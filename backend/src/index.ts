@@ -56,8 +56,14 @@ app.get('/api/auth/bnet', passport.authenticate('bnet'));
 app.get('/api/auth/bnet/callback',
   passport.authenticate('bnet', { failureRedirect: '/login' }),
   (req, res) => {
-    // Redirige vers le dashboard du frontend de production ou local
-    const target = process.env.FRONTEND_URL ? `${process.env.FRONTEND_URL}/dashboard` : 'http://localhost:4200/dashboard';
+    // Nettoie l'URL pour éviter les doubles slashes
+    let frontendBase = process.env.FRONTEND_URL || 'http://localhost:4200';
+    if (frontendBase.endsWith('/')) {
+      frontendBase = frontendBase.slice(0, -1);
+    }
+    const target = `${frontendBase}/dashboard`;
+    
+    console.log('Redirecting to:', target);
     res.redirect(target);
   }
 );
