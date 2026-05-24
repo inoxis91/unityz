@@ -19,6 +19,12 @@ if (process.env.NODE_ENV === 'production') {
 // Initialize Database
 initDb();
 
+console.log('--- Production Config Check ---');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
+console.log('BNET_CALLBACK_URL:', process.env.BNET_CALLBACK_URL);
+console.log('-------------------------------');
+
 app.use(cors({
   origin: [process.env.FRONTEND_URL || 'http://localhost:4200', 'https://unityz.up.railway.app'],
   credentials: true,
