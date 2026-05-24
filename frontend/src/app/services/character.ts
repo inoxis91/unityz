@@ -13,11 +13,13 @@ export interface Character {
   is_dps?: boolean;
 }
 
+import { environment } from '../../environments/environment';
+
 @Injectable({
   providedIn: 'root'
 })
 export class CharacterService {
-  private apiUrl = 'http://localhost:3000/api/characters';
+  private apiUrl = `${environment.apiUrl}/characters`;
 
   constructor(private http: HttpClient) {}
 

@@ -8,11 +8,13 @@ export interface User {
   bnetId: number;
 }
 
+import { environment } from '../../environments/environment';
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:3000/api';
+  private apiUrl = environment.apiUrl;
   currentUser = signal<User | null>(null);
 
   constructor(private http: HttpClient) {}
