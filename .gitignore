@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+dist/
+.angular/
+
+# Environment
+.env
+.env.local
+
+# IDEs
+.idea/
+.vscode/
+
+# Prisma
+/backend/prisma/migrations/

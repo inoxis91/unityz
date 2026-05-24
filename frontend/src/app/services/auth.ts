@@ -1,0 +1,36 @@
+import { Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, tap } from 'rxjs';
+
+export interface User {
+  id: string;
+  battletag: string;
+  bnetId: number;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AuthService {
+  private apiUrl = 'http://localhost:3000/api';
+  currentUser = signal<User | null>(null);
+
+  constructor(private http: HttpClient) {}
+
+  checkAuth(): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/users/me`, { withCredentials: true }).pipe(
+      tap(user => this.currentUser.set(user))
+    );
+  }
+
+  login(): void {
+    window.location.href = `${this.apiUrl}/auth/bnet`;
+  }
+
+  logout(): void {
+    this.http.get(`${this.apiUrl}/auth/logout`, { withCredentials: true }).subscribe(() => {
+      this.currentUser.set(null);
+      window.location.href = '/login';
+    });
+  }
+}

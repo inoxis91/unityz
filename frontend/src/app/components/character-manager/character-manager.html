@@ -1,0 +1,62 @@
+<div class="manager-container">
+  <h2>Gestion de mes personnages</h2>
+
+  <!-- Liste des personnages importés -->
+  <section class="my-characters">
+    <h3>Mes personnages Unity'Z ({{ myCharacters().length }})</h3>
+    <div *ngIf="myCharacters().length === 0" class="empty-state">
+      Aucun personnage importé. Utilisez le bouton ci-dessous pour les récupérer de Battle.net.
+    </div>
+    
+    <table *ngIf="myCharacters().length > 0" class="char-table">
+      <thead>
+        <tr>
+          <th>Nom</th>
+          <th>Royaume</th>
+          <th>Classe</th>
+          <th>Niv.</th>
+          <th>Rôles</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let char of myCharacters()">
+          <td>{{ char.name }}</td>
+          <td>{{ char.realm }}</td>
+          <td>{{ char.class }}</td>
+          <td>{{ char.level }}</td>
+          <td class="roles-cell">
+            <label><input type="checkbox" [(ngModel)]="char.is_tank" (change)="updateRoles(char)"> Tank</label>
+            <label><input type="checkbox" [(ngModel)]="char.is_heal" (change)="updateRoles(char)"> Heal</label>
+            <label><input type="checkbox" [(ngModel)]="char.is_dps" (change)="updateRoles(char)"> DPS</label>
+          </td>
+          <td>
+            <button (click)="removeCharacter(char)" class="btn-remove">Supprimer</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <hr>
+
+  <!-- Section Import depuis Battle.net -->
+  <section class="bnet-import">
+    <div class="header-row">
+      <h3>Importer de Battle.net ({{ bnetCharacters().length }} disponibles)</h3>
+      <button (click)="fetchBnetCharacters()" [disabled]="loadingBnet()" class="btn-fetch">
+        {{ loadingBnet() ? 'Récupération...' : 'Actualiser mes persos Bnet' }}
+      </button>
+    </div>
+
+    <div *ngIf="bnetCharacters().length > 0" class="bnet-list">
+      <div *ngFor="let char of bnetCharacters()" class="bnet-char-card">
+        <div class="char-info">
+          <strong>{{ char.name }}</strong>
+          <span>{{ char.class }} - {{ char.realm }} (Niv. {{ char.level }})</span>
+        </div>
+        <button (click)="importCharacter(char)" class="btn-import">Ajouter</button>
+      </div>
+    </div>
+  </section>
+</div>

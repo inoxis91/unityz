@@ -1,0 +1,102 @@
+.manager-container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+h2 {
+  color: #1a1a1a;
+  border-bottom: 2px solid #0074e0;
+  padding-bottom: 10px;
+}
+
+.char-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.char-table th, .char-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.char-table th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+}
+
+.roles-cell {
+  display: flex;
+  gap: 15px;
+}
+
+.roles-cell label {
+  cursor: pointer;
+}
+
+.btn-remove {
+  background-color: #c41e3a;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-fetch {
+  background-color: #0074e0;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-import {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 30px;
+}
+
+.bnet-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.bnet-char-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.char-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.empty-state {
+  padding: 20px;
+  background: #fff3cd;
+  color: #856404;
+  border-radius: 4px;
+  margin-top: 15px;
+}

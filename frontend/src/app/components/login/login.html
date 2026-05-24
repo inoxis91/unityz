@@ -1,0 +1,17 @@
+<div class="login-container">
+  <h1>Bienvenue sur Unity'Z</h1>
+  
+  <div *ngIf="!authService.currentUser()">
+    <p>Connectez-vous avec votre compte Battle.net pour accéder au roster de la guilde.</p>
+    <button (click)="login()" class="btn-bnet">
+      Se connecter avec Battle.net
+    </button>
+  </div>
+
+  <div *ngIf="authService.currentUser()">
+    <p>Vous êtes déjà connecté en tant que <strong>{{ authService.currentUser()?.battletag }}</strong>.</p>
+    <div class="actions">
+      <a routerLink="/dashboard" class="btn-dashboard">Accéder au Tableau de bord</a>
+    </div>
+  </div>
+</div>

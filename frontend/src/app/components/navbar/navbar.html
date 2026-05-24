@@ -1,0 +1,8 @@
+<nav class="navbar">
+  <div class="nav-brand">Unity'Z</div>
+  <div class="nav-links">
+    <a routerLink="/dashboard" *ngIf="authService.currentUser()">Dashboard</a>
+    <a routerLink="/characters" *ngIf="authService.currentUser()">Gérer mes persos</a>
+    <button *ngIf="authService.currentUser()" (click)="logout()" class="btn-logout">Logout</button>
+  </div>
+</nav>
