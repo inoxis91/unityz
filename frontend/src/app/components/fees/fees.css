@@ -9,14 +9,37 @@
 
 /* Discord Warning Section */
 .discord-warning-section { margin-bottom: 2rem; }
-.warning-card { border-color: #f59e0b; background: #fffbeb; padding: 1.5rem 2rem; }
+.warning-card { border-color: #f59e0b; background: #fffbeb; padding: 1.5rem 2rem; border-radius: 20px; border-width: 1px; border-style: solid; }
 .warning-header { display: flex; align-items: center; gap: 10px; margin-bottom: 0.5rem; }
 .warning-header h3 { margin: 0; font-size: 1.2rem; color: #b45309; }
 .warning-icon { font-size: 1.5rem; }
 .warning-form { display: flex; gap: 1rem; margin: 1rem 0; max-width: 550px; }
-.warning-form input { flex: 1; padding: 12px; border: 2px solid #f59e0b; border-radius: 12px; font-weight: 600; }
-.btn-save { background: #f59e0b; color: white; border: none; padding: 0 20px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-save:hover { background: #d97706; transform: translateY(-2px); }
+
+/* Discord Login Button */
+.btn-discord-login {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #5865F2;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: fit-content;
+}
+
+.btn-discord-login:hover {
+  background: #4752c4;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3);
+}
+
+.btn-discord-login .icon { font-size: 1.25rem; }
+
 .help-text { font-size: 0.8rem; color: #64748b; margin: 0; font-style: italic; }
 .help-text a { color: #0074e0; font-weight: 600; }
 

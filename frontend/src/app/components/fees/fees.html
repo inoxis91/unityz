@@ -13,8 +13,9 @@
       </div>
       <p>Vous n'avez pas encore lié votre compte Discord. Renseignez votre ID pour recevoir des notifications privées lors de la validation de vos cotisations.</p>
       <div class="warning-form">
-        <input type="text" [(ngModel)]="discordPseudo" placeholder="Votre Pseudo Discord (ex: nairolf)" class="modern-input">
-        <button class="btn-save" (click)="linkDiscord()">Lier mon compte</button>
+        <button class="btn-discord-login" (click)="linkDiscord()">
+          <span class="icon">💬</span> Lier mon compte Discord
+        </button>
       </div>
       <p class="help-text">Vous pouvez également gérer cela dans le menu <a routerLink="/options">Options</a>.</p>
     </div>

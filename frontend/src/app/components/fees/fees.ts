@@ -100,7 +100,7 @@ export class FeesComponent implements OnInit {
         };
         alert('Déclaration envoyée avec succès ! Un administrateur va la valider prochainement.');
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Declaration error:', err);
         alert('Erreur lors de la déclaration.');
       }
