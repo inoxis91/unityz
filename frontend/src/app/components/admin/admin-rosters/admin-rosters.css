@@ -108,14 +108,15 @@
 }
 
 .char-name {
-  font-weight: 600;
-  font-size: 1rem;
+  font-weight: 800;
+  font-size: 1.05rem;
 }
 
 .char-class {
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: 800;
   text-transform: uppercase;
+  opacity: 0.9;
 }
 
 .char-roles {
@@ -237,20 +238,7 @@
   background: #eee;
 }
 
-/* Class Colors */
-.death.knight { color: #C41E3A; }
-.demon.hunter { color: #A330C9; }
-.druid { color: #FF7C0A; }
-.evoker { color: #33937F; }
-.hunter { color: #AAD372; }
-.mage { color: #3FC7EB; }
-.monk { color: #00FF98; }
-.paladin { color: #F48CBA; }
-.priest { color: #FFFFFF; text-shadow: 0 0 2px #000; }
-.rogue { color: #FFF468; text-shadow: 0 0 1px #000; }
-.shaman { color: #0070DD; }
-.warlock { color: #8788EE; }
-.warrior { color: #C69B6D; }
+/* Redundant class colors removed - now in global styles.css */
 
 @media (max-width: 1024px) {
   .manager-layout {

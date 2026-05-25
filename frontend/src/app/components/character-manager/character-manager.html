@@ -27,9 +27,9 @@
               {{ char.is_main ? '⭐' : '☆' }}
             </span>
           </td>
-          <td>{{ char.name }}</td>
+          <td class="char-name-cell" [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</td>
           <td>{{ char.realm }}</td>
-          <td>{{ char.class }}</td>
+          <td [class]="'class-' + getClassCategory(char.class)">{{ char.class }}</td>
           <td>{{ char.level }}</td>
           <td class="roles-cell">
             <label><input type="checkbox" [(ngModel)]="char.is_tank" (change)="updateRoles(char)"> Tank</label>
@@ -58,7 +58,7 @@
     <div *ngIf="bnetCharacters().length > 0" class="bnet-list">
       <div *ngFor="let char of bnetCharacters()" class="bnet-char-card">
         <div class="char-info">
-          <strong>{{ char.name }}</strong>
+          <strong [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</strong>
           <span>{{ char.class }} - {{ char.realm }} (Niv. {{ char.level }})</span>
         </div>
         <button (click)="importCharacter(char)" class="btn-import">Ajouter</button>

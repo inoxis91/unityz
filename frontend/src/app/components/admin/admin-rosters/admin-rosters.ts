@@ -99,4 +99,9 @@ export class AdminRostersComponent implements OnInit {
     this.showCreateModal.set(false);
     this.newRoster = { name: '', description: '' };
   }
+
+  getClassCategory(className: string | undefined): string {
+    if (!className) return 'unknown';
+    return className.toLowerCase().replace(/\s+/g, '-');
+  }
 }

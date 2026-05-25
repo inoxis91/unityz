@@ -6,20 +6,67 @@ body {
   color: #333;
 }
 
-/* WoW Classes Colors */
-.warrior { color: #C79C6E !important; }
-.paladin { color: #F58CBA !important; }
-.hunter { color: #ABD473 !important; }
-.rogue { color: #FFF569 !important; }
-.priest { color: #FFFFFF !important; text-shadow: 0 0 2px #000; }
-.death-knight { color: #C41F3B !important; }
-.shaman { color: #0070DE !important; }
-.mage { color: #69CCF0 !important; }
-.warlock { color: #9482C9 !important; }
-.monk { color: #00FF96 !important; }
-.druid { color: #FF7D0A !important; }
-.demon-hunter { color: #A330C9 !important; }
-.evoker { color: #33937F !important; }
+/* WOW Class Colors Variables */
+:root {
+  --color-death-knight: #C41E3A;
+  --color-demon-hunter: #A330C9;
+  --color-druid: #FF7C0A;
+  --color-evoker: #33937F;
+  --color-hunter: #AAD372;
+  --color-mage: #3FC7EB;
+  --color-monk: #00FF98;
+  --color-paladin: #F48CBA;
+  --color-priest: #FFFFFF;
+  --color-rogue: #FFF468;
+  --color-shaman: #0070DD;
+  --color-warlock: #8788EE;
+  --color-warrior: #C69B6D;
+}
+
+/* Class color utility classes */
+.class-death-knight { color: var(--color-death-knight) !important; }
+.class-demon-hunter { color: var(--color-demon-hunter) !important; }
+.class-druid { color: var(--color-druid) !important; }
+.class-evoker { color: var(--color-evoker) !important; }
+.class-hunter { color: var(--color-hunter) !important; }
+.class-mage { color: var(--color-mage) !important; }
+.class-monk { color: var(--color-monk) !important; }
+.class-paladin { color: var(--color-paladin) !important; }
+.class-priest { color: var(--color-priest) !important; text-shadow: 1px 1px 2px #000; }
+.class-rogue { color: var(--color-rogue) !important; text-shadow: 1px 1px 1px #000; }
+.class-shaman { color: var(--color-shaman) !important; }
+.class-warlock { color: var(--color-warlock) !important; }
+.class-warrior { color: var(--color-warrior) !important; }
+
+/* Backward compatibility for existing code */
+.warrior { color: var(--color-warrior) !important; }
+.paladin { color: var(--color-paladin) !important; }
+.hunter { color: var(--color-hunter) !important; }
+.rogue { color: var(--color-rogue) !important; }
+.priest { color: var(--color-priest) !important; text-shadow: 0 0 2px #000; }
+.death-knight { color: var(--color-death-knight) !important; }
+.shaman { color: var(--color-shaman) !important; }
+.mage { color: var(--color-mage) !important; }
+.warlock { color: var(--color-warlock) !important; }
+.monk { color: var(--color-monk) !important; }
+.druid { color: var(--color-druid) !important; }
+.demon-hunter { color: var(--color-demon-hunter) !important; }
+.evoker { color: var(--color-evoker) !important; }
+
+/* Background variants */
+.bg-class-death-knight { background-color: var(--color-death-knight) !important; color: white; }
+.bg-class-demon-hunter { background-color: var(--color-demon-hunter) !important; color: white; }
+.bg-class-druid { background-color: var(--color-druid) !important; color: white; }
+.bg-class-evoker { background-color: var(--color-evoker) !important; color: white; }
+.bg-class-hunter { background-color: var(--color-hunter) !important; color: black; }
+.bg-class-mage { background-color: var(--color-mage) !important; color: black; }
+.bg-class-monk { background-color: var(--color-monk) !important; color: black; }
+.bg-class-paladin { background-color: var(--color-paladin) !important; color: black; }
+.bg-class-priest { background-color: var(--color-priest) !important; color: black; border: 1px solid #ddd; }
+.bg-class-rogue { background-color: var(--color-rogue) !important; color: black; }
+.bg-class-shaman { background-color: var(--color-shaman) !important; color: white; }
+.bg-class-warlock { background-color: var(--color-warlock) !important; color: white; }
+.bg-class-warrior { background-color: var(--color-warrior) !important; color: white; }
 
 /* Common UI Elements */
 .btn {
@@ -35,6 +82,15 @@ body {
   opacity: 0.8;
 }
 
-.btn-primary { background-color: #3498db; color: white; }
-.btn-success { background-color: #2ecc71; color: white; }
-.btn-danger { background-color: #e74c3c; color: white; }
+.btn-primary { background-color: #0074e0; color: white; }
+.btn-success { background-color: #28a745; color: white; }
+.btn-danger { background-color: #c41e3a; color: white; }
+
+.animated-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}

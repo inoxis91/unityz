@@ -147,15 +147,15 @@
 }
 
 .participant-name {
-  font-weight: 700;
-  font-size: 1.05rem;
+  font-weight: 800;
+  font-size: 1.1rem;
   color: #1e293b;
 }
 
 .char-sub-info {
-  font-size: 0.9rem;
-  font-weight: 600;
-  opacity: 0.9;
+  font-size: 0.95rem;
+  font-weight: 700;
+  opacity: 1;
 }
 
 .absent-label {
@@ -445,20 +445,20 @@
   font-weight: 800;
 }
 
-/* Custom classes for WoW */
-.comp-item.warrior { border-left-color: #C79C6E; }
-.comp-item.paladin { border-left-color: #F58CBA; }
-.comp-item.hunter { border-left-color: #ABD473; }
-.comp-item.rogue { border-left-color: #FFF569; }
-.comp-item.priest { border-left-color: #FFFFFF; }
-.comp-item.death-knight { border-left-color: #C41F3B; }
-.comp-item.shaman { border-left-color: #0070DE; }
-.comp-item.mage { border-left-color: #69CCF0; }
-.comp-item.warlock { border-left-color: #9482C9; }
-.comp-item.monk { border-left-color: #00FF96; }
-.comp-item.druid { border-left-color: #FF7D0A; }
-.comp-item.demon-hunter { border-left-color: #A330C9; }
-.comp-item.evoker { border-left-color: #33937F; }
+/* Custom classes for WoW using global variables */
+.comp-item.class-warrior { border-left-color: var(--color-warrior); }
+.comp-item.class-paladin { border-left-color: var(--color-paladin); }
+.comp-item.class-hunter { border-left-color: var(--color-hunter); }
+.comp-item.class-rogue { border-left-color: var(--color-rogue); }
+.comp-item.class-priest { border-left-color: var(--color-priest); }
+.comp-item.class-death-knight { border-left-color: var(--color-death-knight); }
+.comp-item.class-shaman { border-left-color: var(--color-shaman); }
+.comp-item.class-mage { border-left-color: var(--color-mage); }
+.comp-item.class-warlock { border-left-color: var(--color-warlock); }
+.comp-item.class-monk { border-left-color: var(--color-monk); }
+.comp-item.class-druid { border-left-color: var(--color-druid); }
+.comp-item.class-demon-hunter { border-left-color: var(--color-demon-hunter); }
+.comp-item.class-evoker { border-left-color: var(--color-evoker); }
 
 .absent-pills {
   display: flex;

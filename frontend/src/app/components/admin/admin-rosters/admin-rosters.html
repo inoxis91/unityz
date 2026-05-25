@@ -16,8 +16,8 @@
         @for (char of rosterService.unassignedCharacters(); track char.id) {
           <div class="character-card" cdkDrag>
             <div class="char-main">
-              <span class="char-name">{{ char.name }}</span>
-              <span class="char-class" [class]="char.class.toLowerCase()">{{ char.class }}</span>
+              <span class="char-name" [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</span>
+              <span class="char-class" [class]="'class-' + getClassCategory(char.class)">{{ char.class }}</span>
             </div>
             <div class="char-roles">
               <span *ngIf="char.is_tank">🛡️</span>

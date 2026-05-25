@@ -107,10 +107,10 @@
               </div>
               
               <div class="char-info">
-                <span class="participant-name" [class]="s.status === 'absent' && s.main_character_class ? s.main_character_class.toLowerCase() : ''">
+                <span class="participant-name" [class]="'class-' + getClassCategory(s.status === 'absent' ? s.main_character_class : s.character_class)">
                   {{ s.status === 'absent' && s.main_character_name ? s.main_character_name : s.battletag }}
                 </span>
-                <span *ngIf="s.status !== 'absent'" class="char-sub-info" [class]="s.character_class?.toLowerCase()">
+                <span *ngIf="s.status !== 'absent'" class="char-sub-info" [class]="'class-' + getClassCategory(s.character_class)">
                   {{ s.character_name }} ({{ s.character_class }})
                 </span>
                 <span *ngIf="s.status === 'absent'" class="absent-label">Absent</span>
@@ -144,7 +144,7 @@
       <div class="role-column tanks">
         <h4>🛡️ Tanks ({{ tanks().length }})</h4>
         <div class="comp-list">
-          <div *ngFor="let s of tanks()" class="comp-item" [class]="s.character_class?.toLowerCase()" [class.is-standby]="s.status === 'standby'">
+          <div *ngFor="let s of tanks()" class="comp-item" [class]="'class-' + getClassCategory(s.character_class)" [class.is-standby]="s.status === 'standby'">
             <div class="name-row">
               <span class="name">{{ s.character_name }}</span>
               <span *ngIf="s.status === 'standby'" class="maybe-tag">?</span>
@@ -157,7 +157,7 @@
       <div class="role-column heals">
         <h4>🌿 Heals ({{ heals().length }})</h4>
         <div class="comp-list">
-          <div *ngFor="let s of heals()" class="comp-item" [class]="s.character_class?.toLowerCase()" [class.is-standby]="s.status === 'standby'">
+          <div *ngFor="let s of heals()" class="comp-item" [class]="'class-' + getClassCategory(s.character_class)" [class.is-standby]="s.status === 'standby'">
             <div class="name-row">
               <span class="name">{{ s.character_name }}</span>
               <span *ngIf="s.status === 'standby'" class="maybe-tag">?</span>
@@ -170,7 +170,7 @@
       <div class="role-column dps">
         <h4>⚔️ DPS ({{ dps().length }})</h4>
         <div class="comp-list dps-grid">
-          <div *ngFor="let s of dps()" class="comp-item" [class]="s.character_class?.toLowerCase()" [class.is-standby]="s.status === 'standby'">
+          <div *ngFor="let s of dps()" class="comp-item" [class]="'class-' + getClassCategory(s.character_class)" [class.is-standby]="s.status === 'standby'">
             <div class="name-row">
               <span class="name">{{ s.character_name }}</span>
               <span *ngIf="s.status === 'standby'" class="maybe-tag">?</span>
