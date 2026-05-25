@@ -4,6 +4,7 @@
   <div class="nav-links">
     <a routerLink="/dashboard" *ngIf="authService.currentUser()">Dashboard</a>
     <a routerLink="/calendar" *ngIf="authService.currentUser()">Calendrier</a>
+    <a routerLink="/fees" *ngIf="authService.currentUser()">Cotisations</a>
     <a routerLink="/characters" *ngIf="authService.currentUser()">Gérer mes persos</a>
     <a routerLink="/admin" *ngIf="isAdmin()">Admin</a>
     <button *ngIf="authService.currentUser()" (click)="logout()" class="btn-logout">Logout</button>

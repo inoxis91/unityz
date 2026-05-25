@@ -65,6 +65,35 @@ export const initDb = async () => {
       END $$;
     `);
 
+    // Fee declarations table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS fee_declarations (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        amount INTEGER NOT NULL,
+        start_month DATE NOT NULL,
+        duration_months INTEGER NOT NULL DEFAULT 1,
+        comment TEXT,
+        status VARCHAR(20) DEFAULT 'pending',
+        admin_comment TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Fee allocations table (final validated ledger)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS fee_allocations (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        month_date DATE NOT NULL,
+        amount INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, month_date)
+      );
+    `);
+
     // Rosters table
     await client.query(`
       CREATE TABLE IF NOT EXISTS rosters (

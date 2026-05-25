@@ -4,6 +4,7 @@
   <div class="admin-tabs">
     <button [class.active]="activeTab() === 'events'" (click)="activeTab.set('events')">Événements</button>
     <button [class.active]="activeTab() === 'rosters'" (click)="activeTab.set('rosters')">Rosters</button>
+    <button [class.active]="activeTab() === 'fees'" (click)="activeTab.set('fees')">Cotisations</button>
   </div>
 
   <div class="tab-content" *ngIf="activeTab() === 'events'">
@@ -68,5 +69,9 @@
 
   <div class="tab-content" *ngIf="activeTab() === 'rosters'">
     <app-admin-rosters></app-admin-rosters>
+  </div>
+
+  <div class="tab-content" *ngIf="activeTab() === 'fees'">
+    <app-admin-fees></app-admin-fees>
   </div>
 </div>

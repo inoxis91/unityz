@@ -8,6 +8,7 @@ import { initDb } from './lib/db';
 import characterRoutes from './routes/characters';
 import eventRoutes from './routes/events';
 import rosterRoutes from './routes/rosters';
+import feeRoutes from './routes/fees';
 import { errorHandler } from './middlewares/errorHandler';
 
 dotenv.config();
@@ -48,6 +49,7 @@ app.use(passport.session());
 app.use('/api/characters', characterRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/rosters', rosterRoutes);
+app.use('/api/fees', feeRoutes);
 
 // Auth Routes
 app.get('/api/auth/bnet', passport.authenticate('bnet'));

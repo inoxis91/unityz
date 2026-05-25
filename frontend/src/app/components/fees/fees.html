@@ -1,0 +1,102 @@
+<div class="fees-container animated-fade-in">
+  <div class="header-section">
+    <h1>Cotisations & Banque de Guilde</h1>
+    <p class="subtitle">Minimum de 2000 PO par mois requis pour maintenir votre statut de membre actif.</p>
+  </div>
+
+  <!-- Visual Grid Section -->
+  <section class="overview-section">
+    <div class="card grid-card">
+      <div class="card-header">
+        <h2>Mon Année {{ currentYear }}</h2>
+        <div class="legend">
+          <span class="legend-item"><span class="dot paid"></span> Payé</span>
+          <span class="legend-item"><span class="dot donation"></span> Don</span>
+          <span class="legend-item"><span class="dot partial"></span> Incomplet</span>
+        </div>
+      </div>
+      <div class="months-grid">
+        @for (month of months; track month.index) {
+          <div class="month-box" [class]="getMonthStatus(month.index).class">
+            <span class="month-name">{{ month.name }}</span>
+            <div class="month-status">
+              <span class="icon">{{ getMonthStatus(month.index).icon }}</span>
+              <span class="amount">{{ getMonthStatus(month.index).label }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <div class="main-layout">
+    <!-- Declaration Form -->
+    <section class="form-column">
+      <div class="card form-card">
+        <h3>Déclarer un dépôt</h3>
+        <form (ngSubmit)="onSubmit()" class="declaration-form">
+          <div class="form-group">
+            <label>Montant total déposé (PO)</label>
+            <div class="input-with-icon">
+              <input type="number" [(ngModel)]="newDeclaration.amount" name="amount" required min="1">
+              <span class="unit">PO</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Mois de début</label>
+              <input type="date" [(ngModel)]="newDeclaration.start_month" name="start_month" required>
+            </div>
+            <div class="form-group">
+              <label>Nombre de mois</label>
+              <select [(ngModel)]="newDeclaration.duration_months" name="duration">
+                <option [ngValue]="1">1 mois</option>
+                <option [ngValue]="3">3 mois (Trimestre)</option>
+                <option [ngValue]="6">6 mois (Semestre)</option>
+                <option [ngValue]="12">12 mois (Année)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Commentaire</label>
+            <textarea [(ngModel)]="newDeclaration.comment" name="comment" placeholder="Optionnel..."></textarea>
+          </div>
+
+          <button type="submit" class="btn-submit">Envoyer la déclaration</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- History Column -->
+    <section class="history-column">
+      <div class="card history-card">
+        <h3>Historique & Suivi</h3>
+        <div class="declarations-list">
+          @for (decl of feeService.myDeclarations(); track decl.id) {
+            <div class="decl-card" [class]="decl.status">
+              <div class="decl-header">
+                <span class="status-badge">{{ decl.status === 'pending' ? '⏳ En attente' : (decl.status === 'rejected' ? '❌ Refusé' : '✅ Validé') }}</span>
+                <span class="date">{{ decl.created_at | date:'dd/MM/yyyy' }}</span>
+              </div>
+              <div class="decl-body">
+                <div class="main-val">{{ decl.amount }} PO</div>
+                <p class="details">Pour {{ decl.duration_months }} mois à partir de {{ decl.start_month | date:'MMMM yyyy' }}</p>
+                <p class="comment" *ngIf="decl.comment">"{{ decl.comment }}"</p>
+                
+                <div class="admin-feedback" *ngIf="decl.status === 'rejected' && decl.admin_comment">
+                  <strong>Motif du refus :</strong>
+                  <p>{{ decl.admin_comment }}</p>
+                </div>
+              </div>
+            </div>
+          }
+          @if (feeService.myDeclarations().length === 0) {
+            <p class="empty-msg">Aucune déclaration trouvée.</p>
+          }
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

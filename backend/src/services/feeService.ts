@@ -1,0 +1,123 @@
+import pool from '../lib/db';
+
+export interface FeeDeclaration {
+  id: string;
+  user_id: string;
+  battletag?: string;
+  amount: number;
+  start_month: string;
+  duration_months: number;
+  comment: string | null;
+  status: 'pending' | 'accepted' | 'rejected';
+  admin_comment: string | null;
+  created_at: Date;
+}
+
+export interface FeeAllocation {
+  id: string;
+  user_id: string;
+  month_date: string;
+  amount: number;
+}
+
+export class FeeService {
+  static async declarePayment(userId: string, data: any): Promise<FeeDeclaration> {
+    const query = `
+      INSERT INTO fee_declarations (user_id, amount, start_month, duration_months, comment)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *
+    `;
+    const result = await pool.query(query, [userId, data.amount, data.start_month, data.duration_months, data.comment]);
+    return result.rows[0];
+  }
+
+  static async getUserDeclarations(userId: string): Promise<FeeDeclaration[]> {
+    const query = 'SELECT * FROM fee_declarations WHERE user_id = $1 ORDER BY created_at DESC';
+    const result = await pool.query(query, [userId]);
+    return result.rows;
+  }
+
+  static async getUserAllocations(userId: string, year: number): Promise<FeeAllocation[]> {
+    const query = `
+      SELECT * FROM fee_allocations 
+      WHERE user_id = $1 
+      AND EXTRACT(YEAR FROM month_date) = $2
+      ORDER BY month_date ASC
+    `;
+    const result = await pool.query(query, [userId, year]);
+    return result.rows;
+  }
+
+  static async getPendingDeclarations(): Promise<FeeDeclaration[]> {
+    const query = `
+      SELECT fd.*, u.battletag 
+      FROM fee_declarations fd
+      JOIN users u ON fd.user_id = u.id
+      WHERE fd.status = 'pending'
+      ORDER BY fd.created_at ASC
+    `;
+    const result = await pool.query(query);
+    return result.rows;
+  }
+
+  static async getGuildOverview(year: number): Promise<any[]> {
+    const query = `
+      SELECT u.id as user_id, u.battletag, 
+             JSON_AGG(json_build_object('month', month_date, 'amount', amount)) as allocations
+      FROM users u
+      LEFT JOIN fee_allocations fa ON u.id = fa.user_id AND EXTRACT(YEAR FROM fa.month_date) = $1
+      GROUP BY u.id, u.battletag
+      ORDER BY u.battletag ASC
+    `;
+    const result = await pool.query(query, [year]);
+    return result.rows;
+  }
+
+  static async resolveDeclaration(id: string, status: 'accepted' | 'rejected', adminComment: string | null): Promise<void> {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // 1. Update declaration status
+      const declQuery = `
+        UPDATE fee_declarations 
+        SET status = $1, admin_comment = $2, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $3
+        RETURNING *
+      `;
+      const declResult = await client.query(declQuery, [status, adminComment, id]);
+      
+      if (declResult.rowCount === 0) throw new Error('Declaration not found');
+      const decl = declResult.rows[0];
+
+      // 2. If accepted, create allocations
+      if (status === 'accepted') {
+        const monthlyAmount = Math.floor(decl.amount / decl.duration_months);
+        let startDate = new Date(decl.start_month);
+
+        for (let i = 0; i < decl.duration_months; i++) {
+          const allocMonth = new Date(startDate);
+          allocMonth.setMonth(startDate.getMonth() + i);
+          const monthStr = allocMonth.toISOString().split('T')[0];
+
+          const allocQuery = `
+            INSERT INTO fee_allocations (user_id, month_date, amount)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (user_id, month_date) 
+            DO UPDATE SET 
+              amount = fee_allocations.amount + EXCLUDED.amount,
+              updated_at = CURRENT_TIMESTAMP
+          `;
+          await client.query(allocQuery, [decl.user_id, monthStr, monthlyAmount]);
+        }
+      }
+
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
+  }
+}

@@ -1,0 +1,86 @@
+<div class="admin-fees">
+  <div class="sub-tabs">
+    <button [class.active]="activeSubTab() === 'pending'" (click)="activeSubTab.set('pending')">
+      À Valider ({{ feeService.pendingDeclarations().length }})
+    </button>
+    <button [class.active]="activeSubTab() === 'guild'" (click)="activeSubTab.set('guild')">
+      Vue d'ensemble Guilde
+    </button>
+  </div>
+
+  <!-- TAB: Pending Approvals -->
+  <div class="tab-content" *ngIf="activeSubTab() === 'pending'">
+    <div class="pending-list">
+      @for (decl of feeService.pendingDeclarations(); track decl.id) {
+        <div class="pending-card">
+          <div class="user-info">
+            <span class="btag">{{ decl.battletag }}</span>
+            <span class="date">Déposé le {{ decl.created_at | date:'short' }}</span>
+          </div>
+          <div class="decl-details">
+            <div class="val">{{ decl.amount }} PO</div>
+            <p>Période : {{ decl.duration_months }} mois dès {{ decl.start_month | date:'MMMM yyyy' }}</p>
+            <p class="comment" *ngIf="decl.comment">"{{ decl.comment }}"</p>
+          </div>
+          <div class="actions">
+            <button class="btn-approve" (click)="onAccept(decl)">✅ Accepter</button>
+            <button class="btn-reject" (click)="openRejectModal(decl)">❌ Refuser</button>
+          </div>
+        </div>
+      }
+      @if (feeService.pendingDeclarations().length === 0) {
+        <div class="empty-state">
+          <p>Aucune déclaration en attente de validation.</p>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- TAB: Guild Overview -->
+  <div class="tab-content" *ngIf="activeSubTab() === 'guild'">
+    <div class="overview-table-wrapper">
+      <table class="guild-overview-table">
+        <thead>
+          <tr>
+            <th>Membre</th>
+            @for (m of months; track m.index) {
+              <th>{{ m.name }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of guildOverview(); track user.user_id) {
+            <tr>
+              <td class="user-cell">{{ user.battletag }}</td>
+              @for (m of months; track m.index) {
+                <td class="status-cell">
+                  <div class="status-box" [class]="getUserMonthStatus(user, m.index).class">
+                    {{ getUserMonthStatus(user, m.index).icon }}
+                  </div>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Rejection Modal -->
+<div class="modal-backdrop" *ngIf="showRejectModal()">
+  <div class="modal">
+    <h3>Refuser la déclaration</h3>
+    <p>Vous allez refuser le dépôt de <strong>{{ resolvingDecl?.amount }} PO</strong> de <strong>{{ resolvingDecl?.battletag }}</strong>.</p>
+    
+    <div class="form-group">
+      <label>Motif du refus (visible par le membre)</label>
+      <textarea [(ngModel)]="adminComment" placeholder="ex: Pas de trace en banque de guilde..."></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeRejectModal()">Annuler</button>
+      <button class="btn-danger" (click)="onReject()">Confirmer le refus</button>
+    </div>
+  </div>
+</div>

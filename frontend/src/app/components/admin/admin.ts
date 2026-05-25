@@ -3,16 +3,17 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CalendarService, CalendarEvent } from '../../services/calendar';
 import { AdminRostersComponent } from './admin-rosters/admin-rosters';
+import { AdminFeesComponent } from './admin-fees/admin-fees';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, AdminRostersComponent],
+  imports: [CommonModule, FormsModule, AdminRostersComponent, AdminFeesComponent],
   templateUrl: './admin.html',
   styleUrl: './admin.css'
 })
 export class AdminComponent implements OnInit {
-  activeTab = signal<'events' | 'rosters'>('events');
+  activeTab = signal<'events' | 'rosters' | 'fees'>('events');
   events = signal<CalendarEvent[]>([]);
   
   // New Event Form
