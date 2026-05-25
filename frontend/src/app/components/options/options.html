@@ -21,22 +21,27 @@
     <section class="settings-grid">
       
       <!-- Discord Card -->
-      <div class="card settings-card discord-highlight">
+      <div class="card settings-card discord-highlight" [class.linked]="user.discord_id">
         <div class="card-icon">📱</div>
         <div class="card-body">
           <h3>Lien Discord</h3>
-          <p>Renseignez votre <strong>ID Discord</strong> pour recevoir des notifications privées lors de la validation de vos cotisations ou de vos inscriptions en raid.</p>
           
-          <div class="input-group">
-            <input type="text" [(ngModel)]="discordId" placeholder="ex: 123456789012345678" class="modern-input">
-            <button class="btn-save" (click)="saveDiscordId()">Enregistrer</button>
+          <div *ngIf="!user.discord_id">
+            <p>Renseignez votre <strong>Pseudo Discord</strong> pour lier votre compte et recevoir des notifications.</p>
+            <div class="input-group">
+              <input type="text" [(ngModel)]="discordPseudo" placeholder="ex: nairolf ou nairolf#1234" class="modern-input">
+              <button class="btn-save" (click)="linkDiscord()">Lier</button>
+            </div>
+            <p class="help-text">Assurez-vous d'avoir rejoint le serveur de la guilde avant de valider.</p>
           </div>
-          
-          <div class="help-box">
-            <span class="info-icon">ℹ️</span>
-            <p>Comment trouver mon ID ?<br>
-            Paramètres Discord > Avancé > Mode développeur ON.<br>
-            Ensuite, clic droit sur votre profil > Copier l'identifiant.</p>
+
+          <div *ngIf="user.discord_id" class="linked-success animated-fade-in">
+            <div class="success-header">
+              <span class="status-icon">✅</span>
+              <strong>Compte lié avec succès</strong>
+            </div>
+            <p>Votre ID Discord ({{ user.discord_id }}) est enregistré. Vous recevrez désormais vos notifications par MP.</p>
+            <button class="btn-unlink" (click)="authService.updateDiscordId(null).subscribe()">Détacher mon compte</button>
           </div>
         </div>
       </div>

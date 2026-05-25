@@ -12,19 +12,23 @@ import { CharacterManagerComponent } from '../character-manager/character-manage
   styleUrl: './options.css'
 })
 export class OptionsComponent implements OnInit {
-  discordId = '';
+  discordPseudo = '';
   activeTab = signal<'characters' | 'settings'>('characters');
 
   constructor(public authService: AuthService) {}
 
-  ngOnInit() {
-    this.discordId = this.authService.currentUser()?.discord_id || '';
-  }
+  ngOnInit() {}
 
-  saveDiscordId() {
-    this.authService.updateDiscordId(this.discordId).subscribe({
-      next: () => alert('Paramètres mis à jour avec succès !'),
-      error: () => alert('Erreur lors de la mise à jour.')
+  linkDiscord() {
+    if (!this.discordPseudo) return;
+    this.authService.linkDiscordByPseudo(this.discordPseudo).subscribe({
+      next: () => {
+        alert('Compte Discord lié avec succès !');
+        this.discordPseudo = '';
+      },
+      error: (err) => {
+        alert(err.error?.message || 'Erreur lors de la liaison.');
+      }
     });
   }
 }
