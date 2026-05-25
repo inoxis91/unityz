@@ -1,5 +1,6 @@
 <nav class="navbar">
-  <div class="nav-brand">Unity'Z</div>
+  <div class="navbar-brand" routerLink="/dashboard">Unity'Z</div>
+
   <div class="nav-links">
     <a routerLink="/dashboard" *ngIf="authService.currentUser()">Dashboard</a>
     <a routerLink="/calendar" *ngIf="authService.currentUser()">Calendrier</a>

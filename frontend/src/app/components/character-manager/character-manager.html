@@ -30,12 +30,14 @@
           <td>{{ char.realm }}</td>
           <td>{{ char.level }}</td>
           <td class="roles-cell">
-            <label><input type="checkbox" [(ngModel)]="char.is_tank" (change)="updateRoles(char)"> Tank</label>
-            <label><input type="checkbox" [(ngModel)]="char.is_heal" (change)="updateRoles(char)"> Heal</label>
-            <label><input type="checkbox" [(ngModel)]="char.is_dps" (change)="updateRoles(char)"> DPS</label>
+            <div class="role-toggles">
+              <button class="role-toggle tank" [class.active]="char.is_tank" (click)="char.is_tank = !char.is_tank; updateRoles(char)" title="Tank">🛡️</button>
+              <button class="role-toggle heal" [class.active]="char.is_heal" (click)="char.is_heal = !char.is_heal; updateRoles(char)" title="Healer">🌿</button>
+              <button class="role-toggle dps" [class.active]="char.is_dps" (click)="char.is_dps = !char.is_dps; updateRoles(char)" title="DPS">⚔️</button>
+            </div>
           </td>
-          <td>
-            <button (click)="removeCharacter(char)" class="btn-remove">Supprimer</button>
+          <td class="actions-cell">
+            <button (click)="removeCharacter(char)" class="btn-remove-icon" title="Supprimer">🗑️</button>
           </td>
         </tr>
       </tbody>

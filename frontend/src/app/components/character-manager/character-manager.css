@@ -68,21 +68,62 @@ h2 {
 }
 
 .roles-cell {
+  padding: 8px !important;
+}
+
+.role-toggles {
   display: flex;
-  gap: 15px;
+  gap: 6px;
 }
 
-.roles-cell label {
+.role-toggle {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 10px;
   cursor: pointer;
+  font-size: 1.1rem;
+  transition: all 0.2s;
+  opacity: 0.4;
+  filter: grayscale(1);
 }
 
-.btn-remove {
-  background-color: #c41e3a;
-  color: white;
+.role-toggle:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+}
+
+.role-toggle.active {
+  opacity: 1;
+  filter: grayscale(0);
+  background: white;
+  border-color: #3b82f6;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+}
+
+.role-toggle.tank.active { background: #fef2f2; border-color: #ef4444; }
+.role-toggle.heal.active { background: #f0fdf4; border-color: #22c55e; }
+.role-toggle.dps.active { background: #eff6ff; border-color: #3b82f6; }
+
+.actions-cell {
+  text-align: center;
+}
+
+.btn-remove-icon {
+  background: transparent;
   border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
+  font-size: 1.25rem;
   cursor: pointer;
+  padding: 8px;
+  border-radius: 10px;
+  color: #94a3b8;
+  transition: all 0.2s;
+}
+
+.btn-remove-icon:hover {
+  background: #fef2f2;
+  color: #ef4444;
+  transform: scale(1.1);
 }
 
 .btn-fetch {

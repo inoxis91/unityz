@@ -23,6 +23,7 @@ export class CharacterManagerComponent implements OnInit {
 
   ngOnInit() {
     this.loadMyCharacters();
+    this.fetchBnetCharacters();
   }
 
 
