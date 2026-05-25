@@ -147,6 +147,51 @@
 .period-badge strong { font-size: 1.3rem; color: #1e293b; }
 
 .gold-input input { border-color: #f59e0b !important; background: #fffbeb !important; }
+
+/* Unified Input Styles */
+.declaration-form input[type="number"],
+.declaration-form select,
+.declaration-form textarea {
+  width: 100%;
+  padding: 14px;
+  border: 2px solid #f1f5f9;
+  border-radius: 12px;
+  background: #f8fafc;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  transition: all 0.2s;
+  outline: none;
+}
+
+.declaration-form input[type="number"]:focus,
+.declaration-form select:focus,
+.declaration-form textarea:focus {
+  border-color: #0074e0;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(0, 116, 224, 0.1);
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-icon input {
+  font-size: 1.3rem !important;
+  font-weight: 800 !important;
+  padding-right: 50px !important;
+}
+
+.input-with-icon .unit {
+  position: absolute;
+  right: 20px;
+  font-weight: 800;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
 .form-hint { font-size: 0.8rem; color: #64748b; margin-top: 8px; font-weight: 500; }
 
 .empty-form-card {
