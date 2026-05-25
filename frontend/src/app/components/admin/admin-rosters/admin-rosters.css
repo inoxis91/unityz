@@ -1,0 +1,264 @@
+.roster-manager {
+  padding: 1rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.manager-layout {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.character-pool {
+  width: 300px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid #dee2e6;
+  position: sticky;
+  top: 1rem;
+}
+
+.character-pool h3 {
+  margin-top: 0;
+  font-size: 1.1rem;
+  color: #495057;
+  border-bottom: 2px solid #0074e0;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.rosters-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.roster-card {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.roster-header {
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #fafafa;
+  border-radius: 8px 8px 0 0;
+}
+
+.roster-title h4 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #212529;
+}
+
+.roster-desc {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.character-list, .roster-list {
+  min-height: 100px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.character-card {
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: grab;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.character-card:active {
+  cursor: grabbing;
+}
+
+.character-card:hover {
+  border-color: #0074e0;
+  box-shadow: 0 2px 8px rgba(0,116,224,0.1);
+}
+
+.char-main {
+  display: flex;
+  flex-direction: column;
+}
+
+.char-name {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.char-class {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.char-roles {
+  font-size: 1.2rem;
+}
+
+/* Drag & Drop Classes */
+.cdk-drag-preview {
+  box-sizing: border-box;
+  border-radius: 6px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+  background: white;
+  padding: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.3;
+  background: #e9ecef;
+  border: 2px dashed #adb5bd;
+}
+
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.character-list.cdk-drop-list-dragging .character-card:not(.cdk-drag-placeholder),
+.roster-list.cdk-drop-list-dragging .character-card:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.empty-msg {
+  text-align: center;
+  color: #adb5bd;
+  font-style: italic;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.form-group input, .form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.btn-primary {
+  background: #0074e0;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-secondary {
+  background: #e9ecef;
+  color: #495057;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+}
+
+.btn-icon:hover {
+  background: #eee;
+}
+
+/* Class Colors */
+.death.knight { color: #C41E3A; }
+.demon.hunter { color: #A330C9; }
+.druid { color: #FF7C0A; }
+.evoker { color: #33937F; }
+.hunter { color: #AAD372; }
+.mage { color: #3FC7EB; }
+.monk { color: #00FF98; }
+.paladin { color: #F48CBA; }
+.priest { color: #FFFFFF; text-shadow: 0 0 2px #000; }
+.rogue { color: #FFF468; text-shadow: 0 0 1px #000; }
+.shaman { color: #0070DD; }
+.warlock { color: #8788EE; }
+.warrior { color: #C69B6D; }
+
+@media (max-width: 1024px) {
+  .manager-layout {
+    flex-direction: column;
+  }
+  
+  .character-pool {
+    width: 100%;
+    position: static;
+  }
+}

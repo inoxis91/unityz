@@ -4,8 +4,8 @@ export const createEventSchema = z.object({
   body: z.object({
     title: z.string().min(1, 'Title is required').max(255),
     description: z.string().optional().nullable(),
-    start_time: z.string().datetime(),
-    end_time: z.string().datetime(),
+    start_time: z.string().min(10),
+    end_time: z.string().min(10),
     type: z.string().min(1),
   }),
 });
@@ -17,8 +17,8 @@ export const updateEventSchema = z.object({
   body: z.object({
     title: z.string().min(1).max(255),
     description: z.string().optional().nullable(),
-    start_time: z.string().datetime(),
-    end_time: z.string().datetime(),
+    start_time: z.string().min(10),
+    end_time: z.string().min(10),
     type: z.string().min(1),
   }),
 });

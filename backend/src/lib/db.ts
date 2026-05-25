@@ -65,6 +65,27 @@ export const initDb = async () => {
       END $$;
     `);
 
+    // Rosters table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS rosters (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Ensure roster_id column exists in characters
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='characters' AND column_name='roster_id') THEN
+          ALTER TABLE characters ADD COLUMN roster_id UUID REFERENCES rosters(id) ON DELETE SET NULL;
+        END IF;
+      END $$;
+    `);
+
     // Events table
     await client.query(`
       CREATE TABLE IF NOT EXISTS events (

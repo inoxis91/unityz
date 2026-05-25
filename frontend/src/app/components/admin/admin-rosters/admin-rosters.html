@@ -1,0 +1,114 @@
+<div class="roster-manager">
+  <div class="header">
+    <h2>Gestion des Rosters</h2>
+    <button class="btn-primary" (click)="showCreateModal.set(true)">+ Nouveau Roster</button>
+  </div>
+
+  <div class="manager-layout" cdkDropListGroup>
+    <!-- Pool de personnages non assignés -->
+    <div class="character-pool">
+      <h3>Personnages Sans Roster</h3>
+      <div
+        cdkDropList
+        [cdkDropListData]="rosterService.unassignedCharacters()"
+        class="character-list"
+        (cdkDropListDropped)="drop($event, null)">
+        @for (char of rosterService.unassignedCharacters(); track char.id) {
+          <div class="character-card" cdkDrag>
+            <div class="char-main">
+              <span class="char-name">{{ char.name }}</span>
+              <span class="char-class" [class]="char.class.toLowerCase()">{{ char.class }}</span>
+            </div>
+            <div class="char-roles">
+              <span *ngIf="char.is_tank">🛡️</span>
+              <span *ngIf="char.is_heal">🌿</span>
+              <span *ngIf="char.is_dps">⚔️</span>
+            </div>
+          </div>
+        }
+        @if (rosterService.unassignedCharacters().length === 0) {
+          <p class="empty-msg">Tous les personnages sont assignés.</p>
+        }
+      </div>
+    </div>
+
+    <!-- Liste des rosters -->
+    <div class="rosters-grid">
+      @for (roster of rosterService.rosters(); track roster.id) {
+        <div class="roster-card">
+          <div class="roster-header">
+            <div class="roster-title">
+              <h4>{{ roster.name }}</h4>
+              <p class="roster-desc">{{ roster.description }}</p>
+            </div>
+            <div class="roster-actions">
+              <button class="btn-icon" (click)="openEditModal(roster)">✏️</button>
+              <button class="btn-icon" (click)="onDeleteRoster(roster.id)">🗑️</button>
+            </div>
+          </div>
+          
+          <div
+            cdkDropList
+            [cdkDropListData]="roster.characters || []"
+            class="roster-list"
+            (cdkDropListDropped)="drop($event, roster.id)">
+            @for (char of roster.characters; track char.id) {
+              <div class="character-card" cdkDrag>
+                <div class="char-main">
+                  <span class="char-name">{{ char.name }}</span>
+                  <span class="char-class" [class]="char.class.toLowerCase()">{{ char.class }}</span>
+                </div>
+                <div class="char-roles">
+                  <span *ngIf="char.is_tank">🛡️</span>
+                  <span *ngIf="char.is_heal">🌿</span>
+                  <span *ngIf="char.is_dps">⚔️</span>
+                </div>
+              </div>
+            }
+            @if (!roster.characters || roster.characters.length === 0) {
+              <p class="empty-msg">Glissez un personnage ici.</p>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Modal de création -->
+<div class="modal-backdrop" *ngIf="showCreateModal()">
+  <div class="modal">
+    <h3>Nouveau Roster</h3>
+    <div class="form-group">
+      <label>Nom du Roster</label>
+      <input type="text" [(ngModel)]="newRoster.name" placeholder="ex: Raid Mythique">
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea [(ngModel)]="newRoster.description" placeholder="Objectifs, horaires..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeModal()">Annuler</button>
+      <button class="btn-primary" (click)="onCreateRoster()">Créer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal d'édition -->
+<div class="modal-backdrop" *ngIf="showEditModal() && editingRoster">
+  <div class="modal">
+    <h3>Modifier le Roster</h3>
+    <div class="form-group">
+      <label>Nom du Roster</label>
+      <input type="text" [(ngModel)]="editingRoster.name">
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea [(ngModel)]="editingRoster.description"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeEditModal()">Annuler</button>
+      <button class="btn-primary" (click)="onUpdateRoster()">Enregistrer</button>
+    </div>
+  </div>
+</div>
