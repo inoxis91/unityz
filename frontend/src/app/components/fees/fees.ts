@@ -12,7 +12,7 @@ import { AuthService } from '../../services/auth';
   styleUrl: './fees.css'
 })
 export class FeesComponent implements OnInit {
-  currentYear = new Date().getFullYear();
+  displayYear = signal(new Date().getFullYear());
   months = [
     { name: 'Janvier', index: 0 }, { name: 'Février', index: 1 }, { name: 'Mars', index: 2 },
     { name: 'Avril', index: 3 }, { name: 'Mai', index: 4 }, { name: 'Juin', index: 5 },
@@ -20,10 +20,13 @@ export class FeesComponent implements OnInit {
     { name: 'Octobre', index: 9 }, { name: 'Novembre', index: 10 }, { name: 'Décembre', index: 11 }
   ];
 
+  showForm = signal(false);
+  selectedMonthName = '';
+
   // Form
   newDeclaration = {
     amount: 2000,
-    start_month: this.getDefaultStartMonth(),
+    start_month: '',
     duration_months: 1,
     comment: ''
   };
@@ -36,16 +39,37 @@ export class FeesComponent implements OnInit {
 
   loadData() {
     this.feeService.loadMyDeclarations().subscribe();
-    this.feeService.loadMyAllocations(this.currentYear).subscribe();
+    this.feeService.loadMyAllocations(this.displayYear()).subscribe();
   }
 
-  getDefaultStartMonth(): string {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  changeYear(delta: number) {
+    const baseYear = new Date().getFullYear();
+    const newYear = this.displayYear() + delta;
+    
+    // Limitation +/- 1 an comme demandé
+    if (newYear < baseYear - 1 || newYear > baseYear + 1) return;
+    
+    this.displayYear.set(newYear);
+    this.feeService.loadMyAllocations(newYear).subscribe();
+  }
+
+  selectMonth(monthIndex: number) {
+    const month = this.months[monthIndex];
+    this.selectedMonthName = `${month.name} ${this.displayYear()}`;
+    
+    // Set internal date for backend YYYY-MM-01
+    this.newDeclaration.start_month = `${this.displayYear()}-${String(monthIndex + 1).padStart(2, '0')}-01`;
+    
+    this.showForm.set(true);
+    
+    // Smooth scroll to form on mobile
+    setTimeout(() => {
+      document.querySelector('.form-card')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   }
 
   getMonthStatus(monthIndex: number) {
-    const dateStr = `${this.currentYear}-${String(monthIndex + 1).padStart(2, '0')}-01`;
+    const dateStr = `${this.displayYear()}-${String(monthIndex + 1).padStart(2, '0')}-01`;
     const alloc = this.feeService.myAllocations().find(a => a.month_date.startsWith(dateStr.substring(0, 7)));
     
     if (!alloc) return { class: 'none', label: '0 PO', icon: '⭕' };
@@ -60,18 +84,13 @@ export class FeesComponent implements OnInit {
   }
 
   onSubmit() {
-    // Convert YYYY-MM from input to YYYY-MM-01 for backend
-    const submissionData = {
-      ...this.newDeclaration,
-      start_month: `${this.newDeclaration.start_month}-01`
-    };
-
-    this.feeService.declarePayment(submissionData).subscribe({
+    this.feeService.declarePayment(this.newDeclaration).subscribe({
       next: () => {
         this.loadData();
+        this.showForm.set(false);
         this.newDeclaration = {
           amount: 2000,
-          start_month: this.getDefaultStartMonth(),
+          start_month: '',
           duration_months: 1,
           comment: ''
         };
