@@ -84,8 +84,24 @@ export class EventDetailsComponent implements OnInit {
         } else if (chars.length > 0) {
           this.selectedCharacterId = chars[0].id || '';
         }
+        this.onCharacterChange();
       }
     });
+  }
+
+  onCharacterChange() {
+    const char = this.myCharacters().find(c => c.id === this.selectedCharacterId);
+    if (char) {
+      if (char.is_tank) {
+        this.selectedRole = 'tank';
+      } else if (char.is_heal) {
+        this.selectedRole = 'heal';
+      } else if (char.is_dps) {
+        this.selectedRole = 'dps';
+      } else {
+        this.selectedRole = 'dps';
+      }
+    }
   }
 
   setStatus(status: 'signed_up' | 'standby' | 'absent') {
@@ -99,6 +115,7 @@ export class EventDetailsComponent implements OnInit {
       } else if (this.myCharacters().length > 0) {
         this.selectedCharacterId = this.myCharacters()[0].id || '';
       }
+      this.onCharacterChange();
     }
   }
 

@@ -51,7 +51,7 @@
         <div class="signup-fields animated-fade-in" *ngIf="signupStatus !== 'absent'">
           <div class="form-group" *ngIf="myCharacters().length > 0; else noChars">
             <label>Sélectionnez votre personnage :</label>
-            <select [(ngModel)]="selectedCharacterId" class="modern-select">
+            <select [(ngModel)]="selectedCharacterId" (change)="onCharacterChange()" class="modern-select">
               <option *ngFor="let char of myCharacters()" [value]="char.id">{{ char.name }} ({{ char.class }})</option>
             </select>
           </div>
