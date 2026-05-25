@@ -102,7 +102,6 @@ export class CharacterManagerComponent implements OnInit {
   }
 
   getClassCategory(className: string | undefined): string {
-    if (!className) return 'unknown';
-    return className.toLowerCase().replace(/\s+/g, '-');
+    return CharacterService.getClassId(className);
   }
 }

@@ -22,6 +22,30 @@ import { environment } from '../../environments/environment';
 export class CharacterService {
   private apiUrl = `${environment.apiUrl}/characters`;
 
+  static getClassId(className: string | undefined): string {
+    if (!className) return 'unknown';
+    
+    const name = className.toLowerCase().trim();
+    
+    const map: { [key: string]: string } = {
+      'guerrier': 'warrior',
+      'paladin': 'paladin',
+      'chasseur': 'hunter',
+      'voleur': 'rogue',
+      'prêtre': 'priest',
+      'chevalier de la mort': 'death-knight',
+      'chaman': 'shaman',
+      'mage': 'mage',
+      'démoniste': 'warlock',
+      'moine': 'monk',
+      'druide': 'druid',
+      'chasseur de démons': 'demon-hunter',
+      'évocateur': 'evoker'
+    };
+
+    return map[name] || name.replace(/\s+/g, '-');
+  }
+
   constructor(private http: HttpClient) {}
 
   // Récupère les persos depuis Battle.net
