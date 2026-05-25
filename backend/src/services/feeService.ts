@@ -100,12 +100,13 @@ export class FeeService {
       if (status === 'accepted') {
         const monthlyAmount = Math.floor(decl.amount / decl.duration_months);
         
-        // Parsing the date string directly to avoid timezone shifts
-        const [year, month, day] = decl.start_month.split('-').map(Number);
+        // Robust date parsing (handles both Date objects from PG and strings)
+        const startDate = new Date(decl.start_month);
+        const year = startDate.getUTCFullYear();
+        const month = startDate.getUTCMonth(); // 0-indexed
         
         for (let i = 0; i < decl.duration_months; i++) {
-          const currentMonth = month + i - 1; // 0-indexed for Date constructor
-          const allocDate = new Date(Date.UTC(year, currentMonth, 1));
+          const allocDate = new Date(Date.UTC(year, month + i, 1));
           const monthStr = allocDate.toISOString().split('T')[0];
 
           const allocQuery = `
