@@ -138,7 +138,7 @@
   background: #f8fafc;
   padding: 1.25rem;
   border-radius: 16px;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   border: 1px solid #f1f5f9;
 }
 
@@ -146,9 +146,18 @@
 .period-badge { display: flex; align-items: center; gap: 10px; margin-top: 5px; }
 .period-badge strong { font-size: 1.3rem; color: #1e293b; }
 
-.gold-input input { border-color: #f59e0b !important; background: #fffbeb !important; }
+/* Form Fields */
+.declaration-form .form-group {
+  margin-bottom: 1.5rem;
+}
 
-/* Unified Input Styles */
+.declaration-form label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #1e293b;
+}
+
 .declaration-form input[type="number"],
 .declaration-form select,
 .declaration-form textarea {
@@ -162,6 +171,7 @@
   color: #1e293b;
   transition: all 0.2s;
   outline: none;
+  box-sizing: border-box; /* Crucial pour le padding */
 }
 
 .declaration-form input[type="number"]:focus,
@@ -192,10 +202,88 @@
   pointer-events: none;
 }
 
+.gold-input input {
+  border-color: #f59e0b !important;
+  background: #fffbeb !important;
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 1.25rem;
+  border-radius: 16px;
+  background: #0074e0;
+  color: white;
+  border: none;
+  font-weight: 800;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 1rem;
+}
+
+.btn-submit:hover {
+  background: #0062be;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 116, 224, 0.2);
+}
+
 .form-hint { font-size: 0.8rem; color: #64748b; margin-top: 8px; font-weight: 500; }
 
+/* History Column & Cards */
+.history-card { height: fit-content; }
+.declarations-list { display: flex; flex-direction: column; gap: 1rem; }
+
+.decl-card {
+  padding: 1.5rem;
+  border-radius: 20px;
+  border: 1px solid #f1f5f9;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.decl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status-badge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: 100px;
+  background: white;
+  border: 1px solid #e2e8f0;
+}
+
+.status-badge.pending { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+.status-badge.rejected { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+.status-badge.accepted { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
+
+.decl-header .date { font-size: 0.8rem; color: #94a3b8; font-weight: 600; }
+
+.decl-body .main-val { font-size: 1.6rem; font-weight: 800; color: #1e293b; }
+.decl-body .details { margin: 4px 0; font-size: 0.95rem; color: #64748b; font-weight: 700; }
+
+.admin-feedback {
+  margin-top: 0.5rem;
+  padding: 12px;
+  background: white;
+  border-radius: 12px;
+  border-left: 4px solid #ef4444;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.05);
+}
+
+.admin-feedback strong { font-size: 0.7rem; color: #ef4444; text-transform: uppercase; letter-spacing: 0.05em; }
+.admin-feedback p { margin: 4px 0 0; font-size: 0.9rem; color: #1e293b; font-weight: 500; }
+
+/* Empty States */
 .empty-form-card {
   height: 100%;
+  min-height: 400px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -203,15 +291,12 @@
   text-align: center;
   color: #94a3b8;
   background: #f8fafc;
-  border-style: dashed;
+  border: 2px dashed #e2e8f0;
 }
 
-.empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+.empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
 
-/* History Status Badges */
-.status-badge.pending { background: #fef3c7; color: #92400e; }
-.status-badge.rejected { background: #fee2e2; color: #991b1b; }
-.status-badge.accepted { background: #dcfce7; color: #166534; }
+.empty-msg { text-align: center; color: #94a3b8; padding: 2rem; font-style: italic; }
 
 @media (max-width: 1024px) {
   .main-layout { grid-template-columns: 1fr; }
