@@ -90,6 +90,16 @@ export class EventDetailsComponent implements OnInit {
 
   setStatus(status: 'signed_up' | 'standby' | 'absent') {
     this.signupStatus = status;
+    
+    // Auto-reselect Main character if we switch back from absent to a presence status
+    if (status !== 'absent' && (!this.selectedCharacterId || this.selectedCharacterId === '')) {
+      const mainChar = this.myCharacters().find(c => c.is_main);
+      if (mainChar) {
+        this.selectedCharacterId = mainChar.id || '';
+      } else if (this.myCharacters().length > 0) {
+        this.selectedCharacterId = this.myCharacters()[0].id || '';
+      }
+    }
   }
 
   onSignup() {
