@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CalendarService, CalendarEvent, Signup } from '../../services/calendar';
-import { AuthService } from '../../services/auth';
 import { CharacterService, Character } from '../../services/character';
+import { AuthService } from '../../services/auth';
+import { ToastService } from '../../services/toast';
 
 @Component({
   selector: 'app-event-details',
@@ -22,12 +23,10 @@ export class EventDetailsComponent implements OnInit {
   // Signup Form
   selectedCharacterId = '';
   selectedRole = 'dps';
-  comment = '';
   signupStatus: 'signed_up' | 'standby' | 'absent' = 'signed_up';
+  comment = '';
 
-  isAdmin = computed(() => this.authService.currentUser()?.is_admin === true);
-
-  // Computed Composition
+  // Computed views
   tanks = computed(() => this.signups().filter(s => s.role === 'tank' && s.status !== 'absent'));
   heals = computed(() => this.signups().filter(s => s.role === 'heal' && s.status !== 'absent'));
   dps = computed(() => this.signups().filter(s => s.role === 'dps' && s.status !== 'absent'));
@@ -36,8 +35,9 @@ export class EventDetailsComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private calendarService: CalendarService,
-    public authService: AuthService,
-    private characterService: CharacterService
+    private characterService: CharacterService,
+    private authService: AuthService,
+    private toast: ToastService
   ) {}
 
   ngOnInit() {
@@ -53,22 +53,22 @@ export class EventDetailsComponent implements OnInit {
   }
 
   loadEvent(id: string) {
-    this.calendarService.getEvent(id).subscribe({
-      next: (event) => this.event.set(event),
-      error: (err) => console.error('Error loading event:', err)
+    this.calendarService.getEventById(id).subscribe(event => {
+      this.event.set(event);
     });
   }
 
   loadSignups(id: string) {
     this.calendarService.getSignups(id).subscribe(signups => {
       this.signups.set(signups);
-      // Pre-fill if user already signed up
+      
+      // Pre-fill form if user is already signed up
       const mySignup = signups.find(s => s.user_id === this.authService.currentUser()?.id);
       if (mySignup) {
         this.selectedCharacterId = mySignup.character_id || '';
         this.selectedRole = mySignup.role;
+        this.signupStatus = mySignup.status as any;
         this.comment = mySignup.comment || '';
-        this.signupStatus = (mySignup.status as any) || 'signed_up';
       }
     });
   }
@@ -122,27 +122,21 @@ export class EventDetailsComponent implements OnInit {
   onSignup() {
     if (!this.event()) return;
     
-    let charId: string | null = this.selectedCharacterId;
-    
-    if (this.signupStatus === 'absent') {
-      charId = null;
-    } else if (!charId) {
-      alert('Veuillez sélectionner un personnage pour vous inscrire.');
-      return;
-    }
+    const signupData = {
+      character_id: this.signupStatus === 'absent' ? null : this.selectedCharacterId,
+      role: this.selectedRole,
+      status: this.signupStatus,
+      comment: this.comment
+    };
 
-    this.calendarService.signup(this.event()!.id!, {
-      character_id: charId as any,
-      role: this.selectedRole as any,
-      comment: this.comment,
-      status: this.signupStatus
-    }).subscribe({
+    this.calendarService.signup(this.event()!.id!, signupData).subscribe({
       next: () => {
         this.loadSignups(this.event()!.id!);
+        this.toast.success('Votre choix a été enregistré !');
       },
       error: (err) => {
         console.error('Signup error:', err);
-        alert('Erreur lors de l\'enregistrement de votre choix.');
+        this.toast.error('Erreur lors de l\'enregistrement de votre choix.');
       }
     });
   }

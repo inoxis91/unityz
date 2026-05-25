@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import { CharacterManagerComponent } from '../character-manager/character-manager';
+import { ToastService } from '../../services/toast';
 
 @Component({
   selector: 'app-options',
@@ -15,7 +16,11 @@ import { CharacterManagerComponent } from '../character-manager/character-manage
 export class OptionsComponent implements OnInit {
   activeTab = signal<'characters' | 'settings'>('characters');
 
-  constructor(public authService: AuthService, private route: ActivatedRoute) {}
+  constructor(
+    public authService: AuthService, 
+    private route: ActivatedRoute,
+    private toast: ToastService
+  ) {}
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
@@ -23,10 +28,10 @@ export class OptionsComponent implements OnInit {
         this.activeTab.set('settings');
       }
       if (params['success'] === 'discord_linked') {
-        alert('Compte Discord lié avec succès !');
+        this.toast.success('Compte Discord lié avec succès !');
       }
       if (params['error'] === 'discord_failed') {
-        alert('Échec de la liaison Discord.');
+        this.toast.error('Échec de la liaison Discord.');
       }
     });
   }

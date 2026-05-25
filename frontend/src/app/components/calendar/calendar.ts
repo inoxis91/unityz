@@ -8,6 +8,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import { CalendarService, CalendarEvent } from '../../services/calendar';
 import { AuthService } from '../../services/auth';
 import { CharacterService } from '../../services/character';
+import { ToastService } from '../../services/toast';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 
@@ -57,7 +58,8 @@ export class CalendarComponent implements OnInit {
     private calendarService: CalendarService,
     public authService: AuthService,
     private characterService: CharacterService,
-    private router: Router
+    private router: Router,
+    private toast: ToastService
   ) {}
 
   ngOnInit() {
@@ -117,9 +119,13 @@ export class CalendarComponent implements OnInit {
       type: finalType
     };
 
-    this.calendarService.createEvent(eventData).subscribe(() => {
-      this.loadEvents();
-      this.closeCreateModal();
+    this.calendarService.createEvent(eventData).subscribe({
+      next: () => {
+        this.loadEvents();
+        this.closeCreateModal();
+        this.toast.success('Événement créé avec succès.');
+      },
+      error: () => this.toast.error('Erreur lors de la création de l\'événement.')
     });
   }
 

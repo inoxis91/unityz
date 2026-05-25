@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FeeService, FeeAllocation, FeeDeclaration } from '../../services/fee';
 import { AuthService } from '../../services/auth';
+import { ToastService } from '../../services/toast';
 
 @Component({
   selector: 'app-fees',
@@ -22,6 +23,7 @@ export class FeesComponent implements OnInit {
 
   showForm = signal(false);
   selectedMonthName = '';
+  discordId = '';
 
   // Form
   newDeclaration = {
@@ -31,7 +33,11 @@ export class FeesComponent implements OnInit {
     comment: ''
   };
 
-  constructor(public feeService: FeeService, public authService: AuthService) {}
+  constructor(
+    public feeService: FeeService, 
+    public authService: AuthService,
+    private toast: ToastService
+  ) {}
 
   ngOnInit() {
     this.loadData();
@@ -40,10 +46,14 @@ export class FeesComponent implements OnInit {
   loadData() {
     this.feeService.loadMyDeclarations().subscribe();
     this.feeService.loadMyAllocations(this.displayYear()).subscribe();
+    this.discordId = this.authService.currentUser()?.discord_id || '';
   }
 
-  linkDiscord() {
-    this.authService.linkDiscord();
+  saveDiscordId() {
+    this.authService.updateDiscordId(this.discordId).subscribe({
+      next: () => this.toast.success('ID Discord mis à jour ! Vous recevrez désormais vos notifications par MP.'),
+      error: () => this.toast.error('Erreur lors de la mise à jour.')
+    });
   }
 
   changeYear(delta: number) {
@@ -55,6 +65,10 @@ export class FeesComponent implements OnInit {
     
     this.displayYear.set(newYear);
     this.feeService.loadMyAllocations(newYear).subscribe();
+  }
+
+  linkDiscord() {
+    this.authService.linkDiscord();
   }
 
   selectMonth(monthIndex: number) {
@@ -98,11 +112,11 @@ export class FeesComponent implements OnInit {
           duration_months: 1,
           comment: ''
         };
-        alert('Déclaration envoyée avec succès ! Un administrateur va la valider prochainement.');
+        this.toast.success('Déclaration envoyée avec succès ! Un administrateur va la valider prochainement.');
       },
       error: (err: any) => {
         console.error('Declaration error:', err);
-        alert('Erreur lors de la déclaration.');
+        this.toast.error('Erreur lors de la déclaration.');
       }
     });
   }

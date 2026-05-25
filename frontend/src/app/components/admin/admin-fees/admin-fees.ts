@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FeeService, FeeDeclaration, GuildFeeOverview } from '../../../services/fee';
+import { ToastService } from '../../../services/toast';
 
 @Component({
   selector: 'app-admin-fees',
@@ -33,7 +34,10 @@ export class AdminFeesComponent implements OnInit {
     { name: 'Oct', index: 10 }, { name: 'Nov', index: 11 }, { name: 'Déc', index: 12 }
   ];
 
-  constructor(public feeService: FeeService) {}
+  constructor(
+    public feeService: FeeService,
+    private toast: ToastService
+  ) {}
 
   ngOnInit() {
     this.loadPending();
@@ -55,9 +59,13 @@ export class AdminFeesComponent implements OnInit {
 
   onAccept(decl: FeeDeclaration) {
     if (confirm(`Accepter le dépôt de ${decl.amount} PO de ${decl.battletag} ?`)) {
-      this.feeService.resolveDeclaration(decl.id, 'accepted').subscribe(() => {
-        this.loadPending();
-        this.loadOverview();
+      this.feeService.resolveDeclaration(decl.id, 'accepted').subscribe({
+        next: () => {
+          this.loadPending();
+          this.loadOverview();
+          this.toast.success('Dépôt approuvé avec succès.');
+        },
+        error: () => this.toast.error('Erreur lors de l\'approbation.')
       });
     }
   }
@@ -75,9 +83,13 @@ export class AdminFeesComponent implements OnInit {
 
   onReject() {
     if (!this.resolvingDecl) return;
-    this.feeService.resolveDeclaration(this.resolvingDecl.id, 'rejected', this.adminComment).subscribe(() => {
-      this.loadPending();
-      this.closeRejectModal();
+    this.feeService.resolveDeclaration(this.resolvingDecl.id, 'rejected', this.adminComment).subscribe({
+      next: () => {
+        this.loadPending();
+        this.closeRejectModal();
+        this.toast.info('La déclaration a été rejetée.');
+      },
+      error: () => this.toast.error('Erreur lors du rejet.')
     });
   }
 
@@ -92,9 +104,13 @@ export class AdminFeesComponent implements OnInit {
   onSaveAdjustment() {
     if (!this.adjustingUser) return;
     const monthDate = `${this.displayYear()}-${String(this.adjustingMonthIndex).padStart(2, '0')}-01`;
-    this.feeService.adjustAllocation(this.adjustingUser.user_id, monthDate, this.adjustingAmount).subscribe(() => {
-      this.loadOverview();
-      this.showAdjustModal.set(false);
+    this.feeService.adjustAllocation(this.adjustingUser.user_id, monthDate, this.adjustingAmount).subscribe({
+      next: () => {
+        this.loadOverview();
+        this.showAdjustModal.set(false);
+        this.toast.success('Ajustement enregistré.');
+      },
+      error: () => this.toast.error('Erreur lors de l\'ajustement.')
     });
   }
 
