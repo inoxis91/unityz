@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './components/login/login';
 import { DashboardComponent } from './components/dashboard/dashboard';
-import { CharacterManagerComponent } from './components/character-manager/character-manager';
+import { OptionsComponent } from './components/options/options';
 import { CalendarComponent } from './components/calendar/calendar';
 import { AdminComponent } from './components/admin/admin';
 import { EventDetailsComponent } from './components/event-details/event-details';
@@ -17,8 +17,8 @@ export const routes: Routes = [
     canActivate: [authGuard] 
   },
   { 
-    path: 'characters', 
-    component: CharacterManagerComponent, 
+    path: 'options', 
+    component: OptionsComponent, 
     canActivate: [authGuard] 
   },
   { 

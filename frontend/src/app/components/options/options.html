@@ -1,0 +1,70 @@
+<div class="options-container animated-fade-in" *ngIf="authService.currentUser() as user">
+  <div class="header-section">
+    <h1>Options & Préférences</h1>
+    <p class="subtitle">Gérez vos personnages et vos paramètres de compte.</p>
+  </div>
+
+  <div class="options-tabs">
+    <button [class.active]="activeTab() === 'characters'" (click)="activeTab.set('characters')">
+      🎭 Mes Personnages
+    </button>
+    <button [class.active]="activeTab() === 'settings'" (click)="activeTab.set('settings')">
+      ⚙️ Paramètres Compte
+    </button>
+  </div>
+
+  <div class="tab-content" *ngIf="activeTab() === 'characters'">
+    <app-character-manager></app-character-manager>
+  </div>
+
+  <div class="tab-content" *ngIf="activeTab() === 'settings'">
+    <section class="settings-grid">
+      
+      <!-- Discord Card -->
+      <div class="card settings-card discord-highlight">
+        <div class="card-icon">📱</div>
+        <div class="card-body">
+          <h3>Lien Discord</h3>
+          <p>Renseignez votre <strong>ID Discord</strong> pour recevoir des notifications privées lors de la validation de vos cotisations ou de vos inscriptions en raid.</p>
+          
+          <div class="input-group">
+            <input type="text" [(ngModel)]="discordId" placeholder="ex: 123456789012345678" class="modern-input">
+            <button class="btn-save" (click)="saveDiscordId()">Enregistrer</button>
+          </div>
+          
+          <div class="help-box">
+            <span class="info-icon">ℹ️</span>
+            <p>Comment trouver mon ID ?<br>
+            Paramètres Discord > Avancé > Mode développeur ON.<br>
+            Ensuite, clic droit sur votre profil > Copier l'identifiant.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account Info Card -->
+      <div class="card settings-card">
+        <div class="card-icon">🛡️</div>
+        <div class="card-body">
+          <h3>Informations Compte</h3>
+          <div class="info-list">
+            <div class="info-item">
+              <span class="label">BattleTag</span>
+              <span class="value">{{ user.battletag }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">ID Battle.net</span>
+              <span class="value">{{ user.bnet_id }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Statut</span>
+              <span class="value status-badge" [class.admin]="user.is_admin">
+                {{ user.is_admin ? 'ADMINISTRATEUR' : 'MEMBRE' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </div>
+</div>

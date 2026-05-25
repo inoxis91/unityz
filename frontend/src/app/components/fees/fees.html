@@ -4,15 +4,21 @@
     <p class="subtitle">Cliquez sur un mois pour déclarer un dépôt de PO.</p>
   </div>
 
-  <!-- Discord Auto-Link Info -->
-  <div class="discord-info-banner animated-fade-in" *ngIf="authService.currentUser()?.discord_id">
-    <span class="icon">✅</span>
-    <p>Votre compte est lié à Discord. Vous recevrez des notifications privées lors de la validation.</p>
-  </div>
-  <div class="discord-info-banner warning animated-fade-in" *ngIf="!authService.currentUser()?.discord_id">
-    <span class="icon">ℹ️</span>
-    <p>Pour recevoir des notifications, assurez-vous que votre pseudo Discord correspond à votre nom en jeu.</p>
-  </div>
+  <!-- Discord Warning (Only if ID is missing) -->
+  <section class="discord-warning-section animated-fade-in" *ngIf="!authService.currentUser()?.discord_id">
+    <div class="card warning-card">
+      <div class="warning-header">
+        <span class="warning-icon">📱</span>
+        <h3>Liaison Discord Manquante</h3>
+      </div>
+      <p>Vous n'avez pas encore lié votre compte Discord. Renseignez votre ID pour recevoir des notifications privées lors de la validation de vos cotisations.</p>
+      <div class="warning-form">
+        <input type="text" [(ngModel)]="discordId" placeholder="Votre ID Discord (ex: 123456...)" class="modern-input">
+        <button class="btn-save" (click)="saveDiscordId()">Lier mon compte</button>
+      </div>
+      <p class="help-text">Vous pouvez également gérer cela dans le menu <a routerLink="/options">Options</a>.</p>
+    </div>
+  </section>
 
   <!-- Visual Grid Section -->
   <section class="overview-section">

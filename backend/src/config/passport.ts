@@ -46,17 +46,6 @@ passport.use(
         const res = await pool.query(query, [profile.id.toString(), bnetId, battletag, tokenToStore]);
         const user = res.rows[0];
 
-        // Liaison Discord automatique (via préfixe du BattleTag)
-        if (!user.discord_id) {
-          const namePrefix = battletag.split('#')[0];
-          const discordId = await findMemberByName(namePrefix);
-          if (discordId) {
-            await pool.query('UPDATE users SET discord_id = $1 WHERE id = $2', [discordId, user.id]);
-            user.discord_id = discordId;
-            console.log(`[Auth] Discord lié automatiquement : ${discordId} pour ${battletag}`);
-          }
-        }
-
         return done(null, user);
       } catch (error) {
         console.error('Error during auth with DB:', error);

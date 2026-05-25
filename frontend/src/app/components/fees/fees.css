@@ -7,28 +7,18 @@
 .header-section h1 { font-size: 2.5rem; font-weight: 800; color: #1e293b; margin: 0; }
 .subtitle { color: #64748b; font-size: 1.1rem; font-weight: 500; }
 
-/* Discord Banner */
-.discord-info-banner {
-  margin-bottom: 2rem;
-  padding: 1rem 1.5rem;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: #166534;
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-
-.discord-info-banner.warning {
-  background: #f8fafc;
-  border-color: #e2e8f0;
-  color: #64748b;
-}
-
-.discord-info-banner .icon { font-size: 1.25rem; }
+/* Discord Warning Section */
+.discord-warning-section { margin-bottom: 2rem; }
+.warning-card { border-color: #f59e0b; background: #fffbeb; padding: 1.5rem 2rem; }
+.warning-header { display: flex; align-items: center; gap: 10px; margin-bottom: 0.5rem; }
+.warning-header h3 { margin: 0; font-size: 1.2rem; color: #b45309; }
+.warning-icon { font-size: 1.5rem; }
+.warning-form { display: flex; gap: 1rem; margin: 1rem 0; max-width: 550px; }
+.warning-form input { flex: 1; padding: 12px; border: 2px solid #f59e0b; border-radius: 12px; font-weight: 600; }
+.btn-save { background: #f59e0b; color: white; border: none; padding: 0 20px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-save:hover { background: #d97706; transform: translateY(-2px); }
+.help-text { font-size: 0.8rem; color: #64748b; margin: 0; font-style: italic; }
+.help-text a { color: #0074e0; font-weight: 600; }
 
 .card {
   background: white;
