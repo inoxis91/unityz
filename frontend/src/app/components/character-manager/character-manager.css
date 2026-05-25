@@ -101,9 +101,9 @@ h2 {
   box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
 }
 
-.role-toggle.tank.active { background: #fef2f2; border-color: #ef4444; }
+.role-toggle.tank.active { background: #eff6ff; border-color: #3b82f6; }
 .role-toggle.heal.active { background: #f0fdf4; border-color: #22c55e; }
-.role-toggle.dps.active { background: #eff6ff; border-color: #3b82f6; }
+.role-toggle.dps.active { background: #fef2f2; border-color: #ef4444; }
 
 .actions-cell {
   text-align: center;
