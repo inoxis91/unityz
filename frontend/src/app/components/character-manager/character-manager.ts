@@ -22,14 +22,7 @@ export class CharacterManagerComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.authService.checkAuth().subscribe({
-      next: () => {
-        this.loadMyCharacters();
-      },
-      error: () => {
-        window.location.href = '/';
-      }
-    });
+    this.loadMyCharacters();
   }
 
 

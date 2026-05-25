@@ -10,14 +10,9 @@ import { CommonModule } from '@angular/common';
   styleUrl: './dashboard.css'
 })
 export class DashboardComponent implements OnInit {
-  user: User | null = null;
-
-  constructor(private authService: AuthService) {}
+  constructor(public authService: AuthService) {}
 
   ngOnInit() {
-    this.authService.checkAuth().subscribe({
-      next: (user) => this.user = user,
-      error: () => window.location.href = '/login'
-    });
+    // Redirection handled by authGuard
   }
 }

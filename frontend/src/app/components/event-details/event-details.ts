@@ -4,7 +4,7 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CalendarService, CalendarEvent, Signup } from '../../services/calendar';
 import { AuthService } from '../../services/auth';
-import { CharacterService } from '../../services/character';
+import { CharacterService, Character } from '../../services/character';
 
 @Component({
   selector: 'app-event-details',
@@ -16,7 +16,7 @@ import { CharacterService } from '../../services/character';
 export class EventDetailsComponent implements OnInit {
   event = signal<CalendarEvent | null>(null);
   signups = signal<Signup[]>([]);
-  myCharacters = signal<any[]>([]);
+  myCharacters = signal<Character[]>([]);
   activeTab = signal<'participants' | 'composition'>('participants');
   
   // Signup Form

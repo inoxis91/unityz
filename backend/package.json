@@ -20,7 +20,8 @@
     "express-session": "^1.19.0",
     "passport": "^0.7.0",
     "passport-bnet": "^2.0.0",
-    "pg": "^8.21.0"
+    "pg": "^8.21.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/axios": "^0.9.36",

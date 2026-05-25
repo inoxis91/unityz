@@ -1,11 +1,11 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FullCalendarModule } from '@fullcalendar/angular';
-import { CalendarOptions, EventClickArg } from '@fullcalendar/core';
+import { CalendarOptions, EventClickArg, DateSelectArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import { CalendarService, CalendarEvent, Signup } from '../../services/calendar';
+import { CalendarService, CalendarEvent } from '../../services/calendar';
 import { AuthService } from '../../services/auth';
 import { CharacterService } from '../../services/character';
 import { FormsModule } from '@angular/forms';
@@ -61,14 +61,7 @@ export class CalendarComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.authService.checkAuth().subscribe({
-      next: () => {
-        this.loadEvents();
-      },
-      error: () => {
-        window.location.href = '/';
-      }
-    });
+    this.loadEvents();
   }
 
   loadEvents() {
@@ -86,14 +79,14 @@ export class CalendarComponent implements OnInit {
     });
   }
 
-  handleDateClick(arg: any) {
+  handleDateClick(arg: { dateStr: string }) {
     if (!this.isAdmin()) return;
     this.newEvent.start_date = arg.dateStr;
     this.newEvent.end_date = arg.dateStr;
     this.showCreateModal.set(true);
   }
 
-  handleDateSelect(selectInfo: any) {
+  handleDateSelect(selectInfo: DateSelectArg) {
     if (!this.isAdmin()) return;
     const start = selectInfo.startStr.split('T')[0];
     this.newEvent.start_date = start;
@@ -146,11 +139,8 @@ export class CalendarComponent implements OnInit {
 
   handleEventClick(arg: EventClickArg) {
     const eventId = arg.event.id;
-    console.log('Calendar: Event clicked, navigating to ID:', eventId);
     if (eventId) {
       this.router.navigate(['/events', eventId]);
-    } else {
-      console.error('Calendar: Clicked event has no ID');
     }
   }
 }

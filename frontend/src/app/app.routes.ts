@@ -5,13 +5,35 @@ import { CharacterManagerComponent } from './components/character-manager/charac
 import { CalendarComponent } from './components/calendar/calendar';
 import { AdminComponent } from './components/admin/admin';
 import { EventDetailsComponent } from './components/event-details/event-details';
+import { authGuard } from './guards/auth.guard';
+import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
   { path: '', component: LoginComponent },
-  { path: 'dashboard', component: DashboardComponent },
-  { path: 'characters', component: CharacterManagerComponent },
-  { path: 'calendar', component: CalendarComponent },
-  { path: 'events/:id', component: EventDetailsComponent },
-  { path: 'admin', component: AdminComponent },
+  { 
+    path: 'dashboard', 
+    component: DashboardComponent, 
+    canActivate: [authGuard] 
+  },
+  { 
+    path: 'characters', 
+    component: CharacterManagerComponent, 
+    canActivate: [authGuard] 
+  },
+  { 
+    path: 'calendar', 
+    component: CalendarComponent, 
+    canActivate: [authGuard] 
+  },
+  { 
+    path: 'events/:id', 
+    component: EventDetailsComponent, 
+    canActivate: [authGuard] 
+  },
+  { 
+    path: 'admin', 
+    component: AdminComponent, 
+    canActivate: [adminGuard] 
+  },
   { path: '**', redirectTo: '' }
 ];

@@ -5,8 +5,10 @@ import { Observable, tap } from 'rxjs';
 export interface User {
   id: string;
   battletag: string;
-  bnetId: number;
+  bnet_id: number;
   is_admin: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 import { environment } from '../../environments/environment';

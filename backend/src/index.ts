@@ -4,9 +4,10 @@ import passport from './config/passport';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
-import pool, { initDb } from './lib/db';
+import { initDb } from './lib/db';
 import characterRoutes from './routes/characters';
 import eventRoutes from './routes/events';
+import { errorHandler } from './middlewares/errorHandler';
 
 dotenv.config();
 
@@ -20,12 +21,6 @@ if (process.env.NODE_ENV === 'production') {
 // Initialize Database
 initDb();
 
-console.log('--- Production Config Check ---');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
-console.log('BNET_CALLBACK_URL:', process.env.BNET_CALLBACK_URL);
-console.log('-------------------------------');
-
 app.use(cors({
   origin: [process.env.FRONTEND_URL || 'http://localhost:4200', 'https://unityz.up.railway.app'],
   credentials: true,
@@ -36,12 +31,12 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'unityz-secret',
   resave: false,
   saveUninitialized: false,
-  proxy: process.env.NODE_ENV === 'production', // Nécessaire pour Railway/HTTPS
+  proxy: process.env.NODE_ENV === 'production',
   cookie: {
     secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Permet le cookie cross-domain si besoin
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    maxAge: 24 * 60 * 60 * 1000,
   }
 }));
 
@@ -58,33 +53,19 @@ app.get('/api/auth/bnet', passport.authenticate('bnet'));
 app.get('/api/auth/bnet/callback',
   passport.authenticate('bnet', { failureRedirect: '/login' }),
   (req, res) => {
-    console.log('--- Auth Callback Triggered ---');
-    console.log('User authenticated:', req.user ? (req.user as any).battletag : 'NO USER');
-    
-    // Nettoie l'URL pour éviter les doubles slashes
-    let frontendBase = process.env.FRONTEND_URL;
-    console.log('Raw process.env.FRONTEND_URL:', frontendBase);
-
-    if (!frontendBase) {
-      console.warn('FRONTEND_URL is not set, falling back to localhost');
-      frontendBase = 'http://localhost:4200';
-    }
-
+    let frontendBase = process.env.FRONTEND_URL || 'http://localhost:4200';
     if (frontendBase.endsWith('/')) {
       frontendBase = frontendBase.slice(0, -1);
     }
-    
     const target = `${frontendBase}/dashboard`;
-    
-    console.log('Final Redirect Target:', target);
     res.redirect(target);
   }
 );
 
 app.get('/api/auth/logout', (req, res) => {
   req.logout((err) => {
-    if (err) { return res.status(500).json({ message: 'Logout failed' }); }
-    res.json({ message: 'Logged out successfully' });
+    if (err) { return res.status(500).json({ status: 'error', message: 'Logout failed' }); }
+    res.json({ status: 'success', message: 'Logged out successfully' });
   });
 });
 
@@ -92,9 +73,12 @@ app.get('/api/users/me', (req, res) => {
   if (req.isAuthenticated()) {
     res.json(req.user);
   } else {
-    res.status(401).json({ message: 'Not authenticated' });
+    res.status(401).json({ status: 'error', message: 'Not authenticated' });
   }
 });
+
+// Global Error Handler
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
