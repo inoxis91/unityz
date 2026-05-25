@@ -6,6 +6,7 @@ export interface User {
   id: string;
   battletag: string;
   bnet_id: number;
+  discord_id?: string | null;
   is_admin: boolean;
   created_at?: string;
   updated_at?: string;
@@ -24,6 +25,12 @@ export class AuthService {
 
   checkAuth(): Observable<User> {
     return this.http.get<User>(`${this.apiUrl}/users/me`, { withCredentials: true }).pipe(
+      tap(user => this.currentUser.set(user))
+    );
+  }
+
+  updateDiscordId(discordId: string | null): Observable<User> {
+    return this.http.patch<User>(`${this.apiUrl}/users/discord`, { discordId }, { withCredentials: true }).pipe(
       tap(user => this.currentUser.set(user))
     );
   }

@@ -4,6 +4,22 @@
     <p class="subtitle">Cliquez sur un mois pour déclarer un dépôt de PO.</p>
   </div>
 
+  <!-- Discord Link Section -->
+  <section class="discord-link-section animated-fade-in">
+    <div class="card discord-card">
+      <div class="discord-header">
+        <span class="discord-icon">📱</span>
+        <h3>Lien Discord</h3>
+      </div>
+      <p>Renseignez votre <strong>ID Discord</strong> pour recevoir des notifications privées lors de la validation de vos cotisations.</p>
+      <div class="discord-form">
+        <input type="text" [(ngModel)]="discordId" placeholder="ex: 123456789012345678" class="modern-input">
+        <button class="btn-save" (click)="saveDiscordId()">Enregistrer</button>
+      </div>
+      <p class="help-text">Vous pouvez trouver votre ID dans Discord (Paramètres > Avancé > Mode développeur ON, puis clic droit sur votre profil > Copier l'identifiant).</p>
+    </div>
+  </section>
+
   <!-- Visual Grid Section -->
   <section class="overview-section">
     <div class="card grid-card">

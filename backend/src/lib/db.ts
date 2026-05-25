@@ -18,13 +18,25 @@ export const initDb = async () => {
         id VARCHAR(255) PRIMARY KEY,
         bnet_id INTEGER UNIQUE NOT NULL,
         battletag VARCHAR(255) NOT NULL,
+        discord_id VARCHAR(255),
         access_token TEXT,
         is_admin BOOLEAN DEFAULT FALSE,
-        rank INTEGER, -- Deprecated
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        rank INTEGER,
+        created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // Ensure discord_id exists (migration for existing tables)
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='discord_id') THEN
+          ALTER TABLE users ADD COLUMN discord_id VARCHAR(255);
+        END IF;
+      END $$;
+    `);
+
 
     // Ensure is_admin column exists
     await client.query(`

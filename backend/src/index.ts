@@ -9,7 +9,10 @@ import characterRoutes from './routes/characters';
 import eventRoutes from './routes/events';
 import rosterRoutes from './routes/rosters';
 import feeRoutes from './routes/fees';
+import userRoutes from './routes/users';
 import { errorHandler } from './middlewares/errorHandler';
+import { initDiscord } from './lib/discord';
+import { initCronJobs } from './lib/cron';
 
 dotenv.config();
 
@@ -22,6 +25,10 @@ if (process.env.NODE_ENV === 'production') {
 
 // Initialize Database
 initDb();
+
+// Initialize Discord & Cron
+initDiscord();
+initCronJobs();
 
 app.use(cors({
   origin: [process.env.FRONTEND_URL || 'http://localhost:4200', 'https://unityz.up.railway.app'],
@@ -50,6 +57,7 @@ app.use('/api/characters', characterRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/rosters', rosterRoutes);
 app.use('/api/fees', feeRoutes);
+app.use('/api/users', userRoutes);
 
 // Auth Routes
 app.get('/api/auth/bnet', passport.authenticate('bnet'));

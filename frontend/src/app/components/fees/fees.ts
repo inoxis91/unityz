@@ -22,6 +22,7 @@ export class FeesComponent implements OnInit {
 
   showForm = signal(false);
   selectedMonthName = '';
+  discordId = '';
 
   // Form
   newDeclaration = {
@@ -40,6 +41,14 @@ export class FeesComponent implements OnInit {
   loadData() {
     this.feeService.loadMyDeclarations().subscribe();
     this.feeService.loadMyAllocations(this.displayYear()).subscribe();
+    this.discordId = this.authService.currentUser()?.discord_id || '';
+  }
+
+  saveDiscordId() {
+    this.authService.updateDiscordId(this.discordId).subscribe({
+      next: () => alert('ID Discord mis à jour ! Vous recevrez désormais vos notifications par MP.'),
+      error: () => alert('Erreur lors de la mise à jour.')
+    });
   }
 
   changeYear(delta: number) {

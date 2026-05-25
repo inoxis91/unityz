@@ -4,6 +4,7 @@ declare global {
       id: string;
       bnet_id: number;
       battletag: string;
+      discord_id?: string | null;
       access_token: string | null;
       is_admin: boolean;
       rank?: number | null;

@@ -1,4 +1,5 @@
 import pool from '../lib/db';
+import { sendDiscordDM } from '../lib/discord';
 
 export interface FeeDeclaration {
   id: string;
@@ -90,6 +91,11 @@ export class FeeService {
       if (declResult.rowCount === 0) throw new Error('Declaration not found');
       const decl = declResult.rows[0];
 
+      // Fetch user discord_id
+      const userQuery = 'SELECT discord_id FROM users WHERE id = $1';
+      const userResult = await client.query(userQuery, [decl.user_id]);
+      const discordId = userResult.rows[0]?.discord_id;
+
       // 2. If accepted, create allocations
       if (status === 'accepted') {
         const monthlyAmount = Math.floor(decl.amount / decl.duration_months);
@@ -115,6 +121,14 @@ export class FeeService {
       }
 
       await client.query('COMMIT');
+
+      // 3. Send Discord Notification (Outside transaction)
+      if (discordId) {
+        const msg = status === 'accepted' 
+          ? `✅ Votre paiement de **${decl.amount} PO** a été approuvé !`
+          : `❌ Votre paiement de **${decl.amount} PO** a été rejeté.\nMotif : ${adminComment || 'Non spécifié'}`;
+        await sendDiscordDM(discordId, msg);
+      }
     } catch (e) {
       await client.query('ROLLBACK');
       throw e;
