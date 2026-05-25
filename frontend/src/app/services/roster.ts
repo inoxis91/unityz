@@ -25,31 +25,31 @@ export class RosterService {
   constructor(private http: HttpClient) {}
 
   loadRosters(): Observable<Roster[]> {
-    return this.http.get<Roster[]>(this.apiUrl).pipe(
+    return this.http.get<Roster[]>(this.apiUrl, { withCredentials: true }).pipe(
       tap(rosters => this.rosters.set(rosters))
     );
   }
 
   loadUnassignedCharacters(): Observable<Character[]> {
-    return this.http.get<Character[]>(`${this.apiUrl}/unassigned`).pipe(
+    return this.http.get<Character[]>(`${this.apiUrl}/unassigned`, { withCredentials: true }).pipe(
       tap(chars => this.unassignedCharacters.set(chars))
     );
   }
 
   createRoster(data: Partial<Roster>): Observable<Roster> {
-    return this.http.post<Roster>(this.apiUrl, data).pipe(
+    return this.http.post<Roster>(this.apiUrl, data, { withCredentials: true }).pipe(
       tap(() => this.loadRosters().subscribe())
     );
   }
 
   updateRoster(id: string, data: Partial<Roster>): Observable<Roster> {
-    return this.http.put<Roster>(`${this.apiUrl}/${id}`, data).pipe(
+    return this.http.put<Roster>(`${this.apiUrl}/${id}`, data, { withCredentials: true }).pipe(
       tap(() => this.loadRosters().subscribe())
     );
   }
 
   deleteRoster(id: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}`).pipe(
+    return this.http.delete(`${this.apiUrl}/${id}`, { withCredentials: true }).pipe(
       tap(() => {
         this.loadRosters().subscribe();
         this.loadUnassignedCharacters().subscribe();
@@ -58,6 +58,6 @@ export class RosterService {
   }
 
   assignCharacter(characterId: string, rosterId: string | null): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/assign/${characterId}`, { rosterId });
+    return this.http.patch(`${this.apiUrl}/assign/${characterId}`, { rosterId }, { withCredentials: true });
   }
 }
