@@ -108,10 +108,7 @@
               
               <div class="char-info">
                 <span class="participant-name" [class]="'class-' + getClassCategory(s.status === 'absent' ? s.main_character_class : s.character_class)">
-                  {{ s.status === 'absent' && s.main_character_name ? s.main_character_name : s.battletag }}
-                </span>
-                <span *ngIf="s.status !== 'absent'" class="char-sub-info" [class]="'class-' + getClassCategory(s.character_class)">
-                  {{ s.character_name }}
+                  {{ s.status === 'absent' ? (s.main_character_name || 'Inconnu') : s.character_name }}
                 </span>
                 <span *ngIf="s.status === 'absent'" class="absent-label">Absent</span>
                 <span class="signup-time">{{ s.signup_date | date:'dd/MM HH:mm' }}</span>
@@ -185,7 +182,7 @@
       <h4>❌ Absents ({{ absents().length }})</h4>
       <div class="absent-pills">
         <div *ngFor="let s of absents()" class="absent-pill">
-          <span class="btag">{{ s.battletag }}</span>
+          <span class="btag" [class]="'class-' + getClassCategory(s.main_character_class)">{{ s.main_character_name || 'Inconnu' }}</span>
           <span *ngIf="s.comment" class="absent-note" [title]="s.comment">ℹ️</span>
         </div>
       </div>
