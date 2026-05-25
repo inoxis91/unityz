@@ -17,7 +17,7 @@ export interface Roster {
   providedIn: 'root'
 })
 export class RosterService {
-  private apiUrl = `${environment.apiUrl}/api/rosters`;
+  private apiUrl = `${environment.apiUrl}/rosters`;
   
   rosters = signal<Roster[]>([]);
   unassignedCharacters = signal<Character[]>([]);
