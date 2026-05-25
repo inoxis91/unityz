@@ -18,7 +18,7 @@ export interface Signup {
   id?: string;
   event_id: string;
   user_id: string;
-  character_id: string;
+  character_id: string | null;
   role: 'tank' | 'heal' | 'dps';
   status: 'signed_up' | 'confirmed' | 'standby' | 'declined' | 'absent';
   comment?: string;
@@ -62,7 +62,7 @@ export class CalendarService {
     return this.http.get<Signup[]>(`${this.apiUrl}/${eventId}/signups`, { withCredentials: true });
   }
 
-  signup(eventId: string, signupData: { character_id: string, role: string, comment?: string, status?: string }): Observable<Signup> {
+  signup(eventId: string, signupData: { character_id: string | null, role: string, comment?: string, status?: string }): Observable<Signup> {
     return this.http.post<Signup>(`${this.apiUrl}/${eventId}/signup`, signupData, { withCredentials: true });
   }
 

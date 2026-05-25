@@ -53,7 +53,7 @@ export class EventDetailsComponent implements OnInit {
   }
 
   loadEvent(id: string) {
-    this.calendarService.getEventById(id).subscribe(event => {
+    this.calendarService.getEvent(id).subscribe((event: CalendarEvent) => {
       this.event.set(event);
     });
   }
