@@ -20,11 +20,6 @@ router.get('/bnet', isAuthenticated, async (req, res, next) => {
       params: { namespace: 'profile-eu', locale: 'fr_FR' }
     });
 
-    // DEBUG: Log the full response to see why it might be empty
-    console.log('--- RAW BLIZZARD RESPONSE ---');
-    console.log(JSON.stringify(response.data, null, 2));
-    console.log('-----------------------------');
-
     const accounts = response.data.wow_accounts || [];
     let allCharacters: any[] = [];
 
