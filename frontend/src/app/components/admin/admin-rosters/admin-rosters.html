@@ -14,10 +14,9 @@
         class="character-list"
         (cdkDropListDropped)="drop($event, null)">
         @for (char of rosterService.unassignedCharacters(); track char.id) {
-          <div class="character-card" cdkDrag>
+          <div class="character-card" [class]="'border-class-' + getClassCategory(char.class)" cdkDrag>
             <div class="char-main">
               <span class="char-name" [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</span>
-              <span class="char-class" [class]="'class-' + getClassCategory(char.class)">{{ char.class }}</span>
             </div>
             <div class="char-roles">
               <span *ngIf="char.is_tank">🛡️</span>
@@ -53,10 +52,9 @@
             class="roster-list"
             (cdkDropListDropped)="drop($event, roster.id)">
             @for (char of roster.characters; track char.id) {
-              <div class="character-card" cdkDrag>
+              <div class="character-card" [class]="'border-class-' + getClassCategory(char.class)" cdkDrag>
                 <div class="char-main">
-                  <span class="char-name">{{ char.name }}</span>
-                  <span class="char-class" [class]="char.class.toLowerCase()">{{ char.class }}</span>
+                  <span class="char-name" [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</span>
                 </div>
                 <div class="char-roles">
                   <span *ngIf="char.is_tank">🛡️</span>

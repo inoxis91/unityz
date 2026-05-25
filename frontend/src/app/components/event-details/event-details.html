@@ -111,7 +111,7 @@
                   {{ s.status === 'absent' && s.main_character_name ? s.main_character_name : s.battletag }}
                 </span>
                 <span *ngIf="s.status !== 'absent'" class="char-sub-info" [class]="'class-' + getClassCategory(s.character_class)">
-                  {{ s.character_name }} ({{ s.character_class }})
+                  {{ s.character_name }}
                 </span>
                 <span *ngIf="s.status === 'absent'" class="absent-label">Absent</span>
                 <span class="signup-time">{{ s.signup_date | date:'dd/MM HH:mm' }}</span>

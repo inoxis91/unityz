@@ -14,14 +14,13 @@
           <th>Main</th>
           <th>Nom</th>
           <th>Royaume</th>
-          <th>Classe</th>
           <th>Niv.</th>
           <th>Rôles</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let char of myCharacters()" [class.is-main]="char.is_main">
+        <tr *ngFor="let char of myCharacters()" [class.is-main]="char.is_main" [class]="'border-class-' + getClassCategory(char.class)">
           <td class="main-cell">
             <span class="main-star" (click)="setMain(char)" [title]="char.is_main ? 'Personnage principal' : 'Définir comme principal'">
               {{ char.is_main ? '⭐' : '☆' }}
@@ -29,7 +28,6 @@
           </td>
           <td class="char-name-cell" [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</td>
           <td>{{ char.realm }}</td>
-          <td [class]="'class-' + getClassCategory(char.class)">{{ char.class }}</td>
           <td>{{ char.level }}</td>
           <td class="roles-cell">
             <label><input type="checkbox" [(ngModel)]="char.is_tank" (change)="updateRoles(char)"> Tank</label>
@@ -56,10 +54,10 @@
     </div>
 
     <div *ngIf="bnetCharacters().length > 0" class="bnet-list">
-      <div *ngFor="let char of bnetCharacters()" class="bnet-char-card">
+      <div *ngFor="let char of bnetCharacters()" class="bnet-char-card" [class]="'border-class-' + getClassCategory(char.class)">
         <div class="char-info">
           <strong [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</strong>
-          <span>{{ char.class }} - {{ char.realm }} (Niv. {{ char.level }})</span>
+          <span>{{ char.realm }} (Niv. {{ char.level }})</span>
         </div>
         <button (click)="importCharacter(char)" class="btn-import">Ajouter</button>
       </div>

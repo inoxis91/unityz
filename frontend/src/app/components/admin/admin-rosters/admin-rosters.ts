@@ -10,7 +10,7 @@ import {
   DragDropModule 
 } from '@angular/cdk/drag-drop';
 import { RosterService, Roster } from '../../../services/roster';
-import { Character } from '../../../services/character';
+import { CharacterService, Character } from '../../../services/character';
 
 @Component({
   selector: 'app-admin-rosters',
