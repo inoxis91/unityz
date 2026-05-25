@@ -41,8 +41,7 @@ export class FeesComponent implements OnInit {
 
   getDefaultStartMonth(): string {
     const d = new Date();
-    d.setDate(1);
-    return d.toISOString().split('T')[0];
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   }
 
   getMonthStatus(monthIndex: number) {
@@ -61,7 +60,13 @@ export class FeesComponent implements OnInit {
   }
 
   onSubmit() {
-    this.feeService.declarePayment(this.newDeclaration).subscribe({
+    // Convert YYYY-MM from input to YYYY-MM-01 for backend
+    const submissionData = {
+      ...this.newDeclaration,
+      start_month: `${this.newDeclaration.start_month}-01`
+    };
+
+    this.feeService.declarePayment(submissionData).subscribe({
       next: () => {
         this.loadData();
         this.newDeclaration = {
