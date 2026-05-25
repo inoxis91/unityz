@@ -1,10 +1,22 @@
 import express from 'express';
+import pool from '../lib/db';
 import { EventService } from '../services/eventService';
 import { isAuthenticated, isAdmin } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import { createEventSchema, updateEventSchema, signupSchema } from '../schemas/eventSchemas';
 
 const router = express.Router();
+
+// GET /api/events/my-signups : Récupère les inscriptions de l'utilisateur
+router.get('/my-signups', isAuthenticated, async (req, res, next) => {
+  try {
+    const query = 'SELECT * FROM event_signups WHERE user_id = $1';
+    const result = await pool.query(query, [req.user!.id]);
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+});
 
 // GET /api/events : Récupère tous les événements
 router.get('/', isAuthenticated, async (req, res, next) => {

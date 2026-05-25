@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import { CharacterService, Character } from '../../services/character';
-import { CalendarService, CalendarEvent } from '../../services/calendar';
+import { CalendarService, CalendarEvent, Signup } from '../../services/calendar';
 import { RosterService, Roster } from '../../services/roster';
 
 @Component({
@@ -16,6 +16,7 @@ import { RosterService, Roster } from '../../services/roster';
 export class DashboardComponent implements OnInit, OnDestroy {
   myCharacters = signal<Character[]>([]);
   upcomingEvents = signal<CalendarEvent[]>([]);
+  mySignups = signal<Signup[]>([]);
   myRoster = signal<Roster | null>(null);
   currentTime = signal(new Date());
   private timerInterval: any;
@@ -54,8 +55,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.upcomingEvents.set(upcoming);
     });
 
+    // Load signups
+    this.calendarService.getMySignups().subscribe(signups => this.mySignups.set(signups));
+
     // Load roster
     this.rosterService.getMyRoster().subscribe(roster => this.myRoster.set(roster));
+  }
+
+  getSignupStatus(eventId: string | undefined): Signup | undefined {
+    if (!eventId) return undefined;
+    return this.mySignups().find(s => s.event_id === eventId);
   }
 
   getCountdown(startTime: string): string {

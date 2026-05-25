@@ -64,7 +64,23 @@
             <div class="event-main">
               <div class="event-type" [class]="event.type.toLowerCase()">{{ event.type }}</div>
               <h3>{{ event.title }}</h3>
-              <span class="time">{{ event.start_time | date:'HH:mm' }}</span>
+              
+              <div class="event-status-row">
+                <span class="time">{{ event.start_time | date:'HH:mm' }}</span>
+                
+                @if (getSignupStatus(event.id); as signup) {
+                  <span class="status-indicator" [class]="signup.status">
+                    <ng-container [ngSwitch]="signup.status">
+                      <span *ngSwitchCase="'signed_up'">✅ Inscrit</span>
+                      <span *ngSwitchCase="'standby'">❓ En attente</span>
+                      <span *ngSwitchCase="'absent'">❌ Absent</span>
+                      <span *ngSwitchDefault>✅ Inscrit</span>
+                    </ng-container>
+                  </span>
+                } @else {
+                  <span class="status-indicator none">⏳ Non inscrit</span>
+                }
+              </div>
             </div>
             <div class="event-countdown">
               <span class="timer-icon">⏳</span>
@@ -95,7 +111,7 @@
               <span class="realm">{{ char.realm }}</span>
             </div>
             <div class="char-meta">
-              <span class="lvl">v{{ char.level }}</span>
+              <span class="lvl">{{ char.level }}</span>
               <span class="main-star" *ngIf="char.is_main">⭐</span>
             </div>
           </div>

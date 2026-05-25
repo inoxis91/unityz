@@ -69,4 +69,8 @@ export class CalendarService {
   unsignup(eventId: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${eventId}/signup`, { withCredentials: true });
   }
+
+  getMySignups(): Observable<Signup[]> {
+    return this.http.get<Signup[]>(`${this.apiUrl}/my-signups`, { withCredentials: true });
+  }
 }
