@@ -70,4 +70,8 @@ export class FeeService {
   resolveDeclaration(id: string, status: 'accepted' | 'rejected', adminComment?: string): Observable<any> {
     return this.http.patch(`${this.apiUrl}/resolve/${id}`, { status, admin_comment: adminComment }, { withCredentials: true });
   }
+
+  adjustAllocation(userId: string, monthDate: string, amount: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/adjust-allocation`, { userId, monthDate, amount }, { withCredentials: true });
+  }
 }

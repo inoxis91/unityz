@@ -18,3 +18,11 @@ export const resolveDeclarationSchema = z.object({
     admin_comment: z.string().max(1000).optional().nullable(),
   }),
 });
+
+export const adjustAllocationSchema = z.object({
+  body: z.object({
+    userId: z.string().uuid().or(z.string().min(1)), // Can be UUID or string Bnet ID
+    monthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    amount: z.number().int().min(0),
+  }),
+});

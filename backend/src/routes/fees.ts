@@ -2,7 +2,7 @@ import express from 'express';
 import { FeeService } from '../services/feeService';
 import { isAuthenticated, isAdmin } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
-import { createDeclarationSchema, resolveDeclarationSchema } from '../schemas/feeSchemas';
+import { createDeclarationSchema, resolveDeclarationSchema, adjustAllocationSchema } from '../schemas/feeSchemas';
 
 const router = express.Router();
 
@@ -64,6 +64,17 @@ router.patch('/resolve/:id', isAdmin, validate(resolveDeclarationSchema), async 
     const id = req.params.id as string;
     await FeeService.resolveDeclaration(id, req.body.status, req.body.admin_comment);
     res.json({ status: 'success', message: `Declaration ${req.body.status}` });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/fees/adjust-allocation : Ajustement manuel d'une cotisation (Admin)
+router.post('/adjust-allocation', isAdmin, validate(adjustAllocationSchema), async (req, res, next) => {
+  try {
+    const { userId, monthDate, amount } = req.body;
+    await FeeService.upsertAllocation(userId, monthDate, amount);
+    res.json({ status: 'success', message: 'Allocation adjusted successfully' });
   } catch (error) {
     next(error);
   }

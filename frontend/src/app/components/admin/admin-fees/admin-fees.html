@@ -38,6 +38,17 @@
 
   <!-- TAB: Guild Overview -->
   <div class="tab-content" *ngIf="activeSubTab() === 'guild'">
+    <div class="overview-header">
+      <div class="year-nav">
+        <button class="btn-year" (click)="changeYear(-1)">◀</button>
+        <h2>{{ displayYear() }}</h2>
+        <button class="btn-year" (click)="changeYear(1)">▶</button>
+      </div>
+      <div class="overview-legend">
+        <span class="legend-item">Cliquez sur une case pour modifier manuellement</span>
+      </div>
+    </div>
+
     <div class="overview-table-wrapper">
       <table class="guild-overview-table">
         <thead>
@@ -53,9 +64,12 @@
             <tr>
               <td class="user-cell">{{ user.battletag }}</td>
               @for (m of months; track m.index) {
-                <td class="status-cell">
-                  <div class="status-box" [class]="getUserMonthStatus(user, m.index).class">
-                    {{ getUserMonthStatus(user, m.index).icon }}
+                <td class="status-cell" (click)="openAdjustModal(user, m.index)">
+                  <div class="status-box" [class]="getUserMonthStatus(user, m.index).class" [title]="getUserMonthStatus(user, m.index).amount + ' PO'">
+                    <span class="status-icon">{{ getUserMonthStatus(user, m.index).icon }}</span>
+                    <span class="status-amount" *ngIf="getUserMonthStatus(user, m.index).amount > 0">
+                      {{ getUserMonthStatus(user, m.index).amount >= 1000 ? (getUserMonthStatus(user, m.index).amount / 1000).toFixed(1) + 'k' : getUserMonthStatus(user, m.index).amount }}
+                    </span>
                   </div>
                 </td>
               }
@@ -81,6 +95,28 @@
     <div class="modal-footer">
       <button class="btn-secondary" (click)="closeRejectModal()">Annuler</button>
       <button class="btn-danger" (click)="onReject()">Confirmer le refus</button>
+    </div>
+  </div>
+</div>
+
+<!-- Adjustment Modal -->
+<div class="modal-backdrop" *ngIf="showAdjustModal()">
+  <div class="modal">
+    <h3>Ajustement Manuel</h3>
+    <p>Membre : <strong>{{ adjustingUser?.battletag }}</strong></p>
+    <p>Période : <strong>{{ months[adjustingMonthIndex-1]?.name }} {{ displayYear() }}</strong></p>
+
+    <div class="form-group">
+      <label>Montant total des PO pour ce mois</label>
+      <div class="input-with-icon">
+        <input type="number" [(ngModel)]="adjustingAmount" class="modern-input">
+        <span class="unit">PO</span>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="showAdjustModal.set(false)">Annuler</button>
+      <button class="btn-primary" (click)="onSaveAdjustment()">Enregistrer</button>
     </div>
   </div>
 </div>

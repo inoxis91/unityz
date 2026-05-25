@@ -122,4 +122,16 @@ export class FeeService {
       client.release();
     }
   }
+
+  static async upsertAllocation(userId: string, monthDate: string, amount: number): Promise<void> {
+    const query = `
+      INSERT INTO fee_allocations (user_id, month_date, amount)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (user_id, month_date) 
+      DO UPDATE SET 
+        amount = EXCLUDED.amount,
+        updated_at = CURRENT_TIMESTAMP
+    `;
+    await pool.query(query, [userId, monthDate, amount]);
+  }
 }
