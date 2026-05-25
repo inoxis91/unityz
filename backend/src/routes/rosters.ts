@@ -1,10 +1,27 @@
 import express from 'express';
+import pool from '../lib/db';
 import { RosterService } from '../services/rosterService';
-import { isAdmin } from '../middlewares/auth';
+import { isAdmin, isAuthenticated } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import { createRosterSchema, updateRosterSchema, assignCharacterSchema } from '../schemas/rosterSchemas';
 
 const router = express.Router();
+
+// GET /api/rosters/my-roster : Récupère le roster du personnage principal de l'utilisateur
+router.get('/my-roster', isAuthenticated, async (req, res, next) => {
+  try {
+    const query = `
+      SELECT r.* 
+      FROM rosters r
+      JOIN characters c ON r.id = c.roster_id
+      WHERE c.user_id = $1 AND c.is_main = TRUE
+    `;
+    const result = await pool.query(query, [req.user!.id]);
+    res.json(result.rows[0] || null);
+  } catch (error) {
+    next(error);
+  }
+});
 
 // GET /api/rosters : Récupère tous les rosters avec leurs personnages
 router.get('/', isAdmin, async (req, res, next) => {

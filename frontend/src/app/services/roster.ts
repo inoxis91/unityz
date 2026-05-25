@@ -36,6 +36,10 @@ export class RosterService {
     );
   }
 
+  getMyRoster(): Observable<Roster | null> {
+    return this.http.get<Roster | null>(`${this.apiUrl}/my-roster`, { withCredentials: true });
+  }
+
   createRoster(data: Partial<Roster>): Observable<Roster> {
     return this.http.post<Roster>(this.apiUrl, data, { withCredentials: true }).pipe(
       tap(() => this.loadRosters().subscribe())

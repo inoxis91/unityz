@@ -1,13 +1,113 @@
-<div class="dashboard-container" *ngIf="authService.currentUser() as user">
-  <h2>Tableau de bord</h2>
-  <div class="user-info">
-    <p>Connecté en tant que : <strong>{{ user.battletag }}</strong></p>
-    <p>ID Battle.net : {{ user.bnet_id }}</p>
-  </div>
+<div class="dashboard-wrapper animated-fade-in" *ngIf="authService.currentUser() as user">
   
-  <div class="roster-section">
-    <h3>Vos Personnages</h3>
-    <p>Récupération des personnages depuis Battle.net en cours...</p>
-    <!-- On ajoutera la liste des persos ici plus tard -->
+  <!-- Hero Section: Welcome & Roster -->
+  <section class="hero-section">
+    <div class="welcome-box">
+      <div class="user-main-info">
+        <span class="greeting">Bon retour,</span>
+        <h1>{{ mainCharacter()?.name || user.battletag }}</h1>
+      </div>
+      
+      <div class="roster-info-card" *ngIf="myRoster() as roster; else noRoster">
+        <span class="label">Roster Actuel</span>
+        <div class="roster-details">
+          <span class="roster-icon">🛡️</span>
+          <div class="roster-text">
+            <h3>{{ roster.name }}</h3>
+            <p>{{ roster.description }}</p>
+          </div>
+        </div>
+      </div>
+      <ng-template #noRoster>
+        <div class="roster-info-card unassigned">
+          <p>Vous n'êtes assigné à aucun roster pour le moment.</p>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Main Character Display -->
+    <div class="main-char-display" *ngIf="mainCharacter() as char" [class]="'bg-class-' + getClassCategory(char.class)">
+      <div class="char-top">
+        <span class="level">Niveau {{ char.level }}</span>
+        <span class="main-badge">MAIN</span>
+      </div>
+      <div class="char-body">
+        <h2>{{ char.name }}</h2>
+        <span class="realm">{{ char.realm }}</span>
+      </div>
+      <div class="char-footer">
+        <div class="roles">
+          <span *ngIf="char.is_tank" title="Tank">🛡️</span>
+          <span *ngIf="char.is_heal" title="Healer">🌿</span>
+          <span *ngIf="char.is_dps" title="DPS">⚔️</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="dashboard-grid">
+    
+    <!-- Upcoming Events Column -->
+    <section class="events-column">
+      <div class="section-header">
+        <h2>Événements à venir</h2>
+        <a routerLink="/calendar" class="view-all">Tout voir →</a>
+      </div>
+
+      <div class="events-list">
+        @for (event of upcomingEvents(); track event.id) {
+          <div class="event-card" [routerLink]="['/events', event.id]">
+            <div class="event-date">
+              <span class="day">{{ event.start_time | date:'dd' }}</span>
+              <span class="month">{{ event.start_time | date:'MMM' }}</span>
+            </div>
+            <div class="event-main">
+              <div class="event-type" [class]="event.type.toLowerCase()">{{ event.type }}</div>
+              <h3>{{ event.title }}</h3>
+              <span class="time">{{ event.start_time | date:'HH:mm' }}</span>
+            </div>
+            <div class="event-countdown">
+              <span class="timer-icon">⏳</span>
+              <span class="timer-text">{{ getCountdown(event.start_time) }}</span>
+            </div>
+          </div>
+        }
+        @if (upcomingEvents().length === 0) {
+          <div class="empty-state">
+            <p>Aucun événement prévu prochainement.</p>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- My Characters Column -->
+    <section class="chars-column">
+      <div class="section-header">
+        <h2>Mes Personnages</h2>
+        <a routerLink="/characters" class="view-all">Gérer →</a>
+      </div>
+
+      <div class="chars-grid">
+        @for (char of myCharacters(); track char.id) {
+          <div class="simple-char-card" [class]="'border-class-' + getClassCategory(char.class)">
+            <div class="char-info">
+              <span class="name" [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</span>
+              <span class="realm">{{ char.realm }}</span>
+            </div>
+            <div class="char-meta">
+              <span class="lvl">v{{ char.level }}</span>
+              <span class="main-star" *ngIf="char.is_main">⭐</span>
+            </div>
+          </div>
+        }
+        @if (myCharacters().length === 0) {
+          <div class="empty-state">
+            <p>Aucun personnage lié.</p>
+            <button class="btn-import" routerLink="/characters">Importer</button>
+          </div>
+        }
+      </div>
+    </section>
+
   </div>
 </div>
