@@ -32,7 +32,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     
     for (let i = 0; i < 3; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-      const dateStr = d.toISOString().split('T')[0].substring(0, 7);
+      // Manually construct YYYY-MM in local time to avoid timezone shifts
+      const year = d.getFullYear();
+      const monthNum = d.getMonth() + 1;
+      const dateStr = `${year}-${String(monthNum).padStart(2, '0')}`;
+      
       const alloc = this.myAllocations().find(a => a.month_date.startsWith(dateStr));
       
       const monthName = d.toLocaleDateString('fr-FR', { month: 'long' });

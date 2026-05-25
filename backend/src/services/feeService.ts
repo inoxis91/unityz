@@ -93,12 +93,14 @@ export class FeeService {
       // 2. If accepted, create allocations
       if (status === 'accepted') {
         const monthlyAmount = Math.floor(decl.amount / decl.duration_months);
-        let startDate = new Date(decl.start_month);
-
+        
+        // Parsing the date string directly to avoid timezone shifts
+        const [year, month, day] = decl.start_month.split('-').map(Number);
+        
         for (let i = 0; i < decl.duration_months; i++) {
-          const allocMonth = new Date(startDate);
-          allocMonth.setMonth(startDate.getMonth() + i);
-          const monthStr = allocMonth.toISOString().split('T')[0];
+          const currentMonth = month + i - 1; // 0-indexed for Date constructor
+          const allocDate = new Date(Date.UTC(year, currentMonth, 1));
+          const monthStr = allocDate.toISOString().split('T')[0];
 
           const allocQuery = `
             INSERT INTO fee_allocations (user_id, month_date, amount)
