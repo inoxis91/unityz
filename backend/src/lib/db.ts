@@ -69,7 +69,7 @@ export const initDb = async () => {
     await client.query(`
       CREATE TABLE IF NOT EXISTS fee_declarations (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE,
         amount INTEGER NOT NULL,
         start_month DATE NOT NULL,
         duration_months INTEGER NOT NULL DEFAULT 1,
@@ -85,7 +85,7 @@ export const initDb = async () => {
     await client.query(`
       CREATE TABLE IF NOT EXISTS fee_allocations (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE,
         month_date DATE NOT NULL,
         amount INTEGER NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

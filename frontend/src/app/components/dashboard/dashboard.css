@@ -234,7 +234,7 @@
 }
 
 .event-type.raid { background: #fee2e2; color: #ef4444; }
-.event-type.mm+ { background: #f3e8ff; color: #9333ea; }
+.event-type.mm\+ { background: #f3e8ff; color: #9333ea; }
 
 .event-main h3 { margin: 0; font-size: 1.15rem; color: #0f172a; }
 
