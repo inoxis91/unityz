@@ -2,69 +2,8 @@
   <h1>Espace Administrateur</h1>
 
   <div class="admin-tabs">
-    <button [class.active]="activeTab() === 'events'" (click)="activeTab.set('events')">Événements</button>
     <button [class.active]="activeTab() === 'rosters'" (click)="activeTab.set('rosters')">Rosters</button>
     <button [class.active]="activeTab() === 'fees'" (click)="activeTab.set('fees')">Cotisations</button>
-  </div>
-
-  <div class="tab-content" *ngIf="activeTab() === 'events'">
-    <section class="event-management">
-      <h2>Créer un événement</h2>
-      <form (ngSubmit)="onSubmit()" class="event-form">
-        <div class="form-group">
-          <label>Titre</label>
-          <input type="text" [(ngModel)]="newEvent.title" name="title" required>
-        </div>
-        <div class="form-group">
-          <label>Description</label>
-          <textarea [(ngModel)]="newEvent.description" name="description"></textarea>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Début</label>
-            <input type="datetime-local" [(ngModel)]="newEvent.start_time" name="start_time" required>
-          </div>
-          <div class="form-group">
-            <label>Fin</label>
-            <input type="datetime-local" [(ngModel)]="newEvent.end_time" name="end_time" required>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Type</label>
-          <select [(ngModel)]="newEvent.type" name="type">
-            <option value="raid">Raid</option>
-            <option value="other">Autre</option>
-          </select>
-        </div>
-        <button type="submit" class="btn-submit">Créer l'événement</button>
-      </form>
-    </section>
-
-    <hr>
-
-    <section class="events-list">
-      <h2>Événements existants</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Titre</th>
-            <th>Date</th>
-            <th>Type</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let event of events()">
-            <td>{{ event.title }}</td>
-            <td>{{ event.start_time | date:'short' }}</td>
-            <td>{{ event.type }}</td>
-            <td>
-              <button class="btn-delete" (click)="deleteEvent(event.id!)">Supprimer</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
   </div>
 
   <div class="tab-content" *ngIf="activeTab() === 'rosters'">
