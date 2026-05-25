@@ -8,9 +8,16 @@
   font-family: Arial, sans-serif;
 }
 
-.nav-brand {
-  font-size: 1.5rem;
-  font-weight: bold;
+.navbar-brand {
+  font-size: 1.8rem;
+  font-weight: 800;
+  cursor: pointer;
+  letter-spacing: -0.02em;
+  transition: opacity 0.2s;
+}
+
+.navbar-brand:hover {
+  opacity: 0.8;
 }
 
 .nav-links {
