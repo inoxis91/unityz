@@ -6,6 +6,7 @@ export interface User {
   id: string;
   battletag: string;
   bnetId: number;
+  is_admin: boolean;
 }
 
 import { environment } from '../../environments/environment';

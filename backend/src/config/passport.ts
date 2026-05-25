@@ -2,6 +2,7 @@ import passport from 'passport';
 import { Strategy as BnetStrategy } from 'passport-bnet';
 import pool from '../lib/db';
 import dotenv from 'dotenv';
+import axios from 'axios';
 
 dotenv.config();
 
@@ -22,14 +23,14 @@ passport.use(
     },
     async (accessToken: string, refreshToken: string, profile: any, done: any) => {
       try {
-        console.log('Battle.net Profile received:', profile);
+        console.log('Battle.net Profile received:', profile.battletag);
         
         const bnetId = parseInt(profile.id, 10);
         const battletag = profile.battletag;
-        // Le token est passé séparément par passport-bnet
         const tokenToStore = accessToken || profile.token;
 
         // Utilisation de SQL brut pour Upsert (INSERT ... ON CONFLICT)
+        // On ne met pas à jour 'is_admin' ici pour qu'il soit géré manuellement en DB
         const query = `
           INSERT INTO users (id, bnet_id, battletag, access_token, updated_at)
           VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)

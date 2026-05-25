@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 
 import pool, { initDb } from './lib/db';
 import characterRoutes from './routes/characters';
+import eventRoutes from './routes/events';
 
 dotenv.config();
 
@@ -49,6 +50,7 @@ app.use(passport.session());
 
 // Routes
 app.use('/api/characters', characterRoutes);
+app.use('/api/events', eventRoutes);
 
 // Auth Routes
 app.get('/api/auth/bnet', passport.authenticate('bnet'));

@@ -74,12 +74,40 @@ router.get('/bnet', isAuthenticated, async (req: any, res: any) => {
 // GET /api/characters : Récupère les personnages de l'utilisateur stockés en DB
 router.get('/', isAuthenticated, async (req: any, res: any) => {
   try {
-    const query = 'SELECT * FROM characters WHERE user_id = $1 ORDER BY name ASC';
+    const query = 'SELECT * FROM characters WHERE user_id = $1 ORDER BY is_main DESC, name ASC';
     const result = await pool.query(query, [req.user.id]);
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching DB characters:', error);
     res.status(500).json({ message: 'Failed to fetch characters from database' });
+  }
+});
+
+// PATCH /api/characters/:id/main : Définit un personnage comme "Main"
+router.patch('/:id/main', isAuthenticated, async (req: any, res: any) => {
+  const { id } = req.params;
+
+  try {
+    // 1. Désactiver le statut "main" de tous les autres persos de l'utilisateur
+    await pool.query('UPDATE characters SET is_main = FALSE WHERE user_id = $1', [req.user.id]);
+    
+    // 2. Définir le perso sélectionné comme "main"
+    const query = `
+      UPDATE characters 
+      SET is_main = TRUE, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1 AND user_id = $2
+      RETURNING *
+    `;
+    const result = await pool.query(query, [id, req.user.id]);
+    
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Character not found or not owned by user' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error setting main character:', error);
+    res.status(500).json({ message: 'Failed to set main character' });
   }
 });
 

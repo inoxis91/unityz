@@ -19,9 +19,21 @@ export const initDb = async () => {
         bnet_id INTEGER UNIQUE NOT NULL,
         battletag VARCHAR(255) NOT NULL,
         access_token TEXT,
+        is_admin BOOLEAN DEFAULT FALSE,
+        rank INTEGER, -- Deprecated
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+    `);
+
+    // Ensure is_admin column exists
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='is_admin') THEN
+          ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT FALSE;
+        END IF;
+      END $$;
     `);
 
     // Characters table
@@ -36,10 +48,62 @@ export const initDb = async () => {
         is_tank BOOLEAN DEFAULT FALSE,
         is_heal BOOLEAN DEFAULT FALSE,
         is_dps BOOLEAN DEFAULT FALSE,
+        is_main BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(name, realm, user_id)
       );
+    `);
+
+    // Ensure is_main column exists
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='characters' AND column_name='is_main') THEN
+          ALTER TABLE characters ADD COLUMN is_main BOOLEAN DEFAULT FALSE;
+        END IF;
+      END $$;
+    `);
+
+    // Events table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS events (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        start_time TIMESTAMP NOT NULL,
+        end_time TIMESTAMP NOT NULL,
+        type VARCHAR(50) NOT NULL, -- 'raid', 'other'
+        created_by VARCHAR(255) REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Event signups table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS event_signups (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        event_id UUID REFERENCES events(id) ON DELETE CASCADE,
+        user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE,
+        character_id UUID REFERENCES characters(id) ON DELETE CASCADE,
+        role VARCHAR(50), -- 'tank', 'heal', 'dps'
+        status VARCHAR(50) DEFAULT 'signed_up', -- 'signed_up', 'confirmed', 'standby', 'declined'
+        comment TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(event_id, user_id) -- One character per user per event
+      );
+    `);
+
+    // Ensure comment column exists
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='event_signups' AND column_name='comment') THEN
+          ALTER TABLE event_signups ADD COLUMN comment TEXT;
+        END IF;
+      END $$;
     `);
 
     console.log('Database tables initialized successfully.');

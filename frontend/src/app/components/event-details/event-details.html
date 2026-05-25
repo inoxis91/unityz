@@ -1,0 +1,194 @@
+<div class="details-container" *ngIf="event()">
+  <div class="back-link">
+    <a routerLink="/calendar">← Retour au calendrier</a>
+  </div>
+
+  <div class="event-header-card">
+    <div class="event-title-row">
+      <div class="type-badge" [class]="event()?.type?.toLowerCase()">{{ event()?.type }}</div>
+      <h1>{{ event()?.title }}</h1>
+    </div>
+    <div class="event-meta">
+      <div class="meta-item">
+        <span class="icon">📅</span>
+        <span class="text">{{ event()?.start_time | date:'EEEE d MMMM yyyy' : '' : 'fr' }}</span>
+      </div>
+      <div class="meta-item">
+        <span class="icon">🕒</span>
+        <span class="text">{{ event()?.start_time | date:'HH:mm' }} - {{ event()?.end_time | date:'HH:mm' }}</span>
+      </div>
+      <div class="meta-item" *ngIf="event()?.description">
+        <span class="icon">📝</span>
+        <span class="text">{{ event()?.description }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button [class.active]="activeTab() === 'participants'" (click)="activeTab.set('participants')">Participants</button>
+    <button [class.active]="activeTab() === 'composition'" (click)="activeTab.set('composition')">Composition</button>
+  </div>
+
+  <!-- TAB: Participants -->
+  <div class="tab-content" *ngIf="activeTab() === 'participants'">
+    <div class="content-grid">
+      <!-- Signup Form -->
+      <div class="form-card">
+        <h3>Votre inscription</h3>
+        
+        <div class="status-selector">
+          <button [class.active]="signupStatus === 'signed_up'" (click)="setStatus('signed_up')" class="status-btn present">
+            <span class="dot"></span> Présent
+          </button>
+          <button [class.active]="signupStatus === 'standby'" (click)="setStatus('standby')" class="status-btn standby">
+            <span class="dot"></span> Peut-être
+          </button>
+          <button [class.active]="signupStatus === 'absent'" (click)="setStatus('absent')" class="status-btn absent">
+            <span class="dot"></span> Absent
+          </button>
+        </div>
+
+        <div class="signup-fields animated-fade-in" *ngIf="signupStatus !== 'absent'">
+          <div class="form-group" *ngIf="myCharacters().length > 0; else noChars">
+            <label>Sélectionnez votre personnage :</label>
+            <select [(ngModel)]="selectedCharacterId" class="modern-select">
+              <option *ngFor="let char of myCharacters()" [value]="char.id">{{ char.name }} ({{ char.class }})</option>
+            </select>
+          </div>
+          <ng-template #noChars>
+            <div class="warning-box">
+              <p>⚠️ Aucun personnage trouvé. <a routerLink="/characters">Importez vos personnages</a> pour vous inscrire.</p>
+            </div>
+          </ng-template>
+
+          <div class="form-group" *ngIf="myCharacters().length > 0">
+            <label>Votre rôle pour cet événement :</label>
+            <div class="role-selector">
+              <button [class.active]="selectedRole === 'tank'" (click)="selectedRole = 'tank'">🛡️ Tank</button>
+              <button [class.active]="selectedRole === 'heal'" (click)="selectedRole = 'heal'">🌿 Heal</button>
+              <button [class.active]="selectedRole === 'dps'" (click)="selectedRole = 'dps'">⚔️ DPS</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Commentaire / Note :</label>
+          <textarea [(ngModel)]="comment" placeholder="Ex: Un peu de retard possible..." rows="3"></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="btn-action confirm" (click)="onSignup()">
+            <span class="icon">💾</span> Enregistrer mon choix
+          </button>
+        </div>
+      </div>
+
+      <!-- List of signups -->
+      <div class="list-card">
+        <div class="list-header">
+          <h3>Liste des participants</h3>
+          <span class="count-badge">{{ signups().length }}</span>
+        </div>
+        
+        <div class="participants-grid">
+          <div *ngFor="let s of signups()" class="participant-card" [class]="s.status" [class.is-absent]="s.status === 'absent'">
+            <div class="participant-main">
+              <div class="role-icon-box" *ngIf="s.status !== 'absent'">
+                <span class="role-icon" [class]="s.role">
+                  <ng-container [ngSwitch]="s.role">
+                    <span *ngSwitchCase="'tank'">🛡️</span>
+                    <span *ngSwitchCase="'heal'">🌿</span>
+                    <span *ngSwitchCase="'dps'">⚔️</span>
+                  </ng-container>
+                </span>
+              </div>
+              <div class="role-icon-box absent" *ngIf="s.status === 'absent'">
+                <span class="role-icon">❌</span>
+              </div>
+              
+              <div class="char-info">
+                <span class="participant-name" [class]="s.status === 'absent' && s.main_character_class ? s.main_character_class.toLowerCase() : ''">
+                  {{ s.status === 'absent' && s.main_character_name ? s.main_character_name : s.battletag }}
+                </span>
+                <span *ngIf="s.status !== 'absent'" class="char-sub-info" [class]="s.character_class?.toLowerCase()">
+                  {{ s.character_name }} ({{ s.character_class }})
+                </span>
+                <span *ngIf="s.status === 'absent'" class="absent-label">Absent</span>
+                <span class="signup-time">{{ s.signup_date | date:'dd/MM HH:mm' }}</span>
+              </div>
+
+              <div class="status-indicators">
+                <div class="status-pill present" *ngIf="s.status === 'signed_up'" title="Présent">✅</div>
+                <div class="status-pill standby" *ngIf="s.status === 'standby'" title="Peut-être">❓</div>
+                <div class="status-pill absent" *ngIf="s.status === 'absent'" title="Absent">❌</div>
+              </div>
+            </div>
+            
+            <div class="participant-comment" *ngIf="s.comment">
+              <p>"{{ s.comment }}"</p>
+            </div>
+          </div>
+          
+          <div *ngIf="signups().length === 0" class="empty-state">
+            <div class="empty-icon">👥</div>
+            <p>Aucun inscrit pour le moment</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Composition -->
+  <div class="tab-content" *ngIf="activeTab() === 'composition'">
+    <div class="composition-view">
+      <div class="role-column tanks">
+        <h4>🛡️ Tanks ({{ tanks().length }})</h4>
+        <div class="comp-list">
+          <div *ngFor="let s of tanks()" class="comp-item" [class]="s.character_class?.toLowerCase()" [class.is-standby]="s.status === 'standby'">
+            <div class="name-row">
+              <span class="name">{{ s.character_name }}</span>
+              <span *ngIf="s.status === 'standby'" class="maybe-tag">?</span>
+            </div>
+            <span class="sub">{{ s.character_class }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="role-column heals">
+        <h4>🌿 Heals ({{ heals().length }})</h4>
+        <div class="comp-list">
+          <div *ngFor="let s of heals()" class="comp-item" [class]="s.character_class?.toLowerCase()" [class.is-standby]="s.status === 'standby'">
+            <div class="name-row">
+              <span class="name">{{ s.character_name }}</span>
+              <span *ngIf="s.status === 'standby'" class="maybe-tag">?</span>
+            </div>
+            <span class="sub">{{ s.character_class }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="role-column dps">
+        <h4>⚔️ DPS ({{ dps().length }})</h4>
+        <div class="comp-list dps-grid">
+          <div *ngFor="let s of dps()" class="comp-item" [class]="s.character_class?.toLowerCase()" [class.is-standby]="s.status === 'standby'">
+            <div class="name-row">
+              <span class="name">{{ s.character_name }}</span>
+              <span *ngIf="s.status === 'standby'" class="maybe-tag">?</span>
+            </div>
+            <span class="sub">{{ s.character_class }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="absents-section" *ngIf="absents().length > 0">
+      <h4>❌ Absents ({{ absents().length }})</h4>
+      <div class="absent-pills">
+        <div *ngFor="let s of absents()" class="absent-pill">
+          <span class="btag">{{ s.battletag }}</span>
+          <span *ngIf="s.comment" class="absent-note" [title]="s.comment">ℹ️</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

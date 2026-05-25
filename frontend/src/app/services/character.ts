@@ -11,6 +11,7 @@ export interface Character {
   is_tank?: boolean;
   is_heal?: boolean;
   is_dps?: boolean;
+  is_main?: boolean;
 }
 
 import { environment } from '../../environments/environment';
@@ -41,6 +42,11 @@ export class CharacterService {
   // Met à jour les rôles
   updateRoles(charId: string, roles: { isTank: boolean, isHeal: boolean, isDPS: boolean }): Observable<Character> {
     return this.http.patch<Character>(`${this.apiUrl}/${charId}/roles`, roles, { withCredentials: true });
+  }
+
+  // Définit le perso comme principal
+  setMainCharacter(charId: string): Observable<Character> {
+    return this.http.patch<Character>(`${this.apiUrl}/${charId}/main`, {}, { withCredentials: true });
   }
 
   // Supprime un perso de la base

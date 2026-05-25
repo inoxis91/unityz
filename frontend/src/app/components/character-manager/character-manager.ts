@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CharacterService, Character } from '../../services/character';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-character-manager',
@@ -15,11 +16,22 @@ export class CharacterManagerComponent implements OnInit {
   myCharacters = signal<Character[]>([]);
   loadingBnet = signal<boolean>(false);
 
-  constructor(private characterService: CharacterService) {}
+  constructor(
+    private characterService: CharacterService,
+    private authService: AuthService
+  ) {}
 
   ngOnInit() {
-    this.loadMyCharacters();
+    this.authService.checkAuth().subscribe({
+      next: () => {
+        this.loadMyCharacters();
+      },
+      error: () => {
+        window.location.href = '/';
+      }
+    });
   }
+
 
   loadMyCharacters() {
     this.characterService.getMyCharacters().subscribe({
@@ -75,6 +87,14 @@ export class CharacterManagerComponent implements OnInit {
     }).subscribe({
       next: () => console.log('Roles updated for', char.name),
       error: (err) => console.error('Error updating roles', err)
+    });
+  }
+
+  setMain(char: Character) {
+    if (!char.id) return;
+    this.characterService.setMainCharacter(char.id).subscribe({
+      next: () => this.loadMyCharacters(),
+      error: (err) => console.error('Error setting main character', err)
     });
   }
 

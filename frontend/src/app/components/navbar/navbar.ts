@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, computed } from '@angular/core';
 import { AuthService } from '../../services/auth';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -11,6 +11,11 @@ import { RouterModule } from '@angular/router';
   styleUrl: './navbar.css'
 })
 export class NavbarComponent {
+  isAdmin = computed(() => {
+    const user = this.authService.currentUser();
+    return user?.is_admin === true;
+  });
+
   constructor(public authService: AuthService) {}
 
   logout() {

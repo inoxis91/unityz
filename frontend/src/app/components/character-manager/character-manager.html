@@ -11,6 +11,7 @@
     <table *ngIf="myCharacters().length > 0" class="char-table">
       <thead>
         <tr>
+          <th>Main</th>
           <th>Nom</th>
           <th>Royaume</th>
           <th>Classe</th>
@@ -20,7 +21,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let char of myCharacters()">
+        <tr *ngFor="let char of myCharacters()" [class.is-main]="char.is_main">
+          <td class="main-cell">
+            <span class="main-star" (click)="setMain(char)" [title]="char.is_main ? 'Personnage principal' : 'Définir comme principal'">
+              {{ char.is_main ? '⭐' : '☆' }}
+            </span>
+          </td>
           <td>{{ char.name }}</td>
           <td>{{ char.realm }}</td>
           <td>{{ char.class }}</td>

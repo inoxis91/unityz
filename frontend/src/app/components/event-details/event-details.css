@@ -1,0 +1,479 @@
+.details-container {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.back-link {
+  margin-bottom: 1.5rem;
+}
+
+.back-link a {
+  color: #64748b;
+  text-decoration: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.event-header-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  border-left: 8px solid #3b82f6;
+}
+
+.event-title-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.event-title-row h1 {
+  margin: 0;
+  font-size: 2.25rem;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.type-badge {
+  padding: 6px 16px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.type-badge.raid { background: #fee2e2; color: #dc2626; }
+.type-badge.mm\+ { background: #f3e8ff; color: #9333ea; }
+
+.event-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  color: #475569;
+  font-size: 1.1rem;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.meta-item .icon {
+  font-size: 1.2rem;
+  width: 24px;
+}
+
+/* Redesign Participants List */
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.list-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #1e293b;
+}
+
+.count-badge {
+  background: #3b82f6;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.participants-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.participant-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1rem;
+  transition: all 0.2s;
+}
+
+.participant-card:hover {
+  border-color: #cbd5e1;
+  transform: translateX(4px);
+}
+
+.participant-card.is-absent {
+  opacity: 0.7;
+  background: #f1f5f9;
+  border-style: dashed;
+}
+
+.participant-main {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.role-icon-box {
+  width: 40px;
+  height: 40px;
+  background: white;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.role-icon { font-size: 1.2rem; }
+
+.char-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.participant-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #1e293b;
+}
+
+.char-sub-info {
+  font-size: 0.9rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.absent-label {
+  font-weight: 600;
+  color: #ef4444;
+}
+
+.signup-time {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.status-indicators {
+  display: flex;
+  gap: 8px;
+}
+
+.status-pill {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.status-pill.present { background: #22c55e; }
+.status-pill.standby { background: #f59e0b; }
+.status-pill.absent { background: #ef4444; }
+
+.participant-comment {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: white;
+  border-radius: 10px;
+  border-left: 3px solid #3b82f6;
+}
+
+.participant-comment p {
+  margin: 0;
+  font-size: 0.9rem;
+  font-style: italic;
+  color: #475569;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #94a3b8;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.3;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  background: #f1f5f9;
+  padding: 6px;
+  border-radius: 14px;
+  width: fit-content;
+}
+
+.tabs button {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  padding: 10px 24px;
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+
+.tabs button.active {
+  color: #0f172a;
+  background: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 2rem;
+}
+
+.form-card, .list-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Status Selector Buttons */
+.status-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.status-btn {
+  padding: 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.status-btn .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+}
+
+.status-btn.present.active { border-color: #22c55e; background: #f0fdf4; color: #166534; }
+.status-btn.present.active .dot { background: #22c55e; }
+
+.status-btn.standby.active { border-color: #f59e0b; background: #fffbeb; color: #92400e; }
+.status-btn.standby.active .dot { background: #f59e0b; }
+
+.status-btn.absent.active { border-color: #ef4444; background: #fef2f2; color: #991b1b; }
+.status-btn.absent.active .dot { background: #ef4444; }
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: #1e293b;
+}
+
+.modern-select, textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #f1f5f9;
+  border-radius: 12px;
+  background: #f8fafc;
+  font-size: 1rem;
+}
+
+.role-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.role-selector button {
+  padding: 12px 8px;
+  border: 2px solid #f1f5f9;
+  background: #f8fafc;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.role-selector button.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.warning-box {
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.btn-action {
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+}
+
+.btn-action .icon {
+  font-size: 1.2rem;
+}
+
+.btn-action.confirm {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.btn-action.confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+}
+
+.btn-action.unsubscribe {
+  background: #f8fafc;
+  color: #ef4444;
+  border: 2px solid #fee2e2;
+}
+
+.btn-action.unsubscribe:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  transform: translateY(-2px);
+}
+
+.btn-action:active {
+  transform: translateY(0);
+}
+
+/* Composition Design */
+.composition-view {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  gap: 2rem;
+}
+
+.comp-item {
+  padding: 1rem;
+  border-radius: 14px;
+  background: #f8fafc;
+  border-left: 5px solid #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: transform 0.2s;
+}
+
+.comp-item:hover { transform: translateX(4px); }
+
+.comp-item.is-standby {
+  opacity: 0.7;
+  border-left-style: dashed;
+}
+
+.name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.maybe-tag {
+  background: #f59e0b;
+  color: white;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 800;
+}
+
+/* Custom classes for WoW */
+.comp-item.warrior { border-left-color: #C79C6E; }
+.comp-item.paladin { border-left-color: #F58CBA; }
+.comp-item.hunter { border-left-color: #ABD473; }
+.comp-item.rogue { border-left-color: #FFF569; }
+.comp-item.priest { border-left-color: #FFFFFF; }
+.comp-item.death-knight { border-left-color: #C41F3B; }
+.comp-item.shaman { border-left-color: #0070DE; }
+.comp-item.mage { border-left-color: #69CCF0; }
+.comp-item.warlock { border-left-color: #9482C9; }
+.comp-item.monk { border-left-color: #00FF96; }
+.comp-item.druid { border-left-color: #FF7D0A; }
+.comp-item.demon-hunter { border-left-color: #A330C9; }
+.comp-item.evoker { border-left-color: #33937F; }
+
+.absent-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.absent-pill {
+  background: #f1f5f9;
+  padding: 8px 16px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.absent-note { cursor: help; font-size: 0.8rem; }
