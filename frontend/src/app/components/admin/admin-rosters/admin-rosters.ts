@@ -11,6 +11,8 @@ import {
 } from '@angular/cdk/drag-drop';
 import { RosterService, Roster } from '../../../services/roster';
 import { CharacterService, Character } from '../../../services/character';
+import { ConfirmService } from '../../../services/confirm';
+import { ToastService } from '../../../services/toast';
 
 @Component({
   selector: 'app-admin-rosters',
@@ -27,7 +29,11 @@ export class AdminRostersComponent implements OnInit {
   showEditModal = signal(false);
   editingRoster: Roster | null = null;
 
-  constructor(public rosterService: RosterService) {}
+  constructor(
+    public rosterService: RosterService,
+    private confirm: ConfirmService,
+    private toast: ToastService
+  ) {}
 
   ngOnInit() {
     this.loadAll();
@@ -56,6 +62,7 @@ export class AdminRostersComponent implements OnInit {
       this.rosterService.assignCharacter(character.id || '', rosterId).subscribe({
         error: (err) => {
           console.error('Failed to assign character:', err);
+          this.toast.error('Erreur lors de l\'assignation.');
           this.loadAll(); // Rollback on error
         }
       });
@@ -64,8 +71,12 @@ export class AdminRostersComponent implements OnInit {
 
   onCreateRoster() {
     if (!this.newRoster.name) return;
-    this.rosterService.createRoster(this.newRoster).subscribe(() => {
-      this.closeModal();
+    this.rosterService.createRoster(this.newRoster).subscribe({
+        next: () => {
+            this.toast.success('Roster créé avec succès.');
+            this.closeModal();
+        },
+        error: () => this.toast.error('Erreur lors de la création.')
     });
   }
 
@@ -74,14 +85,26 @@ export class AdminRostersComponent implements OnInit {
     this.rosterService.updateRoster(this.editingRoster.id, {
       name: this.editingRoster.name,
       description: this.editingRoster.description
-    }).subscribe(() => {
-      this.closeEditModal();
+    }).subscribe({
+        next: () => {
+            this.toast.success('Roster mis à jour.');
+            this.closeEditModal();
+        },
+        error: () => this.toast.error('Erreur lors de la mise à jour.')
     });
   }
 
-  onDeleteRoster(id: string) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce roster ? Les personnages seront désassignés.')) {
-      this.rosterService.deleteRoster(id).subscribe();
+  async onDeleteRoster(id: string) {
+    const ok = await this.confirm.ask(
+        'Supprimer le roster',
+        'Êtes-vous sûr de vouloir supprimer ce roster ? Les personnages seront désassignés.'
+    );
+
+    if (ok) {
+      this.rosterService.deleteRoster(id).subscribe({
+        next: () => this.toast.success('Roster supprimé.'),
+        error: () => this.toast.error('Erreur lors de la suppression.')
+      });
     }
   }
 

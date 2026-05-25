@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FeeService, FeeDeclaration, GuildFeeOverview } from '../../../services/fee';
 import { ToastService } from '../../../services/toast';
+import { ConfirmService } from '../../../services/confirm';
 
 @Component({
   selector: 'app-admin-fees',
@@ -36,7 +37,8 @@ export class AdminFeesComponent implements OnInit {
 
   constructor(
     public feeService: FeeService,
-    private toast: ToastService
+    private toast: ToastService,
+    private confirm: ConfirmService
   ) {}
 
   ngOnInit() {
@@ -57,8 +59,13 @@ export class AdminFeesComponent implements OnInit {
     this.loadOverview();
   }
 
-  onAccept(decl: FeeDeclaration) {
-    if (confirm(`Accepter le dépôt de ${decl.amount} PO de ${decl.battletag} ?`)) {
+  async onAccept(decl: FeeDeclaration) {
+    const ok = await this.confirm.ask(
+      'Confirmer le dépôt', 
+      `Voulez-vous accepter le dépôt de ${decl.amount} PO de ${decl.battletag} ?`
+    );
+
+    if (ok) {
       this.feeService.resolveDeclaration(decl.id, 'accepted').subscribe({
         next: () => {
           this.loadPending();

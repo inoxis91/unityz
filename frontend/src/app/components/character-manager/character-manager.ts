@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { CharacterService, Character } from '../../services/character';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth';
+import { ConfirmService } from '../../services/confirm';
+import { ToastService } from '../../services/toast';
 
 @Component({
   selector: 'app-character-manager',
@@ -18,7 +20,9 @@ export class CharacterManagerComponent implements OnInit {
 
   constructor(
     private characterService: CharacterService,
-    private authService: AuthService
+    private authService: AuthService,
+    private confirm: ConfirmService,
+    private toast: ToastService
   ) {}
 
   ngOnInit() {
@@ -30,7 +34,6 @@ export class CharacterManagerComponent implements OnInit {
   loadMyCharacters() {
     this.characterService.getMyCharacters().subscribe({
       next: (chars) => {
-        console.log('My DB characters:', chars);
         this.myCharacters.set(chars);
       },
       error: (err) => console.error('Error loading my characters', err)
@@ -39,18 +42,13 @@ export class CharacterManagerComponent implements OnInit {
 
   fetchBnetCharacters() {
     this.loadingBnet.set(true);
-    console.log('Fetching Bnet characters...');
     this.characterService.getBnetCharacters().subscribe({
       next: (chars) => {
-        console.log('Received characters from service:', chars);
-        
         // Filtrer les persos déjà importés
         const currentMyChars = this.myCharacters();
         const filtered = chars.filter(bc => 
           !currentMyChars.some(mc => mc.name === bc.name && mc.realm === bc.realm)
         );
-        
-        console.log('Setting bnetCharacters signal with:', filtered.length, 'items');
         this.bnetCharacters.set(filtered);
         this.loadingBnet.set(false);
       },
@@ -65,10 +63,13 @@ export class CharacterManagerComponent implements OnInit {
     this.characterService.importCharacters([char]).subscribe({
       next: () => {
         this.loadMyCharacters();
-        // Mettre à jour la liste Bnet
+        this.toast.success(`${char.name} a été ajouté à votre liste.`);
         this.bnetCharacters.set(this.bnetCharacters().filter(c => c !== char));
       },
-      error: (err) => console.error('Error importing character', err)
+      error: (err) => {
+        console.error('Error importing character', err);
+        this.toast.error('Erreur lors de l\'importation.');
+      }
     });
   }
 
@@ -79,25 +80,45 @@ export class CharacterManagerComponent implements OnInit {
       isHeal: char.is_heal || false,
       isDPS: char.is_dps || false
     }).subscribe({
-      next: () => console.log('Roles updated for', char.name),
-      error: (err) => console.error('Error updating roles', err)
+      next: () => this.toast.success('Rôles mis à jour.'),
+      error: (err) => {
+        console.error('Error updating roles', err);
+        this.toast.error('Erreur lors de la mise à jour des rôles.');
+      }
     });
   }
 
   setMain(char: Character) {
     if (!char.id) return;
     this.characterService.setMainCharacter(char.id).subscribe({
-      next: () => this.loadMyCharacters(),
-      error: (err) => console.error('Error setting main character', err)
+      next: () => {
+        this.loadMyCharacters();
+        this.toast.success(`${char.name} est maintenant votre personnage principal.`);
+      },
+      error: (err) => {
+        console.error('Error setting main character', err);
+        this.toast.error('Erreur lors de la définition du Main.');
+      }
     });
   }
 
-  removeCharacter(char: Character) {
+  async removeCharacter(char: Character) {
     if (!char.id) return;
-    if (confirm(`Voulez-vous vraiment retirer ${char.name} de votre liste ?`)) {
+    const ok = await this.confirm.ask(
+        'Retirer le personnage',
+        `Voulez-vous vraiment retirer ${char.name} de votre liste ?`
+    );
+
+    if (ok) {
       this.characterService.removeCharacter(char.id).subscribe({
-        next: () => this.loadMyCharacters(),
-        error: (err) => console.error('Error removing character', err)
+        next: () => {
+          this.loadMyCharacters();
+          this.toast.success(`${char.name} a été retiré.`);
+        },
+        error: (err) => {
+          console.error('Error removing character', err);
+          this.toast.error('Erreur lors de la suppression.');
+        }
       });
     }
   }
