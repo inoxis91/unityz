@@ -6,21 +6,46 @@
 - **Key Feature**: Battle.net SSO integration for roster and role synchronization.
 
 ## Tech Stack
-- **Frontend**: Angular (Latest)
-- **Backend**: Node.js (Express) with TypeScript
-- **Database**: PostgreSQL (via Prisma ORM)
-- **Deployment**: Railway (via GitHub)
+- **Frontend**: Angular (Latest) with Signals and Standalone Components.
+- **Backend**: Node.js (Express) with TypeScript.
+- **Database**: PostgreSQL (Raw SQL via `pg` pool, layered in Services).
+- **Deployment**: Railway (via GitHub).
 
-## Architecture
-- **Monorepo Structure**:
-  - `/backend`: Node.js Express server handling OAuth2 and API.
-  - `/frontend`: Angular SPA for the user interface.
+## Engineering Standards & Best Practices
 
-## Conventions
-- Use TypeScript for both frontend and backend.
-- Follow Angular's official style guide for the frontend.
-- Maintain clear separation between API logic and data access in the backend.
-- Battle.net credentials must be stored in `.env` files and never committed.
+### General Principles
+- **Strict Typing**: Use of `: any` is strictly forbidden. All data structures must have interfaces or types.
+- **Naming Conventions**: 
+    - TypeScript/Frontend: `camelCase`.
+    - Database/Backend Entities: `snake_case`.
+    - Components/Classes: `PascalCase`.
+- **DRY & Clean Code**: Refactor redundant logic into services or helper functions. Use descriptive variable names.
+
+### Backend Architecture (Layered)
+- **Routes Layer**: Handles HTTP requests, basic response sending, and delegates to Services.
+- **Service Layer**: Contains all business logic and database interactions (`pool.query`). No SQL in routes.
+- **Validation**: All incoming data (req.body, req.params, req.query) MUST be validated using **Zod** schemas before processing.
+- **Error Handling**: Use the centralized `errorHandler` middleware. Throw errors with specific status codes.
+- **Security**: 
+    - Protect routes using `isAuthenticated` and `isAdmin` middlewares.
+    - Never log or return sensitive user data (like access tokens).
+    - Always use `trust proxy` for secure session cookies on Railway.
+
+### Frontend Standards (Angular)
+- **Route Guards**: Protect access to pages using `authGuard` and `adminGuard`. No manual redirects in `ngOnInit`.
+- **State Management**: Use **Signals** for reactive state and data sharing.
+- **Architecture**:
+    - Use Standalone Components.
+    - Encapsulate API calls in Services (`AuthService`, `CalendarService`, etc.).
+    - Use `computed` signals for derived data (e.g., filtered lists, permission checks).
+- **UI/UX**: 
+    - Maintain a modern, professional look (rounded corners, soft shadows, clear icons).
+    - Use CSS variables for consistent class and role colors.
+    - Provide immediate visual feedback for user actions.
+
+### Database Management
+- **Schema Updates**: Use `CREATE TABLE IF NOT EXISTS` and `ALTER TABLE` in `src/lib/db.ts` to ensure automatic migrations upon deployment.
+- **Integrity**: Use foreign key constraints and cascading deletes to maintain data consistency.
 
 ## Development Workflow
 1. **Local DB**: Use a local PostgreSQL instance or Railway's development database.
@@ -31,3 +56,7 @@
    - `BNET_CALLBACK_URL`
    - `DATABASE_URL`
    - `SESSION_SECRET`
+   - `FRONTEND_URL` (Required for correct production redirects)
+
+## Final Mandate
+Any new feature implementation MUST follow this layered architecture. If a developer or AI identifies technical debt, it should be addressed *before* or *during* the implementation of the new feature.
