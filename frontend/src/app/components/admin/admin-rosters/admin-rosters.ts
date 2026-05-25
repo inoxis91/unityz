@@ -87,7 +87,6 @@ export class AdminRostersComponent implements OnInit {
 
   openEditModal(roster: Roster) {
     this.editingRoster = { ...roster };
-    this.showRejectModal?.set(false); // Clean up if any
     this.showEditModal.set(true);
   }
 
@@ -98,7 +97,6 @@ export class AdminRostersComponent implements OnInit {
 
   closeModal() {
     this.showCreateModal.set(false);
-    this.newDeclaration?.amount; // ignore
     this.newRoster = { name: '', description: '' };
   }
 
