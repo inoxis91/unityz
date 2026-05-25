@@ -26,12 +26,15 @@ router.get('/bnet', isAuthenticated, async (req, res, next) => {
     accounts.forEach((account: any) => {
       if (account.characters) {
         account.characters.forEach((char: any) => {
-          allCharacters.push({
-            name: char.name,
-            realm: char.realm.name,
-            class: char.character_class.name,
-            level: char.level
-          });
+          // Sécurité : certains vieux persos ou persos bas niveau peuvent avoir des données incomplètes
+          if (char.name && char.realm && char.character_class) {
+            allCharacters.push({
+              name: char.name,
+              realm: char.realm.name || 'Unknown',
+              class: char.character_class.name || 'Unknown',
+              level: char.level || 0
+            });
+          }
         });
       }
     });
