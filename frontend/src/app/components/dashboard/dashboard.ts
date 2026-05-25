@@ -5,6 +5,7 @@ import { AuthService } from '../../services/auth';
 import { CharacterService, Character } from '../../services/character';
 import { CalendarService, CalendarEvent, Signup } from '../../services/calendar';
 import { RosterService, Roster } from '../../services/roster';
+import { FeeService, FeeAllocation } from '../../services/fee';
 
 @Component({
   selector: 'app-dashboard',
@@ -18,16 +19,49 @@ export class DashboardComponent implements OnInit, OnDestroy {
   upcomingEvents = signal<CalendarEvent[]>([]);
   mySignups = signal<Signup[]>([]);
   myRoster = signal<Roster | null>(null);
+  myAllocations = signal<FeeAllocation[]>([]);
   currentTime = signal(new Date());
   private timerInterval: any;
 
   mainCharacter = computed(() => this.myCharacters().find(c => c.is_main));
 
+  // Computed summary for next 3 months
+  feeSummary = computed(() => {
+    const months: { name: string, status: any }[] = [];
+    const now = new Date();
+    
+    for (let i = 0; i < 3; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const dateStr = d.toISOString().split('T')[0].substring(0, 7);
+      const alloc = this.myAllocations().find(a => a.month_date.startsWith(dateStr));
+      
+      const monthName = d.toLocaleDateString('fr-FR', { month: 'long' });
+      const capitalized = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+      
+      let status = { class: 'none', icon: '⭕', label: '0 PO' };
+      if (alloc) {
+        if (alloc.amount >= 2000) {
+          status = { 
+            class: alloc.amount > 2000 ? 'donation' : 'paid', 
+            icon: alloc.amount > 2000 ? '⭐' : '✅',
+            label: `${alloc.amount} PO`
+          };
+        } else {
+          status = { class: 'partial', icon: '⚠️', label: `${alloc.amount} PO` };
+        }
+      }
+      
+      months.push({ name: capitalized, status });
+    }
+    return months;
+  });
+
   constructor(
     public authService: AuthService,
     private characterService: CharacterService,
     private calendarService: CalendarService,
-    private rosterService: RosterService
+    private rosterService: RosterService,
+    private feeService: FeeService
   ) {}
 
   ngOnInit() {
@@ -60,6 +94,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     // Load roster
     this.rosterService.getMyRoster().subscribe(roster => this.myRoster.set(roster));
+
+    // Load allocations
+    const currentYear = new Date().getFullYear();
+    this.feeService.loadMyAllocations(currentYear).subscribe(allocs => this.myAllocations.set(allocs));
   }
 
   getSignupStatus(eventId: string | undefined): Signup | undefined {

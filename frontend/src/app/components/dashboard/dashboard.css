@@ -89,6 +89,73 @@
   color: #64748b;
 }
 
+/* Fee Summary Card */
+.dashboard-fee-card {
+  margin-top: 1.5rem;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f1f5f9;
+  max-width: 450px;
+}
+
+.fee-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.fee-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.fee-months {
+  display: flex;
+  gap: 10px;
+}
+
+.fee-month-mini {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.fee-month-mini .m-name {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.fee-month-mini .m-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fee-month-mini .val {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.fee-month-mini.paid { background: #f0fdf4; border-color: #bbf7d0; }
+.fee-month-mini.donation { background: #fffbeb; border-color: #fde68a; }
+.fee-month-mini.partial { background: #fef2f2; border-color: #fecaca; }
+
 .main-char-display {
   width: 350px;
   padding: 2rem;

@@ -23,6 +23,25 @@
           <p>Vous n'êtes assigné à aucun roster pour le moment.</p>
         </div>
       </ng-template>
+
+      <!-- Dashboard Cotisation Summary -->
+      <div class="dashboard-fee-card">
+        <div class="fee-header">
+          <h3>Statut Cotisations</h3>
+          <a routerLink="/fees" class="view-all">Détails →</a>
+        </div>
+        <div class="fee-months">
+          @for (m of feeSummary(); track m.name) {
+            <div class="fee-month-mini" [class]="m.status.class">
+              <span class="m-name">{{ m.name }}</span>
+              <div class="m-status">
+                <span class="icon">{{ m.status.icon }}</span>
+                <span class="val">{{ m.status.label }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
     </div>
 
     <!-- Main Character Display -->
