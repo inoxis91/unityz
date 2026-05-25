@@ -112,6 +112,31 @@
 .card-body h3 { margin: 0 0 0.5rem 0; font-size: 1.3rem; color: #1e293b; }
 .card-body p { margin: 0 0 1.5rem 0; color: #64748b; line-height: 1.5; font-size: 0.95rem; }
 
+/* Discord Login Button */
+.btn-discord-login {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #5865F2;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: fit-content;
+}
+
+.btn-discord-login:hover {
+  background: #4752c4;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3);
+}
+
+.btn-discord-login .icon { font-size: 1.25rem; }
+
 /* Input Group */
 .input-group {
   display: flex;

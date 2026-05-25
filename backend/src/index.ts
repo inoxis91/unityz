@@ -74,6 +74,22 @@ app.get('/api/auth/bnet/callback',
   }
 );
 
+// Discord Auth Routes (for account linking)
+app.get('/api/auth/discord', passport.authorize('discord'));
+
+app.get('/api/auth/discord/callback',
+  passport.authorize('discord', { failureRedirect: '/options?error=discord_failed' }),
+  (req, res) => {
+    let frontendBase = process.env.FRONTEND_URL || 'http://localhost:4200';
+    if (frontendBase.endsWith('/')) {
+      frontendBase = frontendBase.slice(0, -1);
+    }
+    // passport.authorize place l'utilisateur lié dans req.account si on veut, 
+    // mais ici on a déjà mis à jour la DB dans la stratégie Discord.
+    res.redirect(`${frontendBase}/options?tab=settings&success=discord_linked`);
+  }
+);
+
 app.get('/api/auth/logout', (req, res) => {
   req.logout((err) => {
     if (err) { return res.status(500).json({ status: 'error', message: 'Logout failed' }); }

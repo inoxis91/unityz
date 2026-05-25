@@ -22,7 +22,6 @@ export class FeesComponent implements OnInit {
 
   showForm = signal(false);
   selectedMonthName = '';
-  discordPseudo = '';
 
   // Form
   newDeclaration = {
@@ -44,14 +43,7 @@ export class FeesComponent implements OnInit {
   }
 
   linkDiscord() {
-    if (!this.discordPseudo) return;
-    this.authService.linkDiscordByPseudo(this.discordPseudo).subscribe({
-      next: () => {
-        alert('Compte Discord lié avec succès !');
-        this.discordPseudo = '';
-      },
-      error: (err) => alert(err.error?.message || 'Erreur lors de la liaison.')
-    });
+    this.authService.linkDiscord();
   }
 
   changeYear(delta: number) {

@@ -1,6 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import { CharacterManagerComponent } from '../character-manager/character-manager';
 
@@ -12,23 +13,25 @@ import { CharacterManagerComponent } from '../character-manager/character-manage
   styleUrl: './options.css'
 })
 export class OptionsComponent implements OnInit {
-  discordPseudo = '';
   activeTab = signal<'characters' | 'settings'>('characters');
 
-  constructor(public authService: AuthService) {}
+  constructor(public authService: AuthService, private route: ActivatedRoute) {}
 
-  ngOnInit() {}
-
-  linkDiscord() {
-    if (!this.discordPseudo) return;
-    this.authService.linkDiscordByPseudo(this.discordPseudo).subscribe({
-      next: () => {
+  ngOnInit() {
+    this.route.queryParams.subscribe(params => {
+      if (params['tab'] === 'settings') {
+        this.activeTab.set('settings');
+      }
+      if (params['success'] === 'discord_linked') {
         alert('Compte Discord lié avec succès !');
-        this.discordPseudo = '';
-      },
-      error: (err) => {
-        alert(err.error?.message || 'Erreur lors de la liaison.');
+      }
+      if (params['error'] === 'discord_failed') {
+        alert('Échec de la liaison Discord.');
       }
     });
+  }
+
+  linkDiscord() {
+    this.authService.linkDiscord();
   }
 }

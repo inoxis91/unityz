@@ -35,12 +35,8 @@ export class AuthService {
     );
   }
 
-  linkDiscordByPseudo(pseudo: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/users/link-discord`, { pseudo }, { withCredentials: true }).pipe(
-      tap(res => {
-        if (res.user) this.currentUser.set(res.user);
-      })
-    );
+  linkDiscord(): void {
+    window.location.href = `${this.apiUrl}/auth/discord`;
   }
 
   login(): void {

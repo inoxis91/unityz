@@ -27,12 +27,13 @@
           <h3>Lien Discord</h3>
           
           <div *ngIf="!user.discord_id">
-            <p>Renseignez votre <strong>Pseudo Discord</strong> pour lier votre compte et recevoir des notifications.</p>
-            <div class="input-group">
-              <input type="text" [(ngModel)]="discordPseudo" placeholder="ex: nairolf ou nairolf#1234" class="modern-input">
-              <button class="btn-save" (click)="linkDiscord()">Lier</button>
+            <p>Cliquez sur le bouton ci-dessous pour lier votre compte <strong>Discord</strong>. Cela vous permettra de recevoir des notifications privées automatiquement.</p>
+            <div class="action-box">
+              <button class="btn-discord-login" (click)="linkDiscord()">
+                <span class="icon">💬</span> Se connecter avec Discord
+              </button>
             </div>
-            <p class="help-text">Assurez-vous d'avoir rejoint le serveur de la guilde avant de valider.</p>
+            <p class="help-text">La liaison est sécurisée et 100% automatique.</p>
           </div>
 
           <div *ngIf="user.discord_id" class="linked-success animated-fade-in">
