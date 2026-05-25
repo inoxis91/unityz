@@ -21,5 +21,5 @@ import { NavbarComponent } from './components/navbar/navbar';
   `]
 })
 export class AppComponent {
-  title = 'Unity\'Z Guild';
+  title = 'Guilde manager';
 }
