@@ -3,6 +3,7 @@ import { Strategy as BnetStrategy } from 'passport-bnet';
 import pool from '../lib/db';
 import dotenv from 'dotenv';
 import axios from 'axios';
+import { findMemberByName } from '../lib/discord';
 
 dotenv.config();
 
@@ -44,6 +45,17 @@ passport.use(
         
         const res = await pool.query(query, [profile.id.toString(), bnetId, battletag, tokenToStore]);
         const user = res.rows[0];
+
+        // Liaison Discord automatique (via préfixe du BattleTag)
+        if (!user.discord_id) {
+          const namePrefix = battletag.split('#')[0];
+          const discordId = await findMemberByName(namePrefix);
+          if (discordId) {
+            await pool.query('UPDATE users SET discord_id = $1 WHERE id = $2', [discordId, user.id]);
+            user.discord_id = discordId;
+            console.log(`[Auth] Discord lié automatiquement : ${discordId} pour ${battletag}`);
+          }
+        }
 
         return done(null, user);
       } catch (error) {
