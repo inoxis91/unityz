@@ -19,8 +19,8 @@ export class AdminComponent implements OnInit {
   newEvent: CalendarEvent = {
     title: '',
     description: '',
-    start_time: '',
-    end_time: '',
+    start_time: '20:30',
+    end_time: '22:30',
     type: 'raid'
   };
 
@@ -55,8 +55,8 @@ export class AdminComponent implements OnInit {
     this.newEvent = {
       title: '',
       description: '',
-      start_time: '',
-      end_time: '',
+      start_time: '20:30',
+      end_time: '22:30',
       type: 'raid'
     };
   }

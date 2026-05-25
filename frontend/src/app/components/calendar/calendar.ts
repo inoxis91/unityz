@@ -42,9 +42,9 @@ export class CalendarComponent implements OnInit {
     title: '',
     description: '',
     start_date: '',
-    start_time: '21:00',
+    start_time: '20:30',
     end_date: '',
-    end_time: '23:30',
+    end_time: '22:30',
     type: 'raid',
     customType: ''
   };
@@ -129,9 +129,9 @@ export class CalendarComponent implements OnInit {
       title: '',
       description: '',
       start_date: '',
-      start_time: '21:00',
+      start_time: '20:30',
       end_date: '',
-      end_time: '23:30',
+      end_time: '22:30',
       type: 'raid',
       customType: ''
     };

@@ -20,18 +20,23 @@ router.get('/bnet', isAuthenticated, async (req, res, next) => {
       params: { namespace: 'profile-eu', locale: 'fr_FR' }
     });
 
+    // DEBUG: Log the full response to see why it might be empty
+    console.log('--- RAW BLIZZARD RESPONSE ---');
+    console.log(JSON.stringify(response.data, null, 2));
+    console.log('-----------------------------');
+
     const accounts = response.data.wow_accounts || [];
     let allCharacters: any[] = [];
 
     accounts.forEach((account: any) => {
       if (account.characters) {
         account.characters.forEach((char: any) => {
-          // Sécurité : certains vieux persos ou persos bas niveau peuvent avoir des données incomplètes
-          if (char.name && char.realm && char.character_class) {
+          // Relaxed filter: only name is strictly required
+          if (char.name) {
             allCharacters.push({
               name: char.name,
-              realm: char.realm.name || 'Unknown',
-              class: char.character_class.name || 'Unknown',
+              realm: char.realm?.name || 'Inconnu',
+              class: (char.character_class?.name || char.playable_class?.name || 'Inconnu'),
               level: char.level || 0
             });
           }
