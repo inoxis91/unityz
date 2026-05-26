@@ -165,7 +165,29 @@
 }
 
 .char-roles {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 1.2rem;
+}
+
+.logs-link-mini {
+  display: flex;
+  align-items: center;
+  opacity: 0.5;
+  transition: all 0.2s;
+  margin-left: 4px;
+}
+
+.logs-link-mini:hover {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.logs-link-mini img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
 }
 
 /* Drag & Drop Classes */

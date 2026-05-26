@@ -62,7 +62,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     public authService: AuthService,
-    private characterService: CharacterService,
+    public characterService: CharacterService,
     private calendarService: CalendarService,
     private rosterService: RosterService,
     private feeService: FeeService

@@ -22,6 +22,9 @@
               <span *ngIf="char.is_tank">🛡️</span>
               <span *ngIf="char.is_heal">🌿</span>
               <span *ngIf="char.is_dps">⚔️</span>
+              <a [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="logs-link-mini" (click)="$event.stopPropagation()">
+                <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs">
+              </a>
             </div>
           </div>
         }
@@ -67,7 +70,11 @@
                   <span *ngIf="char.is_tank">🛡️</span>
                   <span *ngIf="char.is_heal">🌿</span>
                   <span *ngIf="char.is_dps">⚔️</span>
+                  <a [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="logs-link-mini" (click)="$event.stopPropagation()">
+                    <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs">
+                  </a>
                 </div>
+
               </div>
             }
             @if (!roster.characters || roster.characters.length === 0) {

@@ -60,6 +60,9 @@
           <span *ngIf="char.is_heal" title="Healer">🌿</span>
           <span *ngIf="char.is_dps" title="DPS">⚔️</span>
         </div>
+        <a [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="logs-link" (click)="$event.stopPropagation()">
+          <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" title="Voir les logs">
+        </a>
       </div>
     </div>
   </section>
@@ -132,6 +135,9 @@
             <div class="char-meta">
               <span class="lvl">{{ char.level }}</span>
               <span class="main-star" *ngIf="char.is_main">⭐</span>
+              <a [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="logs-link-mini" (click)="$event.stopPropagation()">
+                <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" title="Voir les logs">
+              </a>
             </div>
           </div>
         }

@@ -111,7 +111,14 @@ export class EventService {
 
     // Fetch all characters for each user to show alts in frontend
     for (const signup of signups) {
-      const charQuery = 'SELECT id, name, class, is_tank, is_heal, is_dps FROM characters WHERE user_id = $1 ORDER BY is_main DESC, name ASC';
+      const charQuery = `
+        SELECT c.id, c.name, c.realm, c.class, c.is_tank, c.is_heal, c.is_dps, c.is_main,
+               r.name as roster_name
+        FROM characters c
+        LEFT JOIN rosters r ON c.roster_id = r.id
+        WHERE c.user_id = $1 
+        ORDER BY c.is_main DESC, c.name ASC
+      `;
       const charResult = await pool.query(charQuery, [signup.user_id]);
       signup.user_characters = charResult.rows;
     }

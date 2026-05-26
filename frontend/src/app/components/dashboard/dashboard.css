@@ -215,6 +215,47 @@
   align-items: center;
 }
 
+.logs-link {
+  background: rgba(255, 255, 255, 0.2);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  backdrop-filter: blur(4px);
+}
+
+.logs-link:hover {
+  background: white;
+  transform: scale(1.1);
+}
+
+.logs-link img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.logs-link-mini {
+  display: flex;
+  align-items: center;
+  opacity: 0.6;
+  transition: all 0.2s;
+}
+
+.logs-link-mini:hover {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.logs-link-mini img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
 .roles {
   display: flex;
   gap: 10px;

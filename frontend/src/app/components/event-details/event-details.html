@@ -336,14 +336,17 @@
     <div class="modal-body">
       <div class="alts-list">
         <div *ngFor="let char of selectedSignup()?.user_characters" class="alt-row" [class]="'class-' + getClassCategory(char.class)">
-          <div class="alt-info">
+          <div class="alt-info-vertical">
             <span class="alt-name">{{ char.name }}</span>
-            <span class="alt-class">{{ char.class }}</span>
+            <span class="alt-roster-text">{{ char.roster_name || 'Sans Roster' }}</span>
           </div>
           <div class="alt-roles">
             <span *ngIf="char.is_tank" title="Tank">🛡️</span>
             <span *ngIf="char.is_heal" title="Heal">🌿</span>
             <span *ngIf="char.is_dps" title="DPS">⚔️</span>
+            <a [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="logs-link-mini" (click)="$event.stopPropagation()">
+              <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs">
+            </a>
           </div>
         </div>
       </div>

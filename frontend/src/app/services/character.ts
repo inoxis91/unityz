@@ -47,6 +47,12 @@ export class CharacterService {
     return map[name] || name.replace(/\s+/g, '-');
   }
 
+  getWarcraftLogsUrl(name: string | undefined, realm: string | undefined): string {
+    if (!name || !realm) return '#';
+    const slugRealm = realm.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
+    return `https://www.warcraftlogs.com/character/eu/${slugRealm}/${name.toLowerCase()}`;
+  }
+
   constructor(private http: HttpClient) {}
 
   // Récupère les persos depuis Battle.net

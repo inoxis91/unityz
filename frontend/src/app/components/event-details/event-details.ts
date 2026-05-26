@@ -126,7 +126,7 @@ export class EventDetailsComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private calendarService: CalendarService,
-    private characterService: CharacterService,
+    public characterService: CharacterService,
     public rosterService: RosterService,
     public authService: AuthService,
     private toast: ToastService

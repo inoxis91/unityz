@@ -31,6 +31,7 @@ export class AdminRostersComponent implements OnInit {
 
   constructor(
     public rosterService: RosterService,
+    public characterService: CharacterService,
     private confirm: ConfirmService,
     private toast: ToastService
   ) {}
