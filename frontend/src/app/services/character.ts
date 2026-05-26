@@ -84,4 +84,9 @@ export class CharacterService {
   removeCharacter(charId: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${charId}`, { withCredentials: true });
   }
+
+  // Récupère les détails (image, stuff) d'un personnage via Blizzard
+  getCharacterDetails(realm: string, name: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/details/${realm}/${name}`, { withCredentials: true });
+  }
 }

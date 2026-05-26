@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, OnDestroy } from '@angular/core';
+import { Component, OnInit, signal, computed, OnDestroy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth';
@@ -21,6 +21,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   myRoster = signal<Roster | null>(null);
   myAllocations = signal<FeeAllocation[]>([]);
   currentTime = signal(new Date());
+
+  charDetails = signal<any>(null);
+  loadingDetails = signal(false);
+
   private timerInterval: any;
 
   mainCharacter = computed(() => this.myCharacters().find(c => c.is_main));
@@ -66,7 +70,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private calendarService: CalendarService,
     private rosterService: RosterService,
     private feeService: FeeService
-  ) {}
+  ) {
+    // Fetch details when main character is loaded
+    effect(() => {
+      const main = this.mainCharacter();
+      if (main) {
+        this.fetchCharacterDetails(main);
+      }
+    });
+  }
 
   ngOnInit() {
     this.loadData();
@@ -102,6 +114,33 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Load allocations
     const currentYear = new Date().getFullYear();
     this.feeService.loadMyAllocations(currentYear).subscribe(allocs => this.myAllocations.set(allocs));
+  }
+
+  fetchCharacterDetails(char: Character) {
+    this.loadingDetails.set(true);
+    this.characterService.getCharacterDetails(char.realm, char.name).subscribe({
+      next: (details) => {
+        this.charDetails.set(details);
+        this.loadingDetails.set(false);
+      },
+      error: () => this.loadingDetails.set(false)
+    });
+  }
+
+  getCharacterImage(): string | null {
+    const details = this.charDetails();
+    if (!details || !details.media || !details.media.assets) return null;
+    
+    const assets = details.media.assets;
+    // Order of preference for a nice dashboard render
+    const preferredKeys = ['main-raw', 'main', 'inset', 'portrait', 'avatar'];
+    
+    for (const key of preferredKeys) {
+      const asset = assets.find((a: any) => a.key === key);
+      if (asset) return asset.value;
+    }
+    
+    return assets[0].value;
   }
 
   getSignupStatus(eventId: string | undefined): Signup | undefined {

@@ -46,23 +46,39 @@
 
     <!-- Main Character Display -->
     <div class="main-char-display" *ngIf="mainCharacter() as char" [class]="'bg-class-' + getClassCategory(char.class)">
-      <div class="char-top">
-        <span class="level">Niveau {{ char.level }}</span>
-        <span class="main-badge">MAIN</span>
+      <div class="char-image-container" *ngIf="getCharacterImage() as imageUrl">
+        <img [src]="imageUrl" alt="Character Render" class="char-render">
       </div>
-      <div class="char-body">
-        <h2>{{ char.name }}</h2>
-        <span class="realm">{{ char.realm }}</span>
-      </div>
-      <div class="char-footer">
-        <div class="roles">
-          <span *ngIf="char.is_tank" title="Tank">🛡️</span>
-          <span *ngIf="char.is_heal" title="Healer">🌿</span>
-          <span *ngIf="char.is_dps" title="DPS">⚔️</span>
+      
+      <div class="char-content">
+        <div class="char-top">
+          <span class="level">Niveau {{ char.level }}</span>
+          <div class="char-badges">
+            <span class="ilvl-badge" *ngIf="charDetails()?.summary as sum">{{ sum.equipped_item_level }} iLvl</span>
+            <span class="main-badge">MAIN</span>
+          </div>
         </div>
-        <a [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="logs-link" (click)="$event.stopPropagation()">
-          <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" title="Voir les logs">
-        </a>
+        <div class="char-body">
+          <h2>{{ char.name }}</h2>
+          <span class="realm">{{ char.realm }}</span>
+        </div>
+        <div class="char-footer">
+          <div class="roles">
+            <span *ngIf="char.is_tank" title="Tank">🛡️</span>
+            <span *ngIf="char.is_heal" title="Healer">🌿</span>
+            <span *ngIf="char.is_dps" title="DPS">⚔️</span>
+          </div>
+          <div class="footer-links">
+            <a [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="logs-link" (click)="$event.stopPropagation()">
+              <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" title="Voir les logs">
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading Overlay -->
+      <div class="char-loading" *ngIf="loadingDetails()">
+        <div class="spinner"></div>
       </div>
     </div>
   </section>

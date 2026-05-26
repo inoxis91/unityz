@@ -1,0 +1,79 @@
+import axios from 'axios';
+
+export class BlizzardService {
+  private static readonly REGION = 'eu';
+  private static readonly LOCALE = 'fr_FR';
+  private static readonly PROFILE_NAMESPACE = 'profile-eu';
+
+  static async getCharacterMedia(accessToken: string, realm: string, characterName: string) {
+    const realmSlug = this.formatRealmSlug(realm);
+    const charNameSlug = this.formatCharSlug(characterName);
+    const url = `https://${this.REGION}.api.blizzard.com/profile/wow/character/${realmSlug}/${charNameSlug}/character-media`;
+    
+    try {
+      console.log(`[DEBUG] Blizzard API Media URL: ${url}`);
+      const response = await axios.get(url, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        params: { namespace: this.PROFILE_NAMESPACE, locale: this.LOCALE }
+      });
+      console.log(`[DEBUG] Blizzard Media Success: found ${response.data.assets?.length || 0} assets`);
+      return response.data;
+    } catch (error: any) {
+      console.error(`[DEBUG] Blizzard Media Error [${characterName}-${realm}]: ${error.response?.status} - ${error.response?.data?.detail || error.message}`);
+      return null;
+    }
+  }
+
+  static async getCharacterEquipment(accessToken: string, realm: string, characterName: string) {
+    const realmSlug = this.formatRealmSlug(realm);
+    const charNameSlug = this.formatCharSlug(characterName);
+    const url = `https://${this.REGION}.api.blizzard.com/profile/wow/character/${realmSlug}/${charNameSlug}/equipment`;
+    
+    try {
+      console.log(`[DEBUG] Blizzard API Equipment URL: ${url}`);
+      const response = await axios.get(url, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        params: { namespace: this.PROFILE_NAMESPACE, locale: this.LOCALE }
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error(`[DEBUG] Blizzard Equipment Error [${characterName}-${realm}]: ${error.response?.status}`);
+      return null;
+    }
+  }
+
+  static async getCharacterSummary(accessToken: string, realm: string, characterName: string) {
+    const realmSlug = this.formatRealmSlug(realm);
+    const charNameSlug = this.formatCharSlug(characterName);
+    const url = `https://${this.REGION}.api.blizzard.com/profile/wow/character/${realmSlug}/${charNameSlug}`;
+    
+    try {
+      console.log(`[DEBUG] Blizzard API Summary URL: ${url}`);
+      const response = await axios.get(url, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        params: { namespace: this.PROFILE_NAMESPACE, locale: this.LOCALE }
+      });
+      console.log(`[DEBUG] Blizzard Summary Success for ${response.data.name}-${response.data.realm?.name}: iLvl ${response.data.equipped_item_level}`);
+      return response.data;
+    } catch (error: any) {
+      console.error(`[DEBUG] Blizzard Summary Error [${characterName}-${realm}]: ${error.response?.status}`);
+      return null;
+    }
+  }
+
+  private static formatRealmSlug(text: string): string {
+    return text.toLowerCase()
+      .trim()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, "") // Supprime les accents pour les royaumes
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+  }
+
+  private static formatCharSlug(text: string): string {
+    // Pour les noms de personnages, on garde les caractères spéciaux/accents
+    // Mais on met en minuscule pour l'URL
+    return text.toLowerCase().trim();
+  }
+}

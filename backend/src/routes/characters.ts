@@ -1,11 +1,38 @@
 import express from 'express';
 import axios from 'axios';
 import { CharacterService } from '../services/characterService';
+import { BlizzardService } from '../services/blizzardService';
 import { isAuthenticated } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import { importCharactersSchema, updateRolesSchema, setMainSchema } from '../schemas/characterSchemas';
 
 const router = express.Router();
+
+// GET /api/characters/details/:realm/:name : Récupère les détails (image, stuff) d'un personnage via Blizzard
+router.get('/details/:realm/:name', isAuthenticated, async (req, res, next) => {
+  try {
+    const accessToken = req.user!.access_token;
+    if (!accessToken) {
+      return res.status(401).json({ status: 'error', message: 'No access token found' });
+    }
+
+    const { realm, name } = req.params;
+
+    const [media, equipment, summary] = await Promise.all([
+      BlizzardService.getCharacterMedia(accessToken, realm as string, name as string),
+      BlizzardService.getCharacterEquipment(accessToken, realm as string, name as string),
+      BlizzardService.getCharacterSummary(accessToken, realm as string, name as string)
+    ]);
+
+    res.json({
+      media,
+      equipment,
+      summary
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 // GET /api/characters/bnet : Récupère les personnages de l'utilisateur via Blizzard
 router.get('/bnet', isAuthenticated, async (req, res, next) => {

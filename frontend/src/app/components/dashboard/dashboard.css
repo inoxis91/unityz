@@ -157,33 +157,94 @@
 .fee-month-mini.partial { background: #fef2f2; border-color: #fecaca; }
 
 .main-char-display {
-  width: 350px;
+  width: 450px;
   padding: 2rem;
   border-radius: 24px;
   color: white;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  justify-content: flex-end;
+  min-height: 280px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
   position: relative;
   overflow: hidden;
 }
 
-.main-char-display::before {
-  content: '';
+.char-image-container {
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+  top: 0;
+  right: -20px;
+  height: 100%;
+  width: 100%;
+  z-index: 1;
   pointer-events: none;
+}
+
+.char-render {
+  height: 140%;
+  width: auto;
+  object-fit: contain;
+  position: absolute;
+  right: 0;
+  top: -20%;
+  mask-image: linear-gradient(to left, black 50%, transparent 95%);
+  -webkit-mask-image: linear-gradient(to left, black 50%, transparent 95%);
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+}
+
+.char-content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .char-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.char-badges {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.ilvl-badge {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.char-loading {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.3);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .main-badge {
