@@ -1,7 +1,7 @@
 import express from 'express';
 import pool from '../lib/db';
 import { RosterService } from '../services/rosterService';
-import { isAdmin, isAuthenticated } from '../middlewares/auth';
+import { canManageRosters, isAuthenticated } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import { createRosterSchema, updateRosterSchema, assignCharacterSchema } from '../schemas/rosterSchemas';
 
@@ -24,7 +24,7 @@ router.get('/my-roster', isAuthenticated, async (req, res, next) => {
 });
 
 // GET /api/rosters : Récupère tous les rosters avec leurs personnages
-router.get('/', isAdmin, async (req, res, next) => {
+router.get('/', canManageRosters, async (req, res, next) => {
   try {
     const rosters = await RosterService.getAll();
     res.json(rosters);
@@ -34,7 +34,7 @@ router.get('/', isAdmin, async (req, res, next) => {
 });
 
 // GET /api/rosters/unassigned : Récupère les personnages sans roster
-router.get('/unassigned', isAdmin, async (req, res, next) => {
+router.get('/unassigned', canManageRosters, async (req, res, next) => {
   try {
     const characters = await RosterService.getUnassignedCharacters();
     res.json(characters);
@@ -44,7 +44,7 @@ router.get('/unassigned', isAdmin, async (req, res, next) => {
 });
 
 // POST /api/rosters : Crée un roster
-router.post('/', isAdmin, validate(createRosterSchema), async (req, res, next) => {
+router.post('/', canManageRosters, validate(createRosterSchema), async (req, res, next) => {
   try {
     const roster = await RosterService.create(req.body);
     res.status(201).json(roster);
@@ -54,7 +54,7 @@ router.post('/', isAdmin, validate(createRosterSchema), async (req, res, next) =
 });
 
 // PUT /api/rosters/:id : Modifie un roster
-router.put('/:id', isAdmin, validate(updateRosterSchema), async (req, res, next) => {
+router.put('/:id', canManageRosters, validate(updateRosterSchema), async (req, res, next) => {
   try {
     const roster = await RosterService.update(req.params.id as string, req.body);
     if (!roster) {
@@ -67,7 +67,7 @@ router.put('/:id', isAdmin, validate(updateRosterSchema), async (req, res, next)
 });
 
 // DELETE /api/rosters/:id : Supprime un roster
-router.delete('/:id', isAdmin, async (req, res, next) => {
+router.delete('/:id', canManageRosters, async (req, res, next) => {
   try {
     const success = await RosterService.delete(req.params.id as string);
     if (!success) {
@@ -80,7 +80,7 @@ router.delete('/:id', isAdmin, async (req, res, next) => {
 });
 
 // PATCH /api/rosters/assign/:characterId : Assigne un personnage à un roster
-router.patch('/assign/:characterId', isAdmin, validate(assignCharacterSchema), async (req, res, next) => {
+router.patch('/assign/:characterId', canManageRosters, validate(assignCharacterSchema), async (req, res, next) => {
   try {
     const success = await RosterService.assignCharacter(req.params.characterId as string, req.body.rosterId);
     if (!success) {

@@ -26,17 +26,161 @@
   border-left: 8px solid #3b82f6;
 }
 
+.event-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-admin {
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #64748b;
+}
+
+.btn-admin:hover {
+  transform: translateY(-1px);
+}
+
+.btn-admin.edit:hover {
+  border-color: #0074e0;
+  color: #0074e0;
+  background: #f0f7ff;
+}
+
+.btn-admin.delete:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+/* Modal Styling (shared with calendar) */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-card {
+  background: #ffffff;
+  border-radius: 24px;
+  width: 95%;
+  max-width: 550px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  animation: modalAppear 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalAppear {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+  padding: 1.5rem 2rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  color: #1e293b;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.close-btn {
+  background: #f1f5f9;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  font-size: 1.5rem;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 2rem;
+}
+
+.modern-form input,
+.modern-form textarea,
+.modern-form select {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background: #ffffff;
+  border: 2px solid #f1f5f9;
+  border-radius: 12px;
+  color: #1e293b;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.modal-footer {
+  padding: 1.5rem 2rem;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.btn-primary { background-color: #0074e0; color: white; border-radius: 12px; padding: 10px 20px; border: none; font-weight: 700; cursor: pointer; }
+.btn-secondary { background-color: #ffffff; color: #64748b; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 20px; font-weight: 700; cursor: pointer; }
+
+@media (max-width: 768px) {
+  .event-header-top {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .admin-actions { width: 100%; }
+  .btn-admin { flex: 1; justify-content: center; }
+  .form-grid { grid-template-columns: 1fr; }
+}
+
 .event-title-row {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  margin-bottom: 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .event-title-row h1 {
   margin: 0;
   font-size: 2.25rem;
-  color: #0f172a;
+  color: #1e293b;
   font-weight: 800;
 }
 
@@ -47,6 +191,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  height: fit-content; /* Ensure it doesn't stretch */
 }
 
 .type-badge.raid { background: #fee2e2; color: #dc2626; }
@@ -59,6 +204,7 @@
   letter-spacing: 0.05em;
   background: #fef3c7;
   color: #92400e;
+  height: fit-content;
 }
 
 .roster-badge.all {

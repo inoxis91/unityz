@@ -4,12 +4,24 @@
   </div>
 
   <div class="event-header-card">
-    <div class="event-title-row">
-      <div class="type-badge" [class]="event()?.type?.toLowerCase()">{{ event()?.type }}</div>
-      <div class="roster-badge" *ngIf="event()?.roster_name" [title]="'Poids: ' + event()?.roster_weight">{{ event()?.roster_name }}</div>
-      <div class="roster-badge all" *ngIf="!event()?.roster_name">Tous</div>
-      <h1>{{ event()?.title }}</h1>
+    <div class="event-header-top">
+      <div class="event-title-row">
+        <div class="type-badge" [class]="event()?.type?.toLowerCase()">{{ event()?.type }}</div>
+        <div class="roster-badge" *ngIf="event()?.roster_name" [title]="'Poids: ' + event()?.roster_weight">{{ event()?.roster_name }}</div>
+        <div class="roster-badge all" *ngIf="!event()?.roster_name">Tous</div>
+        <h1>{{ event()?.title }}</h1>
+      </div>
+      
+      <div class="admin-actions" *ngIf="canManageEvents()">
+        <button class="btn-admin edit" (click)="openEditModal()" title="Modifier l'événement">
+          <span class="icon">✏️</span> Modifier
+        </button>
+        <button class="btn-admin delete" (click)="onDeleteEvent()" title="Supprimer l'événement">
+          <span class="icon">🗑️</span> Supprimer
+        </button>
+      </div>
     </div>
+
     <div class="event-meta">
       <div class="meta-item">
         <span class="icon">📅</span>
@@ -195,5 +207,83 @@
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Modal de Modification (Admin Only) -->
+<div class="modal-overlay" *ngIf="showEditModal() && canManageEvents()" (click)="showEditModal.set(false)">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="header-title">
+        <span class="icon">📝</span>
+        <h2>Modifier l'Événement</h2>
+      </div>
+      <button class="close-btn" (click)="showEditModal.set(false)">&times;</button>
+    </div>
+    
+    <form (ngSubmit)="onUpdateEvent()" class="modern-form">
+      <div class="modal-body">
+        <div class="form-section">
+          <label>Titre de l'activité</label>
+          <input type="text" [(ngModel)]="editEventData.title" name="title" required placeholder="Ex: Raid HM Flèche du vide">
+        </div>
+        
+        <div class="form-section">
+          <label>Description (Optionnel)</label>
+          <textarea [(ngModel)]="editEventData.description" name="description" rows="3"></textarea>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-section">
+            <label>Type</label>
+            <select [(ngModel)]="editEventData.type" name="type" class="custom-select">
+              <option value="raid">Raid</option>
+              <option value="mm+">Donjon MM+</option>
+              <option value="custom">Autre / Spécial</option>
+            </select>
+          </div>
+          <div class="form-section">
+            <label>Roster autorisé</label>
+            <select [(ngModel)]="editEventData.roster_id" name="roster_id" class="custom-select">
+              <option value="">Tous les membres</option>
+              @for (roster of rosterService.rosters(); track roster.id) {
+                <option [value]="roster.id">{{ roster.name }} (Poids: {{ roster.weight }})</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="form-section" *ngIf="editEventData.type === 'custom'">
+          <label>Nom du type personnalisé</label>
+          <input type="text" [(ngModel)]="editEventData.customType" name="customType" placeholder="Ex: PvP, Succès...">
+        </div>
+
+        <div class="form-grid">
+          <div class="form-section">
+            <label>Date de début</label>
+            <input type="date" [(ngModel)]="editEventData.start_date" name="start_date" required>
+          </div>
+          <div class="form-section">
+            <label>Heure de début</label>
+            <input type="time" [(ngModel)]="editEventData.start_time" name="start_time" required>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-section">
+            <label>Date de fin</label>
+            <input type="date" [(ngModel)]="editEventData.end_date" name="end_date" required>
+          </div>
+          <div class="form-section">
+            <label>Heure de fin</label>
+            <input type="time" [(ngModel)]="editEventData.end_time" name="end_time" required>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="showEditModal.set(false)">Annuler</button>
+        <button type="submit" class="btn-primary">Enregistrer les modifications</button>
+      </div>
+    </form>
   </div>
 </div>

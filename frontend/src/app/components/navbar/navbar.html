@@ -17,7 +17,7 @@
         <a routerLink="/calendar" routerLinkActive="active" (click)="closeMenu()">Calendrier</a>
         <a routerLink="/fees" routerLinkActive="active" (click)="closeMenu()">Cotisations</a>
         <a routerLink="/options" routerLinkActive="active" (click)="closeMenu()">Options</a>
-        <a routerLink="/admin" routerLinkActive="active" *ngIf="isAdmin()" (click)="closeMenu()">Admin</a>
+        <a routerLink="/admin" routerLinkActive="active" *ngIf="authService.canAccessAdmin()" (click)="closeMenu()">Admin</a>
         <button (click)="logout()" class="btn-logout">Déconnexion</button>
       }
     </div>

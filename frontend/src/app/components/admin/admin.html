@@ -1,16 +1,20 @@
 <div class="admin-container">
   <h1>Espace Administrateur</h1>
+<div class="admin-tabs">
+  <button *ngIf="authService.isAdmin()" [class.active]="activeTab() === 'users'" (click)="activeTab.set('users')">Membres</button>
+  <button *ngIf="authService.canManageRosters()" [class.active]="activeTab() === 'rosters'" (click)="activeTab.set('rosters')">Rosters</button>
+  <button *ngIf="authService.canManageFees()" [class.active]="activeTab() === 'fees'" (click)="activeTab.set('fees')">Cotisations</button>
+</div>
 
-  <div class="admin-tabs">
-    <button [class.active]="activeTab() === 'rosters'" (click)="activeTab.set('rosters')">Rosters</button>
-    <button [class.active]="activeTab() === 'fees'" (click)="activeTab.set('fees')">Cotisations</button>
-  </div>
+<div class="tab-content" *ngIf="activeTab() === 'users' && authService.isAdmin()">
+  <app-admin-users></app-admin-users>
+</div>
 
-  <div class="tab-content" *ngIf="activeTab() === 'rosters'">
+<div class="tab-content" *ngIf="activeTab() === 'rosters' && authService.canManageRosters()">
     <app-admin-rosters></app-admin-rosters>
   </div>
 
-  <div class="tab-content" *ngIf="activeTab() === 'fees'">
+  <div class="tab-content" *ngIf="activeTab() === 'fees' && authService.canManageFees()">
     <app-admin-fees></app-admin-fees>
   </div>
 </div>

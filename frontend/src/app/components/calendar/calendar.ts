@@ -86,8 +86,8 @@ export class CalendarComponent implements OnInit {
     roster_id: '' as string | null
   };
 
-  isAdmin = computed(() => {
-    return this.authService.currentUser()?.is_admin === true;
+  canManageEvents = computed(() => {
+    return this.authService.canManageEvents();
   });
 
   constructor(
@@ -120,14 +120,14 @@ export class CalendarComponent implements OnInit {
   }
 
   handleDateClick(arg: { dateStr: string }) {
-    if (!this.isAdmin()) return;
+    if (!this.canManageEvents()) return;
     this.newEvent.start_date = arg.dateStr;
     this.newEvent.end_date = arg.dateStr;
     this.showCreateModal.set(true);
   }
 
   handleDateSelect(selectInfo: DateSelectArg) {
-    if (!this.isAdmin()) return;
+    if (!this.canManageEvents()) return;
     const start = selectInfo.startStr.split('T')[0];
     this.newEvent.start_date = start;
     this.newEvent.end_date = start;

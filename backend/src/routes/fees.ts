@@ -1,6 +1,6 @@
 import express from 'express';
 import { FeeService } from '../services/feeService';
-import { isAuthenticated, isAdmin } from '../middlewares/auth';
+import { isAuthenticated, canManageFees } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import { createDeclarationSchema, resolveDeclarationSchema, adjustAllocationSchema } from '../schemas/feeSchemas';
 
@@ -37,8 +37,8 @@ router.post('/declare', isAuthenticated, validate(createDeclarationSchema), asyn
   }
 });
 
-// GET /api/fees/pending : Liste des déclarations à valider (Admin)
-router.get('/pending', isAdmin, async (req, res, next) => {
+// GET /api/fees/pending : Liste des déclarations à valider (Admin, Trésorier)
+router.get('/pending', canManageFees, async (req, res, next) => {
   try {
     const pending = await FeeService.getPendingDeclarations();
     res.json(pending);
@@ -47,8 +47,8 @@ router.get('/pending', isAdmin, async (req, res, next) => {
   }
 });
 
-// GET /api/fees/guild-overview/:year : Vue d'ensemble de la guilde (Admin)
-router.get('/guild-overview/:year', isAdmin, async (req, res, next) => {
+// GET /api/fees/guild-overview/:year : Vue d'ensemble de la guilde (Admin, Trésorier)
+router.get('/guild-overview/:year', canManageFees, async (req, res, next) => {
   try {
     const year = req.params.year as string;
     const overview = await FeeService.getGuildOverview(parseInt(year));
@@ -58,8 +58,8 @@ router.get('/guild-overview/:year', isAdmin, async (req, res, next) => {
   }
 });
 
-// PATCH /api/fees/resolve/:id : Accepter ou refuser une déclaration (Admin)
-router.patch('/resolve/:id', isAdmin, validate(resolveDeclarationSchema), async (req, res, next) => {
+// PATCH /api/fees/resolve/:id : Accepter ou refuser une déclaration (Admin, Trésorier)
+router.patch('/resolve/:id', canManageFees, validate(resolveDeclarationSchema), async (req, res, next) => {
   try {
     const id = req.params.id as string;
     await FeeService.resolveDeclaration(id, req.body.status, req.body.admin_comment);
@@ -69,8 +69,8 @@ router.patch('/resolve/:id', isAdmin, validate(resolveDeclarationSchema), async 
   }
 });
 
-// POST /api/fees/adjust-allocation : Ajustement manuel d'une cotisation (Admin)
-router.post('/adjust-allocation', isAdmin, validate(adjustAllocationSchema), async (req, res, next) => {
+// POST /api/fees/adjust-allocation : Ajustement manuel d'une cotisation (Admin, Trésorier)
+router.post('/adjust-allocation', canManageFees, validate(adjustAllocationSchema), async (req, res, next) => {
   try {
     const { userId, monthDate, amount } = req.body;
     await FeeService.upsertAllocation(userId, monthDate, amount);

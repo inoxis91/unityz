@@ -9,7 +9,11 @@ export const adminGuard = () => {
 
   return authService.checkAuth().pipe(
     map(user => {
-      if (user && user.is_admin) {
+      // Check if user has any administrative privilege
+      const role = user.role;
+      const hasPrivilege = ['admin', 'raid_leader', 'treasurer', 'event_manager'].includes(role);
+      
+      if (user && hasPrivilege) {
         return true;
       }
       router.navigate(['/dashboard']);

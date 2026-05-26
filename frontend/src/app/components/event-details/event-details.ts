@@ -1,12 +1,13 @@
-import { Component, OnInit, signal, computed, effect } from '@angular/core';
+import { Component, OnInit, signal, computed, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CalendarService, CalendarEvent, Signup } from '../../services/calendar';
 import { CharacterService, Character } from '../../services/character';
 import { RosterService, Roster } from '../../services/roster';
 import { AuthService } from '../../services/auth';
 import { ToastService } from '../../services/toast';
+import { ConfirmService } from '../../services/confirm';
 
 @Component({
   selector: 'app-event-details',
@@ -16,6 +17,9 @@ import { ToastService } from '../../services/toast';
   styleUrl: './event-details.css'
 })
 export class EventDetailsComponent implements OnInit {
+  private router = inject(Router);
+  private confirm = inject(ConfirmService);
+  
   event = signal<CalendarEvent | null>(null);
   signups = signal<Signup[]>([]);
   myCharacters = signal<Character[]>([]);
@@ -28,11 +32,27 @@ export class EventDetailsComponent implements OnInit {
   signupStatus: 'signed_up' | 'standby' | 'absent' = 'signed_up';
   comment = '';
 
+  // Edit Event Modal
+  showEditModal = signal(false);
+  editEventData = {
+    title: '',
+    description: '',
+    start_date: '',
+    start_time: '',
+    end_date: '',
+    end_time: '',
+    type: '',
+    customType: '',
+    roster_id: '' as string | null
+  };
+
   // Computed views
   tanks = computed(() => this.signups().filter(s => s.role === 'tank' && s.status !== 'absent'));
   heals = computed(() => this.signups().filter(s => s.role === 'heal' && s.status !== 'absent'));
   dps = computed(() => this.signups().filter(s => s.role === 'dps' && s.status !== 'absent'));
   absents = computed(() => this.signups().filter(s => s.status === 'absent'));
+
+  canManageEvents = computed(() => this.authService.canManageEvents());
 
   allowedCharacters = computed(() => {
     const evt = this.event();
@@ -51,8 +71,8 @@ export class EventDetailsComponent implements OnInit {
     private route: ActivatedRoute,
     private calendarService: CalendarService,
     private characterService: CharacterService,
-    private rosterService: RosterService,
-    private authService: AuthService,
+    public rosterService: RosterService,
+    public authService: AuthService,
     private toast: ToastService
   ) {
     // Effect to auto-select a character when the list of allowed characters is loaded or changed
@@ -108,6 +128,66 @@ export class EventDetailsComponent implements OnInit {
     this.characterService.getMyCharacters().subscribe(chars => {
       this.myCharacters.set(chars);
     });
+  }
+
+  openEditModal() {
+    const evt = this.event();
+    if (!evt) return;
+
+    this.editEventData = {
+      title: evt.title,
+      description: evt.description || '',
+      start_date: evt.start_time.split('T')[0],
+      start_time: evt.start_time.split('T')[1].substring(0, 5),
+      end_date: evt.end_time.split('T')[0],
+      end_time: evt.end_time.split('T')[1].substring(0, 5),
+      type: ['raid', 'mm+'].includes(evt.type) ? evt.type : 'custom',
+      customType: ['raid', 'mm+'].includes(evt.type) ? '' : evt.type,
+      roster_id: evt.roster_id || ''
+    };
+    this.showEditModal.set(true);
+  }
+
+  onUpdateEvent() {
+    if (!this.event()) return;
+    
+    const finalType = this.editEventData.type === 'custom' ? this.editEventData.customType : this.editEventData.type;
+    
+    const updatedData: CalendarEvent = {
+      id: this.event()!.id,
+      title: this.editEventData.title,
+      description: this.editEventData.description,
+      start_time: `${this.editEventData.start_date}T${this.editEventData.start_time}:00`,
+      end_time: `${this.editEventData.end_date}T${this.editEventData.end_time}:00`,
+      type: finalType,
+      roster_id: this.editEventData.roster_id || null
+    };
+
+    this.calendarService.updateEvent(this.event()!.id!, updatedData).subscribe({
+      next: () => {
+        this.loadEvent(this.event()!.id!);
+        this.showEditModal.set(false);
+        this.toast.success('Événement mis à jour.');
+      },
+      error: () => this.toast.error('Erreur lors de la mise à jour.')
+    });
+  }
+
+  async onDeleteEvent() {
+    const ok = await this.confirm.ask(
+      'Supprimer l\'événement',
+      'Êtes-vous sûr de vouloir supprimer cet événement ? Cette action est irréversible.'
+    );
+
+    if (ok && this.event()) {
+      this.calendarService.deleteEvent(this.event()!.id!).subscribe({
+        next: () => {
+          this.toast.success('Événement supprimé.');
+          this.router.navigate(['/calendar']);
+        },
+        error: () => this.toast.error('Erreur lors de la suppression.')
+      });
+    }
   }
 
   onCharacterChange() {

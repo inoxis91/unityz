@@ -14,6 +14,39 @@ const updateDiscordSchema = z.object({
   }),
 });
 
+const updateRoleSchema = z.object({
+  body: z.object({
+    role: z.enum(['admin', 'raid_leader', 'treasurer', 'event_manager', 'member']),
+  }),
+});
+
+router.get('/', isAdmin, async (req, res, next) => {
+  try {
+    const result = await pool.query('SELECT id, battletag, bnet_id, discord_id, role, created_at FROM users ORDER BY battletag ASC');
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.patch('/:id/role', isAdmin, validate(updateRoleSchema), async (req, res, next) => {
+  try {
+    const { role } = req.body;
+    const { id } = req.params;
+
+    const query = 'UPDATE users SET role = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *';
+    const result = await pool.query(query, [role, id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ status: 'error', message: 'User not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.patch('/discord', isAuthenticated, validate(updateDiscordSchema), async (req, res, next) => {
   try {
     const query = 'UPDATE users SET discord_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *';

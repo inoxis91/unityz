@@ -1,7 +1,7 @@
 import express from 'express';
 import pool from '../lib/db';
 import { EventService } from '../services/eventService';
-import { isAuthenticated, isAdmin } from '../middlewares/auth';
+import { isAuthenticated, canManageEvents } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import { createEventSchema, updateEventSchema, signupSchema } from '../schemas/eventSchemas';
 
@@ -51,8 +51,8 @@ router.get('/:id/signups', isAuthenticated, async (req, res, next) => {
   }
 });
 
-// POST /api/events : Crée un événement (Admin uniquement)
-router.post('/', isAdmin, validate(createEventSchema), async (req, res, next) => {
+// POST /api/events : Crée un événement (Admin, Raid Leader, Event Manager)
+router.post('/', canManageEvents, validate(createEventSchema), async (req, res, next) => {
   try {
     const event = await EventService.create(req.body, req.user!.id);
     res.status(201).json(event);
@@ -61,8 +61,8 @@ router.post('/', isAdmin, validate(createEventSchema), async (req, res, next) =>
   }
 });
 
-// PUT /api/events/:id : Modifie un événement (Admin uniquement)
-router.put('/:id', isAdmin, validate(updateEventSchema), async (req, res, next) => {
+// PUT /api/events/:id : Modifie un événement
+router.put('/:id', canManageEvents, validate(updateEventSchema), async (req, res, next) => {
   try {
     const event = await EventService.update(req.params.id as string, req.body);
     if (!event) {
@@ -74,8 +74,8 @@ router.put('/:id', isAdmin, validate(updateEventSchema), async (req, res, next) 
   }
 });
 
-// DELETE /api/events/:id : Supprime un événement (Admin uniquement)
-router.delete('/:id', isAdmin, async (req, res, next) => {
+// DELETE /api/events/:id : Supprime un événement
+router.delete('/:id', canManageEvents, async (req, res, next) => {
   try {
     const success = await EventService.delete(req.params.id as string);
     if (!success) {

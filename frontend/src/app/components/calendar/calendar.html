@@ -9,7 +9,7 @@
   </div>
 
   <!-- Create Event Modal (Admin Only) -->
-  <div class="modal-overlay" *ngIf="showCreateModal() && isAdmin()" (click)="closeCreateModal()">
+  <div class="modal-overlay" *ngIf="showCreateModal() && canManageEvents()" (click)="closeCreateModal()">
     <div class="modal-card" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div class="header-title">

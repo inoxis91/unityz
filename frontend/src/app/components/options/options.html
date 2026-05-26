@@ -63,8 +63,8 @@
             </div>
             <div class="info-item">
               <span class="label">Statut</span>
-              <span class="value status-badge" [class.admin]="user.is_admin">
-                {{ user.is_admin ? 'ADMINISTRATEUR' : 'MEMBRE' }}
+              <span class="value status-badge" [class.admin]="authService.isAdmin()">
+                {{ user.role.toUpperCase() }}
               </span>
             </div>
           </div>

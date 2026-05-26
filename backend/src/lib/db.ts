@@ -20,11 +20,31 @@ export const initDb = async () => {
         battletag VARCHAR(255) NOT NULL,
         discord_id VARCHAR(255),
         access_token TEXT,
-        is_admin BOOLEAN DEFAULT FALSE,
+        role VARCHAR(50) DEFAULT 'member',
         rank INTEGER,
         created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+    `);
+
+    // Ensure role column exists and migrate is_admin before dropping it
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='role') THEN
+          ALTER TABLE users ADD COLUMN role VARCHAR(50) DEFAULT 'member';
+          
+          -- Migrate existing admins IF the column is_admin still exists
+          IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='is_admin') THEN
+            UPDATE users SET role = 'admin' WHERE is_admin = TRUE;
+          END IF;
+        END IF;
+
+        -- Drop the obsolete is_admin column
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='is_admin') THEN
+          ALTER TABLE users DROP COLUMN is_admin;
+        END IF;
+      END $$;
     `);
 
     // Ensure discord_id exists (migration for existing tables)
@@ -33,17 +53,6 @@ export const initDb = async () => {
       BEGIN 
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='discord_id') THEN
           ALTER TABLE users ADD COLUMN discord_id VARCHAR(255);
-        END IF;
-      END $$;
-    `);
-
-
-    // Ensure is_admin column exists
-    await client.query(`
-      DO $$ 
-      BEGIN 
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='is_admin') THEN
-          ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT FALSE;
         END IF;
       END $$;
     `);

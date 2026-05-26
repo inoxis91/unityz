@@ -14,8 +14,7 @@ export class NavbarComponent {
   isMenuOpen = signal(false);
 
   isAdmin = computed(() => {
-    const user = this.authService.currentUser();
-    return user?.is_admin === true;
+    return this.authService.isAdmin();
   });
 
   constructor(public authService: AuthService) {}

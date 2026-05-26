@@ -1,0 +1,42 @@
+<div class="users-admin">
+  <div class="section-header">
+    <h3>Gestion des Membres & Rôles</h3>
+    <p>Attribuez des permissions spécifiques aux membres de la guilde.</p>
+  </div>
+
+  <div class="users-list-card">
+    <div class="table-container">
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>Membre</th>
+            <th>BattleTag</th>
+            <th>Rôle</th>
+            <th>Inscrit le</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of users(); track user.id) {
+            <tr>
+              <td class="user-cell">
+                <div class="user-avatar">
+                  {{ user.battletag.charAt(0).toUpperCase() }}
+                </div>
+                <span class="user-name">{{ user.battletag.split('#')[0] }}</span>
+              </td>
+              <td class="btag-cell">{{ user.battletag }}</td>
+              <td class="role-cell">
+                <select [ngModel]="user.role" (ngModelChange)="onRoleChange(user, $event)" class="role-select">
+                  @for (role of roles; track role.value) {
+                    <option [value]="role.value">{{ role.label }}</option>
+                  }
+                </select>
+              </td>
+              <td class="date-cell">{{ user.created_at | date:'dd/MM/yyyy' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -6,7 +6,7 @@ declare global {
       battletag: string;
       discord_id?: string | null;
       access_token: string | null;
-      is_admin: boolean;
+      role: string;
       rank?: number | null;
       created_at: Date;
       updated_at: Date;
