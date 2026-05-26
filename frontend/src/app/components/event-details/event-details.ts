@@ -8,6 +8,12 @@ import { RosterService, Roster } from '../../services/roster';
 import { AuthService } from '../../services/auth';
 import { ToastService } from '../../services/toast';
 import { ConfirmService } from '../../services/confirm';
+import { CLASS_BUFFS, BuffInfo } from '../../constants/wow';
+
+export interface Buff extends BuffInfo {
+  present: boolean;
+  count: number;
+}
 
 @Component({
   selector: 'app-event-details',
@@ -47,10 +53,24 @@ export class EventDetailsComponent implements OnInit {
   };
 
   // Computed views
-  tanks = computed(() => this.signups().filter(s => s.role === 'tank' && s.status !== 'absent'));
-  heals = computed(() => this.signups().filter(s => s.role === 'heal' && s.status !== 'absent'));
-  dps = computed(() => this.signups().filter(s => s.role === 'dps' && s.status !== 'absent'));
+  tanks = computed(() => this.signups().filter(s => s.role === 'tank' && s.status === 'signed_up'));
+  heals = computed(() => this.signups().filter(s => s.role === 'heal' && s.status === 'signed_up'));
+  dps = computed(() => this.signups().filter(s => s.role === 'dps' && s.status === 'signed_up'));
   absents = computed(() => this.signups().filter(s => s.status === 'absent'));
+
+  buffs = computed(() => {
+    const activeSignups = this.signups().filter(s => s.status === 'signed_up');
+    
+    return CLASS_BUFFS.map(baseBuff => {
+      const allowedClasses = baseBuff.classes;
+      const count = activeSignups.filter(s => allowedClasses.includes(s.character_class || '')).length;
+      return {
+        ...baseBuff,
+        present: count > 0,
+        count: count
+      } as Buff;
+    });
+  });
 
   canManageEvents = computed(() => this.authService.canManageEvents());
 

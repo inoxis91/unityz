@@ -163,53 +163,64 @@
 
   <!-- TAB: Composition -->
   <div class="tab-content" *ngIf="activeTab() === 'composition'">
-    <div class="composition-view">
-      <div class="role-column tanks">
-        <h4>🛡️ Tanks ({{ tanks().length }})</h4>
-        <div class="comp-list">
-          <div *ngFor="let s of tanks()" class="comp-item" [class]="'class-' + getClassCategory(s.character_class)" [class.is-standby]="s.status === 'standby'">
-            <div class="name-row">
-              <span class="name">{{ s.character_name }}</span>
-              <span *ngIf="s.status === 'standby'" class="maybe-tag">?</span>
-            </div>
-            <span class="sub">{{ s.character_class }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="role-column heals">
-        <h4>🌿 Heals ({{ heals().length }})</h4>
-        <div class="comp-list">
-          <div *ngFor="let s of heals()" class="comp-item" [class]="'class-' + getClassCategory(s.character_class)" [class.is-standby]="s.status === 'standby'">
-            <div class="name-row">
-              <span class="name">{{ s.character_name }}</span>
-              <span *ngIf="s.status === 'standby'" class="maybe-tag">?</span>
-            </div>
-            <span class="sub">{{ s.character_class }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="role-column dps">
-        <h4>⚔️ DPS ({{ dps().length }})</h4>
-        <div class="comp-list dps-grid">
-          <div *ngFor="let s of dps()" class="comp-item" [class]="'class-' + getClassCategory(s.character_class)" [class.is-standby]="s.status === 'standby'">
-            <div class="name-row">
-              <span class="name">{{ s.character_name }}</span>
-              <span *ngIf="s.status === 'standby'" class="maybe-tag">?</span>
-            </div>
-            <span class="sub">{{ s.character_class }}</span>
+    <!-- Buffs Tracker -->
+    <div class="buffs-container animated-fade-in">
+      <h3>Buffs de Raid</h3>
+      <div class="buffs-grid">
+        <div *ngFor="let buff of buffs()" class="buff-card" [class.missing]="!buff.present" [title]="buff.label">
+          <div class="buff-icon">{{ buff.icon }}</div>
+          <div class="buff-info">
+            <span class="buff-label">{{ buff.description }}</span>
+            <span class="buff-count" *ngIf="buff.present">x{{ buff.count }}</span>
+            <span class="buff-status" *ngIf="!buff.present">MANQUANT</span>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="absents-section" *ngIf="absents().length > 0">
-      <h4>❌ Absents ({{ absents().length }})</h4>
-      <div class="absent-pills">
-        <div *ngFor="let s of absents()" class="absent-pill">
-          <span class="btag" [class]="'class-' + getClassCategory(s.main_character_class)">{{ s.main_character_name || 'Inconnu' }}</span>
-          <span *ngIf="s.comment" class="absent-note" [title]="s.comment">ℹ️</span>
+    <div class="composition-layout">
+      <div class="role-column tanks">
+        <div class="column-header">
+          <span class="icon">🛡️</span>
+          <h4>Tanks</h4>
+          <span class="count">{{ tanks().length }}</span>
+        </div>
+        <div class="comp-grid">
+          <div *ngFor="let s of tanks()" class="modern-comp-card" [class]="'class-' + getClassCategory(s.character_class)">
+            <div class="card-content">
+              <span class="name">{{ s.character_name }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="role-column heals">
+        <div class="column-header">
+          <span class="icon">🌿</span>
+          <h4>Heals</h4>
+          <span class="count">{{ heals().length }}</span>
+        </div>
+        <div class="comp-grid">
+          <div *ngFor="let s of heals()" class="modern-comp-card" [class]="'class-' + getClassCategory(s.character_class)">
+            <div class="card-content">
+              <span class="name">{{ s.character_name }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="role-column dps">
+        <div class="column-header">
+          <span class="icon">⚔️</span>
+          <h4>DPS</h4>
+          <span class="count">{{ dps().length }}</span>
+        </div>
+        <div class="comp-grid dps-layout">
+          <div *ngFor="let s of dps()" class="modern-comp-card" [class]="'class-' + getClassCategory(s.character_class)">
+            <div class="card-content">
+              <span class="name">{{ s.character_name }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
