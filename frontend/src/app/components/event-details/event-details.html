@@ -108,17 +108,32 @@
           </button>
         </div>
       </div>
+<!-- List of signups -->
+<div class="list-card">
+  <div class="list-header">
+    <div class="list-title-group">
+      <h3>Liste des participants</h3>
+      <span class="count-badge">{{ signups().length }}</span>
+    </div>
+    <div class="sort-controls">
+      <button [class.active]="sortMethod() === 'date'" (click)="sortMethod.set('date')" title="Trier par date">🕒</button>
+      <button [class.active]="sortMethod() === 'status'" (click)="sortMethod.set('status')" title="Trier par statut">📊</button>
+    </div>
+  </div>
 
-      <!-- List of signups -->
-      <div class="list-card">
-        <div class="list-header">
-          <h3>Liste des participants</h3>
-          <span class="count-badge">{{ signups().length }}</span>
-        </div>
-        
-        <div class="participants-grid">
-          <div *ngFor="let s of signups()" class="participant-card" [class]="s.status" [class.is-absent]="s.status === 'absent'">
-            <div class="participant-main">
+  <div class="participants-grid">
+    <div *ngFor="let s of sortedSignups()" 
+         class="participant-card" 
+         [ngClass]="[
+           s.status, 
+           s.status === 'absent' ? 'is-absent' : '', 
+           'class-' + getClassCategory(s.status === 'absent' ? s.main_character_class : s.character_class)
+         ]"
+         (click)="s.status !== 'absent' ? openAltsModal(s) : null"
+         [class.clickable]="s.status !== 'absent'">
+      <div class="participant-main">
+...
+
               <div class="role-icon-box" *ngIf="s.status !== 'absent'">
                 <span class="role-icon" [class]="s.role">
                   <ng-container [ngSwitch]="s.role">
@@ -133,7 +148,7 @@
               </div>
               
               <div class="char-info">
-                <span class="participant-name" [class]="'class-' + getClassCategory(s.status === 'absent' ? s.main_character_class : s.character_class)">
+                <span class="participant-name">
                   {{ s.status === 'absent' ? (s.main_character_name || 'Inconnu') : s.character_name }}
                 </span>
                 <span *ngIf="s.status === 'absent'" class="absent-label">Absent</span>
@@ -320,9 +335,9 @@
     </div>
     <div class="modal-body">
       <div class="alts-list">
-        <div *ngFor="let char of selectedSignup()?.user_characters" class="alt-row" [class]="'border-class-' + getClassCategory(char.class)">
+        <div *ngFor="let char of selectedSignup()?.user_characters" class="alt-row" [class]="'class-' + getClassCategory(char.class)">
           <div class="alt-info">
-            <span class="alt-name" [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</span>
+            <span class="alt-name">{{ char.name }}</span>
             <span class="alt-class">{{ char.class }}</span>
           </div>
           <div class="alt-roles">

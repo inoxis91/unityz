@@ -32,6 +32,9 @@ export class EventDetailsComponent implements OnInit {
   rosters = signal<Roster[]>([]);
   activeTab = signal<'participants' | 'composition'>('participants');
   
+  // Sorting
+  sortMethod = signal<'date' | 'status'>('date');
+
   // Alts View
   showAltsModal = signal(false);
   selectedSignup = signal<Signup | null>(null);
@@ -61,6 +64,33 @@ export class EventDetailsComponent implements OnInit {
   heals = computed(() => this.signups().filter(s => s.role === 'heal' && s.status === 'signed_up'));
   dps = computed(() => this.signups().filter(s => s.role === 'dps' && s.status === 'signed_up'));
   absents = computed(() => this.signups().filter(s => s.status === 'absent'));
+
+  sortedSignups = computed(() => {
+    const list = [...this.signups()];
+    const method = this.sortMethod();
+
+    if (method === 'date') {
+      return list.sort((a, b) => {
+        const dateA = new Date(a.signup_date || (a as any).created_at || 0).getTime();
+        const dateB = new Date(b.signup_date || (b as any).created_at || 0).getTime();
+        return dateA - dateB; // Oldest first
+      });
+    } else {
+      // Sort by status: signed_up > standby > absent
+      const statusWeight: { [key: string]: number } = {
+        'signed_up': 1,
+        'standby': 2,
+        'absent': 3
+      };
+      return list.sort((a, b) => {
+        const weightA = statusWeight[a.status] || 99;
+        const weightB = statusWeight[b.status] || 99;
+        if (weightA !== weightB) return weightA - weightB;
+        // Secondary sort by date if status is same
+        return new Date(a.signup_date || (a as any).created_at || 0).getTime() - new Date(b.signup_date || (b as any).created_at || 0).getTime();
+      });
+    }
+  });
 
   buffs = computed(() => {
     const activeSignups = this.signups().filter(s => s.status === 'signed_up');
