@@ -603,6 +603,18 @@
 
 .buff-icon {
   font-size: 1.25rem;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.buff-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
 }
 
 .buff-info {
@@ -692,11 +704,145 @@
   min-height: 45px;
 }
 
-.modern-comp-card:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
-  filter: brightness(1.1);
+.modern-comp-card.clickable {
+  cursor: pointer;
 }
+
+/* Alts Modal Specifics */
+.alts-modal {
+  max-width: 450px;
+}
+
+.alts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.alt-row {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 5px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform 0.2s;
+}
+
+.alt-row:hover {
+  transform: translateX(4px);
+  background: #f1f5f9;
+}
+
+.alt-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.alt-name {
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.alt-class {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.alt-roles {
+  display: flex;
+  gap: 8px;
+  font-size: 1.1rem;
+}
+
+/* Re-using border classes for alts */
+.alt-row.border-class-warrior { border-left-color: var(--color-warrior); }
+.alt-row.border-class-paladin { border-left-color: var(--color-paladin); }
+.alt-row.border-class-hunter { border-left-color: var(--color-hunter); }
+.alt-row.border-class-rogue { border-left-color: var(--color-rogue); }
+.alt-row.border-class-priest { border-left-color: #cbd5e1; }
+.alt-row.border-class-death-knight { border-left-color: var(--color-death-knight); }
+.alt-row.border-class-shaman { border-left-color: var(--color-shaman); }
+.alt-row.border-class-mage { border-left-color: var(--color-mage); }
+.alt-row.border-class-warlock { border-left-color: var(--color-warlock); }
+.alt-row.border-class-monk { border-left-color: var(--color-monk); }
+.alt-row.border-class-druid { border-left-color: var(--color-druid); }
+.alt-row.border-class-demon-hunter { border-left-color: var(--color-demon-hunter); }
+.alt-row.border-class-evoker { border-left-color: var(--color-evoker); }
+
+.modern-comp-card.clickable {
+  cursor: pointer;
+}
+
+/* Alts Modal Specifics */
+.alts-modal {
+  max-width: 450px;
+}
+
+.alts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.alt-row {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 5px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform 0.2s;
+}
+
+.alt-row:hover {
+  transform: translateX(4px);
+  background: #f1f5f9;
+}
+
+.alt-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.alt-name {
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.alt-class {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.alt-roles {
+  display: flex;
+  gap: 8px;
+  font-size: 1.1rem;
+}
+
+/* Re-using border classes for alts */
+.alt-row.border-class-warrior { border-left-color: var(--color-warrior); }
+.alt-row.border-class-paladin { border-left-color: var(--color-paladin); }
+.alt-row.border-class-hunter { border-left-color: var(--color-hunter); }
+.alt-row.border-class-rogue { border-left-color: var(--color-rogue); }
+.alt-row.border-class-priest { border-left-color: #cbd5e1; }
+.alt-row.border-class-death-knight { border-left-color: var(--color-death-knight); }
+.alt-row.border-class-shaman { border-left-color: var(--color-shaman); }
+.alt-row.border-class-mage { border-left-color: var(--color-mage); }
+.alt-row.border-class-warlock { border-left-color: var(--color-warlock); }
+.alt-row.border-class-monk { border-left-color: var(--color-monk); }
+.alt-row.border-class-druid { border-left-color: var(--color-druid); }
+.alt-row.border-class-demon-hunter { border-left-color: var(--color-demon-hunter); }
+.alt-row.border-class-evoker { border-left-color: var(--color-evoker); }
 
 .modern-comp-card .name {
   font-weight: 800;

@@ -168,7 +168,10 @@
       <h3>Buffs de Raid</h3>
       <div class="buffs-grid">
         <div *ngFor="let buff of buffs()" class="buff-card" [class.missing]="!buff.present" [title]="buff.label">
-          <div class="buff-icon">{{ buff.icon }}</div>
+          <div class="buff-icon">
+            <img *ngIf="buff.icon.includes('/')" [src]="buff.icon" [alt]="buff.label">
+            <span *ngIf="!buff.icon.includes('/')">{{ buff.icon }}</span>
+          </div>
           <div class="buff-info">
             <span class="buff-label">{{ buff.description }}</span>
             <span class="buff-count" *ngIf="buff.present">x{{ buff.count }}</span>
@@ -186,7 +189,7 @@
           <span class="count">{{ tanks().length }}</span>
         </div>
         <div class="comp-grid">
-          <div *ngFor="let s of tanks()" class="modern-comp-card" [class]="'class-' + getClassCategory(s.character_class)">
+          <div *ngFor="let s of tanks()" class="modern-comp-card clickable" [class]="'class-' + getClassCategory(s.character_class)" (click)="openAltsModal(s)">
             <div class="card-content">
               <span class="name">{{ s.character_name }}</span>
             </div>
@@ -201,7 +204,7 @@
           <span class="count">{{ heals().length }}</span>
         </div>
         <div class="comp-grid">
-          <div *ngFor="let s of heals()" class="modern-comp-card" [class]="'class-' + getClassCategory(s.character_class)">
+          <div *ngFor="let s of heals()" class="modern-comp-card clickable" [class]="'class-' + getClassCategory(s.character_class)" (click)="openAltsModal(s)">
             <div class="card-content">
               <span class="name">{{ s.character_name }}</span>
             </div>
@@ -216,7 +219,7 @@
           <span class="count">{{ dps().length }}</span>
         </div>
         <div class="comp-grid dps-layout">
-          <div *ngFor="let s of dps()" class="modern-comp-card" [class]="'class-' + getClassCategory(s.character_class)">
+          <div *ngFor="let s of dps()" class="modern-comp-card clickable" [class]="'class-' + getClassCategory(s.character_class)" (click)="openAltsModal(s)">
             <div class="card-content">
               <span class="name">{{ s.character_name }}</span>
             </div>
@@ -302,5 +305,36 @@
         <button type="submit" class="btn-primary">Enregistrer les modifications</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal de visualisation des Alts -->
+<div class="modal-overlay" *ngIf="showAltsModal() && selectedSignup()" (click)="showAltsModal.set(false)">
+  <div class="modal-card alts-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="header-title">
+        <span class="icon">👥</span>
+        <h2>Personnages de {{ selectedSignup()?.battletag?.split('#')?.[0] }}</h2>
+      </div>
+      <button class="close-btn" (click)="showAltsModal.set(false)">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="alts-list">
+        <div *ngFor="let char of selectedSignup()?.user_characters" class="alt-row" [class]="'border-class-' + getClassCategory(char.class)">
+          <div class="alt-info">
+            <span class="alt-name" [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</span>
+            <span class="alt-class">{{ char.class }}</span>
+          </div>
+          <div class="alt-roles">
+            <span *ngIf="char.is_tank" title="Tank">🛡️</span>
+            <span *ngIf="char.is_heal" title="Heal">🌿</span>
+            <span *ngIf="char.is_dps" title="DPS">⚔️</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="showAltsModal.set(false)">Fermer</button>
+    </div>
   </div>
 </div>

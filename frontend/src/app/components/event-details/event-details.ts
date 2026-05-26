@@ -32,6 +32,10 @@ export class EventDetailsComponent implements OnInit {
   rosters = signal<Roster[]>([]);
   activeTab = signal<'participants' | 'composition'>('participants');
   
+  // Alts View
+  showAltsModal = signal(false);
+  selectedSignup = signal<Signup | null>(null);
+
   // Signup Form
   selectedCharacterId = '';
   selectedRole = 'dps';
@@ -267,5 +271,10 @@ export class EventDetailsComponent implements OnInit {
 
   getClassCategory(className: string | undefined): string {
     return CharacterService.getClassId(className);
+  }
+
+  openAltsModal(signup: Signup) {
+    this.selectedSignup.set(signup);
+    this.showAltsModal.set(true);
   }
 }

@@ -31,6 +31,7 @@ export interface Signup {
   main_character_name?: string;
   main_character_class?: string;
   battletag?: string;
+  user_characters?: any[];
 }
 
 @Injectable({

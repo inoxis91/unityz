@@ -31,6 +31,7 @@ export interface Signup {
   main_character_class?: string;
   battletag?: string;
   signup_date?: Date;
+  user_characters?: any[]; // For alts view
 }
 
 export class EventService {
@@ -106,7 +107,16 @@ export class EventService {
       ORDER BY s.created_at ASC
     `;
     const result = await pool.query(query, [eventId]);
-    return result.rows;
+    const signups = result.rows;
+
+    // Fetch all characters for each user to show alts in frontend
+    for (const signup of signups) {
+      const charQuery = 'SELECT id, name, class, is_tank, is_heal, is_dps FROM characters WHERE user_id = $1 ORDER BY is_main DESC, name ASC';
+      const charResult = await pool.query(charQuery, [signup.user_id]);
+      signup.user_characters = charResult.rows;
+    }
+
+    return signups;
   }
 
   static async signup(eventId: string, userId: string, data: any): Promise<Signup> {
