@@ -36,6 +36,13 @@ export class CalendarComponent implements OnInit {
       center: 'title',
       right: 'dayGridTwoWeeks,dayGridMonth'
     },
+    buttonText: {
+      today: 'Aujourd\'hui',
+      month: 'Mois',
+      week: 'Semaine',
+      day: 'Jour',
+      list: 'Liste'
+    },
     locale: 'fr',
     firstDay: 1, // Start on Monday
     events: [],

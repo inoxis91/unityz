@@ -6,7 +6,9 @@
   <div class="event-header-card">
     <div class="event-header-top">
       <div class="event-title-row">
-        <div class="type-badge" [class]="event()?.type?.toLowerCase()">{{ event()?.type }}</div>
+        <div class="type-badge" [ngClass]="event()?.type?.toLowerCase() === 'mm+' ? 'mm-plus' : event()?.type?.toLowerCase()">
+          {{ event()?.type }}
+        </div>
         <div class="roster-badge" *ngIf="event()?.roster_name" [title]="'Poids: ' + event()?.roster_weight">{{ event()?.roster_name }}</div>
         <div class="roster-badge all" *ngIf="!event()?.roster_name">Tous</div>
         <h1>{{ event()?.title }}</h1>
