@@ -6,6 +6,8 @@
   <div class="event-header-card">
     <div class="event-title-row">
       <div class="type-badge" [class]="event()?.type?.toLowerCase()">{{ event()?.type }}</div>
+      <div class="roster-badge" *ngIf="event()?.roster_name" [title]="'Poids: ' + event()?.roster_weight">{{ event()?.roster_name }}</div>
+      <div class="roster-badge all" *ngIf="!event()?.roster_name">Tous</div>
       <h1>{{ event()?.title }}</h1>
     </div>
     <div class="event-meta">
@@ -49,19 +51,25 @@
         </div>
 
         <div class="signup-fields animated-fade-in" *ngIf="signupStatus !== 'absent'">
-          <div class="form-group" *ngIf="myCharacters().length > 0; else noChars">
+          <div class="form-group" *ngIf="allowedCharacters().length > 0; else noChars">
             <label>Sélectionnez votre personnage :</label>
             <select [(ngModel)]="selectedCharacterId" (change)="onCharacterChange()" class="modern-select">
-              <option *ngFor="let char of myCharacters()" [value]="char.id">{{ char.name }} ({{ char.class }})</option>
+              <option *ngFor="let char of allowedCharacters()" [value]="char.id">{{ char.name }} ({{ char.class }})</option>
             </select>
           </div>
           <ng-template #noChars>
             <div class="warning-box">
-              <p>⚠️ Aucun personnage trouvé. <a routerLink="/characters">Importez vos personnages</a> pour vous inscrire.</p>
+              <p *ngIf="myCharacters().length > 0">
+                ⚠️ Aucun de vos personnages n'est autorisé pour cet événement. 
+                Cet événement est restreint au roster <strong>{{ event()?.roster_name }}</strong> (ou supérieur).
+              </p>
+              <p *ngIf="myCharacters().length === 0">
+                ⚠️ Aucun personnage trouvé. <a routerLink="/characters">Importez vos personnages</a> pour vous inscrire.
+              </p>
             </div>
           </ng-template>
 
-          <div class="form-group" *ngIf="myCharacters().length > 0">
+          <div class="form-group" *ngIf="allowedCharacters().length > 0">
             <label>Votre rôle pour cet événement :</label>
             <div class="role-selector">
               <button [class.active]="selectedRole === 'tank'" (click)="selectedRole = 'tank'">🛡️ Tank</button>

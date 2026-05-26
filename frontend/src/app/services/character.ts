@@ -8,6 +8,7 @@ export interface Character {
   realm: string;
   class: string;
   level: number;
+  roster_id?: string | null;
   is_tank?: boolean;
   is_heal?: boolean;
   is_dps?: boolean;

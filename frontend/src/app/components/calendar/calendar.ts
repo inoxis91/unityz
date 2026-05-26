@@ -8,6 +8,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import { CalendarService, CalendarEvent } from '../../services/calendar';
 import { AuthService } from '../../services/auth';
 import { CharacterService } from '../../services/character';
+import { RosterService } from '../../services/roster';
 import { ToastService } from '../../services/toast';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
@@ -22,18 +23,52 @@ import { RouterModule, Router } from '@angular/router';
 export class CalendarComponent implements OnInit {
   calendarOptions = signal<CalendarOptions>({
     plugins: [dayGridPlugin, interactionPlugin, timeGridPlugin],
-    initialView: 'dayGridMonth',
+    initialView: 'dayGridTwoWeeks',
+    views: {
+      dayGridTwoWeeks: {
+        type: 'dayGrid',
+        duration: { weeks: 2 },
+        buttonText: '2 Semaines'
+      }
+    },
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
-      right: 'dayGridMonth,timeGridWeek,timeGridDay'
+      right: 'dayGridTwoWeeks,dayGridMonth'
     },
     locale: 'fr',
+    firstDay: 1, // Start on Monday
     events: [],
     eventClick: this.handleEventClick.bind(this),
     selectable: true,
     select: this.handleDateSelect.bind(this),
     dateClick: this.handleDateClick.bind(this),
+    height: 'auto',
+    expandRows: true,
+    showNonCurrentDates: false,
+    eventContent: (arg) => {
+      const event = arg.event;
+      const type = event.extendedProps['type'] || 'custom';
+      const rosterName = event.extendedProps['roster_name'];
+      const startTime = event.start ? event.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
+      
+      let typeClass = 'tag-custom';
+      if (type.toLowerCase().includes('raid')) typeClass = 'tag-raid';
+      if (type.toLowerCase().includes('mm+')) typeClass = 'tag-mm';
+
+      return {
+        html: `
+          <div class="custom-event-card">
+            <div class="event-time">${startTime}</div>
+            <div class="event-title">${event.title}</div>
+            <div class="event-tags-container">
+              <div class="event-tag ${typeClass}">${type.toUpperCase()}</div>
+              ${rosterName ? `<div class="event-tag tag-roster">${rosterName.toUpperCase()}</div>` : '<div class="event-tag tag-all">TOUS</div>'}
+            </div>
+          </div>
+        `
+      };
+    }
   });
 
   showCreateModal = signal(false);
@@ -47,7 +82,8 @@ export class CalendarComponent implements OnInit {
     end_date: '',
     end_time: '22:30',
     type: 'raid',
-    customType: ''
+    customType: '',
+    roster_id: '' as string | null
   };
 
   isAdmin = computed(() => {
@@ -58,12 +94,14 @@ export class CalendarComponent implements OnInit {
     private calendarService: CalendarService,
     public authService: AuthService,
     private characterService: CharacterService,
+    public rosterService: RosterService,
     private router: Router,
     private toast: ToastService
   ) {}
 
   ngOnInit() {
     this.loadEvents();
+    this.rosterService.loadRosters().subscribe();
   }
 
   loadEvents() {
@@ -116,7 +154,8 @@ export class CalendarComponent implements OnInit {
       description: this.newEvent.description,
       start_time: `${this.newEvent.start_date}T${this.newEvent.start_time}:00`,
       end_time: `${finalEndDate}T${this.newEvent.end_time}:00`,
-      type: finalType
+      type: finalType,
+      roster_id: this.newEvent.roster_id || null
     };
 
     this.calendarService.createEvent(eventData).subscribe({
@@ -139,7 +178,8 @@ export class CalendarComponent implements OnInit {
       end_date: '',
       end_time: '22:30',
       type: 'raid',
-      customType: ''
+      customType: '',
+      roster_id: ''
     };
   }
 

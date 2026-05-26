@@ -1,17 +1,28 @@
-<div class="login-container">
-  <h1>Bienvenue sur Unity'Z</h1>
-  
-  <div *ngIf="!authService.currentUser()">
-    <p>Connectez-vous avec votre compte Battle.net pour accéder au roster de la guilde.</p>
-    <button (click)="login()" class="btn-bnet">
-      Se connecter avec Battle.net
-    </button>
-  </div>
+<div class="login-page">
+  <div class="login-card">
+    <div class="logo-container">
+      <h1 class="guild-name">Unity'Z</h1>
+      <p class="guild-subtitle">Gestion de Guilde WoW</p>
+    </div>
 
-  <div *ngIf="authService.currentUser()">
-    <p>Vous êtes déjà connecté en tant que <strong>{{ authService.currentUser()?.battletag }}</strong>.</p>
-    <div class="actions">
-      <a routerLink="/dashboard" class="btn-dashboard">Accéder au Tableau de bord</a>
+    <div class="content-section" *ngIf="!authService.currentUser()">
+      <p class="description">
+        Connectez-vous pour accéder au calendrier des raids, gérer vos personnages et suivre vos performances.
+      </p>
+      
+      <button (click)="login()" class="btn-bnet">
+        <svg class="bnet-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2zm-1.5 5v10h1.5l1.5-5.5L15 17h1.5V7H15l-1.5 5.5L12 7h-1.5z"/>
+        </svg>
+        <span>Se connecter avec Battle.net</span>
+      </button>
+    </div>
+
+    <div class="logged-in-section" *ngIf="authService.currentUser()">
+      <p class="welcome-text">
+        Bonjour <span class="battletag">{{ authService.currentUser()?.battletag }}</span> !
+      </p>
+      <a routerLink="/dashboard" class="btn-dashboard">Accéder au Tableau de Bord</a>
     </div>
   </div>
 </div>

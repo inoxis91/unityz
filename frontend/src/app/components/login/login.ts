@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { AuthService } from '../../services/auth';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -11,14 +11,14 @@ import { RouterModule } from '@angular/router';
   styleUrl: './login.css'
 })
 export class LoginComponent implements OnInit {
+  private router = inject(Router);
   constructor(public authService: AuthService) {}
 
   ngOnInit() {
     // Vérifie si on est déjà connecté pour rediriger vers le dashboard
     this.authService.checkAuth().subscribe({
       next: () => {
-        // Optionnel : redirection automatique si déjà connecté
-        // window.location.href = '/dashboard';
+        this.router.navigate(['/dashboard']);
       },
       error: () => {} // On reste sur la page de login si pas connecté
     });

@@ -112,9 +112,20 @@ export const initDb = async () => {
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         name VARCHAR(255) NOT NULL,
         description TEXT,
+        weight INTEGER DEFAULT 1,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+    `);
+
+    // Ensure weight column exists in rosters
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='rosters' AND column_name='weight') THEN
+          ALTER TABLE rosters ADD COLUMN weight INTEGER DEFAULT 1;
+        END IF;
+      END $$;
     `);
 
     // Ensure roster_id column exists in characters
@@ -136,10 +147,21 @@ export const initDb = async () => {
         start_time TIMESTAMP NOT NULL,
         end_time TIMESTAMP NOT NULL,
         type VARCHAR(50) NOT NULL, -- 'raid', 'other'
+        roster_id UUID REFERENCES rosters(id) ON DELETE SET NULL,
         created_by VARCHAR(255) REFERENCES users(id),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+    `);
+
+    // Ensure roster_id column exists in events
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='events' AND column_name='roster_id') THEN
+          ALTER TABLE events ADD COLUMN roster_id UUID REFERENCES rosters(id) ON DELETE SET NULL;
+        END IF;
+      END $$;
     `);
 
     // Event signups table

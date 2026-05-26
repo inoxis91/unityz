@@ -60,10 +60,55 @@
   border-radius: 8px 8px 0 0;
 }
 
-.roster-title h4 {
+.title-with-weight {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.title-with-weight h4 {
   margin: 0;
   font-size: 1.2rem;
   color: #212529;
+}
+
+.weight-label {
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.roster-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-action-icon {
+  background: white;
+  border: 1px solid #e2e8f0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #64748b;
+}
+
+.btn-action-icon:hover {
+  border-color: #0074e0;
+  color: #0074e0;
+  background: #f0f7ff;
+  transform: translateY(-1px);
+}
+
+.btn-action-icon.delete:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: #fef2f2;
 }
 
 .roster-desc {

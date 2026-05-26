@@ -23,7 +23,7 @@ import { ToastService } from '../../../services/toast';
 })
 export class AdminRostersComponent implements OnInit {
   showCreateModal = signal(false);
-  newRoster = { name: '', description: '' };
+  newRoster = { name: '', description: '', weight: 1 };
   
   // Modal for editing
   showEditModal = signal(false);
@@ -84,7 +84,8 @@ export class AdminRostersComponent implements OnInit {
     if (!this.editingRoster || !this.editingRoster.name) return;
     this.rosterService.updateRoster(this.editingRoster.id, {
       name: this.editingRoster.name,
-      description: this.editingRoster.description
+      description: this.editingRoster.description,
+      weight: this.editingRoster.weight
     }).subscribe({
         next: () => {
             this.toast.success('Roster mis à jour.');
@@ -120,7 +121,7 @@ export class AdminRostersComponent implements OnInit {
 
   closeModal() {
     this.showCreateModal.set(false);
-    this.newRoster = { name: '', description: '' };
+    this.newRoster = { name: '', description: '', weight: 1 };
   }
 
   getClassCategory(className: string | undefined): string {

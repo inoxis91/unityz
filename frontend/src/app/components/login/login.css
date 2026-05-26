@@ -1,44 +1,147 @@
-.login-container {
+.login-page {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 80vh;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0b0d17 0%, #1a1e2e 100%);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.login-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 40px;
+  width: 100%;
+  max-width: 450px;
   text-align: center;
-  font-family: Arial, sans-serif;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.8s ease-out;
+}
+
+.logo-container {
+  margin-bottom: 30px;
+}
+
+.guild-name {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(to right, #ffffff, #0074e0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.guild-subtitle {
+  color: #8892b0;
+  font-size: 1rem;
+  margin-top: 5px;
+  letter-spacing: 1px;
+}
+
+.content-section {
+  margin-bottom: 40px;
+}
+
+.description {
+  color: #ccd6f6;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 30px;
 }
 
 .btn-bnet {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
   background-color: #0074e0;
   color: white;
   border: none;
-  padding: 12px 24px;
+  padding: 16px 24px;
   font-size: 1.1rem;
-  border-radius: 4px;
+  font-weight: 600;
+  border-radius: 8px;
   cursor: pointer;
-  margin-top: 20px;
-  transition: background-color 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px -1px rgba(0, 116, 224, 0.3);
 }
 
 .btn-bnet:hover {
   background-color: #0056a3;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 116, 224, 0.4);
+}
+
+.btn-bnet:active {
+  transform: translateY(0);
+}
+
+.bnet-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.logged-in-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.welcome-text {
+  color: #ccd6f6;
+  font-size: 1.2rem;
+}
+
+.battletag {
+  color: #0074e0;
+  font-weight: 700;
 }
 
 .btn-dashboard {
-  display: inline-block;
-  background-color: #1a1a1a;
-  color: white;
+  display: block;
+  background-color: #ffffff;
+  color: #0b0d17;
   text-decoration: none;
-  padding: 12px 24px;
-  border-radius: 4px;
-  margin-top: 20px;
-  transition: background-color 0.2s;
+  padding: 14px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s;
 }
 
 .btn-dashboard:hover {
-  background-color: #333;
+  background-color: #e2e8f0;
+  transform: scale(1.02);
 }
 
-.actions {
-  margin-top: 10px;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+  .login-card {
+    padding: 30px 20px;
+    border-radius: 12px;
+  }
+  
+  .guild-name {
+    font-size: 2rem;
+  }
+  
+  .description {
+    font-size: 1rem;
+  }
 }

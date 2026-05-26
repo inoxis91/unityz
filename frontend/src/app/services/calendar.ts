@@ -9,7 +9,10 @@ export interface CalendarEvent {
   description: string;
   start_time: string;
   end_time: string;
-  type: string; // Permettre 'raid', 'mm+', ou tout type personnalisé
+  type: string;
+  roster_id?: string | null;
+  roster_name?: string | null;
+  roster_weight?: number | null;
   created_by?: string;
   creator_name?: string;
 }

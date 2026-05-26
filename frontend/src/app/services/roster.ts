@@ -8,6 +8,7 @@ export interface Roster {
   id: string;
   name: string;
   description: string | null;
+  weight: number;
   characters?: Character[];
   created_at?: string;
   updated_at?: string;

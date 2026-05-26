@@ -50,7 +50,21 @@
 }
 
 .type-badge.raid { background: #fee2e2; color: #dc2626; }
-.type-badge.mm\+ { background: #f3e8ff; color: #9333ea; }
+.roster-badge {
+  padding: 6px 16px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.roster-badge.all {
+  background: #dcfce7;
+  color: #166534;
+}
 
 .event-meta {
   display: flex;

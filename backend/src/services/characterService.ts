@@ -3,6 +3,7 @@ import pool from '../lib/db';
 export interface Character {
   id: string;
   user_id: string;
+  roster_id: string | null;
   name: string;
   realm: string;
   class: string;

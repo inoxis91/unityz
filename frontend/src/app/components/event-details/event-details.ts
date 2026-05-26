@@ -1,9 +1,10 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CalendarService, CalendarEvent, Signup } from '../../services/calendar';
 import { CharacterService, Character } from '../../services/character';
+import { RosterService, Roster } from '../../services/roster';
 import { AuthService } from '../../services/auth';
 import { ToastService } from '../../services/toast';
 
@@ -18,6 +19,7 @@ export class EventDetailsComponent implements OnInit {
   event = signal<CalendarEvent | null>(null);
   signups = signal<Signup[]>([]);
   myCharacters = signal<Character[]>([]);
+  rosters = signal<Roster[]>([]);
   activeTab = signal<'participants' | 'composition'>('participants');
   
   // Signup Form
@@ -32,13 +34,41 @@ export class EventDetailsComponent implements OnInit {
   dps = computed(() => this.signups().filter(s => s.role === 'dps' && s.status !== 'absent'));
   absents = computed(() => this.signups().filter(s => s.status === 'absent'));
 
+  allowedCharacters = computed(() => {
+    const evt = this.event();
+    const chars = this.myCharacters();
+    if (!evt || !evt.roster_id) return chars; // No restriction
+
+    const targetWeight = evt.roster_weight || 999;
+    return chars.filter(c => {
+      if (!c.roster_id) return false; // Unassigned chars cannot join restricted events
+      const charRoster = this.rosters().find(r => r.id === c.roster_id);
+      return charRoster && charRoster.weight <= targetWeight;
+    });
+  });
+
   constructor(
     private route: ActivatedRoute,
     private calendarService: CalendarService,
     private characterService: CharacterService,
+    private rosterService: RosterService,
     private authService: AuthService,
     private toast: ToastService
-  ) {}
+  ) {
+    // Effect to auto-select a character when the list of allowed characters is loaded or changed
+    effect(() => {
+      const allowed = this.allowedCharacters();
+      if (allowed.length > 0 && !this.selectedCharacterId && this.signupStatus !== 'absent') {
+        const mainChar = allowed.find(c => c.is_main);
+        if (mainChar) {
+          this.selectedCharacterId = mainChar.id || '';
+        } else {
+          this.selectedCharacterId = allowed[0].id || '';
+        }
+        this.onCharacterChange();
+      }
+    });
+  }
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -50,6 +80,7 @@ export class EventDetailsComponent implements OnInit {
       }
     });
     this.loadMyCharacters();
+    this.rosterService.loadRosters().subscribe(rosters => this.rosters.set(rosters));
   }
 
   loadEvent(id: string) {
@@ -76,16 +107,6 @@ export class EventDetailsComponent implements OnInit {
   loadMyCharacters() {
     this.characterService.getMyCharacters().subscribe(chars => {
       this.myCharacters.set(chars);
-      // Auto-select Main character if not already signed up with one
-      if (!this.selectedCharacterId) {
-        const mainChar = chars.find(c => c.is_main);
-        if (mainChar) {
-          this.selectedCharacterId = mainChar.id || '';
-        } else if (chars.length > 0) {
-          this.selectedCharacterId = chars[0].id || '';
-        }
-        this.onCharacterChange();
-      }
     });
   }
 
@@ -109,11 +130,12 @@ export class EventDetailsComponent implements OnInit {
     
     // Auto-reselect Main character if we switch back from absent to a presence status
     if (status !== 'absent' && (!this.selectedCharacterId || this.selectedCharacterId === '')) {
-      const mainChar = this.myCharacters().find(c => c.is_main);
+      const allowed = this.allowedCharacters();
+      const mainChar = allowed.find(c => c.is_main);
       if (mainChar) {
         this.selectedCharacterId = mainChar.id || '';
-      } else if (this.myCharacters().length > 0) {
-        this.selectedCharacterId = this.myCharacters()[0].id || '';
+      } else if (allowed.length > 0) {
+        this.selectedCharacterId = allowed[0].id || '';
       }
       this.onCharacterChange();
     }

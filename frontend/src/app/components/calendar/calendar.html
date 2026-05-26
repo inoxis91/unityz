@@ -23,7 +23,7 @@
         <div class="modal-body">
           <div class="form-section">
             <label>Titre de l'activité</label>
-            <input type="text" [(ngModel)]="newEvent.title" name="title" required placeholder="Ex: Raid HM - Palais d'Amiral">
+            <input type="text" [(ngModel)]="newEvent.title" name="title" required placeholder="Ex: Raid HM Flèche du vide">
           </div>
           
           <div class="form-section">
@@ -33,15 +33,20 @@
 
           <div class="form-grid">
             <div class="form-section">
-              <label>Date</label>
-              <input type="date" [(ngModel)]="newEvent.start_date" name="start_date" required (change)="onDateChange()">
-            </div>
-            <div class="form-section">
               <label>Type</label>
               <select [(ngModel)]="newEvent.type" name="type" class="custom-select">
                 <option value="raid">Raid</option>
                 <option value="mm+">Donjon MM+</option>
                 <option value="custom">Autre / Spécial</option>
+              </select>
+            </div>
+            <div class="form-section">
+              <label>Roster autorisé</label>
+              <select [(ngModel)]="newEvent.roster_id" name="roster_id" class="custom-select">
+                <option value="">Tous les membres</option>
+                @for (roster of rosterService.rosters(); track roster.id) {
+                  <option [value]="roster.id">{{ roster.name }} (Poids: {{ roster.weight }})</option>
+                }
               </select>
             </div>
           </div>

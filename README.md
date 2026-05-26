@@ -25,7 +25,24 @@ This project is structured as a monorepo and is ready for Railway.
 - Point Railway to the `/frontend` directory.
 - Railway will detect it's an Angular app and build it automatically.
 
-## Local Setup
-1. Run `docker-compose up -d` to start the local DB.
-2. Run `npm run setup` at the root.
-3. Run `npm run dev` to start both servers.
+## Installation Locale (Docker)
+
+Le projet est entièrement conteneurisé. Pour le lancer localement :
+
+1. **Configuration des variables d'environnement** :
+   Le fichier `backend/.env` sera créé automatiquement lors du premier lancement, mais vous devrez y renseigner vos identifiants Battle.net.
+
+2. **Lancer le projet** :
+   ```bash
+   docker-compose up --build -d
+   ```
+
+3. **Accès** :
+   - Frontend : [http://localhost:4200](http://localhost:4200)
+   - Backend : [http://localhost:3000](http://localhost:3000)
+
+4. **Redémarrer en cas de changement** :
+   Si les changements ne sont pas pris en compte (notamment sur le frontend), forcez la reconstruction :
+   ```bash
+   docker-compose down && docker-compose up --build -d
+   ```

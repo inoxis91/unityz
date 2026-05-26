@@ -5,6 +5,7 @@ export interface Roster {
   id: string;
   name: string;
   description: string | null;
+  weight: number;
   created_at: Date;
   updated_at: Date;
   characters?: Character[];
@@ -12,7 +13,7 @@ export interface Roster {
 
 export class RosterService {
   static async getAll(): Promise<Roster[]> {
-    const rostersQuery = 'SELECT * FROM rosters ORDER BY name ASC';
+    const rostersQuery = 'SELECT * FROM rosters ORDER BY weight ASC, name ASC';
     const rostersResult = await pool.query(rostersQuery);
     const rosters = rostersResult.rows;
 
@@ -33,22 +34,22 @@ export class RosterService {
 
   static async create(data: Partial<Roster>): Promise<Roster> {
     const query = `
-      INSERT INTO rosters (name, description)
-      VALUES ($1, $2)
+      INSERT INTO rosters (name, description, weight)
+      VALUES ($1, $2, $3)
       RETURNING *
     `;
-    const result = await pool.query(query, [data.name, data.description]);
+    const result = await pool.query(query, [data.name, data.description, data.weight || 1]);
     return result.rows[0];
   }
 
   static async update(id: string, data: Partial<Roster>): Promise<Roster | null> {
     const query = `
       UPDATE rosters 
-      SET name = $1, description = $2, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $3
+      SET name = $1, description = $2, weight = $3, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $4
       RETURNING *
     `;
-    const result = await pool.query(query, [data.name, data.description, id]);
+    const result = await pool.query(query, [data.name, data.description, data.weight, id]);
     return result.rows[0] || null;
   }
 

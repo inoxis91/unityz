@@ -7,6 +7,9 @@ export interface Event {
   start_time: string;
   end_time: string;
   type: string;
+  roster_id: string | null;
+  roster_name?: string | null;
+  roster_weight?: number | null;
   created_by: string;
   created_at: Date;
   updated_at: Date;
@@ -33,12 +36,14 @@ export interface Signup {
 export class EventService {
   static async getAll(): Promise<Event[]> {
     const query = `
-      SELECT id, title, description, 
-             to_char(start_time, 'YYYY-MM-DD"T"HH24:MI:SS') as start_time,
-             to_char(end_time, 'YYYY-MM-DD"T"HH24:MI:SS') as end_time,
-             type, created_by
-      FROM events 
-      ORDER BY start_time ASC
+      SELECT e.id, e.title, e.description, 
+             to_char(e.start_time, 'YYYY-MM-DD"T"HH24:MI:SS') as start_time,
+             to_char(e.end_time, 'YYYY-MM-DD"T"HH24:MI:SS') as end_time,
+             e.type, e.roster_id, e.created_by,
+             r.name as roster_name, r.weight as roster_weight
+      FROM events e
+      LEFT JOIN rosters r ON e.roster_id = r.id
+      ORDER BY e.start_time ASC
     `;
     const result = await pool.query(query);
     return result.rows;
@@ -46,12 +51,14 @@ export class EventService {
 
   static async getById(id: string): Promise<Event | null> {
     const query = `
-      SELECT id, title, description, 
-             to_char(start_time, 'YYYY-MM-DD"T"HH24:MI:SS') as start_time,
-             to_char(end_time, 'YYYY-MM-DD"T"HH24:MI:SS') as end_time,
-             type, created_by
-      FROM events 
-      WHERE id = $1
+      SELECT e.id, e.title, e.description, 
+             to_char(e.start_time, 'YYYY-MM-DD"T"HH24:MI:SS') as start_time,
+             to_char(e.end_time, 'YYYY-MM-DD"T"HH24:MI:SS') as end_time,
+             e.type, e.roster_id, e.created_by,
+             r.name as roster_name, r.weight as roster_weight
+      FROM events e
+      LEFT JOIN rosters r ON e.roster_id = r.id
+      WHERE e.id = $1
     `;
     const result = await pool.query(query, [id]);
     return result.rows[0] || null;
@@ -59,22 +66,22 @@ export class EventService {
 
   static async create(data: Partial<Event>, userId: string): Promise<Event> {
     const query = `
-      INSERT INTO events (title, description, start_time, end_time, type, created_by)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO events (title, description, start_time, end_time, type, roster_id, created_by)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
     `;
-    const result = await pool.query(query, [data.title, data.description, data.start_time, data.end_time, data.type, userId]);
+    const result = await pool.query(query, [data.title, data.description, data.start_time, data.end_time, data.type, data.roster_id || null, userId]);
     return result.rows[0];
   }
 
   static async update(id: string, data: Partial<Event>): Promise<Event | null> {
     const query = `
       UPDATE events 
-      SET title = $1, description = $2, start_time = $3, end_time = $4, type = $5, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $6
+      SET title = $1, description = $2, start_time = $3, end_time = $4, type = $5, roster_id = $6, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $7
       RETURNING *
     `;
-    const result = await pool.query(query, [data.title, data.description, data.start_time, data.end_time, data.type, id]);
+    const result = await pool.query(query, [data.title, data.description, data.start_time, data.end_time, data.type, data.roster_id || null, id]);
     return result.rows[0] || null;
   }
 
