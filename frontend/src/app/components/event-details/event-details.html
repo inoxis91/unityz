@@ -63,23 +63,29 @@
         </div>
 
         <div class="signup-fields animated-fade-in" *ngIf="signupStatus !== 'absent'">
-          <div class="form-group" *ngIf="allowedCharacters().length > 0; else noChars">
+          <div class="form-group" *ngIf="myCharacters().length > 0; else noChars">
             <label>Sélectionnez votre personnage :</label>
             <select [(ngModel)]="selectedCharacterId" (change)="onCharacterChange()" class="modern-select">
-              <option *ngFor="let char of allowedCharacters()" [value]="char.id">{{ char.name }} ({{ char.class }})</option>
+              <option *ngFor="let char of myCharacters()" [value]="char.id" [disabled]="!isCharacterAllowed(char)">
+                {{ char.name }} ({{ char.class }})
+                {{ !isCharacterAllowed(char) ? ' — [ROSTER NON AUTORISÉ]' : '' }}
+              </option>
             </select>
           </div>
           <ng-template #noChars>
             <div class="warning-box">
-              <p *ngIf="myCharacters().length > 0">
-                ⚠️ Aucun de vos personnages n'est autorisé pour cet événement. 
-                Cet événement est restreint au roster <strong>{{ event()?.roster_name }}</strong> (ou supérieur).
-              </p>
-              <p *ngIf="myCharacters().length === 0">
+              <p>
                 ⚠️ Aucun personnage trouvé. <a routerLink="/characters">Importez vos personnages</a> pour vous inscrire.
               </p>
             </div>
           </ng-template>
+
+          <div class="warning-box" *ngIf="myCharacters().length > 0 && allowedCharacters().length === 0">
+            <p>
+              ⚠️ Aucun de vos personnages n'est autorisé pour cet événement. 
+              Cet événement est restreint au roster <strong>{{ event()?.roster_name }}</strong> (ou supérieur).
+            </p>
+          </div>
 
           <div class="form-group" *ngIf="allowedCharacters().length > 0">
             <label>Votre rôle pour cet événement :</label>

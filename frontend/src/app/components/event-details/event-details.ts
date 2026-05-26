@@ -55,17 +55,19 @@ export class EventDetailsComponent implements OnInit {
   canManageEvents = computed(() => this.authService.canManageEvents());
 
   allowedCharacters = computed(() => {
+    return this.myCharacters().filter(c => this.isCharacterAllowed(c));
+  });
+
+  isCharacterAllowed(char: Character): boolean {
     const evt = this.event();
-    const chars = this.myCharacters();
-    if (!evt || !evt.roster_id) return chars; // No restriction
+    if (!evt || !evt.roster_id) return true; // No restriction
 
     const targetWeight = evt.roster_weight || 999;
-    return chars.filter(c => {
-      if (!c.roster_id) return false; // Unassigned chars cannot join restricted events
-      const charRoster = this.rosters().find(r => r.id === c.roster_id);
-      return charRoster && charRoster.weight <= targetWeight;
-    });
-  });
+    if (!char.roster_id) return false;
+    
+    const charRoster = this.rosters().find(r => r.id === char.roster_id);
+    return charRoster ? charRoster.weight <= targetWeight : false;
+  }
 
   constructor(
     private route: ActivatedRoute,
