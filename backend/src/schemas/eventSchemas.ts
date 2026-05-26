@@ -8,6 +8,7 @@ export const createEventSchema = z.object({
     end_time: z.string().min(10),
     type: z.string().min(1),
     roster_id: z.string().uuid().optional().nullable(),
+    mm_groups_count: z.number().int().min(0).optional(),
   }),
 });
 
@@ -22,6 +23,26 @@ export const updateEventSchema = z.object({
     end_time: z.string().min(10),
     type: z.string().min(1),
     roster_id: z.string().uuid().optional().nullable(),
+    mm_groups_count: z.number().int().min(0).optional(),
+  }),
+});
+
+export const updateSignupGroupSchema = z.object({
+  params: z.object({
+    id: z.string().uuid(), // eventId
+    userId: z.string(),
+  }),
+  body: z.object({
+    group_index: z.number().int().min(0),
+  }),
+});
+
+export const updateGroupsCountSchema = z.object({
+  params: z.object({
+    id: z.string().uuid(), // eventId
+  }),
+  body: z.object({
+    count: z.number().int().min(0),
   }),
 });
 

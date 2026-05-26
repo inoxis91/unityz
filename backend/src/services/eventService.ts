@@ -8,6 +8,7 @@ export interface Event {
   end_time: string;
   type: string;
   roster_id: string | null;
+  mm_groups_count: number;
   roster_name?: string | null;
   roster_weight?: number | null;
   created_by: string;
@@ -22,6 +23,7 @@ export interface Signup {
   character_id: string | null;
   role: string;
   status: string;
+  group_index: number;
   comment: string | null;
   created_at: Date;
   updated_at: Date;
@@ -40,7 +42,7 @@ export class EventService {
       SELECT e.id, e.title, e.description, 
              to_char(e.start_time, 'YYYY-MM-DD"T"HH24:MI:SS') as start_time,
              to_char(e.end_time, 'YYYY-MM-DD"T"HH24:MI:SS') as end_time,
-             e.type, e.roster_id, e.created_by,
+             e.type, e.roster_id, e.mm_groups_count, e.created_by,
              r.name as roster_name, r.weight as roster_weight
       FROM events e
       LEFT JOIN rosters r ON e.roster_id = r.id
@@ -55,7 +57,7 @@ export class EventService {
       SELECT e.id, e.title, e.description, 
              to_char(e.start_time, 'YYYY-MM-DD"T"HH24:MI:SS') as start_time,
              to_char(e.end_time, 'YYYY-MM-DD"T"HH24:MI:SS') as end_time,
-             e.type, e.roster_id, e.created_by,
+             e.type, e.roster_id, e.mm_groups_count, e.created_by,
              r.name as roster_name, r.weight as roster_weight
       FROM events e
       LEFT JOIN rosters r ON e.roster_id = r.id
@@ -67,22 +69,40 @@ export class EventService {
 
   static async create(data: Partial<Event>, userId: string): Promise<Event> {
     const query = `
-      INSERT INTO events (title, description, start_time, end_time, type, roster_id, created_by)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO events (title, description, start_time, end_time, type, roster_id, mm_groups_count, created_by)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *
     `;
-    const result = await pool.query(query, [data.title, data.description, data.start_time, data.end_time, data.type, data.roster_id || null, userId]);
+    const result = await pool.query(query, [
+      data.title, 
+      data.description, 
+      data.start_time, 
+      data.end_time, 
+      data.type, 
+      data.roster_id || null, 
+      data.mm_groups_count || 0,
+      userId
+    ]);
     return result.rows[0];
   }
 
   static async update(id: string, data: Partial<Event>): Promise<Event | null> {
     const query = `
       UPDATE events 
-      SET title = $1, description = $2, start_time = $3, end_time = $4, type = $5, roster_id = $6, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $7
+      SET title = $1, description = $2, start_time = $3, end_time = $4, type = $5, roster_id = $6, mm_groups_count = $7, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $8
       RETURNING *
     `;
-    const result = await pool.query(query, [data.title, data.description, data.start_time, data.end_time, data.type, data.roster_id || null, id]);
+    const result = await pool.query(query, [
+      data.title, 
+      data.description, 
+      data.start_time, 
+      data.end_time, 
+      data.type, 
+      data.roster_id || null, 
+      data.mm_groups_count ?? 0,
+      id
+    ]);
     return result.rows[0] || null;
   }
 
@@ -147,6 +167,18 @@ export class EventService {
   static async unsignup(eventId: string, userId: string): Promise<boolean> {
     const query = 'DELETE FROM event_signups WHERE event_id = $1 AND user_id = $2';
     const result = await pool.query(query, [eventId, userId]);
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  static async updateSignupGroup(eventId: string, userId: string, groupIndex: number): Promise<boolean> {
+    const query = 'UPDATE event_signups SET group_index = $1, updated_at = CURRENT_TIMESTAMP WHERE event_id = $2 AND user_id = $3';
+    const result = await pool.query(query, [groupIndex, eventId, userId]);
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  static async updateGroupsCount(eventId: string, count: number): Promise<boolean> {
+    const query = 'UPDATE events SET mm_groups_count = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2';
+    const result = await pool.query(query, [count, eventId]);
     return (result.rowCount ?? 0) > 0;
   }
 }

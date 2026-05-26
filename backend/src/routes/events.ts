@@ -3,7 +3,7 @@ import pool from '../lib/db';
 import { EventService } from '../services/eventService';
 import { isAuthenticated, canManageEvents } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
-import { createEventSchema, updateEventSchema, signupSchema } from '../schemas/eventSchemas';
+import { createEventSchema, updateEventSchema, signupSchema, updateSignupGroupSchema, updateGroupsCountSchema } from '../schemas/eventSchemas';
 
 const router = express.Router();
 
@@ -82,6 +82,32 @@ router.delete('/:id', canManageEvents, async (req, res, next) => {
       return res.status(404).json({ status: 'error', message: 'Event not found' });
     }
     res.json({ status: 'success', message: 'Event deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PATCH /api/events/:id/groups-count : Met à jour le nombre de groupes MM+
+router.patch('/:id/groups-count', canManageEvents, validate(updateGroupsCountSchema), async (req, res, next) => {
+  try {
+    const success = await EventService.updateGroupsCount(req.params.id as string, req.body.count);
+    if (!success) {
+      return res.status(404).json({ status: 'error', message: 'Event not found' });
+    }
+    res.json({ status: 'success', message: 'Groups count updated' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PATCH /api/events/:id/signups/:userId/group : Déplace un utilisateur dans un groupe MM+
+router.patch('/:id/signups/:userId/group', canManageEvents, validate(updateSignupGroupSchema), async (req, res, next) => {
+  try {
+    const success = await EventService.updateSignupGroup(req.params.id as string, req.params.userId as string, req.body.group_index);
+    if (!success) {
+      return res.status(404).json({ status: 'error', message: 'Signup not found' });
+    }
+    res.json({ status: 'success', message: 'Signup group updated' });
   } catch (error) {
     next(error);
   }

@@ -11,6 +11,7 @@ export interface CalendarEvent {
   end_time: string;
   type: string;
   roster_id?: string | null;
+  mm_groups_count?: number;
   roster_name?: string | null;
   roster_weight?: number | null;
   created_by?: string;
@@ -18,19 +19,21 @@ export interface CalendarEvent {
 }
 
 export interface Signup {
-  id?: string;
+  id: string;
   event_id: string;
   user_id: string;
   character_id: string | null;
-  role: 'tank' | 'heal' | 'dps';
-  status: 'signed_up' | 'confirmed' | 'standby' | 'declined' | 'absent';
-  comment?: string;
-  signup_date?: string;
+  role: string;
+  status: string;
+  group_index: number;
+  comment: string | null;
+  created_at: string;
   character_name?: string;
   character_class?: string;
   main_character_name?: string;
   main_character_class?: string;
   battletag?: string;
+  signup_date?: string;
   user_characters?: any[];
 }
 
@@ -62,12 +65,20 @@ export class CalendarService {
     return this.http.delete(`${this.apiUrl}/${id}`, { withCredentials: true });
   }
 
+  updateGroupsCount(eventId: string, count: number): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${eventId}/groups-count`, { count }, { withCredentials: true });
+  }
+
+  updateSignupGroup(eventId: string, userId: string, groupIndex: number): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${eventId}/signups/${userId}/group`, { group_index: groupIndex }, { withCredentials: true });
+  }
+
   getSignups(eventId: string): Observable<Signup[]> {
     return this.http.get<Signup[]>(`${this.apiUrl}/${eventId}/signups`, { withCredentials: true });
   }
 
-  signup(eventId: string, signupData: { character_id: string | null, role: string, comment?: string, status?: string }): Observable<Signup> {
-    return this.http.post<Signup>(`${this.apiUrl}/${eventId}/signup`, signupData, { withCredentials: true });
+  signup(eventId: string, data: any): Observable<Signup> {
+    return this.http.post<Signup>(`${this.apiUrl}/${eventId}/signup`, data, { withCredentials: true });
   }
 
   unsignup(eventId: string): Observable<any> {

@@ -2,6 +2,12 @@ import { Component, OnInit, signal, computed, effect, inject } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { 
+  CdkDragDrop, 
+  moveItemInArray, 
+  transferArrayItem, 
+  DragDropModule 
+} from '@angular/cdk/drag-drop';
 import { CalendarService, CalendarEvent, Signup } from '../../services/calendar';
 import { CharacterService, Character } from '../../services/character';
 import { RosterService, Roster } from '../../services/roster';
@@ -18,7 +24,7 @@ export interface Buff extends BuffInfo {
 @Component({
   selector: 'app-event-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, DragDropModule],
   templateUrl: './event-details.html',
   styleUrl: './event-details.css'
 })
@@ -32,7 +38,7 @@ export class EventDetailsComponent implements OnInit {
   rosters = signal<Roster[]>([]);
   activeTab = signal<'participants' | 'composition'>('participants');
   
-  // Sorting
+  // Sorting for participants tab
   sortMethod = signal<'date' | 'status'>('date');
 
   // Alts View
@@ -56,55 +62,73 @@ export class EventDetailsComponent implements OnInit {
     end_time: '',
     type: '',
     customType: '',
-    roster_id: '' as string | null
+    roster_id: '' as string | null,
+    mm_groups_count: 0
   };
 
-  // Computed views
+  // Computed views for Raid
   tanks = computed(() => this.signups().filter(s => s.role === 'tank' && s.status === 'signed_up'));
   heals = computed(() => this.signups().filter(s => s.role === 'heal' && s.status === 'signed_up'));
   dps = computed(() => this.signups().filter(s => s.role === 'dps' && s.status === 'signed_up'));
   absents = computed(() => this.signups().filter(s => s.status === 'absent'));
 
+  // Sorted list for Participants tab
   sortedSignups = computed(() => {
     const list = [...this.signups()];
     const method = this.sortMethod();
 
     if (method === 'date') {
       return list.sort((a, b) => {
-        const dateA = new Date(a.signup_date || (a as any).created_at || 0).getTime();
-        const dateB = new Date(b.signup_date || (b as any).created_at || 0).getTime();
-        return dateA - dateB; // Oldest first
+        const dateA = new Date(a.signup_date || a.created_at || 0).getTime();
+        const dateB = new Date(b.signup_date || b.created_at || 0).getTime();
+        return dateA - dateB;
       });
     } else {
-      // Sort by status: signed_up > standby > absent
-      const statusWeight: { [key: string]: number } = {
-        'signed_up': 1,
-        'standby': 2,
-        'absent': 3
-      };
+      const statusWeight: { [key: string]: number } = { 'signed_up': 1, 'standby': 2, 'absent': 3 };
       return list.sort((a, b) => {
         const weightA = statusWeight[a.status] || 99;
         const weightB = statusWeight[b.status] || 99;
         if (weightA !== weightB) return weightA - weightB;
-        // Secondary sort by date if status is same
-        return new Date(a.signup_date || (a as any).created_at || 0).getTime() - new Date(b.signup_date || (b as any).created_at || 0).getTime();
+        return new Date(a.signup_date || a.created_at || 0).getTime() - new Date(b.signup_date || b.created_at || 0).getTime();
       });
     }
   });
 
+  // Computed views for MM+
+  unassignedMembers = computed(() => this.signups().filter(s => s.status === 'signed_up' && (s.group_index === 0 || !s.group_index)));
+  
+  mmGroups = computed(() => {
+    const count = this.event()?.mm_groups_count || 0;
+    const groups = [];
+    for (let i = 1; i <= count; i++) {
+      const members = this.signups().filter(s => s.group_index === i);
+      groups.push({
+        index: i,
+        members: members,
+        tanks: members.filter(m => m.role === 'tank'),
+        heals: members.filter(m => m.role === 'heal'),
+        dps: members.filter(m => m.role === 'dps'),
+        buffs: this.calculateBuffs(members)
+      });
+    }
+    return groups;
+  });
+
   buffs = computed(() => {
     const activeSignups = this.signups().filter(s => s.status === 'signed_up');
-    
+    return this.calculateBuffs(activeSignups);
+  });
+
+  calculateBuffs(members: Signup[]): Buff[] {
     return CLASS_BUFFS.map(baseBuff => {
-      const allowedClasses = baseBuff.classes;
-      const count = activeSignups.filter(s => allowedClasses.includes(s.character_class || '')).length;
+      const count = members.filter(s => baseBuff.classes.includes(s.character_class || '')).length;
       return {
         ...baseBuff,
         present: count > 0,
         count: count
       } as Buff;
     });
-  });
+  }
 
   canManageEvents = computed(() => this.authService.canManageEvents());
 
@@ -114,11 +138,9 @@ export class EventDetailsComponent implements OnInit {
 
   isCharacterAllowed(char: Character): boolean {
     const evt = this.event();
-    if (!evt || !evt.roster_id) return true; // No restriction
-
+    if (!evt || !evt.roster_id) return true;
     const targetWeight = evt.roster_weight || 999;
     if (!char.roster_id) return false;
-    
     const charRoster = this.rosters().find(r => r.id === char.roster_id);
     return charRoster ? charRoster.weight <= targetWeight : false;
   }
@@ -131,7 +153,6 @@ export class EventDetailsComponent implements OnInit {
     public authService: AuthService,
     private toast: ToastService
   ) {
-    // Effect to auto-select a character when the list of allowed characters is loaded or changed
     effect(() => {
       const allowed = this.allowedCharacters();
       if (allowed.length > 0 && !this.selectedCharacterId && this.signupStatus !== 'absent') {
@@ -168,8 +189,6 @@ export class EventDetailsComponent implements OnInit {
   loadSignups(id: string) {
     this.calendarService.getSignups(id).subscribe(signups => {
       this.signups.set(signups);
-      
-      // Pre-fill form if user is already signed up
       const mySignup = signups.find(s => s.user_id === this.authService.currentUser()?.id);
       if (mySignup) {
         this.selectedCharacterId = mySignup.character_id || '';
@@ -181,15 +200,12 @@ export class EventDetailsComponent implements OnInit {
   }
 
   loadMyCharacters() {
-    this.characterService.getMyCharacters().subscribe(chars => {
-      this.myCharacters.set(chars);
-    });
+    this.characterService.getMyCharacters().subscribe(chars => this.myCharacters.set(chars));
   }
 
   openEditModal() {
     const evt = this.event();
     if (!evt) return;
-
     this.editEventData = {
       title: evt.title,
       description: evt.description || '',
@@ -199,16 +215,15 @@ export class EventDetailsComponent implements OnInit {
       end_time: evt.end_time.split('T')[1].substring(0, 5),
       type: ['raid', 'mm+'].includes(evt.type) ? evt.type : 'custom',
       customType: ['raid', 'mm+'].includes(evt.type) ? '' : evt.type,
-      roster_id: evt.roster_id || ''
+      roster_id: evt.roster_id || '',
+      mm_groups_count: evt.mm_groups_count || 0
     };
     this.showEditModal.set(true);
   }
 
   onUpdateEvent() {
     if (!this.event()) return;
-    
     const finalType = this.editEventData.type === 'custom' ? this.editEventData.customType : this.editEventData.type;
-    
     const updatedData: CalendarEvent = {
       id: this.event()!.id,
       title: this.editEventData.title,
@@ -216,9 +231,9 @@ export class EventDetailsComponent implements OnInit {
       start_time: `${this.editEventData.start_date}T${this.editEventData.start_time}:00`,
       end_time: `${this.editEventData.end_date}T${this.editEventData.end_time}:00`,
       type: finalType,
-      roster_id: this.editEventData.roster_id || null
+      roster_id: this.editEventData.roster_id || null,
+      mm_groups_count: this.editEventData.mm_groups_count
     };
-
     this.calendarService.updateEvent(this.event()!.id!, updatedData).subscribe({
       next: () => {
         this.loadEvent(this.event()!.id!);
@@ -230,11 +245,7 @@ export class EventDetailsComponent implements OnInit {
   }
 
   async onDeleteEvent() {
-    const ok = await this.confirm.ask(
-      'Supprimer l\'événement',
-      'Êtes-vous sûr de vouloir supprimer cet événement ? Cette action est irréversible.'
-    );
-
+    const ok = await this.confirm.ask('Supprimer l\'événement', 'Êtes-vous sûr de vouloir supprimer cet événement ? Cette action est irréversible.');
     if (ok && this.event()) {
       this.calendarService.deleteEvent(this.event()!.id!).subscribe({
         next: () => {
@@ -249,44 +260,31 @@ export class EventDetailsComponent implements OnInit {
   onCharacterChange() {
     const char = this.myCharacters().find(c => c.id === this.selectedCharacterId);
     if (char) {
-      if (char.is_tank) {
-        this.selectedRole = 'tank';
-      } else if (char.is_heal) {
-        this.selectedRole = 'heal';
-      } else if (char.is_dps) {
-        this.selectedRole = 'dps';
-      } else {
-        this.selectedRole = 'dps';
-      }
+      if (char.is_tank) this.selectedRole = 'tank';
+      else if (char.is_heal) this.selectedRole = 'heal';
+      else this.selectedRole = 'dps';
     }
   }
 
   setStatus(status: 'signed_up' | 'standby' | 'absent') {
     this.signupStatus = status;
-    
-    // Auto-reselect Main character if we switch back from absent to a presence status
     if (status !== 'absent' && (!this.selectedCharacterId || this.selectedCharacterId === '')) {
       const allowed = this.allowedCharacters();
       const mainChar = allowed.find(c => c.is_main);
-      if (mainChar) {
-        this.selectedCharacterId = mainChar.id || '';
-      } else if (allowed.length > 0) {
-        this.selectedCharacterId = allowed[0].id || '';
-      }
+      if (mainChar) this.selectedCharacterId = mainChar.id || '';
+      else if (allowed.length > 0) this.selectedCharacterId = allowed[0].id || '';
       this.onCharacterChange();
     }
   }
 
   onSignup() {
     if (!this.event()) return;
-    
     const signupData = {
       character_id: this.signupStatus === 'absent' ? null : this.selectedCharacterId,
       role: this.selectedRole,
       status: this.signupStatus,
       comment: this.comment
     };
-
     this.calendarService.signup(this.event()!.id!, signupData).subscribe({
       next: () => {
         this.loadSignups(this.event()!.id!);
@@ -306,5 +304,57 @@ export class EventDetailsComponent implements OnInit {
   openAltsModal(signup: Signup) {
     this.selectedSignup.set(signup);
     this.showAltsModal.set(true);
+  }
+
+  // MM+ Group Management
+  onAddGroup() {
+    const evt = this.event();
+    if (!evt || !evt.id) return;
+    const newCount = (evt.mm_groups_count || 0) + 1;
+    this.calendarService.updateGroupsCount(evt.id, newCount).subscribe(() => {
+      this.loadEvent(evt.id!);
+    });
+  }
+
+  onRemoveGroup(index: number) {
+    const evt = this.event();
+    if (!evt || !evt.id) return;
+    
+    // 1. Move all members of this group back to unassigned (index 0)
+    const membersInGroup = this.signups().filter(s => s.group_index === index);
+    const movePromises = membersInGroup.map(m => 
+      this.calendarService.updateSignupGroup(evt.id!, m.user_id, 0).toPromise()
+    );
+
+    Promise.all(movePromises).then(() => {
+      // 2. Decrement group count
+      const newCount = Math.max(0, (evt.mm_groups_count || 0) - 1);
+      this.calendarService.updateGroupsCount(evt.id!, newCount).subscribe(() => {
+        this.loadEvent(evt.id!);
+        this.loadSignups(evt.id!); // Refresh members positions
+      });
+    });
+  }
+
+  dropToGroup(event: CdkDragDrop<Signup[]>, groupIndex: number) {
+    if (event.previousContainer === event.container) return;
+    const member = event.previousContainer.data[event.previousIndex];
+    const evt = this.event();
+    if (!evt || !evt.id || !member) return;
+
+    // Optimistic UI update
+    const currentSignups = this.signups();
+    const updatedSignups = currentSignups.map(s => 
+      s.user_id === member.user_id ? { ...s, group_index: groupIndex } : s
+    );
+    this.signups.set(updatedSignups);
+
+    // Backend update
+    this.calendarService.updateSignupGroup(evt.id, member.user_id, groupIndex).subscribe({
+      error: () => {
+        this.toast.error('Erreur lors du déplacement du joueur.');
+        this.loadSignups(evt.id!);
+      }
+    });
   }
 }

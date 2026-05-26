@@ -157,6 +157,7 @@ export const initDb = async () => {
         end_time TIMESTAMP NOT NULL,
         type VARCHAR(50) NOT NULL, -- 'raid', 'other'
         roster_id UUID REFERENCES rosters(id) ON DELETE SET NULL,
+        mm_groups_count INTEGER DEFAULT 0,
         created_by VARCHAR(255) REFERENCES users(id),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -170,6 +171,9 @@ export const initDb = async () => {
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='events' AND column_name='roster_id') THEN
           ALTER TABLE events ADD COLUMN roster_id UUID REFERENCES rosters(id) ON DELETE SET NULL;
         END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='events' AND column_name='mm_groups_count') THEN
+          ALTER TABLE events ADD COLUMN mm_groups_count INTEGER DEFAULT 0;
+        END IF;
       END $$;
     `);
 
@@ -182,6 +186,7 @@ export const initDb = async () => {
         character_id UUID REFERENCES characters(id) ON DELETE CASCADE,
         role VARCHAR(50), -- 'tank', 'heal', 'dps'
         status VARCHAR(50) DEFAULT 'signed_up', -- 'signed_up', 'confirmed', 'standby', 'declined'
+        group_index INTEGER DEFAULT 0,
         comment TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -195,6 +200,9 @@ export const initDb = async () => {
       BEGIN 
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='event_signups' AND column_name='comment') THEN
           ALTER TABLE event_signups ADD COLUMN comment TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='event_signups' AND column_name='group_index') THEN
+          ALTER TABLE event_signups ADD COLUMN group_index INTEGER DEFAULT 0;
         END IF;
       END $$;
     `);

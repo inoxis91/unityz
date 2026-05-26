@@ -108,32 +108,31 @@
           </button>
         </div>
       </div>
-<!-- List of signups -->
-<div class="list-card">
-  <div class="list-header">
-    <div class="list-title-group">
-      <h3>Liste des participants</h3>
-      <span class="count-badge">{{ signups().length }}</span>
-    </div>
-    <div class="sort-controls">
-      <button [class.active]="sortMethod() === 'date'" (click)="sortMethod.set('date')" title="Trier par date">🕒</button>
-      <button [class.active]="sortMethod() === 'status'" (click)="sortMethod.set('status')" title="Trier par statut">📊</button>
-    </div>
-  </div>
 
-  <div class="participants-grid">
-    <div *ngFor="let s of sortedSignups()" 
-         class="participant-card" 
-         [ngClass]="[
-           s.status, 
-           s.status === 'absent' ? 'is-absent' : '', 
-           'class-' + getClassCategory(s.status === 'absent' ? s.main_character_class : s.character_class)
-         ]"
-         (click)="s.status !== 'absent' ? openAltsModal(s) : null"
-         [class.clickable]="s.status !== 'absent'">
-      <div class="participant-main">
-...
-
+      <!-- List of signups -->
+      <div class="list-card">
+        <div class="list-header">
+          <div class="list-title-group">
+            <h3>Liste des participants</h3>
+            <span class="count-badge">{{ signups().length }}</span>
+          </div>
+          <div class="sort-controls">
+            <button [class.active]="sortMethod() === 'date'" (click)="sortMethod.set('date')" title="Trier par date">🕒</button>
+            <button [class.active]="sortMethod() === 'status'" (click)="sortMethod.set('status')" title="Trier par statut">📊</button>
+          </div>
+        </div>
+        
+        <div class="participants-grid">
+          <div *ngFor="let s of sortedSignups()" 
+               class="participant-card" 
+               [ngClass]="[
+                 s.status, 
+                 s.status === 'absent' ? 'is-absent' : '', 
+                 'class-' + getClassCategory(s.status === 'absent' ? s.main_character_class : s.character_class)
+               ]"
+               (click)="s.status !== 'absent' ? openAltsModal(s) : null"
+               [class.clickable]="s.status !== 'absent'">
+            <div class="participant-main">
               <div class="role-icon-box" *ngIf="s.status !== 'absent'">
                 <span class="role-icon" [class]="s.role">
                   <ng-container [ngSwitch]="s.role">
@@ -152,7 +151,7 @@
                   {{ s.status === 'absent' ? (s.main_character_name || 'Inconnu') : s.character_name }}
                 </span>
                 <span *ngIf="s.status === 'absent'" class="absent-label">Absent</span>
-                <span class="signup-time">{{ s.signup_date | date:'dd/MM HH:mm' }}</span>
+                <span class="signup-time">{{ (s.signup_date || s.created_at) | date:'dd/MM HH:mm' }}</span>
               </div>
 
               <div class="status-indicators">
@@ -178,70 +177,159 @@
 
   <!-- TAB: Composition -->
   <div class="tab-content" *ngIf="activeTab() === 'composition'">
-    <!-- Buffs Tracker -->
-    <div class="buffs-container animated-fade-in">
-      <h3>Buffs de Raid</h3>
-      <div class="buffs-grid">
-        <div *ngFor="let buff of buffs()" class="buff-card" [class.missing]="!buff.present" [title]="buff.label">
-          <div class="buff-icon">
-            <img *ngIf="buff.icon.includes('/')" [src]="buff.icon" [alt]="buff.label">
-            <span *ngIf="!buff.icon.includes('/')">{{ buff.icon }}</span>
-          </div>
-          <div class="buff-info">
-            <span class="buff-label">{{ buff.description }}</span>
-            <span class="buff-count" *ngIf="buff.present">x{{ buff.count }}</span>
-            <span class="buff-status" *ngIf="!buff.present">MANQUANT</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="composition-layout">
-      <div class="role-column tanks">
-        <div class="column-header">
-          <span class="icon">🛡️</span>
-          <h4>Tanks</h4>
-          <span class="count">{{ tanks().length }}</span>
-        </div>
-        <div class="comp-grid">
-          <div *ngFor="let s of tanks()" class="modern-comp-card clickable" [class]="'class-' + getClassCategory(s.character_class)" (click)="openAltsModal(s)">
-            <div class="card-content">
-              <span class="name">{{ s.character_name }}</span>
+    
+    <!-- MODE: RAID -->
+    <ng-container *ngIf="event()?.type?.toLowerCase() !== 'mm+'">
+      <div class="buffs-container animated-fade-in">
+        <h3>Buffs de Raid</h3>
+        <div class="buffs-grid">
+          <div *ngFor="let buff of buffs()" class="buff-card" [class.missing]="!buff.present" [title]="buff.label">
+            <div class="buff-icon">
+              <img *ngIf="buff.icon.includes('/')" [src]="buff.icon" [alt]="buff.label">
+              <span *ngIf="!buff.icon.includes('/')">{{ buff.icon }}</span>
+            </div>
+            <div class="buff-info">
+              <span class="buff-label">{{ buff.description }}</span>
+              <span class="buff-count" *ngIf="buff.present">x{{ buff.count }}</span>
+              <span class="buff-status" *ngIf="!buff.present">MANQUANT</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="role-column heals">
-        <div class="column-header">
-          <span class="icon">🌿</span>
-          <h4>Heals</h4>
-          <span class="count">{{ heals().length }}</span>
+      <div class="composition-layout">
+        <div class="role-column tanks">
+          <div class="column-header"><span class="icon">🛡️</span><h4>Tanks</h4><span class="count">{{ tanks().length }}</span></div>
+          <div class="comp-grid">
+            <div *ngFor="let s of tanks()" class="modern-comp-card clickable" [class]="'class-' + getClassCategory(s.character_class)" (click)="openAltsModal(s)">
+              <div class="card-content"><span class="name">{{ s.character_name }}</span></div>
+            </div>
+          </div>
         </div>
-        <div class="comp-grid">
-          <div *ngFor="let s of heals()" class="modern-comp-card clickable" [class]="'class-' + getClassCategory(s.character_class)" (click)="openAltsModal(s)">
-            <div class="card-content">
-              <span class="name">{{ s.character_name }}</span>
+        <div class="role-column heals">
+          <div class="column-header"><span class="icon">🌿</span><h4>Heals</h4><span class="count">{{ heals().length }}</span></div>
+          <div class="comp-grid">
+            <div *ngFor="let s of heals()" class="modern-comp-card clickable" [class]="'class-' + getClassCategory(s.character_class)" (click)="openAltsModal(s)">
+              <div class="card-content"><span class="name">{{ s.character_name }}</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="role-column dps">
+          <div class="column-header"><span class="icon">⚔️</span><h4>DPS</h4><span class="count">{{ dps().length }}</span></div>
+          <div class="comp-grid dps-layout">
+            <div *ngFor="let s of dps()" class="modern-comp-card clickable" [class]="'class-' + getClassCategory(s.character_class)" (click)="openAltsModal(s)">
+              <div class="card-content"><span class="name">{{ s.character_name }}</span></div>
             </div>
           </div>
         </div>
       </div>
+    </ng-container>
 
-      <div class="role-column dps">
-        <div class="column-header">
-          <span class="icon">⚔️</span>
-          <h4>DPS</h4>
-          <span class="count">{{ dps().length }}</span>
-        </div>
-        <div class="comp-grid dps-layout">
-          <div *ngFor="let s of dps()" class="modern-comp-card clickable" [class]="'class-' + getClassCategory(s.character_class)" (click)="openAltsModal(s)">
-            <div class="card-content">
-              <span class="name">{{ s.character_name }}</span>
-            </div>
+    <!-- MODE: MM+ (Groups) -->
+    <ng-container *ngIf="event()?.type?.toLowerCase() === 'mm+'">
+      <div class="mm-composition-layout" cdkDropListGroup>
+        
+        <!-- Unassigned Members -->
+        <div class="mm-unassigned-panel">
+          <button *ngIf="canManageEvents()" class="btn-add-group-top" (click)="onAddGroup()">+ Ajouter un groupe</button>
+          
+          <div class="panel-header">
+            <h3>Sans groupe</h3>
+            <span class="count-badge">{{ unassignedMembers().length }}</span>
+          </div>
+          <div class="mm-drop-zone unassigned"
+               cdkDropList
+               [cdkDropListData]="unassignedMembers()"
+               (cdkDropListDropped)="dropToGroup($event, 0)">
+            @for (m of unassignedMembers(); track m.user_id) {
+              <div class="mm-member-card" 
+                   [class]="'class-' + getClassCategory(m.character_class)"
+                   [class.can-drag]="canManageEvents()"
+                   [cdkDragDisabled]="!canManageEvents()"
+                   cdkDrag>
+                <div class="role-badge" [class]="m.role">{{ m.role === 'tank' ? '🛡️' : (m.role === 'heal' ? '🌿' : '⚔️') }}</div>
+                <span class="name">{{ m.character_name }}</span>
+                <button class="btn-alts-mini" (click)="openAltsModal(m)">🔍</button>
+              </div>
+            }
+            @if (unassignedMembers().length === 0) {
+              <p class="empty-msg">Tous les joueurs sont placés.</p>
+            }
           </div>
         </div>
+
+        <!-- Groups Grid -->
+        <div class="mm-groups-grid">
+          @for (group of mmGroups(); track group.index) {
+            <div class="mm-group-card animated-fade-in">
+              <div class="group-header">
+                <div class="group-title-row">
+                  <h4>GROUPE {{ group.index }}</h4>
+                  <button *ngIf="canManageEvents()" class="btn-delete-group" (click)="onRemoveGroup(group.index)" title="Supprimer ce groupe">×</button>
+                </div>
+                <div class="group-buffs">
+                  @for (buff of group.buffs; track buff.id) {
+                    <div class="mini-buff" [class.missing]="!buff.present" [title]="buff.label + ': ' + (buff.present ? 'PRÉSENT' : 'MANQUANT')">
+                      <img *ngIf="buff.icon.includes('/')" [src]="buff.icon" [alt]="buff.label">
+                      <span *ngIf="!buff.icon.includes('/')">{{ buff.icon }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <div class="mm-drop-zone group-zone"
+                   cdkDropList
+                   [cdkDropListData]="group.members"
+                   (cdkDropListDropped)="dropToGroup($event, group.index)">
+                
+                <!-- Role Slots inside Group -->
+                <div class="group-roles">
+                  <!-- Tank -->
+                  <div class="role-slot">
+                    <span class="role-label">🛡️</span>
+                    <div class="slot-members">
+                      @for (m of group.tanks; track m.user_id) {
+                        <div class="mm-member-card small" [class]="'class-' + getClassCategory(m.character_class)" cdkDrag [cdkDragDisabled]="!canManageEvents()">
+                          <span class="name">{{ m.character_name }}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                  <!-- Healer -->
+                  <div class="role-slot">
+                    <span class="role-label">🌿</span>
+                    <div class="slot-members">
+                      @for (m of group.heals; track m.user_id) {
+                        <div class="mm-member-card small" [class]="'class-' + getClassCategory(m.character_class)" cdkDrag [cdkDragDisabled]="!canManageEvents()">
+                          <span class="name">{{ m.character_name }}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                  <!-- DPS -->
+                  <div class="role-slot">
+                    <span class="role-label">⚔️</span>
+                    <div class="slot-members dps-slots">
+                      @for (m of group.dps; track m.user_id) {
+                        <div class="mm-member-card small" [class]="'class-' + getClassCategory(m.character_class)" cdkDrag [cdkDragDisabled]="!canManageEvents()">
+                          <span class="name">{{ m.character_name }}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                @if (group.members.length === 0) {
+                  <p class="empty-msg">Glissez des joueurs ici.</p>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
       </div>
-    </div>
+    </ng-container>
+
   </div>
 </div>
 
@@ -286,6 +374,11 @@
               }
             </select>
           </div>
+        </div>
+
+        <div class="form-section" *ngIf="editEventData.type === 'mm+'">
+          <label>Nombre de groupes MM+</label>
+          <input type="number" [(ngModel)]="editEventData.mm_groups_count" name="mm_groups_count" min="0">
         </div>
 
         <div class="form-section" *ngIf="editEventData.type === 'custom'">
