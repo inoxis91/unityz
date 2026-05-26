@@ -8,33 +8,60 @@
     <full-calendar [options]="calendarOptions()"></full-calendar>
   </div>
 
-  <!-- Create Event Modal (Admin Only) -->
-  <div class="modal-overlay" *ngIf="showCreateModal() && canManageEvents()" (click)="closeCreateModal()">
+  <!-- Context Menu -->
+  <div class="context-menu" 
+       *ngIf="contextMenu()" 
+       [style.left.px]="contextMenu()!.x" 
+       [style.top.px]="contextMenu()!.y"
+       (click)="$event.stopPropagation()">
+    <ng-container *ngIf="contextMenu()!.type === 'event'">
+      <button (click)="onEditEvent(contextMenu()!.data)">
+        <span>📝</span> Modifier l'événement
+      </button>
+      <button (click)="onCopyEvent(contextMenu()!.data)">
+        <span>📋</span> Copier l'événement
+      </button>
+      <button class="delete" (click)="onDeleteEvent(contextMenu()!.data)">
+        <span>🗑️</span> Supprimer l'événement
+      </button>
+    </ng-container>
+    <ng-container *ngIf="contextMenu()!.type === 'cell'">
+      <button (click)="onCreateEventFromCell(contextMenu()!.data)">
+        <span>➕</span> Créer un événement
+      </button>
+      <button *ngIf="copiedEvent()" (click)="onPasteEvent(contextMenu()!.data)">
+        <span>📥</span> Coller l'événement
+      </button>
+    </ng-container>
+  </div>
+
+  <!-- Create/Edit Event Modal (Admin Only) -->
+  <div class="modal-overlay" *ngIf="showModal() && canManageEvents()" (click)="closeModal()">
     <div class="modal-card" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div class="header-title">
           <span class="icon">📅</span>
-          <h2>Nouvel Événement</h2>
+          <h2>{{ isEditing() ? 'Modifier' : 'Nouvel' }} Événement</h2>
         </div>
-        <button class="close-btn" (click)="closeCreateModal()">&times;</button>
+        <button class="close-btn" (click)="closeModal()">&times;</button>
       </div>
       
-      <form (ngSubmit)="onCreateEvent()" class="modern-form">
+      <form (ngSubmit)="onSubmitEvent()" class="modern-form">
         <div class="modal-body">
           <div class="form-section">
             <label>Titre de l'activité</label>
-            <input type="text" [(ngModel)]="newEvent.title" name="title" required placeholder="Ex: Raid HM Flèche du vide">
+            <input type="text" [(ngModel)]="eventForm.title" name="title" required placeholder="Ex: Raid HM Flèche du vide">
           </div>
           
           <div class="form-section">
             <label>Description (Optionnel)</label>
-            <textarea [(ngModel)]="newEvent.description" name="description" rows="3" placeholder="Objectifs, prérequis, vocal..."></textarea>
+            <textarea [(ngModel)]="eventForm.description" name="description" rows="3" placeholder="Objectifs, prérequis, vocal..."></textarea>
           </div>
 
           <div class="form-grid">
             <div class="form-section">
               <label>Type</label>
-              <select [(ngModel)]="newEvent.type" name="type" class="custom-select">
+              <select [(ngModel)]="eventForm.type" name="type" class="custom-select">
                 <option value="raid">Raid</option>
                 <option value="mm+">Donjon MM+</option>
                 <option value="custom">Autre / Spécial</option>
@@ -42,10 +69,10 @@
             </div>
             <div class="form-section">
               <label>Roster autorisé</label>
-              <select [(ngModel)]="newEvent.roster_id" name="roster_id" class="custom-select">
+              <select [(ngModel)]="eventForm.roster_id" name="roster_id" class="custom-select">
                 <option value="">Tous les membres</option>
                 @for (roster of rosterService.rosters(); track roster.id) {
-                  <option [value]="roster.id">{{ roster.name }} (Poids: {{ roster.weight }})</option>
+                  <option [value]="roster.id">{{ roster.name }}</option>
                 }
               </select>
             </div>
@@ -54,23 +81,23 @@
           <div class="form-grid">
             <div class="form-section">
               <label>Heure de début</label>
-              <input type="time" [(ngModel)]="newEvent.start_time" name="start_time" required>
+              <input type="time" [(ngModel)]="eventForm.start_time" name="start_time" required>
             </div>
             <div class="form-section">
               <label>Heure de fin</label>
-              <input type="time" [(ngModel)]="newEvent.end_time" name="end_time" required>
+              <input type="time" [(ngModel)]="eventForm.end_time" name="end_time" required>
             </div>
           </div>
 
-          <div class="form-section animated-fade-in" *ngIf="newEvent.type === 'custom'">
+          <div class="form-section animated-fade-in" *ngIf="eventForm.type === 'custom'">
             <label>Précisez le type d'événement</label>
-            <input type="text" [(ngModel)]="newEvent.customType" name="customType" required placeholder="Ex: Farm Montures">
+            <input type="text" [(ngModel)]="eventForm.customType" name="customType" required placeholder="Ex: Farm Montures">
           </div>
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn-secondary" (click)="closeCreateModal()">Annuler</button>
-          <button type="submit" class="btn-primary">Créer l'événement</button>
+          <button type="button" class="btn-secondary" (click)="closeModal()">Annuler</button>
+          <button type="submit" class="btn-primary">{{ isEditing() ? 'Enregistrer' : 'Créer' }}</button>
         </div>
       </form>
     </div>

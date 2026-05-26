@@ -380,3 +380,54 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Context Menu */
+.context-menu {
+  position: fixed;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  z-index: 3000;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+}
+
+.context-menu button {
+  background: none;
+  border: none;
+  padding: 0.8rem 1rem;
+  text-align: left;
+  font-size: 0.95rem;
+  color: #1e293b;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.context-menu button span {
+  font-size: 1.1rem;
+}
+
+.context-menu button:hover {
+  background: #f1f5f9;
+  color: #0074e0;
+}
+
+.context-menu button.delete {
+  color: #dc2626;
+  margin-top: 0.2rem;
+  border-top: 1px solid #f1f5f9;
+  border-radius: 0 0 10px 10px;
+}
+
+.context-menu button.delete:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
