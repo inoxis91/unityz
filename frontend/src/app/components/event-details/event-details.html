@@ -77,7 +77,7 @@
           <ng-template #noChars>
             <div class="warning-box">
               <p>
-                ⚠️ Aucun personnage trouvé. <a routerLink="/characters">Importez vos personnages</a> pour vous inscrire.
+                ⚠️ Aucun personnage trouvé. <a [routerLink]="['/options']" [queryParams]="{tab: 'characters'}">Importez vos personnages</a> pour vous inscrire.
               </p>
             </div>
           </ng-template>

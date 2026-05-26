@@ -122,7 +122,7 @@
     <section class="chars-column">
       <div class="section-header">
         <h2>Mes Personnages</h2>
-        <a routerLink="/characters" class="view-all">Gérer →</a>
+        <a [routerLink]="['/options']" [queryParams]="{tab: 'characters'}" class="view-all">Gérer →</a>
       </div>
 
       <div class="chars-grid">
@@ -144,7 +144,7 @@
         @if (myCharacters().length === 0) {
           <div class="empty-state">
             <p>Aucun personnage lié.</p>
-            <button class="btn-import" routerLink="/characters">Importer</button>
+            <button class="btn-import" [routerLink]="['/options']" [queryParams]="{tab: 'characters'}">Importer</button>
           </div>
         }
       </div>

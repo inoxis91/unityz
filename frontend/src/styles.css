@@ -53,6 +53,21 @@ body {
 .bg-class-warlock { background-color: var(--color-warlock) !important; color: white; }
 .bg-class-warrior { background-color: var(--color-warrior) !important; color: white; }
 
+/* Border variants */
+.border-class-death-knight { border-left: 4px solid var(--color-death-knight) !important; }
+.border-class-demon-hunter { border-left: 4px solid var(--color-demon-hunter) !important; }
+.border-class-druid { border-left: 4px solid var(--color-druid) !important; }
+.border-class-evoker { border-left: 4px solid var(--color-evoker) !important; }
+.border-class-hunter { border-left: 4px solid var(--color-hunter) !important; }
+.border-class-mage { border-left: 4px solid var(--color-mage) !important; }
+.border-class-monk { border-left: 4px solid var(--color-monk) !important; }
+.border-class-paladin { border-left: 4px solid var(--color-paladin) !important; }
+.border-class-priest { border-left: 4px solid var(--color-priest) !important; }
+.border-class-rogue { border-left: 4px solid var(--color-rogue) !important; }
+.border-class-shaman { border-left: 4px solid var(--color-shaman) !important; }
+.border-class-warlock { border-left: 4px solid var(--color-warlock) !important; }
+.border-class-warrior { border-left: 4px solid var(--color-warrior) !important; }
+
 /* Common UI Elements */
 .btn {
   padding: 0.5rem 1rem;
