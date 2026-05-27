@@ -251,7 +251,7 @@ export class EventService {
       return `**${r.battletag.split('#')[0]}**`;
     });
 
-    const channelId = '1509267337147056249';
+    const channelId = process.env.DISCORD_EVENTS_CHANNEL_ID || '1509267337147056249';
     let message = this.formatReminderMessage(event, true, mentions);
     
     if (mentions.length === 0) {
@@ -265,7 +265,7 @@ export class EventService {
     const events = await this.getEventsForDate(date);
     if (events.length === 0) return;
 
-    const channelId = '1509267337147056249';
+    const channelId = process.env.DISCORD_EVENTS_CHANNEL_ID || '1509267337147056249';
     let fullMessage = '📅 **ÉVÉNEMENTS DU JOUR**\n';
     fullMessage += '------------------------------------------\n';
 
