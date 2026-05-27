@@ -12,6 +12,7 @@ export interface User {
   bnet_id: number;
   discord_id?: string | null;
   role: UserRole;
+  has_characters: boolean;
   created_at?: string;
   updated_at?: string;
 }

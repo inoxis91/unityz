@@ -5,6 +5,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 
 import { initDb } from './lib/db';
+import pool from './lib/db';
 import characterRoutes from './routes/characters';
 import eventRoutes from './routes/events';
 import rosterRoutes from './routes/rosters';
@@ -96,9 +97,18 @@ app.get('/api/auth/logout', (req, res) => {
   });
 });
 
-app.get('/api/users/me', (req, res) => {
+app.get('/api/users/me', async (req, res, next) => {
   if (req.isAuthenticated()) {
-    res.json(req.user);
+    try {
+      const user = req.user as any;
+      const charCheck = await pool.query('SELECT 1 FROM characters WHERE user_id = $1 LIMIT 1', [user.id]);
+      res.json({
+        ...user,
+        has_characters: charCheck.rowCount! > 0
+      });
+    } catch (error) {
+      next(error);
+    }
   } else {
     res.status(401).json({ status: 'error', message: 'Not authenticated' });
   }

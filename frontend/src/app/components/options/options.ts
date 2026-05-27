@@ -15,6 +15,7 @@ import { ToastService } from '../../services/toast';
 })
 export class OptionsComponent implements OnInit {
   activeTab = signal<'characters' | 'settings'>('characters');
+  isSetupMode = signal(false);
 
   constructor(
     public authService: AuthService, 
@@ -26,6 +27,10 @@ export class OptionsComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       if (params['tab'] === 'settings') {
         this.activeTab.set('settings');
+      }
+      if (params['setup'] === 'true') {
+        this.isSetupMode.set(true);
+        this.toast.info('Veuillez importer vos personnages Battle.net pour accéder au reste du site.');
       }
       if (params['success'] === 'discord_linked') {
         this.toast.success('Compte Discord lié avec succès !');

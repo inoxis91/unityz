@@ -12,12 +12,12 @@
     </button>
 
     <div class="nav-links" [class.active]="isMenuOpen()">
-      @if (authService.currentUser()) {
-        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMenu()">Dashboard</a>
-        <a routerLink="/calendar" routerLinkActive="active" (click)="closeMenu()">Calendrier</a>
-        <a routerLink="/fees" routerLinkActive="active" (click)="closeMenu()">Cotisations</a>
+      @if (authService.currentUser(); as user) {
+        <a *ngIf="user.has_characters" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMenu()">Dashboard</a>
+        <a *ngIf="user.has_characters" routerLink="/calendar" routerLinkActive="active" (click)="closeMenu()">Calendrier</a>
+        <a *ngIf="user.has_characters" routerLink="/fees" routerLinkActive="active" (click)="closeMenu()">Cotisations</a>
         <a routerLink="/options" routerLinkActive="active" (click)="closeMenu()">Options</a>
-        <a routerLink="/admin" routerLinkActive="active" *ngIf="authService.canAccessAdmin()" (click)="closeMenu()">Admin</a>
+        <a routerLink="/admin" routerLinkActive="active" *ngIf="user.has_characters && authService.canAccessAdmin()" (click)="closeMenu()">Admin</a>
         <button (click)="logout()" class="btn-logout">Déconnexion</button>
       }
     </div>

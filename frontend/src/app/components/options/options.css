@@ -40,6 +40,39 @@
   box-shadow: 0 4px 12px rgba(0, 116, 224, 0.2);
 }
 
+.setup-warning {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 20px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.warning-content {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.warning-content .icon {
+  font-size: 2.5rem;
+}
+
+.warning-content .text h3 {
+  margin: 0 0 0.5rem 0;
+  color: #9a3412;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.warning-content .text p {
+  margin: 0;
+  color: #c2410c;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
 /* Settings Grid */
 .settings-grid {
   display: grid;

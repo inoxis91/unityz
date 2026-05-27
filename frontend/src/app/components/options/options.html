@@ -13,6 +13,16 @@
     </button>
   </div>
 
+  <div class="setup-warning animated-fade-in" *ngIf="isSetupMode()">
+    <div class="warning-content">
+      <span class="icon">⚠️</span>
+      <div class="text">
+        <h3>Synchronisation requise</h3>
+        <p>Pour utiliser Unity'Z, vous devez importer au moins un personnage depuis Battle.net ci-dessous. Une fois fait, vous aurez accès au tableau de bord et au calendrier.</p>
+      </div>
+    </div>
+  </div>
+
   <div class="tab-content" *ngIf="activeTab() === 'characters'">
     <app-character-manager></app-character-manager>
   </div>

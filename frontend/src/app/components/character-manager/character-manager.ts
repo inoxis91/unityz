@@ -65,6 +65,9 @@ export class CharacterManagerComponent implements OnInit {
         this.loadMyCharacters();
         this.toast.success(`${char.name} a été ajouté à votre liste.`);
         this.bnetCharacters.set(this.bnetCharacters().filter(c => c !== char));
+        
+        // Rafraîchir l'auth pour débloquer le site si c'est le premier perso
+        this.authService.checkAuth().subscribe();
       },
       error: (err) => {
         console.error('Error importing character', err);
