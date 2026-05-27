@@ -90,7 +90,52 @@ export class EventService {
       data.mm_groups_count || 0,
       userId
     ]);
-    return result.rows[0];
+    
+    const createdEvent = result.rows[0];
+
+    // On récupère l'event complet (avec les infos du roster) pour la notification
+    const fullEvent = await this.getById(createdEvent.id);
+    if (fullEvent) {
+      this.sendCreationNotification(fullEvent).catch(err => 
+        console.error('[Discord] Error sending creation notification:', err)
+      );
+    }
+
+    return createdEvent;
+  }
+
+  static async sendCreationNotification(event: Event): Promise<void> {
+    const channelId = process.env.DISCORD_EVENTS_CHANNEL_ID || '1509267337147056249';
+    
+    const startTime = new Date(event.start_time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const startDate = new Date(event.start_time).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    const typeIcon = event.type.toLowerCase() === 'raid' ? '⚔️' : '💎';
+    
+    let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+    if (frontendUrl.endsWith('/')) frontendUrl = frontendUrl.slice(0, -1);
+    const eventLink = `${frontendUrl}/events/${event.id}`;
+
+    // Mise en avant du roster
+    const rosterTag = event.roster_name 
+      ? `🔴 **ROSTER : ${event.roster_name.toUpperCase()}** 🔴` 
+      : `🟢 **OUVERT À TOUS** 🟢`;
+
+    let message = `🆕 **NOUVEL ÉVÉNEMENT CRÉÉ !**\n`;
+    message += `Venez nombreux vous inscrire pour faire briller la guilde ! 🚀\n\n`;
+    message += `${rosterTag}\n`;
+    message += `------------------------------------------\n`;
+    message += `\n${typeIcon} **${event.title}**\n`;
+    message += `📅 Date : ${startDate}\n`;
+    message += `⏰ Heure : ${startTime}\n`;
+    message += `📝 Type : ${event.type}\n`;
+    if (event.description) {
+      message += `📖 Description : ${event.description}\n`;
+    }
+    message += `🔗 **S'inscrire ici :** ${eventLink}\n`;
+    message += `------------------------------------------\n`;
+    message += `\nOn compte sur vous ! 🔥`;
+
+    await sendDiscordChannelMessage(channelId, message);
   }
 
   static async update(id: string, data: Partial<Event>): Promise<Event | null> {
