@@ -173,7 +173,7 @@
 .char-image-container {
   position: absolute;
   top: 0;
-  right: -20px;
+  right: -80px;
   height: 100%;
   width: 100%;
   z-index: 1;
@@ -187,8 +187,8 @@
   position: absolute;
   right: 0;
   top: -20%;
-  mask-image: linear-gradient(to left, black 50%, transparent 95%);
-  -webkit-mask-image: linear-gradient(to left, black 50%, transparent 95%);
+  mask-image: linear-gradient(to left, black 40%, transparent 90%);
+  -webkit-mask-image: linear-gradient(to left, black 40%, transparent 90%);
   filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
 }
 
