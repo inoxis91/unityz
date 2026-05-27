@@ -1,4 +1,5 @@
 import pool from '../lib/db';
+import { sendDiscordChannelMessage } from '../lib/discord';
 
 export interface Event {
   id: string;
@@ -191,5 +192,98 @@ export class EventService {
     const query = 'UPDATE events SET mm_groups_count = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2';
     const result = await pool.query(query, [count, eventId]);
     return (result.rowCount ?? 0) > 0;
+  }
+
+  static async getEventsForDate(date: Date): Promise<Event[]> {
+    const query = `
+      SELECT e.*, r.name as roster_name
+      FROM events e
+      LEFT JOIN rosters r ON e.roster_id = r.id
+      WHERE e.start_time::date = $1::date
+      ORDER BY e.start_time ASC
+    `;
+    const result = await pool.query(query, [date.toISOString().split('T')[0]]);
+    return result.rows;
+  }
+
+  static formatReminderMessage(event: Event, isManual: boolean = false, standbyMentions: string[] = []): string {
+    const startTime = new Date(event.start_time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const startDate = new Date(event.start_time).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    const typeIcon = event.type.toLowerCase() === 'raid' ? '⚔️' : '💎';
+    const rosterInfo = event.roster_name ? ` (Roster: ${event.roster_name})` : '';
+    
+    let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+    if (frontendUrl.endsWith('/')) frontendUrl = frontendUrl.slice(0, -1);
+    const eventLink = `${frontendUrl}/events/${event.id}`;
+
+    let message = isManual ? `📣 **RAPPEL D'ÉVÉNEMENT**\n` : `📅 **ÉVÉNEMENTS DU JOUR**\n`;
+    message += '------------------------------------------\n';
+    message += `\n${typeIcon} **${event.title}**\n`;
+    if (isManual) message += `📅 Date : ${startDate}\n`;
+    message += `⏰ Heure : ${startTime}\n`;
+    message += `📝 Type : ${event.type}${rosterInfo}\n`;
+    if (event.description) {
+      message += `📖 Description : ${event.description}\n`;
+    }
+    message += `🔗 **Lien :** ${eventLink}\n`;
+    message += '------------------------------------------\n';
+
+    if (standbyMentions.length > 0) {
+      message += `\n⚠️ **Rappel aux "Peut-être" :**\n${standbyMentions.join(', ')}\nMerci de confirmer votre présence dès que possible ! 🙏\n`;
+    }
+
+    return message;
+  }
+
+  static async sendManualReminder(eventId: string): Promise<void> {
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Event not found');
+
+    // Récupérer les personnes en "standby" (peut-être) avec leur Discord ID ou BattleTag en secours
+    const standbyQuery = `
+      SELECT u.discord_id, u.battletag FROM users u
+      JOIN event_signups s ON u.id = s.user_id
+      WHERE s.event_id = $1 AND s.status = 'standby'
+    `;
+    const standbyRes = await pool.query(standbyQuery, [eventId]);
+    const mentions = standbyRes.rows.map(r => {
+      if (r.discord_id) return `<@${r.discord_id}>`;
+      return `**${r.battletag.split('#')[0]}**`;
+    });
+
+    const channelId = '1509267337147056249';
+    let message = this.formatReminderMessage(event, true, mentions);
+    
+    if (mentions.length === 0) {
+      message += '\nN\'oubliez pas de vous inscrire sur le site ! 🚀';
+    }
+
+    await sendDiscordChannelMessage(channelId, message);
+  }
+
+  static async sendDailyReminders(date: Date): Promise<void> {
+    const events = await this.getEventsForDate(date);
+    if (events.length === 0) return;
+
+    const channelId = '1509267337147056249';
+    let fullMessage = '📅 **ÉVÉNEMENTS DU JOUR**\n';
+    fullMessage += '------------------------------------------\n';
+
+    for (const event of events) {
+      const standbyQuery = `
+        SELECT u.discord_id, u.battletag FROM users u
+        JOIN event_signups s ON u.id = s.user_id
+        WHERE s.event_id = $1 AND s.status = 'standby'
+      `;
+      const standbyRes = await pool.query(standbyQuery, [event.id]);
+      const mentions = standbyRes.rows.map(r => {
+        if (r.discord_id) return `<@${r.discord_id}>`;
+        return `**${r.battletag.split('#')[0]}**`;
+      });
+
+      fullMessage += `\n${this.formatReminderMessage(event, false, mentions)}`;
+    }
+
+    await sendDiscordChannelMessage(channelId, fullMessage);
   }
 }

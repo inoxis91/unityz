@@ -67,8 +67,12 @@ export class AuthService {
     window.location.href = `${this.apiUrl}/auth/discord`;
   }
 
-  login(): void {
-    window.location.href = `${this.apiUrl}/auth/bnet`;
+  login(redirectUrl?: string): void {
+    let url = `${this.apiUrl}/auth/bnet`;
+    if (redirectUrl) {
+      url += `?redirect=${encodeURIComponent(redirectUrl)}`;
+    }
+    window.location.href = url;
   }
 
   logout(): void {

@@ -11,15 +11,13 @@ export class BlizzardService {
     const url = `https://${this.REGION}.api.blizzard.com/profile/wow/character/${realmSlug}/${charNameSlug}/character-media`;
     
     try {
-      console.log(`[DEBUG] Blizzard API Media URL: ${url}`);
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${accessToken}` },
         params: { namespace: this.PROFILE_NAMESPACE, locale: this.LOCALE }
       });
-      console.log(`[DEBUG] Blizzard Media Success: found ${response.data.assets?.length || 0} assets`);
       return response.data;
     } catch (error: any) {
-      console.error(`[DEBUG] Blizzard Media Error [${characterName}-${realm}]: ${error.response?.status} - ${error.response?.data?.detail || error.message}`);
+      console.error(`[Blizzard API] Media Error [${characterName}-${realm}]: ${error.response?.status} - ${error.response?.data?.detail || error.message}`);
       return null;
     }
   }
@@ -30,14 +28,13 @@ export class BlizzardService {
     const url = `https://${this.REGION}.api.blizzard.com/profile/wow/character/${realmSlug}/${charNameSlug}/equipment`;
     
     try {
-      console.log(`[DEBUG] Blizzard API Equipment URL: ${url}`);
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${accessToken}` },
         params: { namespace: this.PROFILE_NAMESPACE, locale: this.LOCALE }
       });
       return response.data;
     } catch (error: any) {
-      console.error(`[DEBUG] Blizzard Equipment Error [${characterName}-${realm}]: ${error.response?.status}`);
+      console.error(`[Blizzard API] Equipment Error [${characterName}-${realm}]: ${error.response?.status}`);
       return null;
     }
   }
@@ -48,15 +45,13 @@ export class BlizzardService {
     const url = `https://${this.REGION}.api.blizzard.com/profile/wow/character/${realmSlug}/${charNameSlug}`;
     
     try {
-      console.log(`[DEBUG] Blizzard API Summary URL: ${url}`);
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${accessToken}` },
         params: { namespace: this.PROFILE_NAMESPACE, locale: this.LOCALE }
       });
-      console.log(`[DEBUG] Blizzard Summary Success for ${response.data.name}-${response.data.realm?.name}: iLvl ${response.data.equipped_item_level}`);
       return response.data;
     } catch (error: any) {
-      console.error(`[DEBUG] Blizzard Summary Error [${characterName}-${realm}]: ${error.response?.status}`);
+      console.error(`[Blizzard API] Summary Error [${characterName}-${realm}]: ${error.response?.status}`);
       return null;
     }
   }

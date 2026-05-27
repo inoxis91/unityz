@@ -9,11 +9,6 @@ export const adminGuard = (route: ActivatedRouteSnapshot, state: RouterStateSnap
 
   return authService.checkAuth().pipe(
     map(user => {
-      if (!user) {
-        router.navigate(['/login']);
-        return false;
-      }
-
       // Même un admin doit avoir ses persos
       if (!user.has_characters) {
         router.navigate(['/options'], { queryParams: { tab: 'characters', setup: 'true' } });
@@ -31,7 +26,7 @@ export const adminGuard = (route: ActivatedRouteSnapshot, state: RouterStateSnap
       return false;
     }),
     catchError(() => {
-      router.navigate(['/login']);
+      router.navigate(['/login'], { queryParams: { redirect: state.url } });
       return of(false);
     })
   );

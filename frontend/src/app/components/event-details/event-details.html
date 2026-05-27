@@ -15,6 +15,9 @@
       </div>
       
       <div class="admin-actions" *ngIf="canManageEvents()">
+        <button class="btn-admin remind" (click)="onRemindEvent()" title="Envoyer un rappel sur Discord">
+          <span class="icon">🔔</span> Rappeler
+        </button>
         <button class="btn-admin edit" (click)="openEditModal()" title="Modifier l'événement">
           <span class="icon">✏️</span> Modifier
         </button>

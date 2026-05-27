@@ -68,6 +68,10 @@ export class CalendarService {
     return this.http.delete(`${this.apiUrl}/${id}`, { withCredentials: true });
   }
 
+  remindEvent(id: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${id}/remind`, {}, { withCredentials: true });
+  }
+
   updateGroupsCount(eventId: string, count: number): Observable<any> {
     return this.http.patch(`${this.apiUrl}/${eventId}/groups-count`, { count }, { withCredentials: true });
   }

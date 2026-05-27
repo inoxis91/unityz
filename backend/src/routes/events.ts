@@ -39,6 +39,17 @@ router.get('/:id', isAuthenticated, async (req, res, next) => {
   }
 });
 
+// POST /api/events/:id/remind : Envoie un rappel manuel sur Discord (Admin/Manager)
+router.post('/:id/remind', canManageEvents, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await EventService.sendManualReminder(id as string);
+    res.json({ status: 'success', message: 'Reminder sent successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/events/:id/signups : Récupère les inscriptions pour un événement
 router.get('/:id/signups', isAuthenticated, async (req, res, next) => {
   try {

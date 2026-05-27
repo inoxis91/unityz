@@ -1,5 +1,6 @@
 import express from 'express';
 import session from 'express-session';
+import cookieParser from 'cookie-parser';
 import passport from './config/passport';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -46,6 +47,7 @@ app.use(cors({
   credentials: true,
 }));
 
+app.use(cookieParser());
 app.use(express.json());
 app.use(session({
   secret: process.env.SESSION_SECRET || 'unityz-secret',
@@ -71,14 +73,33 @@ app.use('/api/fees', feeRoutes);
 app.use('/api/users', userRoutes);
 
 // Auth Routes
-app.get('/api/auth/bnet', passport.authenticate('bnet'));
-
-app.get('/api/auth/bnet/callback', (req, res, next) => {
-  passport.authenticate('bnet', { failureRedirect: `${frontendUrl}/login` })(req, res, (err: any) => {
-    if (err) return next(err);
-    res.redirect(frontendUrl + '/');
-  });
+app.get('/api/auth/bnet', (req, res, next) => {
+  const redirect = req.query.redirect as string;
+  if (redirect && redirect.startsWith('/')) {
+    res.cookie('redirect_after_login', redirect, { 
+      maxAge: 10 * 60 * 1000, 
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    });
+  }
+  passport.authenticate('bnet')(req, res, next);
 });
+
+app.get('/api/auth/bnet/callback', 
+  passport.authenticate('bnet', { failureRedirect: `${frontendUrl}/login` }),
+  (req, res) => {
+    let target = frontendUrl + '/';
+    const redirect = req.cookies?.redirect_after_login;
+    
+    if (redirect && redirect.startsWith('/')) {
+      target = frontendUrl + redirect;
+      res.clearCookie('redirect_after_login');
+    }
+
+    res.redirect(target);
+  }
+);
 
 // Discord Auth Routes (for account linking)
 app.get('/api/auth/discord', passport.authorize('discord'));
@@ -90,14 +111,31 @@ app.get('/api/auth/discord/callback', (req, res, next) => {
   });
 });
 
-app.get('/api/auth/logout', (req, res) => {
+app.get('/api/auth/logout', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  
   req.logout((err) => {
-    if (err) { return res.status(500).json({ status: 'error', message: 'Logout failed' }); }
-    res.json({ status: 'success', message: 'Logged out successfully' });
+    if (err) { return next(err); }
+    
+    if (req.session) {
+      req.session.destroy((err) => {
+        if (err) { console.error('[Auth] Logout session destroy error:', err); }
+        res.clearCookie('connect.sid', { path: '/' });
+        return res.status(200).json({ status: 'success' });
+      });
+    } else {
+      res.clearCookie('connect.sid', { path: '/' });
+      res.status(200).json({ status: 'success' });
+    }
   });
 });
 
 app.get('/api/users/me', async (req, res, next) => {
+  // Empêcher la mise en cache de l'identité (très important pour le logout/refresh)
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
   if (req.isAuthenticated()) {
     try {
       const user = req.user as any;

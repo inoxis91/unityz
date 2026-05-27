@@ -63,6 +63,12 @@
   background: #f0f7ff;
 }
 
+.btn-admin.remind:hover {
+  border-color: #f59e0b;
+  color: #f59e0b;
+  background: #fffbeb;
+}
+
 .btn-admin.delete:hover {
   border-color: #ef4444;
   color: #ef4444;

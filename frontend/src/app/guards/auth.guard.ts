@@ -9,11 +9,6 @@ export const authGuard = (route: ActivatedRouteSnapshot, state: RouterStateSnaps
 
   return authService.checkAuth().pipe(
     map(user => {
-      if (!user) {
-        router.navigate(['/login']);
-        return false;
-      }
-
       // Si l'utilisateur n'a pas de persos, il ne peut aller QUE sur la page options/characters
       if (!user.has_characters) {
         const isTargetingOptions = state.url.startsWith('/options');
@@ -26,7 +21,8 @@ export const authGuard = (route: ActivatedRouteSnapshot, state: RouterStateSnaps
       return true;
     }),
     catchError(() => {
-      router.navigate(['/login']);
+      // Rediriger vers la page de login locale avec l'URL de retour
+      router.navigate(['/login'], { queryParams: { redirect: state.url } });
       return of(false);
     })
   );

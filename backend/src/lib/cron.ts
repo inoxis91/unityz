@@ -1,8 +1,17 @@
 import cron from 'node-cron';
 import pool from './db';
 import { sendDiscordChannelMessage } from './discord';
+import { EventService } from '../services/eventService';
 
 export const initCronJobs = () => {
+  // Every day at 10:00 AM - Daily Event Reminder
+  cron.schedule('0 10 * * *', async () => {
+    console.log('[Cron] Checking for today\'s events...');
+    await EventService.sendDailyReminders(new Date());
+  }, {
+    timezone: "Europe/Paris"
+  });
+
   // Every day at 18:00
   cron.schedule('0 18 * * *', async () => {
     const today = new Date();

@@ -274,6 +274,23 @@ export class EventDetailsComponent implements OnInit {
     }
   }
 
+  async onRemindEvent() {
+    const evt = this.event();
+    if (!evt) return;
+
+    const ok = await this.confirm.ask(
+      'Envoyer un rappel',
+      `Voulez-vous envoyer un rappel Discord pour l'événement "${evt.title}" ?`
+    );
+
+    if (ok) {
+      this.calendarService.remindEvent(evt.id!).subscribe({
+        next: () => this.toast.success('Rappel envoyé sur Discord !'),
+        error: () => this.toast.error('Erreur lors de l\'envoi du rappel.')
+      });
+    }
+  }
+
   onCharacterChange() {
     const char = this.myCharacters().find(c => c.id === this.selectedCharacterId);
     if (char) {
