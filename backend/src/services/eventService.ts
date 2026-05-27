@@ -121,7 +121,12 @@ export class EventService {
              s.created_at as signup_date
       FROM event_signups s 
       LEFT JOIN characters c ON s.character_id = c.id 
-      LEFT JOIN characters mc ON s.user_id = mc.user_id AND mc.is_main = TRUE
+      LEFT JOIN (
+        SELECT DISTINCT ON (user_id) user_id, name, class 
+        FROM characters 
+        WHERE is_main = TRUE 
+        ORDER BY user_id, updated_at DESC
+      ) mc ON s.user_id = mc.user_id
       JOIN users u ON s.user_id = u.id 
       WHERE s.event_id = $1
       ORDER BY s.created_at ASC

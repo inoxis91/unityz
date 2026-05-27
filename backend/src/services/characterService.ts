@@ -58,17 +58,29 @@ export class CharacterService {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
+      
+      // Check if user already has a main character
+      const mainCheck = await client.query('SELECT 1 FROM characters WHERE user_id = $1 AND is_main = TRUE LIMIT 1', [userId]);
+      let hasMain = mainCheck.rowCount! > 0;
+
       for (const char of characters) {
+        // The first character imported becomes main IF the user has no main yet
+        const setAsMain = !hasMain;
+        
         const query = `
-          INSERT INTO characters (user_id, name, realm, class, level)
-          VALUES ($1, $2, $3, $4, $5)
+          INSERT INTO characters (user_id, name, realm, class, level, is_main)
+          VALUES ($1, $2, $3, $4, $5, $6)
           ON CONFLICT (name, realm, user_id) 
           DO UPDATE SET 
             level = EXCLUDED.level,
             class = EXCLUDED.class,
             updated_at = CURRENT_TIMESTAMP
         `;
-        await client.query(query, [userId, char.name, char.realm, char.class, char.level]);
+        await client.query(query, [userId, char.name, char.realm, char.class, char.level, setAsMain]);
+        
+        if (setAsMain) {
+          hasMain = true; // Only set the first one as main
+        }
       }
       await client.query('COMMIT');
     } catch (e) {
