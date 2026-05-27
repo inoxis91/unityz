@@ -5,7 +5,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 
 import { initDb } from './lib/db';
-import pool from './lib/db';
 import characterRoutes from './routes/characters';
 import eventRoutes from './routes/events';
 import rosterRoutes from './routes/rosters';
@@ -14,6 +13,7 @@ import userRoutes from './routes/users';
 import { errorHandler } from './middlewares/errorHandler';
 import { initDiscord } from './lib/discord';
 import { initCronJobs } from './lib/cron';
+import { UserService } from './services/userService';
 
 dotenv.config();
 
@@ -101,10 +101,10 @@ app.get('/api/users/me', async (req, res, next) => {
   if (req.isAuthenticated()) {
     try {
       const user = req.user as any;
-      const charCheck = await pool.query('SELECT 1 FROM characters WHERE user_id = $1 LIMIT 1', [user.id]);
+      const has_characters = await UserService.hasCharacters(user.id);
       res.json({
         ...user,
-        has_characters: charCheck.rowCount! > 0
+        has_characters
       });
     } catch (error) {
       next(error);

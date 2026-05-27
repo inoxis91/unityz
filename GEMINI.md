@@ -60,3 +60,14 @@
 
 ## Final Mandate
 Any new feature implementation MUST follow this layered architecture. If a developer or AI identifies technical debt, it should be addressed *before* or *during* the implementation of the new feature.
+
+## Roadmap & Futures Fonctionnalités
+Voici les fonctionnalités prévues pour les prochaines phases de développement :
+
+1.  **Intégration Raider.IO API** : Récupérer automatiquement le score MM+ des personnages lors de l'import et l'afficher sur le Dashboard et dans les compositions MM+.
+2.  **Attendance Tracker (Suivi de présence)** : Calcul automatique du taux de participation aux raids sur les 30 derniers jours pour aider les officiers.
+3.  **Notifications Discord Automatisées** :
+    *   Annonce automatique des nouveaux événements dans un canal dédié.
+    *   Rappels automatiques (pings) 24h avant le début d'un événement pour les membres non inscrits.
+4.  **Gestion des Loots (BiS List)** : Système permettant aux joueurs de lister les objets souhaités sur chaque boss. Interface admin pour faciliter l'attribution des loots (Master Loot / Loot Council).
+5.  **Audit Logs** : Historique des actions administratives (création/suppression d'événements, changement de rôles, etc.).

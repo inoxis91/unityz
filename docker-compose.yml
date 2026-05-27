@@ -27,7 +27,9 @@ services:
       - /app/node_modules
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      target: build
     command: npm start
     ports:
       - '4200:4200'

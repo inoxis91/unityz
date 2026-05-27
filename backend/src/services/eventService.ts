@@ -37,6 +37,12 @@ export interface Signup {
 }
 
 export class EventService {
+  static async getMySignups(userId: string): Promise<Signup[]> {
+    const query = 'SELECT * FROM event_signups WHERE user_id = $1';
+    const result = await pool.query(query, [userId]);
+    return result.rows;
+  }
+
   static async getAll(): Promise<Event[]> {
     const query = `
       SELECT e.id, e.title, e.description, 

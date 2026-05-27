@@ -1,5 +1,4 @@
 import express from 'express';
-import pool from '../lib/db';
 import { EventService } from '../services/eventService';
 import { isAuthenticated, canManageEvents } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
@@ -10,9 +9,8 @@ const router = express.Router();
 // GET /api/events/my-signups : Récupère les inscriptions de l'utilisateur
 router.get('/my-signups', isAuthenticated, async (req, res, next) => {
   try {
-    const query = 'SELECT * FROM event_signups WHERE user_id = $1';
-    const result = await pool.query(query, [req.user!.id]);
-    res.json(result.rows);
+    const signups = await EventService.getMySignups(req.user!.id);
+    res.json(signups);
   } catch (error) {
     next(error);
   }

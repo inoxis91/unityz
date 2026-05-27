@@ -1,10 +1,9 @@
 import express from 'express';
-import pool from '../lib/db';
-import { isAuthenticated } from '../middlewares/auth';
+import { isAuthenticated, isAdmin } from '../middlewares/auth';
 import { z } from 'zod';
 import { validate } from '../middlewares/validate';
 import { findMemberByName } from '../lib/discord';
-import { isAdmin } from '../middlewares/auth';
+import { UserService } from '../services/userService';
 
 const router = express.Router();
 
@@ -20,38 +19,39 @@ const updateRoleSchema = z.object({
   }),
 });
 
+// GET /api/users : Liste tous les utilisateurs (Admin)
 router.get('/', isAdmin, async (req, res, next) => {
   try {
-    const result = await pool.query('SELECT id, battletag, bnet_id, discord_id, role, created_at FROM users ORDER BY battletag ASC');
-    res.json(result.rows);
+    const users = await UserService.getAll();
+    res.json(users);
   } catch (error) {
     next(error);
   }
 });
 
+// PATCH /api/users/:id/role : Change le rôle d'un utilisateur (Admin)
 router.patch('/:id/role', isAdmin, validate(updateRoleSchema), async (req, res, next) => {
   try {
     const { role } = req.body;
-    const { id } = req.params;
+    const id = req.params.id as string;
 
-    const query = 'UPDATE users SET role = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *';
-    const result = await pool.query(query, [role, id]);
+    const user = await UserService.updateRole(id, role);
 
-    if (result.rowCount === 0) {
+    if (!user) {
       return res.status(404).json({ status: 'error', message: 'User not found' });
     }
 
-    res.json(result.rows[0]);
+    res.json(user);
   } catch (error) {
     next(error);
   }
 });
 
+// PATCH /api/users/discord : Met à jour son propre ID Discord
 router.patch('/discord', isAuthenticated, validate(updateDiscordSchema), async (req, res, next) => {
   try {
-    const query = 'UPDATE users SET discord_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *';
-    const result = await pool.query(query, [req.body.discordId, req.user!.id]);
-    res.json(result.rows[0]);
+    const user = await UserService.updateDiscordId(req.user!.id, req.body.discordId);
+    res.json(user);
   } catch (error) {
     next(error);
   }
@@ -63,6 +63,7 @@ const linkDiscordSchema = z.object({
   }),
 });
 
+// POST /api/users/link-discord : Lie son compte Discord par pseudo
 router.post('/link-discord', isAuthenticated, validate(linkDiscordSchema), async (req, res, next) => {
   try {
     const { pseudo } = req.body;
@@ -75,9 +76,8 @@ router.post('/link-discord', isAuthenticated, validate(linkDiscordSchema), async
       });
     }
 
-    const query = 'UPDATE users SET discord_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *';
-    const result = await pool.query(query, [discordId, req.user!.id]);
-    res.json({ status: 'success', user: result.rows[0] });
+    const user = await UserService.updateDiscordId(req.user!.id, discordId);
+    res.json({ status: 'success', user });
   } catch (error) {
     next(error);
   }
