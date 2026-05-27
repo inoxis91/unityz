@@ -23,13 +23,20 @@
 
 ### Backend Architecture (Layered)
 - **Routes Layer**: Handles HTTP requests, basic response sending, and delegates to Services.
-- **Service Layer**: Contains all business logic and database interactions (`pool.query`). No SQL in routes.
+- **Service Layer**: Contains all business logic and database interactions (`pool.query`). **ABSOLUTELY NO SQL in routes.**
 - **Validation**: All incoming data (req.body, req.params, req.query) MUST be validated using **Zod** schemas before processing.
 - **Error Handling**: Use the centralized `errorHandler` middleware. Throw errors with specific status codes.
 - **Security**: 
     - Protect routes using `isAuthenticated` and `isAdmin` middlewares.
+    - **Character Sync Enforcement**: Users MUST have at least one synchronized character to access non-auth features.
     - Never log or return sensitive user data (like access tokens).
     - Always use `trust proxy` for secure session cookies on Railway.
+    - **Session Security**: Cookies must use `httpOnly: true`, `secure: true`, and `sameSite: 'none'` in production.
+
+### Performance & Resource Optimization
+- **Frontend Serving**: Use **Nginx Alpine** in production Dockerfiles to minimize RAM usage (< 5MB). Avoid running Node.js process for static assets in production.
+- **Assets**: Compress all PNG/JPG assets. Prefer WebP or SVG for icons to reduce network bandwidth.
+- **Database**: Use connection pooling (`pg` pool) for efficient query management.
 
 ### Frontend Standards (Angular)
 - **Route Guards**: Protect access to pages using `authGuard` and `adminGuard`. No manual redirects in `ngOnInit`.
