@@ -28,10 +28,13 @@ export interface Signup {
   group_index: number;
   comment: string | null;
   created_at: string;
+  updated_at: string;
   character_name?: string;
   character_class?: string;
+  character_realm?: string;
   main_character_name?: string;
   main_character_class?: string;
+  main_character_realm?: string;
   battletag?: string;
   signup_date?: string;
   user_characters?: any[];

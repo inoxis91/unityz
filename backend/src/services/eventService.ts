@@ -121,14 +121,14 @@ export class EventService {
   static async getSignups(eventId: string): Promise<Signup[]> {
     const query = `
       SELECT s.*, 
-             c.name as character_name, c.class as character_class,
-             mc.name as main_character_name, mc.class as main_character_class,
+             c.name as character_name, c.class as character_class, c.realm as character_realm,
+             mc.name as main_character_name, mc.class as main_character_class, mc.realm as main_character_realm,
              u.battletag,
              s.created_at as signup_date
       FROM event_signups s 
       LEFT JOIN characters c ON s.character_id = c.id 
       LEFT JOIN (
-        SELECT DISTINCT ON (user_id) user_id, name, class 
+        SELECT DISTINCT ON (user_id) user_id, name, class, realm 
         FROM characters 
         WHERE is_main = TRUE 
         ORDER BY user_id, updated_at DESC

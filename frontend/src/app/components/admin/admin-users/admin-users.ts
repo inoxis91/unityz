@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService, User, UserRole } from '../../../services/auth';
 import { ToastService } from '../../../services/toast';
+import { ConfirmService } from '../../../services/confirm';
 
 @Component({
   selector: 'app-admin-users',
@@ -12,8 +13,9 @@ import { ToastService } from '../../../services/toast';
   styleUrl: './admin-users.css'
 })
 export class AdminUsersComponent implements OnInit {
-  private authService = inject(AuthService);
+  public authService = inject(AuthService);
   private toast = inject(ToastService);
+  private confirm = inject(ConfirmService);
   
   users = signal<User[]>([]);
   roles: { value: UserRole, label: string }[] = [
@@ -43,5 +45,25 @@ export class AdminUsersComponent implements OnInit {
         this.loadUsers(); // Revert on UI
       }
     });
+  }
+
+  async onDeleteUser(user: User) {
+    const ok = await this.confirm.ask(
+      'Supprimer le membre',
+      `Voulez-vous vraiment supprimer ${user.battletag} ? Cette action supprimera également tous ses personnages et inscriptions.`
+    );
+
+    if (ok) {
+      this.authService.deleteUser(user.id).subscribe({
+        next: () => {
+          this.toast.success('Membre supprimé avec succès.');
+          this.loadUsers();
+        },
+        error: (err) => {
+          console.error('Delete error:', err);
+          this.toast.error('Erreur lors de la suppression.');
+        }
+      });
+    }
   }
 }

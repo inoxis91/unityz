@@ -33,4 +33,10 @@ export class UserService {
     const result = await pool.query(query, [userId]);
     return (result.rowCount ?? 0) > 0;
   }
+
+  static async deleteUser(id: string): Promise<boolean> {
+    const query = 'DELETE FROM users WHERE id = $1';
+    const result = await pool.query(query, [id]);
+    return (result.rowCount ?? 0) > 0;
+  }
 }

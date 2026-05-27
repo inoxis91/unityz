@@ -209,18 +209,50 @@
 
 .char-badges {
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
+}
+
+.ilvl-badge, .rio-badge, .main-badge {
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  display: flex;
   align-items: center;
+  gap: 4px;
 }
 
 .ilvl-badge {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(4px);
-  padding: 4px 12px;
-  border-radius: 100px;
+  background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.rio-badge {
+  background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.main-badge {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.rio-mini {
   font-size: 0.75rem;
   font-weight: 800;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ea580c;
+  background: #fff7ed;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid #ffedd5;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .char-loading {

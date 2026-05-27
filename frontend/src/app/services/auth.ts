@@ -47,6 +47,10 @@ export class AuthService {
     return this.http.patch<User>(`${this.apiUrl}/users/${userId}/role`, { role }, { withCredentials: true });
   }
 
+  deleteUser(userId: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/users/${userId}`, { withCredentials: true });
+  }
+
   checkAuth(): Observable<User> {
     return this.http.get<User>(`${this.apiUrl}/users/me`, { withCredentials: true }).pipe(
       tap(user => this.currentUser.set(user))

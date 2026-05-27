@@ -57,6 +57,7 @@
           <span class="level">Niveau {{ char.level }}</span>
           <div class="char-badges">
             <span class="ilvl-badge" *ngIf="charDetails()?.summary as sum">{{ sum.equipped_item_level }} iLvl</span>
+            <span class="rio-badge" *ngIf="mainCharacterRioScore()">{{ mainCharacterRioScore() }} RIO</span>
             <span class="main-badge">MAIN</span>
           </div>
         </div>
@@ -71,6 +72,9 @@
             <img *ngIf="char.is_dps" src="assets/icons/dps.png" class="role-icon-img large" title="DPS" alt="DPS">
           </div>
           <div class="footer-links">
+            <a [href]="characterService.getRaiderIoUrl(char.name, char.realm)" target="_blank" class="logs-link" (click)="$event.stopPropagation()">
+              <img src="assets/icons/raiderio.webp" alt="Raider.IO" title="Voir Raider.IO">
+            </a>
             <a [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="logs-link" (click)="$event.stopPropagation()">
               <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" title="Voir les logs">
             </a>
@@ -152,7 +156,11 @@
             </div>
             <div class="char-meta">
               <span class="lvl">{{ char.level }}</span>
+              <span class="rio-mini" *ngIf="getRioScoreForKey(char.name, char.realm)">{{ getRioScoreForKey(char.name, char.realm) }}</span>
               <span class="main-star" *ngIf="char.is_main">⭐</span>
+              <a [href]="characterService.getRaiderIoUrl(char.name, char.realm)" target="_blank" class="logs-link-mini" (click)="$event.stopPropagation()">
+                <img src="assets/icons/raiderio.webp" alt="Raider.IO" title="Voir Raider.IO">
+              </a>
               <a [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="logs-link-mini" (click)="$event.stopPropagation()">
                 <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" title="Voir les logs">
               </a>

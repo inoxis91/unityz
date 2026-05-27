@@ -277,6 +277,9 @@
                   <img [src]="'assets/icons/' + m.role + '.png'" class="role-icon-img small" [alt]="m.role">
                 </div>
                 <span class="name">{{ m.character_name }}</span>
+                <span class="rio-mini" *ngIf="getRioScoreForKey(m.character_name, m.character_realm || m.main_character_realm)">
+                  {{ getRioScoreForKey(m.character_name, m.character_realm || m.main_character_realm) }}
+                </span>
                 <button class="btn-alts-mini" (click)="openAltsModal(m)">🔍</button>
               </div>
             }
@@ -321,6 +324,9 @@
                       @for (m of group.tanks; track m.user_id) {
                         <div class="mm-member-card small" [class]="'class-' + getClassCategory(m.character_class)" cdkDrag [cdkDragDisabled]="!canManageEvents()">
                           <span class="name">{{ m.character_name }}</span>
+                          <span class="rio-micro" *ngIf="getRioScoreForKey(m.character_name, m.character_realm || m.main_character_realm)">
+                            {{ getRioScoreForKey(m.character_name, m.character_realm || m.main_character_realm) }}
+                          </span>
                         </div>
                       }
                     </div>
@@ -334,6 +340,9 @@
                       @for (m of group.heals; track m.user_id) {
                         <div class="mm-member-card small" [class]="'class-' + getClassCategory(m.character_class)" cdkDrag [cdkDragDisabled]="!canManageEvents()">
                           <span class="name">{{ m.character_name }}</span>
+                          <span class="rio-micro" *ngIf="getRioScoreForKey(m.character_name, m.character_realm || m.main_character_realm)">
+                            {{ getRioScoreForKey(m.character_name, m.character_realm || m.main_character_realm) }}
+                          </span>
                         </div>
                       }
                     </div>
@@ -347,6 +356,9 @@
                       @for (m of group.dps; track m.user_id) {
                         <div class="mm-member-card small" [class]="'class-' + getClassCategory(m.character_class)" cdkDrag [cdkDragDisabled]="!canManageEvents()">
                           <span class="name">{{ m.character_name }}</span>
+                          <span class="rio-micro" *ngIf="getRioScoreForKey(m.character_name, m.character_realm || m.main_character_realm)">
+                            {{ getRioScoreForKey(m.character_name, m.character_realm || m.main_character_realm) }}
+                          </span>
                         </div>
                       }
                     </div>
@@ -468,9 +480,13 @@
             <span class="alt-roster-text">{{ char.roster_name || 'Sans Roster' }}</span>
           </div>
           <div class="alt-roles">
+            <span class="rio-mini" *ngIf="getRioScoreForKey(char.name, char.realm)">{{ getRioScoreForKey(char.name, char.realm) }}</span>
             <img *ngIf="char.is_tank" src="assets/icons/tank.png" class="role-icon-img small" title="Tank" alt="Tank">
             <img *ngIf="char.is_heal" src="assets/icons/heal.png" class="role-icon-img small" title="Heal" alt="Heal">
             <img *ngIf="char.is_dps" src="assets/icons/dps.png" class="role-icon-img small" title="DPS" alt="DPS">
+            <a [href]="characterService.getRaiderIoUrl(char.name, char.realm)" target="_blank" class="logs-link-mini" (click)="$event.stopPropagation()">
+              <img src="assets/icons/raiderio.webp" alt="Raider.IO">
+            </a>
             <a [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="logs-link-mini" (click)="$event.stopPropagation()">
               <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs">
             </a>

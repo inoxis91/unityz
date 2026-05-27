@@ -24,6 +24,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   charDetails = signal<any>(null);
   loadingDetails = signal(false);
+  mainCharacterRioScore = signal<number | null>(null);
+  rioScores = signal<Map<string, number>>(new Map());
 
   private timerInterval: any;
 
@@ -76,6 +78,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const main = this.mainCharacter();
       if (main) {
         this.fetchCharacterDetails(main);
+        this.characterService.getRioScore(main.name, main.realm).subscribe(score => {
+          this.mainCharacterRioScore.set(score);
+        });
       }
     });
   }
@@ -93,7 +98,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   loadData() {
     // Load characters
-    this.characterService.getMyCharacters().subscribe(chars => this.myCharacters.set(chars));
+    this.characterService.getMyCharacters().subscribe(chars => {
+      this.myCharacters.set(chars);
+      // Fetch RIO scores for all
+      chars.forEach(c => {
+        this.characterService.getRioScore(c.name, c.realm).subscribe(score => {
+          this.rioScores.update(map => {
+            const newMap = new Map(map);
+            newMap.set(`${c.name}-${c.realm}`.toLowerCase(), score);
+            return newMap;
+          });
+        });
+      });
+    });
     
     // Load events and filter for upcoming
     this.calendarService.getEvents().subscribe(events => {
@@ -166,5 +183,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   getClassCategory(className: string | undefined): string {
     return CharacterService.getClassId(className);
+  }
+
+  getRioScoreForKey(name: string, realm: string): number | null {
+    return this.rioScores().get(`${name}-${realm}`.toLowerCase()) || null;
   }
 }

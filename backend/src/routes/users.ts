@@ -47,6 +47,28 @@ router.patch('/:id/role', isAdmin, validate(updateRoleSchema), async (req, res, 
   }
 });
 
+// DELETE /api/users/:id : Supprime un utilisateur (Admin)
+router.delete('/:id', isAdmin, async (req, res, next) => {
+  try {
+    const id = req.params.id as string;
+
+    // Sécurité: Un admin ne peut pas se supprimer lui-même via cette route
+    if (id === req.user!.id) {
+      return res.status(400).json({ status: 'error', message: 'You cannot delete your own account.' });
+    }
+
+    const success = await UserService.deleteUser(id);
+
+    if (!success) {
+      return res.status(404).json({ status: 'error', message: 'User not found' });
+    }
+
+    res.json({ status: 'success', message: 'User deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // PATCH /api/users/discord : Met à jour son propre ID Discord
 router.patch('/discord', isAuthenticated, validate(updateDiscordSchema), async (req, res, next) => {
   try {

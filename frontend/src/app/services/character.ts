@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of, map, catchError, shareReplay } from 'rxjs';
 
 export interface Character {
   id?: string;
@@ -13,6 +13,7 @@ export interface Character {
   is_heal?: boolean;
   is_dps?: boolean;
   is_main?: boolean;
+  rio_score?: number; // Score live non stocké en BDD
 }
 
 import { environment } from '../../environments/environment';
@@ -22,6 +23,7 @@ import { environment } from '../../environments/environment';
 })
 export class CharacterService {
   private apiUrl = `${environment.apiUrl}/characters`;
+  private rioCache = new Map<string, Observable<number>>();
 
   static getClassId(className: string | undefined): string {
     if (!className) return 'unknown';
@@ -51,6 +53,35 @@ export class CharacterService {
     if (!name || !realm) return '#';
     const slugRealm = realm.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
     return `https://www.warcraftlogs.com/character/eu/${slugRealm}/${name.toLowerCase()}`;
+  }
+
+  getRaiderIoUrl(name: string | undefined, realm: string | undefined): string {
+    if (!name || !realm) return '#';
+    const slugRealm = realm.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
+    return `https://raider.io/characters/eu/${slugRealm}/${name.toLowerCase()}`;
+  }
+
+  getRioScore(name: string, realm: string): Observable<number> {
+    const key = `${name}-${realm}`.toLowerCase();
+    
+    if (this.rioCache.has(key)) {
+      return this.rioCache.get(key)!;
+    }
+
+    const slugRealm = realm.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
+    const url = `https://raider.io/api/v1/characters/profile?region=eu&realm=${slugRealm}&name=${name.toLowerCase()}&fields=mythic_plus_scores_by_season:current`;
+
+    const obs = this.http.get<any>(url).pipe(
+      map(res => {
+        const score = res?.mythic_plus_scores_by_season?.[0]?.scores?.all || 0;
+        return Math.round(score);
+      }),
+      catchError(() => of(0)),
+      shareReplay(1)
+    );
+
+    this.rioCache.set(key, obs);
+    return obs;
   }
 
   constructor(private http: HttpClient) {}

@@ -34,6 +34,7 @@ export class EventDetailsComponent implements OnInit {
   
   event = signal<CalendarEvent | null>(null);
   signups = signal<Signup[]>([]);
+  rioScores = signal<Map<string, number>>(new Map());
   myCharacters = signal<Character[]>([]);
   rosters = signal<Roster[]>([]);
   activeTab = signal<'participants' | 'composition'>('participants');
@@ -189,6 +190,22 @@ export class EventDetailsComponent implements OnInit {
   loadSignups(id: string) {
     this.calendarService.getSignups(id).subscribe(signups => {
       this.signups.set(signups);
+
+      // Fetch RIO scores for everyone
+      signups.forEach(s => {
+        const name = s.character_name || s.main_character_name;
+        const realm = s.character_realm || s.main_character_realm;
+        if (name && realm) {
+          this.characterService.getRioScore(name, realm).subscribe(score => {
+            this.rioScores.update(map => {
+              const newMap = new Map(map);
+              newMap.set(`${name}-${realm}`.toLowerCase(), score);
+              return newMap;
+            });
+          });
+        }
+      });
+
       const mySignup = signups.find(s => s.user_id === this.authService.currentUser()?.id);
       if (mySignup) {
         this.selectedCharacterId = mySignup.character_id || '';
@@ -299,6 +316,11 @@ export class EventDetailsComponent implements OnInit {
 
   getClassCategory(className: string | undefined): string {
     return CharacterService.getClassId(className);
+  }
+
+  getRioScoreForKey(name: string | undefined, realm: string | undefined): number | null {
+    if (!name || !realm) return null;
+    return this.rioScores().get(`${name}-${realm}`.toLowerCase()) || null;
   }
 
   openAltsModal(signup: Signup) {
