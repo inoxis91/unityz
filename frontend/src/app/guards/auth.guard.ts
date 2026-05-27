@@ -10,7 +10,7 @@ export const authGuard = () => {
   return authService.checkAuth().pipe(
     map(user => !!user),
     catchError(() => {
-      router.navigate(['/']);
+      router.navigate(['/login']);
       return of(false);
     })
   );

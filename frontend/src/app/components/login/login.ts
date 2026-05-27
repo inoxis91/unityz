@@ -12,19 +12,22 @@ import { RouterModule, Router } from '@angular/router';
 })
 export class LoginComponent implements OnInit {
   private router = inject(Router);
+  isLoading = signal(false);
+
   constructor(public authService: AuthService) {}
 
   ngOnInit() {
     // Vérifie si on est déjà connecté pour rediriger vers le dashboard
     this.authService.checkAuth().subscribe({
       next: () => {
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/']);
       },
       error: () => {} // On reste sur la page de login si pas connecté
     });
   }
 
   login() {
+    this.isLoading.set(true);
     this.authService.login();
   }
 }

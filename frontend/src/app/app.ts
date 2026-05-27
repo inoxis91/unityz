@@ -50,7 +50,7 @@ export class AppComponent {
 
   isLoginPage = computed(() => {
     const currentUrl = this.url();
-    return currentUrl === '/' || currentUrl === '/login' || currentUrl === '';
+    return currentUrl.startsWith('/login');
   });
 
   title = 'Guilde manager';

@@ -1,6 +1,6 @@
 <nav class="navbar" [class.menu-open]="isMenuOpen()">
   <div class="navbar-container">
-    <div class="navbar-brand" routerLink="/dashboard" (click)="closeMenu()">
+    <div class="navbar-brand" routerLink="/" (click)="closeMenu()">
       Unity'Z
     </div>
 
@@ -13,7 +13,7 @@
 
     <div class="nav-links" [class.active]="isMenuOpen()">
       @if (authService.currentUser()) {
-        <a routerLink="/dashboard" routerLinkActive="active" (click)="closeMenu()">Dashboard</a>
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMenu()">Dashboard</a>
         <a routerLink="/calendar" routerLinkActive="active" (click)="closeMenu()">Calendrier</a>
         <a routerLink="/fees" routerLinkActive="active" (click)="closeMenu()">Cotisations</a>
         <a routerLink="/options" routerLinkActive="active" (click)="closeMenu()">Options</a>

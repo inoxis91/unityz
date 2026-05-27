@@ -1,6 +1,7 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 
 export type UserRole = 'admin' | 'raid_leader' | 'treasurer' | 'event_manager' | 'member';
@@ -32,6 +33,8 @@ export class AuthService {
   canManageEvents = computed(() => this.isAdmin() || this.isRaidLeader() || this.isEventManager());
   canManageFees = computed(() => this.isAdmin() || this.isTreasurer());
   canAccessAdmin = computed(() => this.isAdmin() || this.canManageRosters() || this.canManageFees());
+
+  private router = inject(Router);
 
   constructor(private http: HttpClient) {}
 
@@ -66,7 +69,7 @@ export class AuthService {
   logout(): void {
     this.http.get(`${this.apiUrl}/auth/logout`, { withCredentials: true }).subscribe(() => {
       this.currentUser.set(null);
-      window.location.href = '/login';
+      this.router.navigate(['/login']);
     });
   }
 }

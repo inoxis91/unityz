@@ -10,11 +10,17 @@
         Connectez-vous pour accéder au calendrier des raids, gérer vos personnages et suivre vos performances.
       </p>
       
-      <button (click)="login()" class="btn-bnet">
-        <svg class="bnet-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2zm-1.5 5v10h1.5l1.5-5.5L15 17h1.5V7H15l-1.5 5.5L12 7h-1.5z"/>
-        </svg>
-        <span>Se connecter avec Battle.net</span>
+      <button (click)="login()" class="btn-bnet" [disabled]="isLoading()">
+        <ng-container *ngIf="!isLoading()">
+          <svg class="bnet-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2zm-1.5 5v10h1.5l1.5-5.5L15 17h1.5V7H15l-1.5 5.5L12 7h-1.5z"/>
+          </svg>
+          <span>Se connecter avec Battle.net</span>
+        </ng-container>
+        <ng-container *ngIf="isLoading()">
+          <span class="loader"></span>
+          <span>Redirection vers Battle.net...</span>
+        </ng-container>
       </button>
     </div>
 
@@ -22,7 +28,7 @@
       <p class="welcome-text">
         Bonjour <span class="battletag">{{ authService.currentUser()?.battletag }}</span> !
       </p>
-      <a routerLink="/dashboard" class="btn-dashboard">Accéder au Tableau de Bord</a>
+      <a routerLink="/" class="btn-dashboard">Accéder au Tableau de Bord</a>
     </div>
   </div>
 </div>

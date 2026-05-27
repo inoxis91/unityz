@@ -19,8 +19,14 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Clean up FRONTEND_URL if it has a trailing slash
+let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+if (frontendUrl.endsWith('/')) {
+  frontendUrl = frontendUrl.slice(0, -1);
+}
+
 if (process.env.NODE_ENV === 'production') {
-  app.set('trust proxy', 1);
+  app.set('trust proxy', true);
 }
 
 // Initialize Database
@@ -31,7 +37,11 @@ initDiscord();
 initCronJobs();
 
 app.use(cors({
-  origin: [process.env.FRONTEND_URL || 'http://localhost:4200', 'https://unityz.up.railway.app'],
+  origin: [
+    frontendUrl,
+    'https://unityz.up.railway.app',
+    'https://unityz-production.up.railway.app'
+  ],
   credentials: true,
 }));
 
@@ -40,12 +50,12 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'unityz-secret',
   resave: false,
   saveUninitialized: false,
-  proxy: process.env.NODE_ENV === 'production',
+  proxy: true, // Required for Railway / Heroku
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
   }
 }));
 
@@ -62,33 +72,22 @@ app.use('/api/users', userRoutes);
 // Auth Routes
 app.get('/api/auth/bnet', passport.authenticate('bnet'));
 
-app.get('/api/auth/bnet/callback',
-  passport.authenticate('bnet', { failureRedirect: '/login' }),
-  (req, res) => {
-    let frontendBase = process.env.FRONTEND_URL || 'http://localhost:4200';
-    if (frontendBase.endsWith('/')) {
-      frontendBase = frontendBase.slice(0, -1);
-    }
-    const target = `${frontendBase}/dashboard`;
-    res.redirect(target);
-  }
-);
+app.get('/api/auth/bnet/callback', (req, res, next) => {
+  passport.authenticate('bnet', { failureRedirect: `${frontendUrl}/login` })(req, res, (err: any) => {
+    if (err) return next(err);
+    res.redirect(frontendUrl + '/');
+  });
+});
 
 // Discord Auth Routes (for account linking)
 app.get('/api/auth/discord', passport.authorize('discord'));
 
-app.get('/api/auth/discord/callback',
-  passport.authorize('discord', { failureRedirect: '/options?error=discord_failed' }),
-  (req, res) => {
-    let frontendBase = process.env.FRONTEND_URL || 'http://localhost:4200';
-    if (frontendBase.endsWith('/')) {
-      frontendBase = frontendBase.slice(0, -1);
-    }
-    // passport.authorize place l'utilisateur lié dans req.account si on veut, 
-    // mais ici on a déjà mis à jour la DB dans la stratégie Discord.
-    res.redirect(`${frontendBase}/options?tab=settings&success=discord_linked`);
-  }
-);
+app.get('/api/auth/discord/callback', (req, res, next) => {
+  passport.authorize('discord', { failureRedirect: `${frontendUrl}/options?error=discord_failed` })(req, res, (err: any) => {
+    if (err) return next(err);
+    res.redirect(`${frontendUrl}/options?tab=settings&success=discord_linked`);
+  });
+});
 
 app.get('/api/auth/logout', (req, res) => {
   req.logout((err) => {

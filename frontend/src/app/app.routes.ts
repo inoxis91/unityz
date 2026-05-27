@@ -10,12 +10,12 @@ import { adminGuard } from './guards/admin.guard';
 import { FeesComponent } from './components/fees/fees';
 
 export const routes: Routes = [
-  { path: '', component: LoginComponent },
   { 
-    path: 'dashboard', 
+    path: '', 
     component: DashboardComponent, 
     canActivate: [authGuard] 
   },
+  { path: 'login', component: LoginComponent },
   { 
     path: 'options', 
     component: OptionsComponent, 

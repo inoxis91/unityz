@@ -16,11 +16,11 @@ export const adminGuard = () => {
       if (user && hasPrivilege) {
         return true;
       }
-      router.navigate(['/dashboard']);
+      router.navigate(['/']);
       return false;
     }),
     catchError(() => {
-      router.navigate(['/']);
+      router.navigate(['/login']);
       return of(false);
     })
   );
