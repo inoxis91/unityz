@@ -298,6 +298,11 @@
   display: flex; justify-content: center; align-items: center;
 }
 
+.role-icon-box .role-icon-img {
+  width: 28px;
+  height: 28px;
+}
+
 .participant-name {
   font-weight: 800; font-size: 1.1rem;
   color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
@@ -331,6 +336,12 @@
   display: flex; align-items: center; gap: 10px;
   margin-bottom: 1.5rem; padding: 10px 16px;
   background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;
+}
+
+.column-header .icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .column-header h4 { margin: 0; font-size: 1rem; font-weight: 800; color: #1e293b; text-transform: uppercase; flex: 1; }
@@ -617,9 +628,16 @@
 }
 
 .role-label {
-  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding-top: 4px;
   opacity: 0.8;
+}
+
+.role-label .role-icon-img {
+  width: 24px;
+  height: 24px;
 }
 
 .slot-members {

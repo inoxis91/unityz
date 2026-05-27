@@ -11,7 +11,9 @@
       <div class="roster-info-card" *ngIf="myRoster() as roster; else noRoster">
         <span class="label">Roster Actuel</span>
         <div class="roster-details">
-          <span class="roster-icon">🛡️</span>
+          <span class="roster-icon">
+            <img src="assets/icons/tank.png" class="role-icon-img" alt="Roster">
+          </span>
           <div class="roster-text">
             <h3>{{ roster.name }}</h3>
             <p>{{ roster.description }}</p>
@@ -64,9 +66,9 @@
         </div>
         <div class="char-footer">
           <div class="roles">
-            <span *ngIf="char.is_tank" title="Tank">🛡️</span>
-            <span *ngIf="char.is_heal" title="Healer">🌿</span>
-            <span *ngIf="char.is_dps" title="DPS">⚔️</span>
+            <img *ngIf="char.is_tank" src="assets/icons/tank.png" class="role-icon-img large" title="Tank" alt="Tank">
+            <img *ngIf="char.is_heal" src="assets/icons/heal.png" class="role-icon-img large" title="Healer" alt="Heal">
+            <img *ngIf="char.is_dps" src="assets/icons/dps.png" class="role-icon-img large" title="DPS" alt="DPS">
           </div>
           <div class="footer-links">
             <a [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="logs-link" (click)="$event.stopPropagation()">

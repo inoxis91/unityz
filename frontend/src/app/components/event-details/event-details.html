@@ -92,9 +92,15 @@
           <div class="form-group" *ngIf="allowedCharacters().length > 0">
             <label>Votre rôle pour cet événement :</label>
             <div class="role-selector">
-              <button [class.active]="selectedRole === 'tank'" (click)="selectedRole = 'tank'">🛡️ Tank</button>
-              <button [class.active]="selectedRole === 'heal'" (click)="selectedRole = 'heal'">🌿 Heal</button>
-              <button [class.active]="selectedRole === 'dps'" (click)="selectedRole = 'dps'">⚔️ DPS</button>
+              <button [class.active]="selectedRole === 'tank'" (click)="selectedRole = 'tank'">
+                <img src="assets/icons/tank.png" class="role-icon-img" alt="Tank"> Tank
+              </button>
+              <button [class.active]="selectedRole === 'heal'" (click)="selectedRole = 'heal'">
+                <img src="assets/icons/heal.png" class="role-icon-img" alt="Heal"> Heal
+              </button>
+              <button [class.active]="selectedRole === 'dps'" (click)="selectedRole = 'dps'">
+                <img src="assets/icons/dps.png" class="role-icon-img" alt="DPS"> DPS
+              </button>
             </div>
           </div>
         </div>
@@ -138,9 +144,9 @@
               <div class="role-icon-box" *ngIf="s.status !== 'absent'">
                 <span class="role-icon" [class]="s.role">
                   <ng-container [ngSwitch]="s.role">
-                    <span *ngSwitchCase="'tank'">🛡️</span>
-                    <span *ngSwitchCase="'heal'">🌿</span>
-                    <span *ngSwitchCase="'dps'">⚔️</span>
+                    <img *ngSwitchCase="'tank'" src="assets/icons/tank.png" class="role-icon-img" alt="Tank">
+                    <img *ngSwitchCase="'heal'" src="assets/icons/heal.png" class="role-icon-img" alt="Heal">
+                    <img *ngSwitchCase="'dps'" src="assets/icons/dps.png" class="role-icon-img" alt="DPS">
                   </ng-container>
                 </span>
               </div>
@@ -201,7 +207,13 @@
 
       <div class="composition-layout">
         <div class="role-column tanks">
-          <div class="column-header"><span class="icon">🛡️</span><h4>Tanks</h4><span class="count">{{ tanks().length }}</span></div>
+          <div class="column-header">
+            <span class="icon">
+              <img src="assets/icons/tank.png" class="role-icon-img" alt="Tank">
+            </span>
+            <h4>Tanks</h4>
+            <span class="count">{{ tanks().length }}</span>
+          </div>
           <div class="comp-grid">
             <div *ngFor="let s of tanks()" class="modern-comp-card clickable" [class]="'class-' + getClassCategory(s.character_class)" (click)="openAltsModal(s)">
               <div class="card-content"><span class="name">{{ s.character_name }}</span></div>
@@ -209,7 +221,13 @@
           </div>
         </div>
         <div class="role-column heals">
-          <div class="column-header"><span class="icon">🌿</span><h4>Heals</h4><span class="count">{{ heals().length }}</span></div>
+          <div class="column-header">
+            <span class="icon">
+              <img src="assets/icons/heal.png" class="role-icon-img" alt="Heal">
+            </span>
+            <h4>Heals</h4>
+            <span class="count">{{ heals().length }}</span>
+          </div>
           <div class="comp-grid">
             <div *ngFor="let s of heals()" class="modern-comp-card clickable" [class]="'class-' + getClassCategory(s.character_class)" (click)="openAltsModal(s)">
               <div class="card-content"><span class="name">{{ s.character_name }}</span></div>
@@ -217,7 +235,13 @@
           </div>
         </div>
         <div class="role-column dps">
-          <div class="column-header"><span class="icon">⚔️</span><h4>DPS</h4><span class="count">{{ dps().length }}</span></div>
+          <div class="column-header">
+            <span class="icon">
+              <img src="assets/icons/dps.png" class="role-icon-img" alt="DPS">
+            </span>
+            <h4>DPS</h4>
+            <span class="count">{{ dps().length }}</span>
+          </div>
           <div class="comp-grid dps-layout">
             <div *ngFor="let s of dps()" class="modern-comp-card clickable" [class]="'class-' + getClassCategory(s.character_class)" (click)="openAltsModal(s)">
               <div class="card-content"><span class="name">{{ s.character_name }}</span></div>
@@ -249,7 +273,9 @@
                    [class.can-drag]="canManageEvents()"
                    [cdkDragDisabled]="!canManageEvents()"
                    cdkDrag>
-                <div class="role-badge" [class]="m.role">{{ m.role === 'tank' ? '🛡️' : (m.role === 'heal' ? '🌿' : '⚔️') }}</div>
+                <div class="role-badge" [class]="m.role">
+                  <img [src]="'assets/icons/' + m.role + '.png'" class="role-icon-img small" [alt]="m.role">
+                </div>
                 <span class="name">{{ m.character_name }}</span>
                 <button class="btn-alts-mini" (click)="openAltsModal(m)">🔍</button>
               </div>
@@ -288,7 +314,9 @@
                 <div class="group-roles">
                   <!-- Tank -->
                   <div class="role-slot">
-                    <span class="role-label">🛡️</span>
+                    <span class="role-label">
+                      <img src="assets/icons/tank.png" class="role-icon-img small" alt="Tank">
+                    </span>
                     <div class="slot-members">
                       @for (m of group.tanks; track m.user_id) {
                         <div class="mm-member-card small" [class]="'class-' + getClassCategory(m.character_class)" cdkDrag [cdkDragDisabled]="!canManageEvents()">
@@ -299,7 +327,9 @@
                   </div>
                   <!-- Healer -->
                   <div class="role-slot">
-                    <span class="role-label">🌿</span>
+                    <span class="role-label">
+                      <img src="assets/icons/heal.png" class="role-icon-img small" alt="Heal">
+                    </span>
                     <div class="slot-members">
                       @for (m of group.heals; track m.user_id) {
                         <div class="mm-member-card small" [class]="'class-' + getClassCategory(m.character_class)" cdkDrag [cdkDragDisabled]="!canManageEvents()">
@@ -310,7 +340,9 @@
                   </div>
                   <!-- DPS -->
                   <div class="role-slot">
-                    <span class="role-label">⚔️</span>
+                    <span class="role-label">
+                      <img src="assets/icons/dps.png" class="role-icon-img small" alt="DPS">
+                    </span>
                     <div class="slot-members dps-slots">
                       @for (m of group.dps; track m.user_id) {
                         <div class="mm-member-card small" [class]="'class-' + getClassCategory(m.character_class)" cdkDrag [cdkDragDisabled]="!canManageEvents()">
@@ -436,9 +468,9 @@
             <span class="alt-roster-text">{{ char.roster_name || 'Sans Roster' }}</span>
           </div>
           <div class="alt-roles">
-            <span *ngIf="char.is_tank" title="Tank">🛡️</span>
-            <span *ngIf="char.is_heal" title="Heal">🌿</span>
-            <span *ngIf="char.is_dps" title="DPS">⚔️</span>
+            <img *ngIf="char.is_tank" src="assets/icons/tank.png" class="role-icon-img small" title="Tank" alt="Tank">
+            <img *ngIf="char.is_heal" src="assets/icons/heal.png" class="role-icon-img small" title="Heal" alt="Heal">
+            <img *ngIf="char.is_dps" src="assets/icons/dps.png" class="role-icon-img small" title="DPS" alt="DPS">
             <a [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="logs-link-mini" (click)="$event.stopPropagation()">
               <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs">
             </a>

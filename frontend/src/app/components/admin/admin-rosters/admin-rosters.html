@@ -19,9 +19,9 @@
               <span class="char-name" [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</span>
             </div>
             <div class="char-roles">
-              <span *ngIf="char.is_tank">🛡️</span>
-              <span *ngIf="char.is_heal">🌿</span>
-              <span *ngIf="char.is_dps">⚔️</span>
+              <img *ngIf="char.is_tank" src="assets/icons/tank.png" class="role-icon-img small" alt="Tank">
+              <img *ngIf="char.is_heal" src="assets/icons/heal.png" class="role-icon-img small" alt="Heal">
+              <img *ngIf="char.is_dps" src="assets/icons/dps.png" class="role-icon-img small" alt="DPS">
               <a [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="logs-link-mini" (click)="$event.stopPropagation()">
                 <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs">
               </a>
@@ -67,9 +67,9 @@
                   <span class="char-name" [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</span>
                 </div>
                 <div class="char-roles">
-                  <span *ngIf="char.is_tank">🛡️</span>
-                  <span *ngIf="char.is_heal">🌿</span>
-                  <span *ngIf="char.is_dps">⚔️</span>
+                  <img *ngIf="char.is_tank" src="assets/icons/tank.png" class="role-icon-img small" alt="Tank">
+                  <img *ngIf="char.is_heal" src="assets/icons/heal.png" class="role-icon-img small" alt="Heal">
+                  <img *ngIf="char.is_dps" src="assets/icons/dps.png" class="role-icon-img small" alt="DPS">
                   <a [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="logs-link-mini" (click)="$event.stopPropagation()">
                     <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs">
                   </a>

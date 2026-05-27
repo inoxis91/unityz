@@ -31,9 +31,15 @@
           <td>{{ char.level }}</td>
           <td class="roles-cell">
             <div class="role-toggles">
-              <button class="role-toggle tank" [class.active]="char.is_tank" (click)="char.is_tank = !char.is_tank; updateRoles(char)" title="Tank">🛡️</button>
-              <button class="role-toggle heal" [class.active]="char.is_heal" (click)="char.is_heal = !char.is_heal; updateRoles(char)" title="Healer">🌿</button>
-              <button class="role-toggle dps" [class.active]="char.is_dps" (click)="char.is_dps = !char.is_dps; updateRoles(char)" title="DPS">⚔️</button>
+              <button class="role-toggle tank" [class.active]="char.is_tank" (click)="char.is_tank = !char.is_tank; updateRoles(char)" title="Tank">
+                <img src="assets/icons/tank.png" class="role-icon-img" alt="Tank">
+              </button>
+              <button class="role-toggle heal" [class.active]="char.is_heal" (click)="char.is_heal = !char.is_heal; updateRoles(char)" title="Healer">
+                <img src="assets/icons/heal.png" class="role-icon-img" alt="Heal">
+              </button>
+              <button class="role-toggle dps" [class.active]="char.is_dps" (click)="char.is_dps = !char.is_dps; updateRoles(char)" title="DPS">
+                <img src="assets/icons/dps.png" class="role-icon-img" alt="DPS">
+              </button>
             </div>
           </td>
           <td class="actions-cell">

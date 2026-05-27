@@ -44,5 +44,5 @@ Le projet est entièrement conteneurisé. Pour le lancer localement :
 4. **Redémarrer en cas de changement** :
    Si les changements ne sont pas pris en compte (notamment sur le frontend), forcez la reconstruction :
    ```bash
-   docker-compose down && docker-compose up --build -d
+   docker compose down && docker compose up --build
    ```
