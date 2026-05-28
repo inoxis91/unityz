@@ -1,5 +1,5 @@
 import pool from '../lib/db';
-import { sendDiscordDM } from '../lib/discord';
+import { sendDiscordDM, sendFeeDeclarationNotification } from '../lib/discord';
 
 export interface FeeDeclaration {
   id: string;
@@ -29,7 +29,28 @@ export class FeeService {
       RETURNING *
     `;
     const result = await pool.query(query, [userId, data.amount, data.start_month, data.duration_months, data.comment]);
-    return result.rows[0];
+    const declaration = result.rows[0];
+
+    // Fetch user info and characters for notification
+    const userQuery = `
+      SELECT u.battletag,
+             (SELECT name FROM characters WHERE user_id = u.id AND is_main = true LIMIT 1) as main_character,
+             (SELECT json_agg(json_build_object('name', name, 'realm', realm, 'class', class, 'is_main', is_main)) FROM characters WHERE user_id = u.id) as characters
+      FROM users u
+      WHERE u.id = $1
+    `;
+    const userResult = await pool.query(userQuery, [userId]);
+    const userInfo = userResult.rows[0];
+
+    if (userInfo) {
+      await sendFeeDeclarationNotification(declaration, {
+        battletag: userInfo.battletag,
+        mainCharacter: userInfo.main_character,
+        characters: userInfo.characters || []
+      });
+    }
+
+    return declaration;
   }
 
   static async getUserDeclarations(userId: string): Promise<FeeDeclaration[]> {

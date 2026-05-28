@@ -1,5 +1,6 @@
-import { Client, Events, GatewayIntentBits } from 'discord.js';
+import { Client, Events, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, TextChannel } from 'discord.js';
 import dotenv from 'dotenv';
+import { FeeService } from '../services/feeService';
 
 dotenv.config();
 
@@ -22,6 +23,40 @@ export const initDiscord = () => {
     console.log(`✅ Discord Bot logged in as ${readyClient.user.tag}`);
   });
 
+  client.on(Events.InteractionCreate, async (interaction) => {
+    if (!interaction.isButton()) return;
+
+    const [action, declarationId] = interaction.customId.split('_');
+
+    if (action === 'approveFee' || action === 'rejectFee') {
+      // Check if user has permission (optional, but good practice. For now we assume if they can click in the channel, they can manage)
+      // They could also just be officers.
+
+      try {
+        await interaction.deferReply({ ephemeral: true });
+        
+        const status = action === 'approveFee' ? 'accepted' : 'rejected';
+        const adminComment = action === 'rejectFee' ? 'Refusé via Discord' : null;
+        
+        await FeeService.resolveDeclaration(declarationId, status, adminComment);
+        
+        // Update the original message to remove buttons and show status
+        const originalEmbed = interaction.message.embeds[0];
+        const updatedEmbed = EmbedBuilder.from(originalEmbed)
+          .setColor(status === 'accepted' ? 0x00FF00 : 0xFF0000)
+          .setTitle(`${originalEmbed.title} - ${status === 'accepted' ? '✅ APPROUVÉ' : '❌ REFUSÉ'}`)
+          .setFooter({ text: `Traité par ${interaction.user.username}` });
+
+        await interaction.message.edit({ embeds: [updatedEmbed], components: [] });
+        await interaction.editReply(`La déclaration a été **${status === 'accepted' ? 'approuvée' : 'refusée'}**.`);
+
+      } catch (error: any) {
+        console.error('Error resolving fee via Discord:', error);
+        await interaction.editReply(`Erreur lors du traitement: ${error.message}`);
+      }
+    }
+  });
+
   client.login(token).catch(err => {
     console.error('Failed to login to Discord:', err);
   });
@@ -37,7 +72,6 @@ export const findMemberByName = async (name: string) => {
     
     const searchName = name.toLowerCase().trim();
     
-    // On cherche dans les pseudos, les usernames et les noms d'affichage
     const member = guild.members.cache.find(m => 
       m.nickname?.toLowerCase() === searchName || 
       m.user.username.toLowerCase() === searchName ||
@@ -75,6 +109,60 @@ export const sendDiscordChannelMessage = async (channelId: string, message: stri
     console.error(`Failed to send Discord message to channel ${channelId}:`, error);
   }
   return false;
+};
+
+export const sendFeeDeclarationNotification = async (declaration: any, userDetails: { battletag: string, mainCharacter: string, characters: any[] }) => {
+  try {
+    const channelId = process.env.DISCORD_FEES_CHANNEL_ID;
+    if (!channelId) {
+      console.warn('DISCORD_FEES_CHANNEL_ID not set, skipping fee notification');
+      return false;
+    }
+
+    const channel = await client.channels.fetch(channelId) as TextChannel;
+    if (!channel || !channel.isTextBased()) {
+      console.error(`Channel ${channelId} not found or is not a text channel.`);
+      return false;
+    }
+
+    let charsList = userDetails.characters && userDetails.characters.length > 0 
+      ? userDetails.characters.map(c => `- ${c.name} (${c.class} - ${c.realm})${c.is_main ? ' **[MAIN]**' : ''}`).join('\n')
+      : 'Aucun personnage synchronisé';
+
+    const embed = new EmbedBuilder()
+      .setTitle('Nouvelle Déclaration de Cotisation')
+      .setColor(0xFFA500) // Orange
+      .addFields(
+        { name: 'Membre', value: `${userDetails.mainCharacter || userDetails.battletag}\n(${userDetails.battletag})`, inline: true },
+        { name: 'Montant Total', value: `${declaration.amount} PO`, inline: true },
+        { name: 'Périodicité', value: `${declaration.duration_months} mois (dès ${new Date(declaration.start_month).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })})`, inline: false },
+        { name: 'Personnages', value: charsList, inline: false }
+      )
+      .setTimestamp();
+
+    if (declaration.comment) {
+      embed.addFields({ name: 'Commentaire', value: `"${declaration.comment}"`, inline: false });
+    }
+
+    const row = new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        new ButtonBuilder()
+          .setCustomId(`approveFee_${declaration.id}`)
+          .setLabel('Approuver')
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId(`rejectFee_${declaration.id}`)
+          .setLabel('Refuser')
+          .setStyle(ButtonStyle.Danger),
+      );
+
+    await channel.send({ embeds: [embed], components: [row] });
+    return true;
+
+  } catch (error) {
+    console.error('Failed to send fee declaration notification:', error);
+    return false;
+  }
 };
 
 export default client;
