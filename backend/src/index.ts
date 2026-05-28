@@ -1,6 +1,5 @@
 import express from 'express';
 import session from 'express-session';
-import cookieParser from 'cookie-parser';
 import passport from './config/passport';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -16,6 +15,13 @@ import { initDiscord } from './lib/discord';
 import { initCronJobs } from './lib/cron';
 import { UserService } from './services/userService';
 
+// Étendre le type Session pour inclure nos propriétés personnalisées
+declare module 'express-session' {
+  interface SessionData {
+    redirect_after_login?: string;
+  }
+}
+
 dotenv.config();
 
 const app = express();
@@ -27,8 +33,12 @@ if (frontendUrl.endsWith('/')) {
   frontendUrl = frontendUrl.slice(0, -1);
 }
 
-if (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT) {
-  app.set('trust proxy', 1); // Trust the first proxy (Railway/Heroku)
+const isProd = process.env.NODE_ENV === 'production' || !!process.env.RAILWAY_ENVIRONMENT_NAME || !!process.env.RAILWAY_STATIC_URL;
+
+console.log(`[System] Environment: ${isProd ? 'Production' : 'Development'}`);
+if (isProd) {
+  app.set('trust proxy', 1);
+  console.log('[System] Trust Proxy enabled (1)');
 }
 
 // Initialize Database
@@ -47,15 +57,14 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(cookieParser());
 app.use(express.json());
 
-const isProd = process.env.NODE_ENV === 'production' || !!process.env.RAILWAY_ENVIRONMENT;
-
 app.use(session({
+  name: 'unityz_sid',
   secret: process.env.SESSION_SECRET || 'unityz-secret',
-  resave: false,
+  resave: true, 
   saveUninitialized: false,
+  rolling: true,
   proxy: true,
   cookie: {
     secure: isProd,
@@ -79,32 +88,20 @@ app.use('/api/users', userRoutes);
 app.get('/api/auth/bnet', (req, res, next) => {
   const redirect = req.query.redirect as string;
   if (redirect && redirect.startsWith('/')) {
-    res.cookie('redirect_after_login', redirect, { 
-      maxAge: 10 * 60 * 1000, 
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? 'none' : 'lax'
-    });
+    req.session.redirect_after_login = redirect;
   }
   passport.authenticate('bnet')(req, res, next);
 });
 
 app.get('/api/auth/bnet/callback', (req, res, next) => {
   passport.authenticate('bnet', { failureRedirect: `${frontendUrl}/login` })(req, res, () => {
-    // Une fois authentifié par passport, on gère la redirection et le nettoyage des cookies
     let target = frontendUrl + '/';
-    const redirect = req.cookies?.redirect_after_login;
     
-    if (redirect && redirect.startsWith('/')) {
-      target = frontendUrl + redirect;
-      res.clearCookie('redirect_after_login', {
-        httpOnly: true,
-        secure: isProd,
-        sameSite: isProd ? 'none' : 'lax'
-      });
+    if (req.session.redirect_after_login) {
+      target = frontendUrl + req.session.redirect_after_login;
+      delete req.session.redirect_after_login;
     }
 
-    // On force la sauvegarde de la session avant de rediriger pour éviter les problèmes sur certains navigateurs (Firefox)
     req.session.save((err) => {
       if (err) {
         console.error('[Auth] Session save error:', err);
