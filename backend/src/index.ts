@@ -27,8 +27,8 @@ if (frontendUrl.endsWith('/')) {
   frontendUrl = frontendUrl.slice(0, -1);
 }
 
-if (process.env.NODE_ENV === 'production') {
-  app.set('trust proxy', true);
+if (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT) {
+  app.set('trust proxy', 1); // Trust the first proxy (Railway/Heroku)
 }
 
 // Initialize Database
@@ -49,14 +49,17 @@ app.use(cors({
 
 app.use(cookieParser());
 app.use(express.json());
+
+const isProd = process.env.NODE_ENV === 'production' || !!process.env.RAILWAY_ENVIRONMENT;
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'unityz-secret',
   resave: false,
   saveUninitialized: false,
-  proxy: true, // Required for Railway / Heroku
+  proxy: true,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
   }
@@ -79,27 +82,38 @@ app.get('/api/auth/bnet', (req, res, next) => {
     res.cookie('redirect_after_login', redirect, { 
       maxAge: 10 * 60 * 1000, 
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax'
     });
   }
   passport.authenticate('bnet')(req, res, next);
 });
 
-app.get('/api/auth/bnet/callback', 
-  passport.authenticate('bnet', { failureRedirect: `${frontendUrl}/login` }),
-  (req, res) => {
+app.get('/api/auth/bnet/callback', (req, res, next) => {
+  passport.authenticate('bnet', { failureRedirect: `${frontendUrl}/login` })(req, res, () => {
+    // Une fois authentifié par passport, on gère la redirection et le nettoyage des cookies
     let target = frontendUrl + '/';
     const redirect = req.cookies?.redirect_after_login;
     
     if (redirect && redirect.startsWith('/')) {
       target = frontendUrl + redirect;
-      res.clearCookie('redirect_after_login');
+      res.clearCookie('redirect_after_login', {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax'
+      });
     }
 
-    res.redirect(target);
-  }
-);
+    // On force la sauvegarde de la session avant de rediriger pour éviter les problèmes sur certains navigateurs (Firefox)
+    req.session.save((err) => {
+      if (err) {
+        console.error('[Auth] Session save error:', err);
+        return next(err);
+      }
+      res.redirect(target);
+    });
+  });
+});
 
 // Discord Auth Routes (for account linking)
 app.get('/api/auth/discord', passport.authorize('discord'));
@@ -107,7 +121,13 @@ app.get('/api/auth/discord', passport.authorize('discord'));
 app.get('/api/auth/discord/callback', (req, res, next) => {
   passport.authorize('discord', { failureRedirect: `${frontendUrl}/options?error=discord_failed` })(req, res, (err: any) => {
     if (err) return next(err);
-    res.redirect(`${frontendUrl}/options?tab=settings&success=discord_linked`);
+    
+    req.session.save((saveErr) => {
+      if (saveErr) {
+        console.error('[Auth] Discord session save error:', saveErr);
+      }
+      res.redirect(`${frontendUrl}/options?tab=settings&success=discord_linked`);
+    });
   });
 });
 
@@ -117,14 +137,21 @@ app.get('/api/auth/logout', (req, res, next) => {
   req.logout((err) => {
     if (err) { return next(err); }
     
+    const cookieOptions = {
+      path: '/',
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? ('none' as const) : ('lax' as const)
+    };
+
     if (req.session) {
       req.session.destroy((err) => {
         if (err) { console.error('[Auth] Logout session destroy error:', err); }
-        res.clearCookie('connect.sid', { path: '/' });
+        res.clearCookie('connect.sid', cookieOptions);
         return res.status(200).json({ status: 'success' });
       });
     } else {
-      res.clearCookie('connect.sid', { path: '/' });
+      res.clearCookie('connect.sid', cookieOptions);
       res.status(200).json({ status: 'success' });
     }
   });
