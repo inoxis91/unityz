@@ -12,8 +12,10 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   backend:
-    build: ./backend
-    command: npm run dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: npm --prefix backend run dev
     ports:
       - '3000:3000'
     env_file:
@@ -23,8 +25,8 @@ services:
     depends_on:
       - db
     volumes:
-      - ./backend:/app
-      - /app/node_modules
+      - ./backend:/app/backend
+      - /app/backend/node_modules
 
   frontend:
     build:

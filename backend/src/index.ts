@@ -3,6 +3,7 @@ import session from 'express-session';
 import passport from './config/passport';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 
 import { initDb } from './lib/db';
 import characterRoutes from './routes/characters';
@@ -49,11 +50,13 @@ initDiscord();
 initCronJobs();
 
 app.use(cors({
-  origin: [
-    frontendUrl,
-    'https://unityz.up.railway.app',
-    'https://unityz-production.up.railway.app'
-  ],
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (origin.endsWith('.up.railway.app') || origin.includes('localhost')) {
+      return callback(null, true);
+    }
+    callback(null, true);
+  },
   credentials: true,
 }));
 
@@ -83,6 +86,19 @@ app.use('/api/events', eventRoutes);
 app.use('/api/rosters', rosterRoutes);
 app.use('/api/fees', feeRoutes);
 app.use('/api/users', userRoutes);
+
+// --- SERVING FRONTEND ---
+if (isProd) {
+  const publicPath = path.join(__dirname, '../public');
+  console.log(`[System] Serving frontend from: ${publicPath}`);
+  app.use(express.static(publicPath));
+  
+  // SPA Routing: rediriger toutes les routes non-API vers index.html
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(publicPath, 'index.html'));
+  });
+}
 
 // Auth Routes
 app.get('/api/auth/bnet', (req, res, next) => {
