@@ -93,10 +93,14 @@ if (isProd) {
   console.log(`[System] Serving frontend from: ${publicPath}`);
   app.use(express.static(publicPath));
   
-  // SPA Routing: rediriger toutes les routes non-API vers index.html
-  // Note: En Express 5, le wildcard '*' doit être écrit '/:path*'
-  app.get('/:path*', (req, res, next) => {
-    if (req.path.startsWith('/api')) return next();
+  // SPA Routing: Middleware final pour capturer toutes les routes non-API
+  // Cette méthode évite les erreurs de syntaxe wildcard d'Express 5
+  app.use((req, res, next) => {
+    // Si c'est une requête API qui n'existe pas, on laisse l'errorHandler gérer
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+    // Pour tout le reste, on sert l'index.html de l'application Angular
     res.sendFile(path.join(publicPath, 'index.html'));
   });
 }
