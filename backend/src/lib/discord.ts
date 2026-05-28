@@ -24,35 +24,47 @@ export const initDiscord = () => {
   });
 
   client.on(Events.InteractionCreate, async (interaction) => {
-    if (!interaction.isButton()) return;
+    if (interaction.isButton()) {
+      const [action, declarationId] = interaction.customId.split('_');
 
-    const [action, declarationId] = interaction.customId.split('_');
+      if (action === 'approveFee') {
+        try {
+          await interaction.deferReply({ ephemeral: true });
+          
+          await FeeService.resolveDeclaration(declarationId, 'accepted', null);
+          
+          const originalEmbed = interaction.message.embeds[0];
+          const updatedEmbed = EmbedBuilder.from(originalEmbed)
+            .setColor(0x00FF00)
+            .setTitle(`${originalEmbed.title} - ✅ APPROUVÉ`)
+            .setFooter({ text: `Traité par ${interaction.user.username}` });
 
-    if (action === 'approveFee' || action === 'rejectFee') {
-      // Check if user has permission (optional, but good practice. For now we assume if they can click in the channel, they can manage)
-      // They could also just be officers.
+          await interaction.message.edit({ embeds: [updatedEmbed], components: [] });
+          await interaction.editReply(`La déclaration a été **approuvée**.`);
 
-      try {
-        await interaction.deferReply({ ephemeral: true });
-        
-        const status = action === 'approveFee' ? 'accepted' : 'rejected';
-        const adminComment = action === 'rejectFee' ? 'Refusé via Discord' : null;
-        
-        await FeeService.resolveDeclaration(declarationId, status, adminComment);
-        
-        // Update the original message to remove buttons and show status
-        const originalEmbed = interaction.message.embeds[0];
-        const updatedEmbed = EmbedBuilder.from(originalEmbed)
-          .setColor(status === 'accepted' ? 0x00FF00 : 0xFF0000)
-          .setTitle(`${originalEmbed.title} - ${status === 'accepted' ? '✅ APPROUVÉ' : '❌ REFUSÉ'}`)
-          .setFooter({ text: `Traité par ${interaction.user.username}` });
+        } catch (error: any) {
+          console.error('Error resolving fee via Discord:', error);
+          await interaction.editReply(`Erreur lors du traitement: ${error.message}`);
+        }
+      } else if (action === 'rejectFee') {
+        try {
+          await interaction.deferReply({ ephemeral: true });
+          
+          await FeeService.resolveDeclaration(declarationId, 'rejected', null);
+          
+          const originalEmbed = interaction.message.embeds[0];
+          const updatedEmbed = EmbedBuilder.from(originalEmbed)
+            .setColor(0xFF0000)
+            .setTitle(`${originalEmbed.title} - ❌ REFUSÉ`)
+            .setFooter({ text: `Traité par ${interaction.user.username}` });
 
-        await interaction.message.edit({ embeds: [updatedEmbed], components: [] });
-        await interaction.editReply(`La déclaration a été **${status === 'accepted' ? 'approuvée' : 'refusée'}**.`);
+          await interaction.message.edit({ embeds: [updatedEmbed], components: [] });
+          await interaction.editReply(`La déclaration a été **refusée**.`);
 
-      } catch (error: any) {
-        console.error('Error resolving fee via Discord:', error);
-        await interaction.editReply(`Erreur lors du traitement: ${error.message}`);
+        } catch (error: any) {
+          console.error('Error resolving fee via Discord:', error);
+          await interaction.editReply(`Erreur lors du traitement: ${error.message}`);
+        }
       }
     }
   });

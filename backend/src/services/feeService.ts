@@ -150,9 +150,12 @@ export class FeeService {
 
       // 3. Send Discord Notification (Outside transaction)
       if (discordId) {
+        const startMonthStr = new Date(decl.start_month).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+        const periodInfo = `Période : **${decl.duration_months} mois** (à partir de **${startMonthStr}**)`;
+
         const msg = status === 'accepted' 
-          ? `✅ Votre paiement de **${decl.amount} PO** a été approuvé !`
-          : `❌ Votre paiement de **${decl.amount} PO** a été rejeté.\nMotif : ${adminComment || 'Non spécifié'}`;
+          ? `✅ Votre paiement de **${decl.amount} PO** a été approuvé !\n${periodInfo}`
+          : `❌ Votre paiement de **${decl.amount} PO** a été rejeté.\n${periodInfo}\nMotif : ${adminComment || 'Non spécifié'}`;
         await sendDiscordDM(discordId, msg);
       }
     } catch (e) {
