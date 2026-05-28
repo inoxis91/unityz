@@ -232,3 +232,57 @@
   .pending-card { grid-template-columns: 1fr; gap: 1rem; }
   .overview-table-wrapper { overflow-x: auto; }
 }
+
+.clickable {
+  cursor: pointer;
+  color: #0074e0;
+}
+
+.clickable:hover {
+  text-decoration: underline;
+  color: #005bb5;
+}
+
+.characters-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-top: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.character-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #f1f5f9;
+}
+
+.char-name {
+  font-weight: 800;
+  color: #1e293b;
+  min-width: 120px;
+}
+
+.char-name.is-main {
+  color: #0074e0;
+}
+
+.char-details {
+  font-size: 0.85rem;
+  color: #64748b;
+  flex-grow: 1;
+}
+
+.main-badge {
+  background: #dbeafe;
+  color: #1e40af;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 6px;
+}

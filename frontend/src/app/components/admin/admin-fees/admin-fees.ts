@@ -28,6 +28,10 @@ export class AdminFeesComponent implements OnInit {
   adjustingMonthIndex: number = 0;
   adjustingAmount: number = 0;
 
+  // Character List Modal
+  showCharactersModal = signal(false);
+  modalUser: { battletag?: string; main_character?: string; characters?: any[] } | null = null;
+
   months = [
     { name: 'Jan', index: 1 }, { name: 'Fév', index: 2 }, { name: 'Mar', index: 3 },
     { name: 'Avr', index: 4 }, { name: 'Mai', index: 5 }, { name: 'Jui', index: 6 },
@@ -119,6 +123,16 @@ export class AdminFeesComponent implements OnInit {
       },
       error: () => this.toast.error('Erreur lors de l\'ajustement.')
     });
+  }
+
+  openCharactersModal(user: any) {
+    this.modalUser = user;
+    this.showCharactersModal.set(true);
+  }
+
+  closeCharactersModal() {
+    this.showCharactersModal.set(false);
+    this.modalUser = null;
   }
 
   getMonthAlloc(user: GuildFeeOverview, monthIndex: number) {

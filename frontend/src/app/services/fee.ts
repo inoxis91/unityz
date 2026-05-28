@@ -3,10 +3,19 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+export interface CharacterInfo {
+  name: string;
+  realm: string;
+  class: string;
+  is_main: boolean;
+}
+
 export interface FeeDeclaration {
   id: string;
   user_id: string;
   battletag?: string;
+  main_character?: string;
+  characters?: CharacterInfo[];
   amount: number;
   start_month: string;
   duration_months: number;
@@ -26,6 +35,8 @@ export interface FeeAllocation {
 export interface GuildFeeOverview {
   user_id: string;
   battletag: string;
+  main_character?: string;
+  characters?: CharacterInfo[];
   allocations: { month: string, amount: number }[];
 }
 

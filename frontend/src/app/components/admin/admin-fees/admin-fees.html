@@ -14,7 +14,7 @@
       @for (decl of feeService.pendingDeclarations(); track decl.id) {
         <div class="pending-card">
           <div class="user-info">
-            <span class="btag">{{ decl.battletag }}</span>
+            <span class="btag clickable" (click)="openCharactersModal(decl)">{{ decl.main_character || decl.battletag }}</span>
             <span class="date">Déposé le {{ decl.created_at | date:'short' }}</span>
           </div>
           <div class="decl-details">
@@ -62,7 +62,7 @@
         <tbody>
           @for (user of guildOverview(); track user.user_id) {
             <tr>
-              <td class="user-cell">{{ user.battletag }}</td>
+              <td class="user-cell clickable" (click)="openCharactersModal(user)">{{ user.main_character || user.battletag }}</td>
               @for (m of months; track m.index) {
                 <td class="status-cell" (click)="openAdjustModal(user, m.index)">
                   <div class="status-box" [class]="getUserMonthStatus(user, m.index).class" [title]="getUserMonthStatus(user, m.index).amount + ' PO'">
@@ -117,6 +117,30 @@
     <div class="modal-footer">
       <button class="btn-secondary" (click)="showAdjustModal.set(false)">Annuler</button>
       <button class="btn-primary" (click)="onSaveAdjustment()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Characters List Modal -->
+<div class="modal-backdrop" *ngIf="showCharactersModal()">
+  <div class="modal">
+    <h3>Personnages de {{ modalUser?.battletag }}</h3>
+    
+    <div class="characters-list" *ngIf="modalUser?.characters?.length; else noChars">
+      @for (char of modalUser?.characters; track char.name) {
+        <div class="character-item">
+          <span class="char-name" [class.is-main]="char.is_main">{{ char.name }}</span>
+          <span class="char-details">{{ char.class }} - {{ char.realm }}</span>
+          <span class="main-badge" *ngIf="char.is_main">Main</span>
+        </div>
+      }
+    </div>
+    <ng-template #noChars>
+      <p>Aucun personnage synchronisé pour ce joueur.</p>
+    </ng-template>
+
+    <div class="modal-footer">
+      <button class="btn-primary" (click)="closeCharactersModal()">Fermer</button>
     </div>
   </div>
 </div>

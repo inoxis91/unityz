@@ -51,7 +51,9 @@ export class FeeService {
 
   static async getPendingDeclarations(): Promise<FeeDeclaration[]> {
     const query = `
-      SELECT fd.*, u.battletag 
+      SELECT fd.*, u.battletag,
+             (SELECT name FROM characters WHERE user_id = fd.user_id AND is_main = true LIMIT 1) as main_character,
+             (SELECT json_agg(json_build_object('name', name, 'realm', realm, 'class', class, 'is_main', is_main)) FROM characters WHERE user_id = fd.user_id) as characters
       FROM fee_declarations fd
       JOIN users u ON fd.user_id = u.id
       WHERE fd.status = 'pending'
@@ -64,6 +66,8 @@ export class FeeService {
   static async getGuildOverview(year: number): Promise<any[]> {
     const query = `
       SELECT u.id as user_id, u.battletag, 
+             (SELECT name FROM characters WHERE user_id = u.id AND is_main = true LIMIT 1) as main_character,
+             (SELECT json_agg(json_build_object('name', name, 'realm', realm, 'class', class, 'is_main', is_main)) FROM characters WHERE user_id = u.id) as characters,
              JSON_AGG(json_build_object('month', month_date, 'amount', amount)) as allocations
       FROM users u
       LEFT JOIN fee_allocations fa ON u.id = fa.user_id AND EXTRACT(YEAR FROM fa.month_date) = $1
