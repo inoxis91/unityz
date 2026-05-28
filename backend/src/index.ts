@@ -104,13 +104,14 @@ if (isProd) {
     res.sendFile(path.join(publicPath, 'index.html'));
   });
 }
-
 // Auth Routes
 app.get('/api/auth/bnet', (req, res, next) => {
   const redirect = req.query.redirect as string;
-  
+  console.log(`[Auth] Login initiated. SessionID: ${req.sessionID}, Redirect Query: ${redirect}`);
+
   if (redirect && redirect.startsWith('/')) {
     req.session.redirect_after_login = redirect;
+    console.log(`[Auth] Storing redirect in session: ${redirect}`);
     // On force la sauvegarde immédiate pour être sûr que le callback la retrouve
     req.session.save((err) => {
       if (err) console.error('[Auth] Error saving redirect to session:', err);
@@ -122,19 +123,26 @@ app.get('/api/auth/bnet', (req, res, next) => {
 });
 
 app.get('/api/auth/bnet/callback', (req, res, next) => {
+  console.log(`[Auth] Callback received. SessionID: ${req.sessionID}`);
   passport.authenticate('bnet', { failureRedirect: `${frontendUrl}/login` })(req, res, () => {
     let target = frontendUrl + '/';
-    
-    if (req.session.redirect_after_login) {
-      target = frontendUrl + req.session.redirect_after_login;
+
+    const sessionRedirect = req.session.redirect_after_login;
+    console.log(`[Auth] User authenticated. Session redirect: ${sessionRedirect}`);
+
+    if (sessionRedirect) {
+      target = frontendUrl + sessionRedirect;
       delete req.session.redirect_after_login;
+      console.log(`[Auth] Final target determined from session: ${target}`);
     }
 
+    // On force la sauvegarde de la session avant de rediriger pour éviter les problèmes sur certains navigateurs (Firefox)
     req.session.save((err) => {
       if (err) {
         console.error('[Auth] Session save error:', err);
         return next(err);
       }
+      console.log(`[Auth] Redirecting to: ${target}`);
       res.redirect(target);
     });
   });
