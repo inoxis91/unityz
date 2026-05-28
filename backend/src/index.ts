@@ -108,10 +108,17 @@ if (isProd) {
 // Auth Routes
 app.get('/api/auth/bnet', (req, res, next) => {
   const redirect = req.query.redirect as string;
+  
   if (redirect && redirect.startsWith('/')) {
     req.session.redirect_after_login = redirect;
+    // On force la sauvegarde immédiate pour être sûr que le callback la retrouve
+    req.session.save((err) => {
+      if (err) console.error('[Auth] Error saving redirect to session:', err);
+      passport.authenticate('bnet')(req, res, next);
+    });
+  } else {
+    passport.authenticate('bnet')(req, res, next);
   }
-  passport.authenticate('bnet')(req, res, next);
 });
 
 app.get('/api/auth/bnet/callback', (req, res, next) => {
