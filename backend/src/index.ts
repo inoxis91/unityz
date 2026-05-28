@@ -123,31 +123,27 @@ app.get('/api/auth/bnet', (req, res, next) => {
 });
 
 app.get('/api/auth/bnet/callback', (req, res, next) => {
-  console.log(`[Auth] Callback received. SessionID: ${req.sessionID}`);
+  // Capturer la redirection AVANT que passport ne régénère la session
+  const savedRedirect = req.session.redirect_after_login;
+
   passport.authenticate('bnet', { failureRedirect: `${frontendUrl}/login` })(req, res, () => {
     let target = frontendUrl + '/';
 
-    const sessionRedirect = req.session.redirect_after_login;
-    console.log(`[Auth] User authenticated. Session redirect: ${sessionRedirect}`);
-
-    if (sessionRedirect) {
-      target = frontendUrl + sessionRedirect;
-      delete req.session.redirect_after_login;
-      console.log(`[Auth] Final target determined from session: ${target}`);
+    // Restaurer la redirection dans la nouvelle session
+    if (savedRedirect) {
+      target = frontendUrl + savedRedirect;
+      // Pas besoin de le supprimer de la session car c'est une nouvelle session
     }
 
-    // On force la sauvegarde de la session avant de rediriger pour éviter les problèmes sur certains navigateurs (Firefox)
     req.session.save((err) => {
       if (err) {
-        console.error('[Auth] Session save error:', err);
+        console.error('[Auth] Session save error in callback:', err);
         return next(err);
       }
-      console.log(`[Auth] Redirecting to: ${target}`);
       res.redirect(target);
     });
   });
 });
-
 // Discord Auth Routes (for account linking)
 app.get('/api/auth/discord', passport.authorize('discord'));
 
