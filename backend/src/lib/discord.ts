@@ -1,4 +1,4 @@
-import { Client, Events, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, TextChannel } from 'discord.js';
+import { Client, Events, GatewayIntentBits, EmbedBuilder, TextChannel } from 'discord.js';
 import dotenv from 'dotenv';
 import { FeeService } from '../services/feeService';
 
@@ -21,52 +21,6 @@ export const initDiscord = () => {
 
   client.once(Events.ClientReady, (readyClient) => {
     console.log(`✅ Discord Bot logged in as ${readyClient.user.tag}`);
-  });
-
-  client.on(Events.InteractionCreate, async (interaction) => {
-    if (interaction.isButton()) {
-      const [action, declarationId] = interaction.customId.split('_');
-
-      if (action === 'approveFee') {
-        try {
-          await interaction.deferReply({ ephemeral: true });
-          
-          await FeeService.resolveDeclaration(declarationId, 'accepted', null);
-          
-          const originalEmbed = interaction.message.embeds[0];
-          const updatedEmbed = EmbedBuilder.from(originalEmbed)
-            .setColor(0x00FF00)
-            .setTitle(`${originalEmbed.title} - ✅ APPROUVÉ`)
-            .setFooter({ text: `Traité par ${interaction.user.username}` });
-
-          await interaction.message.edit({ embeds: [updatedEmbed], components: [] });
-          await interaction.editReply(`La déclaration a été **approuvée**.`);
-
-        } catch (error: any) {
-          console.error('Error resolving fee via Discord:', error);
-          await interaction.editReply(`Erreur lors du traitement: ${error.message}`);
-        }
-      } else if (action === 'rejectFee') {
-        try {
-          await interaction.deferReply({ ephemeral: true });
-          
-          await FeeService.resolveDeclaration(declarationId, 'rejected', null);
-          
-          const originalEmbed = interaction.message.embeds[0];
-          const updatedEmbed = EmbedBuilder.from(originalEmbed)
-            .setColor(0xFF0000)
-            .setTitle(`${originalEmbed.title} - ❌ REFUSÉ`)
-            .setFooter({ text: `Traité par ${interaction.user.username}` });
-
-          await interaction.message.edit({ embeds: [updatedEmbed], components: [] });
-          await interaction.editReply(`La déclaration a été **refusée**.`);
-
-        } catch (error: any) {
-          console.error('Error resolving fee via Discord:', error);
-          await interaction.editReply(`Erreur lors du traitement: ${error.message}`);
-        }
-      }
-    }
   });
 
   client.login(token).catch(err => {
@@ -156,19 +110,7 @@ export const sendFeeDeclarationNotification = async (declaration: any, userDetai
       embed.addFields({ name: 'Commentaire', value: `"${declaration.comment}"`, inline: false });
     }
 
-    const row = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-        new ButtonBuilder()
-          .setCustomId(`approveFee_${declaration.id}`)
-          .setLabel('Approuver')
-          .setStyle(ButtonStyle.Success),
-        new ButtonBuilder()
-          .setCustomId(`rejectFee_${declaration.id}`)
-          .setLabel('Refuser')
-          .setStyle(ButtonStyle.Danger),
-      );
-
-    await channel.send({ embeds: [embed], components: [row] });
+    await channel.send({ embeds: [embed] });
     return true;
 
   } catch (error) {
