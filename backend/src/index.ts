@@ -94,7 +94,8 @@ if (isProd) {
   app.use(express.static(publicPath));
   
   // SPA Routing: rediriger toutes les routes non-API vers index.html
-  app.get('*', (req, res, next) => {
+  // Note: En Express 5, le wildcard '*' doit être écrit '(.*)'
+  app.get('(.*)', (req, res, next) => {
     if (req.path.startsWith('/api')) return next();
     res.sendFile(path.join(publicPath, 'index.html'));
   });
