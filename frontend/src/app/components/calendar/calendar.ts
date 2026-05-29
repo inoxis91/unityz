@@ -104,6 +104,26 @@ export class CalendarComponent implements OnInit {
     return this.authService.canManageEvents();
   });
 
+  eventsList = signal<CalendarEvent[]>([]);
+
+  upcomingEvents = computed(() => {
+    const now = new Date();
+    // Set time to beginning of the day to show all of today's upcoming events
+    now.setHours(0, 0, 0, 0);
+    return this.eventsList()
+      .filter(e => new Date(e.start_time) >= now)
+      .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+  });
+
+  onCreateEventMobile() {
+    if (!this.canManageEvents()) return;
+    const todayStr = new Date().toISOString().split('T')[0];
+    this.eventForm.start_date = todayStr;
+    this.eventForm.end_date = todayStr;
+    this.isEditing.set(false);
+    this.showModal.set(true);
+  }
+
   constructor(
     private calendarService: CalendarService,
     public authService: AuthService,
@@ -131,6 +151,7 @@ export class CalendarComponent implements OnInit {
 
   loadEvents() {
     this.calendarService.getEvents().subscribe(events => {
+      this.eventsList.set(events);
       const formattedEvents = events.map(e => ({
         id: e.id,
         title: e.title,
