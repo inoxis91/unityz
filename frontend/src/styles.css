@@ -2,6 +2,11 @@
 html {
   scroll-behavior: smooth;
   overflow-x: hidden;
+  transition: background-color 0.2s ease-in-out;
+}
+
+html.dark-body-theme {
+  background-color: #0f172a;
 }
 
 body {

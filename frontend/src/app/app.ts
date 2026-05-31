@@ -54,13 +54,15 @@ export class AppComponent {
   });
 
   constructor() {
-    // Dynamically apply a dark background class to document.body
-    // when displaying full-page views (landing, login) to prevent white bands
+    // Dynamically apply a dark background class to both html and body
+    // when displaying full-page views (landing, login) to prevent white bands on scroll/bounce
     effect(() => {
       if (this.isFullPage()) {
         document.body.classList.add('dark-body-theme');
+        document.documentElement.classList.add('dark-body-theme');
       } else {
         document.body.classList.remove('dark-body-theme');
+        document.documentElement.classList.remove('dark-body-theme');
       }
     });
   }
