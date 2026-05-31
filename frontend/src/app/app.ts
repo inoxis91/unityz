@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, effect } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
 import { NavbarComponent } from './components/navbar/navbar';
 import { ToastComponent } from './components/toast/toast';
@@ -52,6 +52,18 @@ export class AppComponent {
     const currentUrl = this.url();
     return currentUrl.startsWith('/login') || currentUrl === '/';
   });
+
+  constructor() {
+    // Dynamically apply a dark background class to document.body
+    // when displaying full-page views (landing, login) to prevent white bands
+    effect(() => {
+      if (this.isFullPage()) {
+        document.body.classList.add('dark-body-theme');
+      } else {
+        document.body.classList.remove('dark-body-theme');
+      }
+    });
+  }
 
   title = "Guild Manager";
 }
