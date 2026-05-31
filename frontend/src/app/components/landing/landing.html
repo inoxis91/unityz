@@ -1,0 +1,134 @@
+<div class="landing-container">
+  <!-- Navbar / Header overlay for the landing page -->
+  <div class="landing-nav">
+    <div class="brand">Guild Manager</div>
+    <div class="nav-actions">
+      <a href="#features" class="nav-link">Fonctionnalités</a>
+      <a href="#pricing" class="nav-link">Tarifs</a>
+      <a routerLink="/login" class="btn-login">Connexion</a>
+    </div>
+  </div>
+
+  <!-- Hero Section -->
+  <header class="hero-section">
+    <div class="hero-bg-glow"></div>
+    <div class="hero-content">
+      <div class="badge">SaaS Multi-Guilde - Nouvelle version</div>
+      <h1 class="hero-title">Gérez votre Guilde avec <span class="highlight">Excellence</span></h1>
+      <p class="hero-subtitle">
+        La plateforme tout-en-un pour les guildes World of Warcraft. Synchronisation Battle.net, calendrier de raids, intégration Discord et suivi des performances.
+      </p>
+      <div class="hero-actions">
+        <a routerLink="/login" class="btn-primary large">Commencer gratuitement</a>
+        <a href="#pricing" class="btn-secondary large">Voir les offres</a>
+      </div>
+      <div class="hero-trust">
+        <span>Rejoignez l'élite. Simplifiez votre gestion de roster aujourd'hui.</span>
+      </div>
+    </div>
+    
+    <!-- Abstract 3D/Visual representation for Hero -->
+    <div class="hero-visual">
+      <div class="mockup-window animated-float">
+        <div class="mockup-header">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+        </div>
+        <div class="mockup-body">
+          <div class="sidebar">
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line"></div>
+          </div>
+          <div class="main-content">
+            <div class="skeleton-title"></div>
+            <div class="skeleton-grid">
+              <div class="skeleton-card"></div>
+              <div class="skeleton-card"></div>
+              <div class="skeleton-card"></div>
+            </div>
+            <div class="skeleton-list">
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Features Section -->
+  <section class="features-section" id="features">
+    <div class="section-header">
+      <h2>Tout ce dont votre guilde a besoin</h2>
+      <p>Oubliez les tableurs obsolètes et les bots discord instables. Centralisez toute la gestion de votre roster au même endroit avec une interface fluide et moderne.</p>
+    </div>
+    <div class="features-grid">
+      @for (feature of features; track feature.title) {
+        <div class="feature-card">
+          <div class="feature-icon">{{ feature.icon }}</div>
+          <h3>{{ feature.title }}</h3>
+          <p>{{ feature.description }}</p>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Divider -->
+  <div class="section-divider"></div>
+
+  <!-- Pricing Section -->
+  <section class="pricing-section" id="pricing">
+    <div class="section-header">
+      <h2>Des tarifs adaptés à vos ambitions</h2>
+      <p>Choisissez l'abonnement qui correspond à la taille et aux objectifs de votre guilde. Annulable à tout moment.</p>
+    </div>
+    <div class="pricing-grid">
+      @for (plan of plans; track plan.name) {
+        <div class="pricing-card" [class.highlighted]="plan.highlighted">
+          <div class="highlight-badge" *ngIf="plan.highlighted">Plus populaire</div>
+          <div class="plan-header">
+            <h3>{{ plan.name }}</h3>
+            <div class="plan-price">
+              <span class="amount">{{ plan.price }}</span>
+              <span class="period">{{ plan.period }}</span>
+            </div>
+            <p class="plan-desc">{{ plan.description }}</p>
+          </div>
+          <ul class="plan-features">
+            @for (feat of plan.features; track feat) {
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                {{ feat }}
+              </li>
+            }
+          </ul>
+          <div class="plan-action">
+            <a routerLink="/login" class="btn" [class.btn-primary]="plan.highlighted" [class.btn-outline]="!plan.highlighted">
+              {{ plan.buttonText }}
+            </a>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Footer CTA -->
+  <footer class="footer-cta">
+    <div class="footer-content">
+      <h2>Prêt à optimiser votre roster ?</h2>
+      <p>Rejoignez les dizaines de guildes qui ont déjà franchi le pas vers une gestion simplifiée et concentrez-vous sur l'essentiel : le progress.</p>
+      <a routerLink="/login" class="btn-primary huge">Créer mon espace guilde</a>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Unity'Z Guild Manager. Tous droits réservés.</p>
+      <div class="footer-links">
+        <a href="#">CGU</a>
+        <a href="#">Confidentialité</a>
+        <a href="#">Contact</a>
+      </div>
+    </div>
+  </footer>
+</div>

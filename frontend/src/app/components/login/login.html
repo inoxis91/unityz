@@ -1,11 +1,17 @@
 <div class="login-page">
-  <div class="login-card">
+  <div class="login-card" [class.wide-card]="loginState() === 'subscribe'">
     <div class="logo-container">
-      <h1 class="guild-name">Unity'Z</h1>
+      <h1 class="guild-name">Guild Manager</h1>
       <p class="guild-subtitle">Gestion de Guilde WoW</p>
     </div>
 
-    <div class="content-section" *ngIf="!authService.currentUser()">
+    <!-- Error Message -->
+    <div *ngIf="errorMessage()" class="error-message">
+      {{ errorMessage() }}
+    </div>
+
+    <!-- State 1: Initial Login -->
+    <div class="content-section" *ngIf="loginState() === 'initial'">
       <p class="description">
         Connectez-vous pour accéder au calendrier des raids, gérer vos personnages et suivre vos performances.
       </p>
@@ -24,11 +30,67 @@
       </button>
     </div>
 
-    <div class="logged-in-section" *ngIf="authService.currentUser()">
-      <p class="welcome-text">
-        Bonjour <span class="battletag">{{ authService.currentUser()?.battletag }}</span> !
-      </p>
-      <a routerLink="/" class="btn-dashboard">Accéder au Tableau de Bord</a>
+    <!-- State 2: Syncing -->
+    <div class="content-section syncing" *ngIf="loginState() === 'syncing'">
+      <div class="spinner-container">
+        <span class="loader large"></span>
+      </div>
+      <h3>Synchronisation en cours</h3>
+      <p class="description">Récupération de vos personnages et guildes depuis les serveurs de Blizzard...</p>
     </div>
+
+    <!-- State 3: Guild Selection -->
+    <div class="content-section guild-select" *ngIf="loginState() === 'guild-select'">
+      <h3>Choisissez votre guilde</h3>
+      <p class="description">Vous appartenez à plusieurs guildes. Sélectionnez celle que vous souhaitez gérer.</p>
+      
+      <div class="guild-list">
+        @for (guild of guilds(); track guild.id) {
+          <div class="guild-card" (click)="selectGuild(guild)" [class.inactive]="guild.subscription_status !== 'active'">
+            <div class="guild-info">
+              <h4>&lt;{{ guild.name }}&gt;</h4>
+              <span class="realm">{{ guild.realm }}</span>
+            </div>
+            <div class="guild-status">
+              <span class="badge" [class.success]="guild.subscription_status === 'active'" [class.error]="guild.subscription_status !== 'active'">
+                {{ guild.subscription_status === 'active' ? 'Actif' : 'Inactif' }}
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- State 4: Subscription Prompt -->
+    <div class="content-section subscribe" *ngIf="loginState() === 'subscribe'">
+      <h3>Abonnement requis</h3>
+      <p class="description">
+        La guilde <strong>{{ selectedGuildForSubscription()?.name }}</strong> n'a pas d'abonnement actif.<br>
+        En tant que GM/Officier, vous pouvez souscrire à un forfait.
+      </p>
+
+      <div class="pricing-grid small">
+        @for (plan of plans; track plan.name) {
+          <div class="pricing-card mini">
+            <div class="plan-header">
+              <h4>{{ plan.name }}</h4>
+              <div class="plan-price">{{ plan.price }}<span>{{ plan.period }}</span></div>
+            </div>
+            <ul class="plan-features">
+              @for (feat of plan.features; track feat) {
+                <li><span class="check">✓</span> {{ feat }}</li>
+              }
+            </ul>
+            <button class="btn-primary" (click)="subscribe(plan.name)" [disabled]="isLoading()">
+              <ng-container *ngIf="!isLoading()">Choisir</ng-container>
+              <ng-container *ngIf="isLoading()"><span class="loader"></span></ng-container>
+            </button>
+          </div>
+        }
+      </div>
+      
+      <button class="btn-secondary mt-4" (click)="loginState.set('initial')" *ngIf="!isLoading()">Annuler</button>
+    </div>
+
   </div>
 </div>

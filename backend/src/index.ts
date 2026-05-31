@@ -15,6 +15,7 @@ import { errorHandler } from './middlewares/errorHandler';
 import { initDiscord } from './lib/discord';
 import { initCronJobs } from './lib/cron';
 import { UserService } from './services/userService';
+import authRoutes from './routes/auth';
 
 // Étendre le type Session pour inclure nos propriétés personnalisées
 declare module 'express-session' {
@@ -27,6 +28,15 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Global Request/Response Logging Middleware
+app.use((req, res, next) => {
+  console.log(`[Request] ${req.method} ${req.originalUrl || req.url} - IP: ${req.ip}`);
+  res.on('finish', () => {
+    console.log(`[Response] ${req.method} ${req.originalUrl || req.url} - Status: ${res.statusCode}`);
+  });
+  next();
+});
 
 // Clean up FRONTEND_URL if it has a trailing slash
 let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
@@ -63,8 +73,8 @@ app.use(cors({
 app.use(express.json());
 
 app.use(session({
-  name: 'unityz_sid',
-  secret: process.env.SESSION_SECRET || 'unityz-secret',
+  name: 'guild_manager_sid',
+  secret: process.env.SESSION_SECRET || 'guild_manager_secret',
   resave: true, 
   saveUninitialized: false,
   rolling: true,
@@ -86,6 +96,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/rosters', rosterRoutes);
 app.use('/api/fees', feeRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
 
 // --- SERVING FRONTEND ---
 if (isProd) {
@@ -127,12 +138,11 @@ app.get('/api/auth/bnet/callback', (req, res, next) => {
   const savedRedirect = req.session.redirect_after_login;
 
   passport.authenticate('bnet', { failureRedirect: `${frontendUrl}/login` })(req, res, () => {
-    let target = frontendUrl + '/';
+    let target = frontendUrl + '/login?sync=true';
 
     // Restaurer la redirection dans la nouvelle session
     if (savedRedirect) {
-      target = frontendUrl + savedRedirect;
-      // Pas besoin de le supprimer de la session car c'est une nouvelle session
+      target = frontendUrl + '/login?sync=true&redirect=' + encodeURIComponent(savedRedirect);
     }
 
     req.session.save((err) => {

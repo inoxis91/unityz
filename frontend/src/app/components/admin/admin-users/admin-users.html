@@ -1,7 +1,7 @@
 <div class="users-admin">
   <div class="section-header">
-    <h3>Gestion des Membres & Rôles</h3>
-    <p>Attribuez des permissions spécifiques aux membres de la guilde.</p>
+    <h3>Gestion des Membres</h3>
+    <p>Visualisez et gérez les membres inscrits sur la plateforme.</p>
   </div>
 
   <div class="users-list-card">
@@ -11,7 +11,6 @@
           <tr>
             <th>Membre</th>
             <th>BattleTag</th>
-            <th>Rôle</th>
             <th>Inscrit le</th>
             <th class="actions-header">Actions</th>
           </tr>
@@ -26,13 +25,6 @@
                 <span class="user-name">{{ user.battletag.split('#')[0] }}</span>
               </td>
               <td class="btag-cell">{{ user.battletag }}</td>
-              <td class="role-cell">
-                <select [ngModel]="user.role" (ngModelChange)="onRoleChange(user, $event)" class="role-select">
-                  @for (role of roles; track role.value) {
-                    <option [value]="role.value">{{ role.label }}</option>
-                  }
-                </select>
-              </td>
               <td class="date-cell">{{ user.created_at | date:'dd/MM/yyyy' }}</td>
               <td class="actions-cell">
                 <button 

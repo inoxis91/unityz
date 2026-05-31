@@ -1,6 +1,6 @@
-# Unity'Z - WoW Guild Website
+# Guild Manager - WoW Guild Website
 
-A modern web application for the "Unity'Z" World of Warcraft guild, featuring Battle.net SSO integration and roster management.
+A modern web application for World of Warcraft guilds, featuring Battle.net SSO integration and roster management.
 
 ## Deployment on Railway
 

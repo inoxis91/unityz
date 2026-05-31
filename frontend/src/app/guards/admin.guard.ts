@@ -9,20 +9,18 @@ export const adminGuard = (route: ActivatedRouteSnapshot, state: RouterStateSnap
 
   return authService.checkAuth().pipe(
     map(user => {
-      // Même un admin doit avoir ses persos
-      if (!user.has_characters) {
-        router.navigate(['/options'], { queryParams: { tab: 'characters', setup: 'true' } });
+      // Must have an active guild context
+      if (!user.current_guild_id) {
+        router.navigate(['/login'], { queryParams: { sync: 'true', redirect: state.url } });
         return false;
       }
 
-      // Check if user has any administrative privilege
-      const role = user.role;
-      const hasPrivilege = ['admin', 'raid_leader', 'treasurer', 'event_manager'].includes(role);
-      
-      if (hasPrivilege) {
+      // Check if user has administrative privilege via service
+      if (authService.canAccessAdmin()) {
         return true;
       }
-      router.navigate(['/']);
+      
+      router.navigate(['/dashboard']);
       return false;
     }),
     catchError(() => {

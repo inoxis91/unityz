@@ -8,10 +8,15 @@ import { EventDetailsComponent } from './components/event-details/event-details'
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { FeesComponent } from './components/fees/fees';
+import { LandingComponent } from './components/landing/landing';
 
 export const routes: Routes = [
   { 
     path: '', 
+    component: LandingComponent
+  },
+  { 
+    path: 'dashboard', 
     component: DashboardComponent, 
     canActivate: [authGuard] 
   },

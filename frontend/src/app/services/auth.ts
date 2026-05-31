@@ -4,14 +4,20 @@ import { Observable, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 
-export type UserRole = 'admin' | 'raid_leader' | 'treasurer' | 'event_manager' | 'member';
+export interface Guild {
+  id: string;
+  name: string;
+  realm: string;
+  subscription_status: string;
+  rank: number | null;
+}
 
 export interface User {
   id: string;
   battletag: string;
   bnet_id: number;
   discord_id?: string | null;
-  role: UserRole;
+  current_guild_id: string | null;
   has_characters: boolean;
   created_at?: string;
   updated_at?: string;
@@ -24,16 +30,17 @@ export class AuthService {
   private apiUrl = environment.apiUrl;
   currentUser = signal<User | null>(null);
 
-  // Computed permissions
-  isAdmin = computed(() => this.currentUser()?.role === 'admin');
-  isRaidLeader = computed(() => this.currentUser()?.role === 'raid_leader');
-  isTreasurer = computed(() => this.currentUser()?.role === 'treasurer');
-  isEventManager = computed(() => this.currentUser()?.role === 'event_manager');
-
-  canManageRosters = computed(() => this.isAdmin() || this.isRaidLeader());
-  canManageEvents = computed(() => this.isAdmin() || this.isRaidLeader() || this.isEventManager());
-  canManageFees = computed(() => this.isAdmin() || this.isTreasurer());
-  canAccessAdmin = computed(() => this.isAdmin() || this.canManageRosters() || this.canManageFees());
+  // We temporarily disable fine-grained permissions based on a single rank 
+  // since roles are now dynamic based on the active guild.
+  // For this iteration, Rank 0 and 1 are admins.
+  // We'll refine this later by fetching the active guild rank alongside user data.
+  // For now, these default to true if the user is authenticated to keep other pages working, 
+  // but the real check is done via adminGuard and backend API.
+  isAdmin = computed(() => !!this.currentUser());
+  canManageRosters = computed(() => !!this.currentUser());
+  canManageEvents = computed(() => !!this.currentUser());
+  canManageFees = computed(() => !!this.currentUser());
+  canAccessAdmin = computed(() => !!this.currentUser());
 
   private router = inject(Router);
 
@@ -41,10 +48,6 @@ export class AuthService {
 
   getUsers(): Observable<User[]> {
     return this.http.get<User[]>(`${this.apiUrl}/users`, { withCredentials: true });
-  }
-
-  updateUserRole(userId: string, role: UserRole): Observable<User> {
-    return this.http.patch<User>(`${this.apiUrl}/users/${userId}/role`, { role }, { withCredentials: true });
   }
 
   deleteUser(userId: string): Observable<any> {
@@ -55,6 +58,18 @@ export class AuthService {
     return this.http.get<User>(`${this.apiUrl}/users/me`, { withCredentials: true }).pipe(
       tap(user => this.currentUser.set(user))
     );
+  }
+
+  syncGuilds(): Observable<Guild[]> {
+    return this.http.get<Guild[]>(`${this.apiUrl}/auth/sync`, { withCredentials: true });
+  }
+
+  setActiveGuild(guildId: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/active-guild`, { guildId }, { withCredentials: true });
+  }
+
+  subscribeToGuild(guildId: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/guilds/${guildId}/subscribe`, {}, { withCredentials: true });
   }
 
   updateDiscordId(discordId: string | null): Observable<User> {

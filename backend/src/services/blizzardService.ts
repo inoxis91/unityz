@@ -56,6 +56,21 @@ export class BlizzardService {
     }
   }
 
+  static async getGuildRoster(accessToken: string, realmSlug: string, guildNameSlug: string) {
+    const url = `https://${this.REGION}.api.blizzard.com/data/wow/guild/${realmSlug}/${guildNameSlug}/roster`;
+    
+    try {
+      const response = await axios.get(url, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        params: { namespace: this.PROFILE_NAMESPACE, locale: this.LOCALE }
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error(`[Blizzard API] Guild Roster Error [${guildNameSlug}-${realmSlug}]: ${error.response?.status} - ${error.response?.data?.detail || error.message}`);
+      return null;
+    }
+  }
+
   private static formatRealmSlug(text: string): string {
     return text.toLowerCase()
       .trim()

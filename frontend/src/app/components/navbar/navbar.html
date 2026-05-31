@@ -1,7 +1,7 @@
 <nav class="navbar" [class.menu-open]="isMenuOpen()">
   <div class="navbar-container">
     <div class="navbar-brand" routerLink="/" (click)="closeMenu()">
-      Unity'Z
+      Guild Manager
     </div>
 
     <!-- Burger Menu Button -->
@@ -13,7 +13,7 @@
 
     <div class="nav-links" [class.active]="isMenuOpen()">
       @if (authService.currentUser(); as user) {
-        <a *ngIf="user.has_characters" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMenu()">Dashboard</a>
+        <a *ngIf="user.has_characters" routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMenu()">Dashboard</a>
         <a *ngIf="user.has_characters" routerLink="/calendar" routerLinkActive="active" (click)="closeMenu()">Calendrier</a>
         <a *ngIf="user.has_characters" routerLink="/fees" routerLinkActive="active" (click)="closeMenu()">Cotisations</a>
         <a routerLink="/options" routerLinkActive="active" (click)="closeMenu()">Options</a>

@@ -27,6 +27,42 @@ export const initDb = async () => {
       );
     `);
 
+    // Guilds table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS guilds (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        bnet_guild_id BIGINT UNIQUE,
+        name VARCHAR(255) NOT NULL,
+        realm VARCHAR(255) NOT NULL,
+        subscription_status VARCHAR(50) DEFAULT 'inactive',
+        subscription_plan VARCHAR(50) DEFAULT 'free',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Ensure bnet_guild_id is BIGINT (migration for existing tables)
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='bnet_guild_id') THEN
+          ALTER TABLE guilds ADD COLUMN bnet_guild_id BIGINT UNIQUE;
+        ELSIF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='bnet_guild_id' AND data_type='integer') THEN
+          ALTER TABLE guilds ALTER COLUMN bnet_guild_id TYPE BIGINT;
+        END IF;
+      END $$;
+    `);
+
+    // Ensure current_guild_id exists in users
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='current_guild_id') THEN
+          ALTER TABLE users ADD COLUMN current_guild_id UUID REFERENCES guilds(id) ON DELETE SET NULL;
+        END IF;
+      END $$;
+    `);
+
     // Ensure role column exists and migrate is_admin before dropping it
     await client.query(`
       DO $$ 
@@ -70,10 +106,25 @@ export const initDb = async () => {
         is_heal BOOLEAN DEFAULT FALSE,
         is_dps BOOLEAN DEFAULT FALSE,
         is_main BOOLEAN DEFAULT FALSE,
+        guild_id UUID REFERENCES guilds(id) ON DELETE SET NULL,
+        guild_rank INTEGER,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(name, realm, user_id)
       );
+    `);
+
+    // Ensure guild columns exist in characters
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='characters' AND column_name='guild_id') THEN
+          ALTER TABLE characters ADD COLUMN guild_id UUID REFERENCES guilds(id) ON DELETE SET NULL;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='characters' AND column_name='guild_rank') THEN
+          ALTER TABLE characters ADD COLUMN guild_rank INTEGER;
+        END IF;
+      END $$;
     `);
 
     // Ensure is_main column exists

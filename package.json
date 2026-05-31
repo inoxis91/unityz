@@ -1,7 +1,7 @@
 {
   "name": "unityz-monorepo",
   "version": "1.0.0",
-  "description": "Unity'Z Guild Website Monorepo",
+  "description": "Guild Manager Website Monorepo",
   "scripts": {
     "setup": "npm run install:backend && npm run install:frontend",
     "install:backend": "cd backend && npm install",

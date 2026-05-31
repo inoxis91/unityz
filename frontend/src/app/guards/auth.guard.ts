@@ -9,19 +9,16 @@ export const authGuard = (route: ActivatedRouteSnapshot, state: RouterStateSnaps
 
   return authService.checkAuth().pipe(
     map(user => {
-      // Si l'utilisateur n'a pas de persos, il ne peut aller QUE sur la page options/characters
-      if (!user.has_characters) {
-        const isTargetingOptions = state.url.startsWith('/options');
-        if (!isTargetingOptions) {
-          router.navigate(['/options'], { queryParams: { tab: 'characters', setup: 'true' } });
-          return false;
-        }
+      // Pour utiliser l'app, l'utilisateur doit avoir une guilde active sélectionnée
+      if (!user.current_guild_id) {
+        router.navigate(['/login'], { queryParams: { sync: 'true', redirect: state.url } });
+        return false;
       }
 
       return true;
     }),
     catchError(() => {
-      // Rediriger vers la page de login locale avec l'URL de retour
+      // Rediriger vers la page de login
       router.navigate(['/login'], { queryParams: { redirect: state.url } });
       return of(false);
     })

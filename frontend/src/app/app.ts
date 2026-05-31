@@ -13,8 +13,8 @@ import { NavigationEnd } from '@angular/router';
   standalone: true,
   imports: [CommonModule, RouterOutlet, NavbarComponent, ToastComponent, ConfirmComponent],
   template: `
-    <app-navbar *ngIf="!isLoginPage()"></app-navbar>
-    <main [class.login-mode]="isLoginPage()">
+    <app-navbar *ngIf="!isFullPage()"></app-navbar>
+    <main [class.full-page-mode]="isFullPage()">
       <router-outlet></router-outlet>
     </main>
     <app-toast></app-toast>
@@ -28,7 +28,7 @@ import { NavigationEnd } from '@angular/router';
       min-height: calc(100vh - 80px);
     }
 
-    main.login-mode {
+    main.full-page-mode {
       padding: 0;
       max-width: none;
       margin: 0;
@@ -45,13 +45,13 @@ export class AppComponent {
       filter(event => event instanceof NavigationEnd),
       map(event => (event as NavigationEnd).urlAfterRedirects)
     ),
-    { initialValue: '/' }
+    { initialValue: this.router.url } // Use current url as initial value
   );
 
-  isLoginPage = computed(() => {
+  isFullPage = computed(() => {
     const currentUrl = this.url();
-    return currentUrl.startsWith('/login');
+    return currentUrl.startsWith('/login') || currentUrl === '/';
   });
 
-  title = 'Guilde manager';
+  title = "Guild Manager";
 }

@@ -18,7 +18,7 @@
       <span class="icon">⚠️</span>
       <div class="text">
         <h3>Synchronisation requise</h3>
-        <p>Pour utiliser Unity'Z, vous devez importer au moins un personnage depuis Battle.net ci-dessous. Une fois fait, vous aurez accès au tableau de bord et au calendrier.</p>
+        <p>Pour utiliser Guild Manager, vous devez importer au moins un personnage depuis Battle.net ci-dessous. Une fois fait, vous aurez accès au tableau de bord et au calendrier.</p>
       </div>
     </div>
   </div>
@@ -72,12 +72,6 @@
             <div class="info-item">
               <span class="label">ID Battle.net</span>
               <span class="value">{{ user.bnet_id }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Statut</span>
-              <span class="value status-badge" [class.admin]="authService.isAdmin()">
-                {{ user.role.toUpperCase() }}
-              </span>
             </div>
           </div>
         </div>
