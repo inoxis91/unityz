@@ -1,8 +1,4 @@
 /* Base styling for landing to ensure it stands out from the rest of the app */
-html {
-  scroll-behavior: smooth;
-}
-
 /* Remove focus outline (white borders) when navigating to anchor links */
 section:focus,
 section:target {
