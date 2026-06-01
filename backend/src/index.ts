@@ -5,12 +5,15 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 
-import { initDb } from './lib/db';
+import pool, { initDb } from './lib/db';
 import characterRoutes from './routes/characters';
 import eventRoutes from './routes/events';
 import rosterRoutes from './routes/rosters';
 import feeRoutes from './routes/fees';
 import userRoutes from './routes/users';
+import stripeRoutes from './routes/stripe';
+import guildRoutes from './routes/guilds';
+import mockAuthRoutes from './routes/mockAuth';
 import { errorHandler } from './middlewares/errorHandler';
 import { initDiscord } from './lib/discord';
 import { initCronJobs } from './lib/cron';
@@ -86,6 +89,13 @@ app.use('/api/events', eventRoutes);
 app.use('/api/rosters', rosterRoutes);
 app.use('/api/fees', feeRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/stripe', stripeRoutes);
+app.use('/api/guilds', guildRoutes);
+
+if (!isProd) {
+  app.use('/api/mock-auth', mockAuthRoutes);
+  console.log('[System] Mock Authentication routes enabled on /api/mock-auth');
+}
 
 // --- SERVING FRONTEND ---
 if (isProd) {
@@ -194,11 +204,38 @@ app.get('/api/users/me', async (req, res, next) => {
 
   if (req.isAuthenticated()) {
     try {
-      const user = req.user as any;
+      const dbUserRes = await pool.query('SELECT * FROM users WHERE id = $1', [req.user!.id]);
+      const user = dbUserRes.rows[0];
+      if (!user) {
+        return res.status(404).json({ status: 'error', message: 'User not found' });
+      }
+
       const has_characters = await UserService.hasCharacters(user.id);
+      
+      let subscription_tier = 'none';
+      let subscription_expires_at = null;
+      let active_guild_is_paid = false;
+      let active_guild_fees_enabled = true;
+      let active_guild_minimum_fee_amount = 2000;
+      if (user.active_guild_id) {
+        const guildRes = await pool.query('SELECT subscription_tier, subscription_expires_at, fees_enabled, minimum_fee_amount FROM guilds WHERE id = $1', [user.active_guild_id]);
+        if (guildRes.rows[0]) {
+          subscription_tier = guildRes.rows[0].subscription_tier;
+          subscription_expires_at = guildRes.rows[0].subscription_expires_at;
+          active_guild_is_paid = subscription_expires_at ? (new Date(subscription_expires_at) > new Date()) : false;
+          active_guild_fees_enabled = guildRes.rows[0].fees_enabled !== undefined ? guildRes.rows[0].fees_enabled : true;
+          active_guild_minimum_fee_amount = guildRes.rows[0].minimum_fee_amount || 2000;
+        }
+      }
+
       res.json({
         ...user,
-        has_characters
+        has_characters,
+        subscription_tier,
+        subscription_expires_at,
+        active_guild_is_paid,
+        active_guild_fees_enabled,
+        active_guild_minimum_fee_amount
       });
     } catch (error) {
       next(error);

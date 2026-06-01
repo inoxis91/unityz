@@ -104,6 +104,20 @@ export class CalendarComponent implements OnInit {
     return this.authService.canManageEvents();
   });
 
+  isPro = computed(() => this.authService.currentUser()?.subscription_tier === 'pro');
+
+  getEventsInMonthCount(dateStr: string): number {
+    if (!dateStr) return 0;
+    const targetDate = new Date(dateStr);
+    const targetYear = targetDate.getFullYear();
+    const targetMonth = targetDate.getMonth();
+
+    return this.eventsList().filter(e => {
+      const eDate = new Date(e.start_time);
+      return eDate.getFullYear() === targetYear && eDate.getMonth() === targetMonth;
+    }).length;
+  }
+
   eventsList = signal<CalendarEvent[]>([]);
 
   upcomingEvents = computed(() => {
@@ -223,6 +237,15 @@ export class CalendarComponent implements OnInit {
         const d = new Date(this.eventForm.start_date);
         d.setDate(d.getDate() + 1);
         finalEndDate = d.toISOString().split('T')[0];
+    }
+
+    // Check event limit for non-pro when creating (not editing)
+    if (!this.isPro() && !this.isEditing()) {
+      const count = this.getEventsInMonthCount(this.eventForm.start_date);
+      if (count >= 6) {
+        this.toast.error('Limite de 6 événements par mois atteinte pour votre abonnement. Passez au forfait Pro pour programmer des événements illimités.');
+        return;
+      }
     }
 
     const eventData: CalendarEvent = {

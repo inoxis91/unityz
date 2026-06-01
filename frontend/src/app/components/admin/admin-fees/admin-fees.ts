@@ -1,9 +1,10 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FeeService, FeeDeclaration, GuildFeeOverview } from '../../../services/fee';
 import { ToastService } from '../../../services/toast';
 import { ConfirmService } from '../../../services/confirm';
+import { AuthService } from '../../../services/auth';
 
 @Component({
   selector: 'app-admin-fees',
@@ -27,6 +28,9 @@ export class AdminFeesComponent implements OnInit {
   adjustingUser: GuildFeeOverview | null = null;
   adjustingMonthIndex: number = 0;
   adjustingAmount: number = 0;
+
+  public authService = inject(AuthService);
+  minimumFee = computed(() => this.authService.currentUser()?.active_guild_minimum_fee_amount ?? 2000);
 
   // Character List Modal
   showCharactersModal = signal(false);
@@ -143,7 +147,7 @@ export class AdminFeesComponent implements OnInit {
   getUserMonthStatus(user: GuildFeeOverview, monthIndex: number) {
     const alloc = this.getMonthAlloc(user, monthIndex);
     if (!alloc || alloc.amount === 0) return { class: 'none', icon: '⭕', amount: 0 };
-    if (alloc.amount >= 2000) return { class: alloc.amount > 2000 ? 'donation' : 'paid', icon: alloc.amount > 2000 ? '⭐' : '✅', amount: alloc.amount };
+    if (alloc.amount >= this.minimumFee()) return { class: alloc.amount > this.minimumFee() ? 'donation' : 'paid', icon: alloc.amount > this.minimumFee() ? '⭐' : '✅', amount: alloc.amount };
     return { class: 'partial', icon: '⚠️', amount: alloc.amount };
   }
 }

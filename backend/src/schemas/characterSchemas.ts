@@ -7,6 +7,11 @@ export const importCharactersSchema = z.object({
       realm: z.string().min(1),
       class: z.string().min(1),
       level: z.number().int(),
+      guild: z.object({
+        id: z.number().int(),
+        name: z.string().min(1),
+        realm: z.string().min(1)
+      }).nullable().optional()
     })),
   }),
 });

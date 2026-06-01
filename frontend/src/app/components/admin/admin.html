@@ -4,6 +4,7 @@
   <button *ngIf="authService.isAdmin()" [class.active]="activeTab() === 'users'" (click)="activeTab.set('users')">Membres</button>
   <button *ngIf="authService.canManageRosters()" [class.active]="activeTab() === 'rosters'" (click)="activeTab.set('rosters')">Rosters</button>
   <button *ngIf="authService.canManageFees()" [class.active]="activeTab() === 'fees'" (click)="activeTab.set('fees')">Cotisations</button>
+  <button *ngIf="authService.isAdmin()" [class.active]="activeTab() === 'settings'" (click)="activeTab.set('settings')">Configuration Guilde</button>
 </div>
 
 <div class="tab-content" *ngIf="activeTab() === 'users' && authService.isAdmin()">
@@ -16,5 +17,9 @@
 
   <div class="tab-content" *ngIf="activeTab() === 'fees' && authService.canManageFees()">
     <app-admin-fees></app-admin-fees>
+  </div>
+
+  <div class="tab-content" *ngIf="activeTab() === 'settings' && authService.isAdmin()">
+    <app-admin-settings></app-admin-settings>
   </div>
 </div>

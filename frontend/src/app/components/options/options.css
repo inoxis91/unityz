@@ -236,6 +236,174 @@
   color: #ef4444;
 }
 
+.subscription-highlight {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.subscription-highlight .card-icon {
+  background: #fef3c7;
+}
+
+/* Tier badges */
+.tier-badge {
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.tier-badge.none {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.tier-badge.free {
+  background: #dbeafe;
+  color: #3b82f6;
+}
+
+.tier-badge.medium {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.tier-badge.pro {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #b45309;
+  border: 1px solid #f59e0b;
+}
+
+/* Status badge */
+.status-badge-sub {
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.status-badge-sub.active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge-sub.expired {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Actions in subscription */
+.action-box-sub {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(245, 158, 11, 0.15);
+  display: flex;
+}
+
+.btn-manage-sub {
+  background: #f59e0b;
+  color: #78350f;
+  border: none;
+  font-weight: 800;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.btn-manage-sub:hover {
+  background: #d97706;
+  transform: translateY(-1px);
+}
+
+/* Pro Locked Personal Discord Box overlay and blur styling */
+.pro-locked-box-discord {
+  position: relative;
+  overflow: hidden;
+}
+
+.pro-locked-banner-discord {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(4px);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem;
+  border-radius: 24px;
+}
+
+.lock-icon-discord {
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+  animation: bounce-slow 2s infinite;
+}
+
+.pro-locked-banner-discord .banner-badge-discord {
+  background: #3b82f6;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.pro-locked-banner-discord h4 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 0.35rem 0;
+}
+
+.pro-locked-banner-discord p {
+  color: #cbd5e1;
+  font-size: 0.8rem;
+  max-width: 320px;
+  line-height: 1.4;
+  margin: 0 0 1.25rem 0;
+}
+
+.pro-locked-banner-discord .btn-upgrade-discord {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+  padding: 0.6rem 1.25rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+  transition: all 0.2s;
+}
+
+.pro-locked-banner-discord .btn-upgrade-discord:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+}
+
+.muted-opacity-discord {
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
 @media (max-width: 1024px) {
   .settings-grid { grid-template-columns: 1fr; }
 }

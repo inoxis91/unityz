@@ -316,3 +316,57 @@
     position: static;
   }
 }
+
+/* Quota locked notice banner */
+.quota-locked-notice {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.notice-icon {
+  font-size: 1.8rem;
+}
+
+.notice-text {
+  flex: 1;
+  text-align: left;
+}
+
+.notice-text strong {
+  font-size: 1rem;
+  color: #f59e0b;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.notice-text p {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.btn-upgrade-mini {
+  background: #f59e0b;
+  color: #1e1b4b;
+  border: none;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.2);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-upgrade-mini:hover {
+  background: #d97706;
+  transform: translateY(-1px);
+}

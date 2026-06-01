@@ -191,6 +191,24 @@ h2 {
   margin-bottom: 0.25rem;
 }
 
+.char-details {
+  font-size: 0.88rem;
+  color: #64748b;
+}
+
+.guild-tag {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  margin-top: 0.35rem;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
 .empty-state {
   padding: 20px;
   background: #fff3cd;

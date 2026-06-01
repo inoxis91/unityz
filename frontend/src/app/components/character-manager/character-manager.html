@@ -65,7 +65,8 @@
       <div *ngFor="let char of bnetCharacters()" class="bnet-char-card" [class]="'border-class-' + getClassCategory(char.class)">
         <div class="char-info">
           <strong [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</strong>
-          <span>{{ char.realm }} (Niv. {{ char.level }})</span>
+          <span class="char-details">{{ char.realm }} (Niv. {{ char.level }})</span>
+          <span *ngIf="char.guild" class="guild-tag">🏰 {{ char.guild.name }}</span>
         </div>
         <button (click)="importCharacter(char)" class="btn-import">Ajouter</button>
       </div>

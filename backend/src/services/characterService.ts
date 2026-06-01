@@ -17,9 +17,15 @@ export interface Character {
 }
 
 export class CharacterService {
-  static async getByUserId(userId: string): Promise<Character[]> {
-    const query = 'SELECT * FROM characters WHERE user_id = $1 ORDER BY is_main DESC, name ASC';
-    const result = await pool.query(query, [userId]);
+  static async getByUserId(userId: string, guildId?: string): Promise<Character[]> {
+    let query = 'SELECT * FROM characters WHERE user_id = $1';
+    const params: any[] = [userId];
+    if (guildId) {
+      query += ' AND guild_id = $2';
+      params.push(guildId);
+    }
+    query += ' ORDER BY is_main DESC, name ASC';
+    const result = await pool.query(query, params);
     return result.rows;
   }
 
@@ -66,17 +72,30 @@ export class CharacterService {
       for (const char of characters) {
         // The first character imported becomes main IF the user has no main yet
         const setAsMain = !hasMain;
+
+        let guildId: string | null = null;
+        if (char.guild) {
+          const guildRes = await client.query(`
+            INSERT INTO guilds (blizzard_id, name, realm)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (blizzard_id) DO UPDATE 
+            SET name = EXCLUDED.name, realm = EXCLUDED.realm, updated_at = CURRENT_TIMESTAMP
+            RETURNING id
+          `, [char.guild.id, char.guild.name, char.guild.realm]);
+          guildId = guildRes.rows[0].id;
+        }
         
         const query = `
-          INSERT INTO characters (user_id, name, realm, class, level, is_main)
-          VALUES ($1, $2, $3, $4, $5, $6)
+          INSERT INTO characters (user_id, name, realm, class, level, is_main, guild_id)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
           ON CONFLICT (name, realm, user_id) 
           DO UPDATE SET 
             level = EXCLUDED.level,
             class = EXCLUDED.class,
+            guild_id = EXCLUDED.guild_id,
             updated_at = CURRENT_TIMESTAMP
         `;
-        await client.query(query, [userId, char.name, char.realm, char.class, char.level, setAsMain]);
+        await client.query(query, [userId, char.name, char.realm, char.class, char.level, setAsMain, guildId]);
         
         if (setAsMain) {
           hasMain = true; // Only set the first one as main

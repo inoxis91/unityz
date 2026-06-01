@@ -12,6 +12,77 @@ export const initDb = async () => {
   try {
     console.log('Initializing database tables...');
     
+    // Guilds table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS guilds (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        blizzard_id INTEGER UNIQUE,
+        name VARCHAR(255) NOT NULL,
+        realm VARCHAR(255) NOT NULL,
+        region VARCHAR(50) DEFAULT 'eu',
+        subscription_tier VARCHAR(50) DEFAULT 'none',
+        subscription_expires_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NULL,
+        stripe_customer_id VARCHAR(255),
+        discord_enabled BOOLEAN DEFAULT FALSE,
+        discord_guild_id VARCHAR(255),
+        discord_events_channel_id VARCHAR(255),
+        discord_fees_channel_id VARCHAR(255),
+        discord_reminder_channel_id VARCHAR(255),
+        fees_enabled BOOLEAN DEFAULT TRUE,
+        minimum_fee_amount INTEGER DEFAULT 2000,
+        created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Ensure Discord and Subscription columns exist in guilds
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='subscription_tier') THEN
+          ALTER TABLE guilds ADD COLUMN subscription_tier VARCHAR(50) DEFAULT 'none';
+        ELSE
+          ALTER TABLE guilds ALTER COLUMN subscription_tier SET DEFAULT 'none';
+        END IF;
+
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='subscription_expires_at') THEN
+          ALTER TABLE guilds ADD COLUMN subscription_expires_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NULL;
+        ELSE
+          ALTER TABLE guilds ALTER COLUMN subscription_expires_at SET DEFAULT NULL;
+        END IF;
+
+        -- Migrate existing is_paid data
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='is_paid') THEN
+          UPDATE guilds SET subscription_tier = 'pro', subscription_expires_at = CURRENT_TIMESTAMP + INTERVAL '10 years' WHERE is_paid = TRUE;
+          ALTER TABLE guilds DROP COLUMN is_paid;
+        END IF;
+
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='fees_enabled') THEN
+          ALTER TABLE guilds ADD COLUMN fees_enabled BOOLEAN DEFAULT TRUE;
+        END IF;
+
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='minimum_fee_amount') THEN
+          ALTER TABLE guilds ADD COLUMN minimum_fee_amount INTEGER DEFAULT 2000;
+        END IF;
+
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='discord_enabled') THEN
+          ALTER TABLE guilds ADD COLUMN discord_enabled BOOLEAN DEFAULT FALSE;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='discord_guild_id') THEN
+          ALTER TABLE guilds ADD COLUMN discord_guild_id VARCHAR(255);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='discord_events_channel_id') THEN
+          ALTER TABLE guilds ADD COLUMN discord_events_channel_id VARCHAR(255);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='discord_fees_channel_id') THEN
+          ALTER TABLE guilds ADD COLUMN discord_fees_channel_id VARCHAR(255);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='discord_reminder_channel_id') THEN
+          ALTER TABLE guilds ADD COLUMN discord_reminder_channel_id VARCHAR(255);
+        END IF;
+      END $$;
+    `);
+
     // Users table
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
@@ -22,9 +93,20 @@ export const initDb = async () => {
         access_token TEXT,
         role VARCHAR(50) DEFAULT 'member',
         rank INTEGER,
+        active_guild_id UUID REFERENCES guilds(id) ON DELETE SET NULL,
         created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+    `);
+
+    // Ensure active_guild_id exists (migration for existing tables)
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='active_guild_id') THEN
+          ALTER TABLE users ADD COLUMN active_guild_id UUID REFERENCES guilds(id) ON DELETE SET NULL;
+        END IF;
+      END $$;
     `);
 
     // Ensure role column exists and migrate is_admin before dropping it
@@ -62,6 +144,7 @@ export const initDb = async () => {
       CREATE TABLE IF NOT EXISTS characters (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE,
+        guild_id UUID REFERENCES guilds(id) ON DELETE SET NULL,
         name VARCHAR(255) NOT NULL,
         realm VARCHAR(255) NOT NULL,
         class VARCHAR(255),
@@ -76,12 +159,15 @@ export const initDb = async () => {
       );
     `);
 
-    // Ensure is_main column exists
+    // Ensure is_main and guild_id columns exist
     await client.query(`
       DO $$ 
       BEGIN 
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='characters' AND column_name='is_main') THEN
           ALTER TABLE characters ADD COLUMN is_main BOOLEAN DEFAULT FALSE;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='characters' AND column_name='guild_id') THEN
+          ALTER TABLE characters ADD COLUMN guild_id UUID REFERENCES guilds(id) ON DELETE SET NULL;
         END IF;
       END $$;
     `);
@@ -91,6 +177,7 @@ export const initDb = async () => {
       CREATE TABLE IF NOT EXISTS fee_declarations (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE,
+        guild_id UUID REFERENCES guilds(id) ON DELETE CASCADE,
         amount INTEGER NOT NULL,
         start_month DATE NOT NULL,
         duration_months INTEGER NOT NULL DEFAULT 1,
@@ -102,23 +189,53 @@ export const initDb = async () => {
       );
     `);
 
+    // Ensure guild_id exists in fee_declarations
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='fee_declarations' AND column_name='guild_id') THEN
+          ALTER TABLE fee_declarations ADD COLUMN guild_id UUID REFERENCES guilds(id) ON DELETE CASCADE;
+        END IF;
+      END $$;
+    `);
+
     // Fee allocations table (final validated ledger)
     await client.query(`
       CREATE TABLE IF NOT EXISTS fee_allocations (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE,
+        guild_id UUID REFERENCES guilds(id) ON DELETE CASCADE,
         month_date DATE NOT NULL,
         amount INTEGER NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(user_id, month_date)
+        UNIQUE(user_id, month_date, guild_id)
       );
+    `);
+
+    // Ensure guild_id exists in fee_allocations and update UNIQUE constraint
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='fee_allocations' AND column_name='guild_id') THEN
+          ALTER TABLE fee_allocations ADD COLUMN guild_id UUID REFERENCES guilds(id) ON DELETE CASCADE;
+        END IF;
+
+        IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fee_allocations_user_id_month_date_key') THEN
+          ALTER TABLE fee_allocations DROP CONSTRAINT fee_allocations_user_id_month_date_key;
+        END IF;
+
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fee_allocations_user_id_month_date_guild_id_key') THEN
+          ALTER TABLE fee_allocations ADD CONSTRAINT fee_allocations_user_id_month_date_guild_id_key UNIQUE(user_id, month_date, guild_id);
+        END IF;
+      END $$;
     `);
 
     // Rosters table
     await client.query(`
       CREATE TABLE IF NOT EXISTS rosters (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        guild_id UUID REFERENCES guilds(id) ON DELETE CASCADE,
         name VARCHAR(255) NOT NULL,
         description TEXT,
         weight INTEGER DEFAULT 1,
@@ -127,12 +244,15 @@ export const initDb = async () => {
       );
     `);
 
-    // Ensure weight column exists in rosters
+    // Ensure weight and guild_id columns exist in rosters
     await client.query(`
       DO $$ 
       BEGIN 
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='rosters' AND column_name='weight') THEN
           ALTER TABLE rosters ADD COLUMN weight INTEGER DEFAULT 1;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='rosters' AND column_name='guild_id') THEN
+          ALTER TABLE rosters ADD COLUMN guild_id UUID REFERENCES guilds(id) ON DELETE CASCADE;
         END IF;
       END $$;
     `);
@@ -151,6 +271,7 @@ export const initDb = async () => {
     await client.query(`
       CREATE TABLE IF NOT EXISTS events (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        guild_id UUID REFERENCES guilds(id) ON DELETE CASCADE,
         title VARCHAR(255) NOT NULL,
         description TEXT,
         start_time TIMESTAMP NOT NULL,
@@ -164,7 +285,7 @@ export const initDb = async () => {
       );
     `);
 
-    // Ensure roster_id column exists in events
+    // Ensure roster_id and guild_id columns exist in events
     await client.query(`
       DO $$ 
       BEGIN 
@@ -173,6 +294,9 @@ export const initDb = async () => {
         END IF;
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='events' AND column_name='mm_groups_count') THEN
           ALTER TABLE events ADD COLUMN mm_groups_count INTEGER DEFAULT 0;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='events' AND column_name='guild_id') THEN
+          ALTER TABLE events ADD COLUMN guild_id UUID REFERENCES guilds(id) ON DELETE CASCADE;
         END IF;
       END $$;
     `);

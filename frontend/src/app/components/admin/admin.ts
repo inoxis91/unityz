@@ -4,18 +4,19 @@ import { FormsModule } from '@angular/forms';
 import { AdminRostersComponent } from './admin-rosters/admin-rosters';
 import { AdminFeesComponent } from './admin-fees/admin-fees';
 import { AdminUsersComponent } from './admin-users/admin-users';
+import { AdminSettingsComponent } from './admin-settings/admin-settings';
 import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, AdminRostersComponent, AdminFeesComponent, AdminUsersComponent],
+  imports: [CommonModule, FormsModule, AdminRostersComponent, AdminFeesComponent, AdminUsersComponent, AdminSettingsComponent],
   templateUrl: './admin.html',
   styleUrl: './admin.css'
 })
 export class AdminComponent implements OnInit {
   public authService = inject(AuthService);
-  activeTab = signal<'users' | 'rosters' | 'fees'>('users');
+  activeTab = signal<'users' | 'rosters' | 'fees' | 'settings'>('users');
 
   constructor() {}
 

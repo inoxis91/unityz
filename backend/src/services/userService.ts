@@ -1,4 +1,6 @@
 import pool from '../lib/db';
+import axios from 'axios';
+import { BlizzardService } from './blizzardService';
 
 export interface User {
   id: string;
@@ -13,6 +15,18 @@ export class UserService {
   static async getAll(): Promise<User[]> {
     const query = 'SELECT id, battletag, bnet_id, discord_id, role, created_at FROM users ORDER BY battletag ASC';
     const result = await pool.query(query);
+    return result.rows;
+  }
+
+  static async getAllForGuild(guildId: string): Promise<User[]> {
+    const query = `
+      SELECT DISTINCT u.id, u.battletag, u.bnet_id, u.discord_id, u.role, u.created_at 
+      FROM users u
+      LEFT JOIN characters c ON u.id = c.user_id
+      WHERE c.guild_id = $1 OR u.active_guild_id = $1
+      ORDER BY u.battletag ASC
+    `;
+    const result = await pool.query(query, [guildId]);
     return result.rows;
   }
 
@@ -38,5 +52,282 @@ export class UserService {
     const query = 'DELETE FROM users WHERE id = $1';
     const result = await pool.query(query, [id]);
     return (result.rowCount ?? 0) > 0;
+  }
+
+  static async getUserGuilds(userId: string): Promise<any[]> {
+    const query = `
+      SELECT DISTINCT g.* 
+      FROM guilds g
+      JOIN characters c ON c.guild_id = g.id
+      WHERE c.user_id = $1
+    `;
+    const result = await pool.query(query, [userId]);
+    return result.rows;
+  }
+
+  static async updateActiveGuild(userId: string, guildId: string): Promise<boolean> {
+    // Security check: verify the user has a character in this guild
+    const checkQuery = `
+      SELECT 1 FROM characters 
+      WHERE user_id = $1 AND guild_id = $2 
+      LIMIT 1
+    `;
+    const checkRes = await pool.query(checkQuery, [userId, guildId]);
+    if (checkRes.rowCount === 0) {
+      throw new Error('User does not have any characters in this guild.');
+    }
+
+    const query = 'UPDATE users SET active_guild_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2';
+    const result = await pool.query(query, [guildId, userId]);
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  static async getActiveGuild(userId: string): Promise<any | null> {
+    const query = `
+      SELECT g.* 
+      FROM guilds g
+      JOIN users u ON u.active_guild_id = g.id
+      WHERE u.id = $1
+    `;
+    const result = await pool.query(query, [userId]);
+    return result.rows[0] || null;
+  }
+
+  static async discoverUserGuilds(accessToken: string): Promise<any[]> {
+    if (accessToken.startsWith('mock_')) {
+      const { mockCharacters, mockGuilds } = require('../lib/mockData');
+      const userChars = mockCharacters.filter((c: any) => c.user_id === accessToken);
+      const guildIds = Array.from(new Set(userChars.map((c: any) => c.guild_id).filter((id: any) => id !== null)));
+      
+      const registeredGuilds: any[] = [];
+      for (const gid of guildIds) {
+        const guild = mockGuilds.find((g: any) => g.id === gid);
+        if (guild) {
+          const dbRes = await pool.query(`
+            INSERT INTO guilds (id, blizzard_id, name, realm, region, subscription_tier, subscription_expires_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            ON CONFLICT (blizzard_id) DO UPDATE 
+            SET name = EXCLUDED.name, realm = EXCLUDED.realm, updated_at = CURRENT_TIMESTAMP
+            RETURNING id, name, realm, region, subscription_tier, subscription_expires_at
+          `, [guild.id, guild.blizzard_id, guild.name, guild.realm, guild.region, guild.subscription_tier, guild.subscription_expires_at]);
+          registeredGuilds.push(dbRes.rows[0]);
+        }
+      }
+      return registeredGuilds;
+    }
+
+    const response = await axios.get('https://eu.api.blizzard.com/profile/user/wow', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      params: { namespace: 'profile-eu', locale: 'fr_FR' }
+    });
+
+    const accounts = response.data.wow_accounts || [];
+    const characterSummaries: any[] = [];
+
+    accounts.forEach((account: any) => {
+      if (account.characters) {
+        account.characters.forEach((char: any) => {
+          if (char.name && (char.level || 0) >= 10) {
+            characterSummaries.push({
+              name: char.name,
+              realm: char.realm?.name || 'Inconnu'
+            });
+          }
+        });
+      }
+    });
+
+    // Fetch character profiles in parallel to find their guild
+    const uniqueGuildsMap = new Map<number, any>();
+
+    await Promise.all(
+      characterSummaries.map(async (char) => {
+        try {
+          const summary = await BlizzardService.getCharacterSummary(accessToken, char.realm, char.name);
+          if (summary && summary.guild) {
+            uniqueGuildsMap.set(summary.guild.id, {
+              blizzard_id: summary.guild.id,
+              name: summary.guild.name,
+              realm: summary.guild.realm?.name || char.realm,
+              region: 'eu'
+            });
+          }
+        } catch (err) {
+          // Ignore
+        }
+      })
+    );
+
+    const discoveredGuilds = Array.from(uniqueGuildsMap.values());
+    const registeredGuilds: any[] = [];
+
+    // Insert or find guilds in database to get real UUIDs and statuses
+    for (const guild of discoveredGuilds) {
+      const dbRes = await pool.query(`
+        INSERT INTO guilds (blizzard_id, name, realm, region)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (blizzard_id) DO UPDATE 
+        SET name = EXCLUDED.name, realm = EXCLUDED.realm, updated_at = CURRENT_TIMESTAMP
+        RETURNING id, name, realm, region, subscription_tier, subscription_expires_at
+      `, [guild.blizzard_id, guild.name, guild.realm, guild.region]);
+      registeredGuilds.push(dbRes.rows[0]);
+    }
+
+    return registeredGuilds;
+  }
+
+  static async fetchGuildCharacters(userId: string, guildId: string, accessToken: string): Promise<any[]> {
+    // 1. Get the guild's blizzard ID and details to match characters
+    const guildRes = await pool.query('SELECT blizzard_id, name, realm FROM guilds WHERE id = $1', [guildId]);
+    const guild = guildRes.rows[0];
+    if (!guild) throw new Error('Guild not found');
+
+    // 2. Set user active guild ID
+    await pool.query('UPDATE users SET active_guild_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [guildId, userId]);
+
+    // 3. Fetch characters from BNet Account Profile
+    let matchingCharacters: any[] = [];
+    if (accessToken.startsWith('mock_')) {
+      const { mockCharacters } = require('../lib/mockData');
+      matchingCharacters = mockCharacters.filter((c: any) => c.user_id === userId && c.guild_id === guildId).map((c: any) => ({
+        name: c.name,
+        realm: c.realm,
+        class: c.class,
+        level: c.level
+      }));
+    } else {
+      const response = await axios.get('https://eu.api.blizzard.com/profile/user/wow', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        params: { namespace: 'profile-eu', locale: 'fr_FR' }
+      });
+
+      const accounts = response.data.wow_accounts || [];
+
+      // 4. Fetch details to find characters belonging to this guild
+      const charactersToCheck: any[] = [];
+      accounts.forEach((account: any) => {
+        if (account.characters) {
+          account.characters.forEach((char: any) => {
+            if (char.name && (char.level || 0) >= 10) {
+              charactersToCheck.push({
+                name: char.name,
+                realm: char.realm?.name || 'Inconnu',
+                class: (char.character_class?.name || char.playable_class?.name || 'Inconnu'),
+                level: char.level || 0
+              });
+            }
+          });
+        }
+      });
+
+      await Promise.all(
+        charactersToCheck.map(async (char) => {
+          try {
+            const summary = await BlizzardService.getCharacterSummary(accessToken, char.realm, char.name);
+            if (summary && summary.guild && summary.guild.id === guild.blizzard_id) {
+              matchingCharacters.push({
+                ...char,
+                is_main: false
+              });
+            }
+          } catch (err) {
+            // Ignore
+          }
+        })
+      );
+    }
+
+    // Check if any of the user's characters in the guild is the Guild Master (rank 0)
+    let isGuildMaster = false;
+    let userRank = 9; // Default rank (lowest rank)
+    try {
+      if (accessToken.startsWith('mock_')) {
+        const { mockUsers } = require('../lib/mockData');
+        const mockUser = mockUsers.find((u: any) => u.id === userId);
+        userRank = mockUser?.rank !== null && mockUser?.rank !== undefined ? mockUser.rank : 9;
+        isGuildMaster = userRank === 0;
+      } else {
+        const roster = await BlizzardService.getGuildRoster(accessToken, guild.realm, guild.name);
+        if (roster && roster.members) {
+          const guildMasterMember = roster.members.find((m: any) => m.rank === 0);
+          if (guildMasterMember && guildMasterMember.character) {
+            const gmName = guildMasterMember.character.name.toLowerCase();
+            isGuildMaster = matchingCharacters.some(
+              (char) => char.name.toLowerCase() === gmName
+            );
+          }
+
+          // Calculate user's minimum rank (highest position) across all their characters in this guild
+          const matchingCharNames = matchingCharacters.map((c: any) => c.name.toLowerCase());
+          const userRosterMembers = roster.members.filter((m: any) => 
+            m.character && matchingCharNames.includes(m.character.name.toLowerCase())
+          );
+          if (userRosterMembers.length > 0) {
+            userRank = Math.min(...userRosterMembers.map((m: any) => m.rank));
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[UserService] Failed to fetch guild roster for GM/Rank check:', err);
+    }
+
+    // Update user role based on GM status
+    const userRes = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
+    const currentRole = userRes.rows[0]?.role || 'member';
+    let newRole = currentRole;
+
+    if (isGuildMaster) {
+      newRole = 'admin';
+    } else if (currentRole === 'admin') {
+      newRole = 'member';
+    }
+
+    console.log(`[UserService] Saving user ${userId} rank: ${userRank}, role: ${newRole} during fetchGuildCharacters`);
+    await pool.query(
+      'UPDATE users SET rank = $1, role = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
+      [userRank, newRole, userId]
+    );
+
+    return matchingCharacters;
+  }
+
+  static async importSelectedCharacters(userId: string, guildId: string, accessToken: string, selectedCharacters: any[]): Promise<void> {
+    const guildRes = await pool.query('SELECT blizzard_id, name, realm FROM guilds WHERE id = $1', [guildId]);
+    const guild = guildRes.rows[0];
+    if (!guild) throw new Error('Guild not found');
+
+    if (selectedCharacters.length === 0) {
+      throw new Error('Please select at least one character to import');
+    }
+
+    // Insert characters into database
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      
+      // Delete any existing characters of this user in this guild before inserting new selection
+      await client.query('DELETE FROM characters WHERE user_id = $1 AND guild_id = $2', [userId, guildId]);
+
+      for (const char of selectedCharacters) {
+        const query = `
+          INSERT INTO characters (user_id, guild_id, name, realm, class, level, is_main)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
+          ON CONFLICT (name, realm, user_id) 
+          DO UPDATE SET 
+            level = EXCLUDED.level,
+            class = EXCLUDED.class,
+            guild_id = EXCLUDED.guild_id,
+            is_main = EXCLUDED.is_main,
+            updated_at = CURRENT_TIMESTAMP
+        `;
+        await client.query(query, [userId, guildId, char.name, char.realm, char.class, char.level, char.is_main || false]);
+      }
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
   }
 }

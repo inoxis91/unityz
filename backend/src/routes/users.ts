@@ -1,4 +1,5 @@
 import express from 'express';
+import pool from '../lib/db';
 import { isAuthenticated, isAdmin } from '../middlewares/auth';
 import { z } from 'zod';
 import { validate } from '../middlewares/validate';
@@ -19,10 +20,14 @@ const updateRoleSchema = z.object({
   }),
 });
 
-// GET /api/users : Liste tous les utilisateurs (Admin)
+// GET /api/users : Liste tous les utilisateurs de la guilde active (Admin)
 router.get('/', isAdmin, async (req, res, next) => {
   try {
-    const users = await UserService.getAll();
+    const guildId = req.user!.active_guild_id;
+    if (!guildId) {
+      return res.status(400).json({ status: 'error', message: 'No active guild selected' });
+    }
+    const users = await UserService.getAllForGuild(guildId);
     res.json(users);
   } catch (error) {
     next(error);
@@ -72,7 +77,25 @@ router.delete('/:id', isAdmin, async (req, res, next) => {
 // PATCH /api/users/discord : Met à jour son propre ID Discord
 router.patch('/discord', isAuthenticated, validate(updateDiscordSchema), async (req, res, next) => {
   try {
-    const user = await UserService.updateDiscordId(req.user!.id, req.body.discordId);
+    const discordId = req.body.discordId;
+    
+    // Only block if trying to LINK (discordId is not null). Detaching (discordId is null) is always allowed.
+    if (discordId !== null) {
+      const guildId = req.user!.active_guild_id;
+      if (guildId) {
+        const guildRes = await pool.query('SELECT subscription_tier FROM guilds WHERE id = $1', [guildId]);
+        const tier = guildRes.rows[0]?.subscription_tier || 'free';
+        if (tier !== 'pro') {
+          return res.status(403).json({
+            status: 'error',
+            code: 'PRO_FEATURE_REQUIRED',
+            message: 'Personal Discord notification is a Pro feature. Please upgrade your subscription.'
+          });
+        }
+      }
+    }
+
+    const user = await UserService.updateDiscordId(req.user!.id, discordId);
     res.json(user);
   } catch (error) {
     next(error);
@@ -88,6 +111,19 @@ const linkDiscordSchema = z.object({
 // POST /api/users/link-discord : Lie son compte Discord par pseudo
 router.post('/link-discord', isAuthenticated, validate(linkDiscordSchema), async (req, res, next) => {
   try {
+    const guildId = req.user!.active_guild_id;
+    if (guildId) {
+      const guildRes = await pool.query('SELECT subscription_tier FROM guilds WHERE id = $1', [guildId]);
+      const tier = guildRes.rows[0]?.subscription_tier || 'free';
+      if (tier !== 'pro') {
+        return res.status(403).json({
+          status: 'error',
+          code: 'PRO_FEATURE_REQUIRED',
+          message: 'Discord linking is a Pro feature. Please upgrade your subscription.'
+        });
+      }
+    }
+
     const { pseudo } = req.body;
     const discordId = await findMemberByName(pseudo);
     
@@ -100,6 +136,84 @@ router.post('/link-discord', isAuthenticated, validate(linkDiscordSchema), async
 
     const user = await UserService.updateDiscordId(req.user!.id, discordId);
     res.json({ status: 'success', user });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/users/me/guilds : Liste les guildes associées aux personnages de l'utilisateur
+router.get('/me/guilds', isAuthenticated, async (req, res, next) => {
+  try {
+    const accessToken = req.user!.access_token;
+    if (!accessToken) {
+      return res.status(401).json({ status: 'error', message: 'No access token found' });
+    }
+    const guilds = await UserService.discoverUserGuilds(accessToken);
+    res.json(guilds);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/users/me/active-guild : Récupère la guilde active courante
+router.get('/me/active-guild', isAuthenticated, async (req, res, next) => {
+  try {
+    const guild = await UserService.getActiveGuild(req.user!.id);
+    res.json(guild);
+  } catch (error) {
+    next(error);
+  }
+});
+
+const updateActiveGuildSchema = z.object({
+  body: z.object({
+    guildId: z.string().uuid(),
+  }),
+});
+
+// POST /api/users/active-guild : Met à jour la guilde active de l'utilisateur et renvoie les personnages correspondants
+router.post('/active-guild', isAuthenticated, validate(updateActiveGuildSchema), async (req, res, next) => {
+  try {
+    const { guildId } = req.body;
+    const accessToken = req.user!.access_token;
+    if (!accessToken) {
+      return res.status(401).json({ status: 'error', message: 'No access token found' });
+    }
+    const characters = await UserService.fetchGuildCharacters(req.user!.id, guildId, accessToken);
+    res.json({ status: 'success', characters });
+  } catch (error) {
+    next(error);
+  }
+});
+
+const importCharactersSchema = z.object({
+  body: z.object({
+    characters: z.array(z.object({
+      name: z.string().min(2).max(100),
+      realm: z.string().min(2).max(100),
+      class: z.string().min(2).max(100),
+      level: z.number().int().min(1),
+      is_main: z.boolean().optional(),
+    })).min(1),
+  }),
+});
+
+// POST /api/users/import-characters : Importe les personnages sélectionnés et définit le personnage principal
+router.post('/import-characters', isAuthenticated, validate(importCharactersSchema), async (req, res, next) => {
+  try {
+    const { characters } = req.body;
+    const guildId = req.user!.active_guild_id;
+    const accessToken = req.user!.access_token;
+
+    if (!guildId) {
+      return res.status(400).json({ status: 'error', message: 'No active guild selected' });
+    }
+    if (!accessToken) {
+      return res.status(401).json({ status: 'error', message: 'No access token found' });
+    }
+
+    await UserService.importSelectedCharacters(req.user!.id, guildId, accessToken, characters);
+    res.json({ status: 'success', message: 'Characters imported successfully' });
   } catch (error) {
     next(error);
   }

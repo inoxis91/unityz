@@ -12,7 +12,14 @@ export interface User {
   bnet_id: number;
   discord_id?: string | null;
   role: UserRole;
+  rank?: number | null;
   has_characters: boolean;
+  active_guild_id?: string | null;
+  active_guild_is_paid?: boolean;
+  active_guild_fees_enabled?: boolean;
+  active_guild_minimum_fee_amount?: number;
+  subscription_tier?: 'free' | 'medium' | 'pro';
+  subscription_expires_at?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -23,12 +30,18 @@ export interface User {
 export class AuthService {
   private apiUrl = environment.apiUrl;
   currentUser = signal<User | null>(null);
+  currentGuild = signal<any | null>(null);
 
   // Computed permissions
   isAdmin = computed(() => this.currentUser()?.role === 'admin');
   isRaidLeader = computed(() => this.currentUser()?.role === 'raid_leader');
   isTreasurer = computed(() => this.currentUser()?.role === 'treasurer');
   isEventManager = computed(() => this.currentUser()?.role === 'event_manager');
+
+  isGMOrOfficer = computed(() => {
+    const rank = this.currentUser()?.rank;
+    return rank !== undefined && rank !== null && rank <= 2;
+  });
 
   canManageRosters = computed(() => this.isAdmin() || this.isRaidLeader());
   canManageEvents = computed(() => this.isAdmin() || this.isRaidLeader() || this.isEventManager());
@@ -51,9 +64,43 @@ export class AuthService {
     return this.http.delete(`${this.apiUrl}/users/${userId}`, { withCredentials: true });
   }
 
+  getUserGuilds(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/users/me/guilds`, { withCredentials: true });
+  }
+
+  getActiveGuild(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/users/me/active-guild`, { withCredentials: true }).pipe(
+      tap(guild => this.currentGuild.set(guild))
+    );
+  }
+
+  setActiveGuild(guildId: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/users/active-guild`, { guildId }, { withCredentials: true }).pipe(
+      tap(() => {
+        this.getActiveGuild().subscribe();
+      })
+    );
+  }
+
+  importCharacters(characters: any[]): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/users/import-characters`, { characters }, { withCredentials: true }).pipe(
+      tap(() => {
+        // Refresh auth details to update has_characters signal details
+        this.checkAuth().subscribe();
+      })
+    );
+  }
+
   checkAuth(): Observable<User> {
     return this.http.get<User>(`${this.apiUrl}/users/me`, { withCredentials: true }).pipe(
-      tap(user => this.currentUser.set(user))
+      tap(user => {
+        this.currentUser.set(user);
+        if (user && user.active_guild_id) {
+          this.getActiveGuild().subscribe();
+        } else {
+          this.currentGuild.set(null);
+        }
+      })
     );
   }
 
@@ -73,6 +120,20 @@ export class AuthService {
       url += `?redirect=${encodeURIComponent(redirectUrl)}`;
     }
     window.location.href = url;
+  }
+
+  getMockUsers(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/mock-auth/users`, { withCredentials: true });
+  }
+
+  mockLogin(mockUserId: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/mock-auth/login`, { mockUserId }, { withCredentials: true }).pipe(
+      tap(res => {
+        if (res.status === 'success') {
+          this.currentUser.set(res.user);
+        }
+      })
+    );
   }
 
   logout(): void {

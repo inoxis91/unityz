@@ -1,11 +1,13 @@
 import express from 'express';
 import pool from '../lib/db';
 import { RosterService } from '../services/rosterService';
-import { canManageRosters, isAuthenticated } from '../middlewares/auth';
+import { canManageRosters, isAuthenticated, requireActiveGuild, requirePaidGuild } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import { createRosterSchema, updateRosterSchema, assignCharacterSchema } from '../schemas/rosterSchemas';
 
 const router = express.Router();
+
+router.use(requireActiveGuild, requirePaidGuild);
 
 // GET /api/rosters/my-roster : Récupère le roster du personnage principal de l'utilisateur
 router.get('/my-roster', isAuthenticated, async (req, res, next) => {
@@ -26,7 +28,7 @@ router.get('/my-roster', isAuthenticated, async (req, res, next) => {
 // GET /api/rosters : Récupère tous les rosters avec leurs personnages
 router.get('/', canManageRosters, async (req, res, next) => {
   try {
-    const rosters = await RosterService.getAll();
+    const rosters = await RosterService.getAll(req.user!.active_guild_id || undefined);
     res.json(rosters);
   } catch (error) {
     next(error);
@@ -36,7 +38,7 @@ router.get('/', canManageRosters, async (req, res, next) => {
 // GET /api/rosters/unassigned : Récupère les personnages sans roster
 router.get('/unassigned', canManageRosters, async (req, res, next) => {
   try {
-    const characters = await RosterService.getUnassignedCharacters();
+    const characters = await RosterService.getUnassignedCharacters(req.user!.active_guild_id || undefined);
     res.json(characters);
   } catch (error) {
     next(error);
@@ -46,7 +48,25 @@ router.get('/unassigned', canManageRosters, async (req, res, next) => {
 // POST /api/rosters : Crée un roster
 router.post('/', canManageRosters, validate(createRosterSchema), async (req, res, next) => {
   try {
-    const roster = await RosterService.create(req.body);
+    const guildId = req.user!.active_guild_id!;
+    
+    // Check subscription tier limit
+    const guildRes = await pool.query('SELECT subscription_tier FROM guilds WHERE id = $1', [guildId]);
+    const tier = guildRes.rows[0]?.subscription_tier || 'free';
+    
+    if (tier === 'free' || tier === 'medium') {
+      const countRes = await pool.query('SELECT COUNT(*) FROM rosters WHERE guild_id = $1', [guildId]);
+      const count = parseInt(countRes.rows[0].count, 10);
+      if (count >= 2) {
+        return res.status(403).json({
+          status: 'error',
+          code: 'LIMIT_REACHED',
+          message: 'You have reached the limit of 2 rosters for your subscription tier. Upgrade to Pro for unlimited rosters.'
+        });
+      }
+    }
+
+    const roster = await RosterService.create(req.body, guildId);
     res.status(201).json(roster);
   } catch (error) {
     next(error);

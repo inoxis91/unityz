@@ -1,5 +1,6 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, signal, inject } from '@angular/core';
 import { AuthService } from '../../services/auth';
+import { I18nService } from '../../services/i18n';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
@@ -12,6 +13,7 @@ import { RouterModule } from '@angular/router';
 })
 export class NavbarComponent {
   isMenuOpen = signal(false);
+  public i18n = inject(I18nService);
 
   isAdmin = computed(() => {
     return this.authService.isAdmin();

@@ -41,6 +41,32 @@
   align-items: center;
 }
 
+.nav-lang-selector {
+  display: flex;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 0.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-right: 0.5rem;
+}
+
+.nav-lang-selector button {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.nav-lang-selector button.active {
+  background: #3b82f6;
+  color: #ffffff;
+}
+
 .nav-links a {
   color: #94a3b8;
   text-decoration: none;

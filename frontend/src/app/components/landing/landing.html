@@ -1,0 +1,130 @@
+<div class="landing-container">
+  <!-- Header -->
+  <header class="landing-header">
+    <div class="logo">
+      <span class="logo-symbol">🛡️</span> GuildSaaS <span class="logo-beta">PRO</span>
+    </div>
+    <div class="header-actions">
+      <!-- Lang Selector -->
+      <div class="lang-selector">
+        <button [class.active]="i18n.currentLocale() === 'fr'" (click)="changeLang('fr')">FR</button>
+        <button [class.active]="i18n.currentLocale() === 'en'" (click)="changeLang('en')">EN</button>
+      </div>
+      <button class="btn-login-nav" (click)="login()">{{ i18n.t('nav.login') }}</button>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <h1 class="hero-title">{{ i18n.t('landing.hero.title') }}</h1>
+      <p class="hero-subtitle">{{ i18n.t('landing.hero.subtitle') }}</p>
+      <div class="hero-buttons">
+        <button class="btn-primary" (click)="login()">{{ i18n.t('landing.hero.cta.start') }}</button>
+        <button (click)="scrollToPricing()" class="btn-secondary">{{ i18n.t('landing.hero.cta.demo') }}</button>
+      </div>
+    </div>
+    <div class="hero-glow-sphere"></div>
+  </section>
+
+  <!-- Features Grid -->
+  <section class="features-section">
+    <div class="features-grid">
+      <!-- Sync -->
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>{{ i18n.t('landing.feature.sync.title') }}</h3>
+        <p>{{ i18n.t('landing.feature.sync.desc') }}</p>
+      </div>
+
+      <!-- Rosters -->
+      <div class="feature-card">
+        <div class="feature-icon">👥</div>
+        <h3>{{ i18n.t('landing.feature.roster.title') }}</h3>
+        <p>{{ i18n.t('landing.feature.roster.desc') }}</p>
+      </div>
+
+      <!-- Calendar -->
+      <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <h3>{{ i18n.t('landing.feature.calendar.title') }}</h3>
+        <p>{{ i18n.t('landing.feature.calendar.desc') }}</p>
+      </div>
+
+      <!-- Fees -->
+      <div class="feature-card">
+        <div class="feature-icon">💰</div>
+        <h3>{{ i18n.t('landing.feature.fees.title') }}</h3>
+        <p>{{ i18n.t('landing.feature.fees.desc') }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section id="pricing" class="pricing-section">
+    <h2 class="pricing-title">{{ i18n.t('landing.pricing.title') }}</h2>
+    <p class="pricing-subtitle">{{ i18n.t('landing.pricing.subtitle') }}</p>
+
+    <div class="pricing-cards-grid">
+      <!-- Trial Card -->
+      <div class="pricing-card">
+        <div class="pricing-header">
+          <h3>{{ i18n.t('pricing.plan.free') }}</h3>
+          <div class="price-container">
+            <span class="price-val">0 €</span>
+            <span class="price-period">{{ i18n.t('pricing.period.days') }}</span>
+          </div>
+        </div>
+        <ul class="pricing-features">
+          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.sync') }}</li>
+          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roster_limit') }}</li>
+          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.event_limit') }}</li>
+          <li class="excluded"><span class="cross">❌</span> {{ i18n.t('pricing.feat.discord_no') }}</li>
+        </ul>
+        <button class="btn-pricing-cta" (click)="login()">{{ i18n.t('pricing.cta.free') }}</button>
+      </div>
+
+      <!-- Moyen Card -->
+      <div class="pricing-card">
+        <div class="pricing-header">
+          <h3>{{ i18n.t('pricing.plan.medium') }}</h3>
+          <div class="price-container">
+            <span class="price-val">4.99 €</span>
+            <span class="price-period">{{ i18n.t('pricing.period.months') }}</span>
+          </div>
+        </div>
+        <ul class="pricing-features">
+          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.sync') }}</li>
+          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roster_limit') }}</li>
+          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.event_limit') }}</li>
+          <li class="excluded"><span class="cross">❌</span> {{ i18n.t('pricing.feat.discord_no') }}</li>
+        </ul>
+        <button class="btn-pricing-cta" (click)="login()">{{ i18n.t('pricing.cta.medium') }}</button>
+      </div>
+
+      <!-- Pro Card -->
+      <div class="pricing-card pro-card-highlight">
+        <div class="pro-tag">{{ i18n.t('pricing.popular') }}</div>
+        <div class="pricing-header">
+          <h3>{{ i18n.t('pricing.plan.pro') }}</h3>
+          <div class="price-container">
+            <span class="price-val">9.99 €</span>
+            <span class="price-period">{{ i18n.t('pricing.period.months') }}</span>
+          </div>
+        </div>
+        <ul class="pricing-features">
+          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.sync') }}</li>
+          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roster_unlimited') }}</li>
+          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.event_unlimited') }}</li>
+          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.discord_yes') }}</li>
+        </ul>
+        <button class="btn-pricing-cta btn-pro-cta" (click)="login()">{{ i18n.t('pricing.cta.pro') }}</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="landing-footer">
+    <p>© 2026 GuildSaaS. World of Warcraft, Warcraft and Blizzard Entertainment are trademarks or registered trademarks of Blizzard Entertainment, Inc.</p>
+  </footer>
+</div>

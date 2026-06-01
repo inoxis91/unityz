@@ -13,8 +13,8 @@ import { NavigationEnd } from '@angular/router';
   standalone: true,
   imports: [CommonModule, RouterOutlet, NavbarComponent, ToastComponent, ConfirmComponent],
   template: `
-    <app-navbar *ngIf="!isLoginPage()"></app-navbar>
-    <main [class.login-mode]="isLoginPage()">
+    <app-navbar *ngIf="!isPublicPage()"></app-navbar>
+    <main [class.full-width]="isFullWidthPage()">
       <router-outlet></router-outlet>
     </main>
     <app-toast></app-toast>
@@ -28,7 +28,7 @@ import { NavigationEnd } from '@angular/router';
       min-height: calc(100vh - 80px);
     }
 
-    main.login-mode {
+    main.full-width {
       padding: 0;
       max-width: none;
       margin: 0;
@@ -48,9 +48,14 @@ export class AppComponent {
     { initialValue: '/' }
   );
 
-  isLoginPage = computed(() => {
+  isPublicPage = computed(() => {
     const currentUrl = this.url();
-    return currentUrl.startsWith('/login');
+    return currentUrl === '/' || currentUrl.startsWith('/login');
+  });
+
+  isFullWidthPage = computed(() => {
+    const currentUrl = this.url();
+    return currentUrl === '/' || currentUrl.startsWith('/login') || currentUrl.startsWith('/select-guild') || currentUrl.startsWith('/payment');
   });
 
   title = 'Guilde manager';

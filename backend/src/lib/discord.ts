@@ -28,9 +28,9 @@ export const initDiscord = () => {
   });
 };
 
-export const findMemberByName = async (name: string) => {
+export const findMemberByName = async (name: string, discordGuildId?: string) => {
   try {
-    const guildId = process.env.DISCORD_GUILD_ID;
+    const guildId = discordGuildId || process.env.DISCORD_GUILD_ID;
     if (!guildId) return null;
 
     const guild = await client.guilds.fetch(guildId);
@@ -77,9 +77,9 @@ export const sendDiscordChannelMessage = async (channelId: string, message: stri
   return false;
 };
 
-export const sendFeeDeclarationNotification = async (declaration: any, userDetails: { battletag: string, mainCharacter: string, characters: any[] }) => {
+export const sendFeeDeclarationNotification = async (declaration: any, userDetails: { battletag: string, mainCharacter: string, characters: any[] }, discordFeesChannelId?: string) => {
   try {
-    const channelId = process.env.DISCORD_FEES_CHANNEL_ID;
+    const channelId = discordFeesChannelId || process.env.DISCORD_FEES_CHANNEL_ID;
     if (!channelId) {
       console.warn('DISCORD_FEES_CHANNEL_ID not set, skipping fee notification');
       return false;

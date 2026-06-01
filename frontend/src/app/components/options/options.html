@@ -1,19 +1,19 @@
 <div class="options-container animated-fade-in" *ngIf="authService.currentUser() as user">
   <div class="header-section">
-    <h1>Options & Préférences</h1>
-    <p class="subtitle">Gérez vos personnages et vos paramètres de compte.</p>
+    <h1>{{ i18n.t('nav.options') }}</h1>
+    <p class="subtitle">Gerez vos personnages et vos paramètres de compte.</p>
   </div>
 
   <div class="options-tabs">
     <button [class.active]="activeTab() === 'characters'" (click)="activeTab.set('characters')">
-      🎭 Mes Personnages
+      {{ i18n.t('options.tabs.characters') }}
     </button>
     <button [class.active]="activeTab() === 'settings'" (click)="activeTab.set('settings')">
-      ⚙️ Paramètres Compte
+      {{ i18n.t('options.tabs.settings') }}
     </button>
   </div>
 
-  <div class="setup-warning animated-fade-in" *ngIf="isSetupMode()">
+  <div class="setup-warning animated-fade-in" *ngIf="isSetupMode() && !user.has_characters">
     <div class="warning-content">
       <span class="icon">⚠️</span>
       <div class="text">
@@ -31,28 +31,39 @@
     <section class="settings-grid">
       
       <!-- Discord Card -->
-      <div class="card settings-card discord-highlight" [class.linked]="user.discord_id">
-        <div class="card-icon">📱</div>
-        <div class="card-body">
-          <h3>Lien Discord</h3>
-          
-          <div *ngIf="!user.discord_id">
-            <p>Cliquez sur le bouton ci-dessous pour lier votre compte <strong>Discord</strong>. Cela vous permettra de recevoir des notifications privées automatiquement.</p>
-            <div class="action-box">
-              <button class="btn-discord-login" (click)="linkDiscord()">
-                <span class="icon">💬</span> Se connecter avec Discord
-              </button>
-            </div>
-            <p class="help-text">La liaison est sécurisée et 100% automatique.</p>
-          </div>
+      <div class="card settings-card discord-highlight pro-locked-box-discord" [class.linked]="user.discord_id">
+        <!-- Locked Overlay Banner -->
+        <div class="pro-locked-banner-discord animated-fade-in" *ngIf="!isPro()">
+          <span class="lock-icon-discord">🔒</span>
+          <span class="banner-badge-discord">PRO</span>
+          <h4>{{ i18n.t('options.discord.locked_title') }}</h4>
+          <p>{{ i18n.t('options.discord.locked_desc') }}</p>
+          <button class="btn-upgrade-discord" routerLink="/payment">{{ i18n.t('admin.discord.btn_unlock') }}</button>
+        </div>
 
-          <div *ngIf="user.discord_id" class="linked-success animated-fade-in">
-            <div class="success-header">
-              <span class="status-icon">✅</span>
-              <strong>Compte lié avec succès</strong>
+        <div class="discord-card-content" [class.muted-opacity-discord]="!isPro()">
+          <div class="card-icon">📱</div>
+          <div class="card-body">
+            <h3>{{ i18n.t('options.discord.title') }}</h3>
+            
+            <div *ngIf="!user.discord_id">
+              <p>{{ i18n.t('options.discord.desc') }}</p>
+              <div class="action-box">
+                <button class="btn-discord-login" (click)="linkDiscord()" [disabled]="!isPro()">
+                  <span class="icon">💬</span> {{ i18n.t('options.discord.btn_link') }}
+                </button>
+              </div>
+              <p class="help-text">{{ i18n.t('options.discord.secure') }}</p>
             </div>
-            <p>Votre ID Discord ({{ user.discord_id }}) est enregistré. Vous recevrez désormais vos notifications par MP.</p>
-            <button class="btn-unlink" (click)="authService.updateDiscordId(null).subscribe()">Détacher mon compte</button>
+
+            <div *ngIf="user.discord_id" class="linked-success animated-fade-in">
+              <div class="success-header">
+                <span class="status-icon">✅</span>
+                <strong>{{ i18n.t('options.discord.success_title') }}</strong>
+              </div>
+              <p>{{ i18n.t('options.discord.success_desc') }} (ID: {{ user.discord_id }})</p>
+              <button class="btn-unlink" (click)="authService.updateDiscordId(null).subscribe()" [disabled]="!isPro()">{{ i18n.t('options.discord.btn_unlink') }}</button>
+            </div>
           </div>
         </div>
       </div>
@@ -63,22 +74,55 @@
           <img src="assets/icons/tank.png" class="role-icon-img" alt="Account">
         </div>
         <div class="card-body">
-          <h3>Informations Compte</h3>
+          <h3>{{ i18n.t('options.account.title') }}</h3>
           <div class="info-list">
             <div class="info-item">
-              <span class="label">BattleTag</span>
+              <span class="label">{{ i18n.t('options.account.btag') }}</span>
               <span class="value">{{ user.battletag }}</span>
             </div>
             <div class="info-item">
-              <span class="label">ID Battle.net</span>
+              <span class="label">{{ i18n.t('options.account.bnet_id') }}</span>
               <span class="value">{{ user.bnet_id }}</span>
             </div>
             <div class="info-item">
-              <span class="label">Statut</span>
+              <span class="label">{{ i18n.t('options.account.status') }}</span>
               <span class="value status-badge" [class.admin]="authService.isAdmin()">
                 {{ user.role.toUpperCase() }}
               </span>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Guild Subscription Card -->
+      <div class="card settings-card subscription-highlight">
+        <div class="card-icon">👑</div>
+        <div class="card-body">
+          <h3>{{ i18n.t('options.sub.title') }}</h3>
+          <div class="info-list">
+            <div class="info-item">
+              <span class="label">{{ i18n.t('options.sub.guild') }}</span>
+              <span class="value" style="font-weight: 700;">{{ authService.currentGuild()?.name || 'Aucune' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">{{ i18n.t('options.sub.plan') }}</span>
+              <span class="value tier-badge" [class]="user.subscription_tier || 'none'">
+                {{ getTierLabel(user.subscription_tier) }}
+              </span>
+            </div>
+            <div class="info-item" *ngIf="user.subscription_expires_at">
+              <span class="label">{{ i18n.t('options.sub.expires') }}</span>
+              <span class="value">{{ user.subscription_expires_at | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">{{ i18n.t('options.sub.status') }}</span>
+              <span class="value status-badge-sub" [class.active]="user.active_guild_is_paid" [class.expired]="!user.active_guild_is_paid">
+                {{ user.active_guild_is_paid ? i18n.t('options.sub.status_active') : i18n.t('options.sub.status_expired') }}
+              </span>
+            </div>
+          </div>
+          <div class="action-box-sub" *ngIf="authService.isGMOrOfficer()">
+            <button class="btn-manage-sub" routerLink="/payment">{{ i18n.t('options.sub.btn_manage') }}</button>
           </div>
         </div>
       </div>

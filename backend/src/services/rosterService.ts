@@ -12,9 +12,15 @@ export interface Roster {
 }
 
 export class RosterService {
-  static async getAll(): Promise<Roster[]> {
-    const rostersQuery = 'SELECT * FROM rosters ORDER BY weight ASC, name ASC';
-    const rostersResult = await pool.query(rostersQuery);
+  static async getAll(guildId?: string): Promise<Roster[]> {
+    let rostersQuery = 'SELECT * FROM rosters';
+    const params: any[] = [];
+    if (guildId) {
+      rostersQuery += ' WHERE guild_id = $1';
+      params.push(guildId);
+    }
+    rostersQuery += ' ORDER BY weight ASC, name ASC';
+    const rostersResult = await pool.query(rostersQuery, params);
     const rosters = rostersResult.rows;
 
     for (const roster of rosters) {
@@ -26,19 +32,25 @@ export class RosterService {
     return rosters;
   }
 
-  static async getUnassignedCharacters(): Promise<Character[]> {
-    const query = 'SELECT * FROM characters WHERE roster_id IS NULL ORDER BY name ASC';
-    const result = await pool.query(query);
+  static async getUnassignedCharacters(guildId?: string): Promise<Character[]> {
+    let query = 'SELECT * FROM characters WHERE roster_id IS NULL';
+    const params: any[] = [];
+    if (guildId) {
+      query += ' AND guild_id = $1';
+      params.push(guildId);
+    }
+    query += ' ORDER BY name ASC';
+    const result = await pool.query(query, params);
     return result.rows;
   }
 
-  static async create(data: Partial<Roster>): Promise<Roster> {
+  static async create(data: Partial<Roster>, guildId: string): Promise<Roster> {
     const query = `
-      INSERT INTO rosters (name, description, weight)
-      VALUES ($1, $2, $3)
+      INSERT INTO rosters (name, description, weight, guild_id)
+      VALUES ($1, $2, $3, $4)
       RETURNING *
     `;
-    const result = await pool.query(query, [data.name, data.description, data.weight || 1]);
+    const result = await pool.query(query, [data.name, data.description, data.weight || 1, guildId]);
     return result.rows[0];
   }
 

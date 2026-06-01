@@ -1,10 +1,13 @@
 import express from 'express';
+import pool from '../lib/db';
 import { EventService } from '../services/eventService';
-import { isAuthenticated, canManageEvents } from '../middlewares/auth';
+import { isAuthenticated, canManageEvents, requireActiveGuild, requirePaidGuild } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import { createEventSchema, updateEventSchema, signupSchema, updateSignupGroupSchema, updateGroupsCountSchema } from '../schemas/eventSchemas';
 
 const router = express.Router();
+
+router.use(requireActiveGuild, requirePaidGuild);
 
 // GET /api/events/my-signups : Récupère les inscriptions de l'utilisateur
 router.get('/my-signups', isAuthenticated, async (req, res, next) => {
@@ -19,7 +22,7 @@ router.get('/my-signups', isAuthenticated, async (req, res, next) => {
 // GET /api/events : Récupère tous les événements
 router.get('/', isAuthenticated, async (req, res, next) => {
   try {
-    const events = await EventService.getAll();
+    const events = await EventService.getAll(req.user!.active_guild_id || undefined);
     res.json(events);
   } catch (error) {
     next(error);
@@ -63,7 +66,30 @@ router.get('/:id/signups', isAuthenticated, async (req, res, next) => {
 // POST /api/events : Crée un événement (Admin, Raid Leader, Event Manager)
 router.post('/', canManageEvents, validate(createEventSchema), async (req, res, next) => {
   try {
-    const event = await EventService.create(req.body, req.user!.id);
+    const guildId = req.user!.active_guild_id!;
+    const startTime = req.body.start_time;
+
+    // Check subscription tier limit
+    const guildRes = await pool.query('SELECT subscription_tier FROM guilds WHERE id = $1', [guildId]);
+    const tier = guildRes.rows[0]?.subscription_tier || 'free';
+
+    if (tier === 'free' || tier === 'medium') {
+      const countRes = await pool.query(`
+        SELECT COUNT(*) FROM events 
+        WHERE guild_id = $1 
+          AND DATE_TRUNC('month', start_time) = DATE_TRUNC('month', $2::timestamp)
+      `, [guildId, startTime]);
+      const count = parseInt(countRes.rows[0].count, 10);
+      if (count >= 6) {
+        return res.status(403).json({
+          status: 'error',
+          code: 'LIMIT_REACHED',
+          message: 'You have reached the limit of 6 events per month for your subscription tier. Upgrade to Pro for unlimited events.'
+        });
+      }
+    }
+
+    const event = await EventService.create(req.body, req.user!.id, guildId);
     res.status(201).json(event);
   } catch (error) {
     next(error);

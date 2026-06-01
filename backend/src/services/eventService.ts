@@ -13,6 +13,7 @@ export interface Event {
   roster_name?: string | null;
   roster_weight?: number | null;
   created_by: string;
+  guild_id?: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -44,8 +45,8 @@ export class EventService {
     return result.rows;
   }
 
-  static async getAll(): Promise<Event[]> {
-    const query = `
+  static async getAll(guildId?: string): Promise<Event[]> {
+    let query = `
       SELECT e.id, e.title, e.description, 
              to_char(e.start_time, 'YYYY-MM-DD"T"HH24:MI:SS') as start_time,
              to_char(e.end_time, 'YYYY-MM-DD"T"HH24:MI:SS') as end_time,
@@ -53,9 +54,14 @@ export class EventService {
              r.name as roster_name, r.weight as roster_weight
       FROM events e
       LEFT JOIN rosters r ON e.roster_id = r.id
-      ORDER BY e.start_time ASC
     `;
-    const result = await pool.query(query);
+    const params: any[] = [];
+    if (guildId) {
+      query += ' WHERE e.guild_id = $1';
+      params.push(guildId);
+    }
+    query += ' ORDER BY e.start_time ASC';
+    const result = await pool.query(query, params);
     return result.rows;
   }
 
@@ -64,7 +70,7 @@ export class EventService {
       SELECT e.id, e.title, e.description, 
              to_char(e.start_time, 'YYYY-MM-DD"T"HH24:MI:SS') as start_time,
              to_char(e.end_time, 'YYYY-MM-DD"T"HH24:MI:SS') as end_time,
-             e.type, e.roster_id, e.mm_groups_count, e.created_by,
+             e.type, e.roster_id, e.mm_groups_count, e.created_by, e.guild_id,
              r.name as roster_name, r.weight as roster_weight
       FROM events e
       LEFT JOIN rosters r ON e.roster_id = r.id
@@ -74,10 +80,10 @@ export class EventService {
     return result.rows[0] || null;
   }
 
-  static async create(data: Partial<Event>, userId: string): Promise<Event> {
+  static async create(data: Partial<Event>, userId: string, guildId: string): Promise<Event> {
     const query = `
-      INSERT INTO events (title, description, start_time, end_time, type, roster_id, mm_groups_count, created_by)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      INSERT INTO events (title, description, start_time, end_time, type, roster_id, mm_groups_count, created_by, guild_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING *
     `;
     const result = await pool.query(query, [
@@ -88,7 +94,8 @@ export class EventService {
       data.type, 
       data.roster_id || null, 
       data.mm_groups_count || 0,
-      userId
+      userId,
+      guildId
     ]);
     
     const createdEvent = result.rows[0];
@@ -105,7 +112,17 @@ export class EventService {
   }
 
   static async sendCreationNotification(event: Event): Promise<void> {
-    const channelId = process.env.DISCORD_EVENTS_CHANNEL_ID || '1509267337147056249';
+    if (!event.guild_id) return;
+
+    // Fetch guild Discord settings
+    const guildRes = await pool.query('SELECT discord_enabled, discord_events_channel_id FROM guilds WHERE id = $1', [event.guild_id]);
+    const guild = guildRes.rows[0];
+
+    if (!guild || !guild.discord_enabled || !guild.discord_events_channel_id) {
+      return; // Skip if Discord is disabled or channel not set
+    }
+
+    const channelId = guild.discord_events_channel_id;
     
     const startTime = new Date(event.start_time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     const startDate = new Date(event.start_time).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -283,6 +300,15 @@ export class EventService {
   static async sendManualReminder(eventId: string): Promise<void> {
     const event = await this.getById(eventId);
     if (!event) throw new Error('Event not found');
+    if (!event.guild_id) return;
+
+    // Fetch guild Discord settings
+    const guildRes = await pool.query('SELECT discord_enabled, discord_events_channel_id FROM guilds WHERE id = $1', [event.guild_id]);
+    const guild = guildRes.rows[0];
+
+    if (!guild || !guild.discord_enabled || !guild.discord_events_channel_id) {
+      return; // Skip if Discord disabled or channel not set
+    }
 
     // Récupérer les personnes en "standby" (peut-être) avec leur Discord ID ou BattleTag en secours
     const standbyQuery = `
@@ -296,7 +322,7 @@ export class EventService {
       return `**${r.battletag.split('#')[0]}**`;
     });
 
-    const channelId = process.env.DISCORD_EVENTS_CHANNEL_ID || '1509267337147056249';
+    const channelId = guild.discord_events_channel_id;
     let message = this.formatReminderMessage(event, true, mentions);
     
     if (mentions.length === 0) {
@@ -310,25 +336,44 @@ export class EventService {
     const events = await this.getEventsForDate(date);
     if (events.length === 0) return;
 
-    const channelId = process.env.DISCORD_EVENTS_CHANNEL_ID || '1509267337147056249';
-    let fullMessage = '📅 **ÉVÉNEMENTS DU JOUR**\n';
-    fullMessage += '------------------------------------------\n';
-
+    // Group events by guild_id to send isolated reminders per guild
+    const eventsByGuild: Record<string, Event[]> = {};
     for (const event of events) {
-      const standbyQuery = `
-        SELECT u.discord_id, u.battletag FROM users u
-        JOIN event_signups s ON u.id = s.user_id
-        WHERE s.event_id = $1 AND s.status = 'standby'
-      `;
-      const standbyRes = await pool.query(standbyQuery, [event.id]);
-      const mentions = standbyRes.rows.map(r => {
-        if (r.discord_id) return `<@${r.discord_id}>`;
-        return `**${r.battletag.split('#')[0]}**`;
-      });
-
-      fullMessage += `\n${this.formatReminderMessage(event, false, mentions)}`;
+      if (event.guild_id) {
+        if (!eventsByGuild[event.guild_id]) {
+          eventsByGuild[event.guild_id] = [];
+        }
+        eventsByGuild[event.guild_id].push(event);
+      }
     }
 
-    await sendDiscordChannelMessage(channelId, fullMessage);
+    for (const [guildId, guildEvents] of Object.entries(eventsByGuild)) {
+      const guildRes = await pool.query('SELECT discord_enabled, discord_events_channel_id FROM guilds WHERE id = $1', [guildId]);
+      const guild = guildRes.rows[0];
+
+      if (!guild || !guild.discord_enabled || !guild.discord_events_channel_id) {
+        continue; // Skip guild if Discord is disabled or channel not set
+      }
+
+      let fullMessage = '📅 **ÉVÉNEMENTS DU JOUR**\n';
+      fullMessage += '------------------------------------------\n';
+
+      for (const event of guildEvents) {
+        const standbyQuery = `
+          SELECT u.discord_id, u.battletag FROM users u
+          JOIN event_signups s ON u.id = s.user_id
+          WHERE s.event_id = $1 AND s.status = 'standby'
+        `;
+        const standbyRes = await pool.query(standbyQuery, [event.id]);
+        const mentions = standbyRes.rows.map(r => {
+          if (r.discord_id) return `<@${r.discord_id}>`;
+          return `**${r.battletag.split('#')[0]}**`;
+        });
+
+        fullMessage += `\n${this.formatReminderMessage(event, false, mentions)}`;
+      }
+
+      await sendDiscordChannelMessage(guild.discord_events_channel_id, fullMessage);
+    }
   }
 }

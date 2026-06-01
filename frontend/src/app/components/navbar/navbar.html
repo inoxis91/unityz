@@ -1,7 +1,7 @@
 <nav class="navbar" [class.menu-open]="isMenuOpen()">
   <div class="navbar-container">
-    <div class="navbar-brand" routerLink="/" (click)="closeMenu()">
-      Unity'Z
+    <div class="navbar-brand" [routerLink]="authService.currentUser() ? '/dashboard' : '/'" (click)="closeMenu()">
+      {{ authService.currentGuild() ? authService.currentGuild().name : 'Guild manager' }}
     </div>
 
     <!-- Burger Menu Button -->
@@ -12,13 +12,19 @@
     </button>
 
     <div class="nav-links" [class.active]="isMenuOpen()">
+      <!-- Lang Selector -->
+      <div class="nav-lang-selector">
+        <button [class.active]="i18n.currentLocale() === 'fr'" (click)="i18n.setLocale('fr')">FR</button>
+        <button [class.active]="i18n.currentLocale() === 'en'" (click)="i18n.setLocale('en')">EN</button>
+      </div>
+
       @if (authService.currentUser(); as user) {
-        <a *ngIf="user.has_characters" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMenu()">Dashboard</a>
-        <a *ngIf="user.has_characters" routerLink="/calendar" routerLinkActive="active" (click)="closeMenu()">Calendrier</a>
-        <a *ngIf="user.has_characters" routerLink="/fees" routerLinkActive="active" (click)="closeMenu()">Cotisations</a>
-        <a routerLink="/options" routerLinkActive="active" (click)="closeMenu()">Options</a>
-        <a routerLink="/admin" routerLinkActive="active" *ngIf="user.has_characters && authService.canAccessAdmin()" (click)="closeMenu()">Admin</a>
-        <button (click)="logout()" class="btn-logout">Déconnexion</button>
+        <a *ngIf="user.has_characters && user.active_guild_id && user.active_guild_is_paid" routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMenu()">{{ i18n.t('nav.dashboard') }}</a>
+        <a *ngIf="user.has_characters && user.active_guild_id && user.active_guild_is_paid" routerLink="/calendar" routerLinkActive="active" (click)="closeMenu()">{{ i18n.t('nav.calendar') }}</a>
+        <a *ngIf="user.has_characters && user.active_guild_id && user.active_guild_is_paid && user.active_guild_fees_enabled" routerLink="/fees" routerLinkActive="active" (click)="closeMenu()">{{ i18n.t('nav.fees') }}</a>
+        <a *ngIf="user.has_characters && user.active_guild_id && user.active_guild_is_paid" routerLink="/options" routerLinkActive="active" (click)="closeMenu()">{{ i18n.t('nav.options') }}</a>
+        <a routerLink="/admin" routerLinkActive="active" *ngIf="user.has_characters && user.active_guild_id && user.active_guild_is_paid && authService.canAccessAdmin()" (click)="closeMenu()">{{ i18n.t('nav.admin') }}</a>
+        <button (click)="logout()" class="btn-logout">{{ i18n.t('nav.logout') }}</button>
       }
     </div>
   </div>

@@ -14,6 +14,11 @@ export interface Character {
   is_dps?: boolean;
   is_main?: boolean;
   rio_score?: number; // Score live non stocké en BDD
+  guild?: {
+    id: number;
+    name: string;
+    realm: string;
+  } | null;
 }
 
 import { environment } from '../../environments/environment';

@@ -1,10 +1,12 @@
 import express from 'express';
 import { FeeService } from '../services/feeService';
-import { isAuthenticated, canManageFees } from '../middlewares/auth';
+import { isAuthenticated, canManageFees, requireActiveGuild, requirePaidGuild } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import { createDeclarationSchema, resolveDeclarationSchema, adjustAllocationSchema } from '../schemas/feeSchemas';
 
 const router = express.Router();
+
+router.use(requireActiveGuild, requirePaidGuild);
 
 // GET /api/fees/my-declarations : Récupère les déclarations de l'utilisateur
 router.get('/my-declarations', isAuthenticated, async (req, res, next) => {
@@ -30,7 +32,7 @@ router.get('/my-allocations/:year', isAuthenticated, async (req, res, next) => {
 // POST /api/fees/declare : Déclarer un nouveau paiement
 router.post('/declare', isAuthenticated, validate(createDeclarationSchema), async (req, res, next) => {
   try {
-    const declaration = await FeeService.declarePayment(req.user!.id, req.body);
+    const declaration = await FeeService.declarePayment(req.user!.id, req.body, req.user!.active_guild_id!);
     res.status(201).json(declaration);
   } catch (error) {
     next(error);
@@ -40,7 +42,7 @@ router.post('/declare', isAuthenticated, validate(createDeclarationSchema), asyn
 // GET /api/fees/pending : Liste des déclarations à valider (Admin, Trésorier)
 router.get('/pending', canManageFees, async (req, res, next) => {
   try {
-    const pending = await FeeService.getPendingDeclarations();
+    const pending = await FeeService.getPendingDeclarations(req.user!.active_guild_id || undefined);
     res.json(pending);
   } catch (error) {
     next(error);
@@ -51,7 +53,7 @@ router.get('/pending', canManageFees, async (req, res, next) => {
 router.get('/guild-overview/:year', canManageFees, async (req, res, next) => {
   try {
     const year = req.params.year as string;
-    const overview = await FeeService.getGuildOverview(parseInt(year));
+    const overview = await FeeService.getGuildOverview(parseInt(year), req.user!.active_guild_id || undefined);
     res.json(overview);
   } catch (error) {
     next(error);
@@ -73,7 +75,7 @@ router.patch('/resolve/:id', canManageFees, validate(resolveDeclarationSchema), 
 router.post('/adjust-allocation', canManageFees, validate(adjustAllocationSchema), async (req, res, next) => {
   try {
     const { userId, monthDate, amount } = req.body;
-    await FeeService.upsertAllocation(userId, monthDate, amount);
+    await FeeService.upsertAllocation(userId, monthDate, amount, req.user!.active_guild_id!);
     res.json({ status: 'success', message: 'Allocation adjusted successfully' });
   } catch (error) {
     next(error);

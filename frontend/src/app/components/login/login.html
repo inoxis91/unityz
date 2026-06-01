@@ -1,13 +1,13 @@
 <div class="login-page">
   <div class="login-card">
     <div class="logo-container">
-      <h1 class="guild-name">Unity'Z</h1>
-      <p class="guild-subtitle">Gestion de Guilde WoW</p>
+      <h1 class="guild-name">{{ i18n.t('login.title') }}</h1>
+      <p class="guild-subtitle">{{ i18n.t('login.subtitle') }}</p>
     </div>
 
     <div class="content-section" *ngIf="!authService.currentUser()">
       <p class="description">
-        Connectez-vous pour accéder au calendrier des raids, gérer vos personnages et suivre vos performances.
+        {{ i18n.t('login.desc') }}
       </p>
       
       <button (click)="login()" class="btn-bnet" [disabled]="isLoading()">
@@ -15,20 +15,58 @@
           <svg class="bnet-icon" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2zm-1.5 5v10h1.5l1.5-5.5L15 17h1.5V7H15l-1.5 5.5L12 7h-1.5z"/>
           </svg>
-          <span>Se connecter avec Battle.net</span>
+          <span>{{ i18n.t('login.btn_bnet') }}</span>
         </ng-container>
         <ng-container *ngIf="isLoading()">
           <span class="loader"></span>
-          <span>Redirection vers Battle.net...</span>
+          <span>{{ i18n.t('login.redirecting') }}</span>
         </ng-container>
       </button>
+
+      <!-- Mock Login Section for Development -->
+      <div class="mock-login-section animated-fade-in" *ngIf="!isProd">
+        <div class="divider">
+          <span>{{ i18n.t('login.mock_or') }}</span>
+        </div>
+        
+        <p class="mock-desc">{{ i18n.t('login.mock_desc') }}</p>
+        
+        <div class="form-group-mock">
+          <select [ngModel]="selectedMockUser()" (ngModelChange)="selectedMockUser.set($event)" class="mock-select">
+            <option *ngFor="let user of mockUsers()" [value]="user.id">{{ user.label }}</option>
+          </select>
+        </div>
+
+        <button (click)="onMockLogin()" class="btn-mock-login" [disabled]="isLoading()">
+          <span *ngIf="!isLoading()">⚡ {{ i18n.t('login.mock_btn') }}</span>
+          <span *ngIf="isLoading()" class="loader"></span>
+        </button>
+      </div>
     </div>
 
-    <div class="logged-in-section" *ngIf="authService.currentUser()">
+    <div class="logged-in-section" *ngIf="authService.currentUser() as user">
       <p class="welcome-text">
-        Bonjour <span class="battletag">{{ authService.currentUser()?.battletag }}</span> !
+        {{ i18n.t('login.welcome') }} <span class="battletag">{{ user.battletag }}</span> !
       </p>
-      <a routerLink="/" class="btn-dashboard">Accéder au Tableau de Bord</a>
+      
+      <!-- Option 1: Onboarding complete -->
+      <a routerLink="/" class="btn-dashboard" *ngIf="user.active_guild_id && user.has_characters">
+        {{ i18n.t('login.btn_dashboard') }}
+      </a>
+
+      <!-- Option 2: Onboarding incomplete (Half-connected state) -->
+      <div class="incomplete-onboarding-box animated-fade-in" *ngIf="!user.active_guild_id || !user.has_characters">
+        <h4 class="incomplete-title">{{ i18n.t('login.incomplete_title') }}</h4>
+        <p class="incomplete-desc">{{ i18n.t('login.incomplete_desc') }}</p>
+        <a routerLink="/select-guild" class="btn-resume-onboarding">
+          {{ i18n.t('login.btn_resume') }}
+        </a>
+      </div>
+
+      <!-- Disconnect Action (Always visible on logged in section) -->
+      <button (click)="authService.logout()" class="btn-logout-login">
+        {{ i18n.t('login.btn_logout_alt') }}
+      </button>
     </div>
   </div>
 </div>

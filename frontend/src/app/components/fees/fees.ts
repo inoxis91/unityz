@@ -25,6 +25,8 @@ export class FeesComponent implements OnInit {
   selectedMonthName = '';
   discordId = '';
 
+  minimumFee = computed(() => this.authService.currentUser()?.active_guild_minimum_fee_amount ?? 2000);
+
   // Form
   newDeclaration = {
     amount: 2000,
@@ -41,6 +43,7 @@ export class FeesComponent implements OnInit {
 
   ngOnInit() {
     this.loadData();
+    this.newDeclaration.amount = this.minimumFee();
   }
 
   loadData() {
@@ -91,11 +94,11 @@ export class FeesComponent implements OnInit {
     const alloc = this.feeService.myAllocations().find(a => a.month_date.startsWith(dateStr.substring(0, 7)));
     
     if (!alloc) return { class: 'none', label: '0 PO', icon: '⭕' };
-    if (alloc.amount >= 2000) {
+    if (alloc.amount >= this.minimumFee()) {
       return { 
-        class: alloc.amount > 2000 ? 'donation' : 'paid', 
+        class: alloc.amount > this.minimumFee() ? 'donation' : 'paid', 
         label: `${alloc.amount} PO`, 
-        icon: alloc.amount > 2000 ? '⭐' : '✅' 
+        icon: alloc.amount > this.minimumFee() ? '⭐' : '✅' 
       };
     }
     return { class: 'partial', label: `${alloc.amount} PO`, icon: '⚠️' };
@@ -107,7 +110,7 @@ export class FeesComponent implements OnInit {
         this.loadData();
         this.showForm.set(false);
         this.newDeclaration = {
-          amount: 2000,
+          amount: this.minimumFee(),
           start_month: '',
           duration_months: 1,
           comment: ''

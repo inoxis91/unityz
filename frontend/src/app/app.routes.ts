@@ -1,5 +1,8 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './components/login/login';
+import { LandingComponent } from './components/landing/landing';
+import { SelectGuildComponent } from './components/select-guild/select-guild';
+import { PaymentComponent } from './components/payment/payment';
 import { DashboardComponent } from './components/dashboard/dashboard';
 import { OptionsComponent } from './components/options/options';
 import { CalendarComponent } from './components/calendar/calendar';
@@ -10,12 +13,23 @@ import { adminGuard } from './guards/admin.guard';
 import { FeesComponent } from './components/fees/fees';
 
 export const routes: Routes = [
+  { path: '', component: LandingComponent },
+  { path: 'login', component: LoginComponent },
   { 
-    path: '', 
+    path: 'select-guild', 
+    component: SelectGuildComponent, 
+    canActivate: [authGuard] 
+  },
+  { 
+    path: 'payment', 
+    component: PaymentComponent, 
+    canActivate: [authGuard] 
+  },
+  { 
+    path: 'dashboard', 
     component: DashboardComponent, 
     canActivate: [authGuard] 
   },
-  { path: 'login', component: LoginComponent },
   { 
     path: 'options', 
     component: OptionsComponent, 
@@ -39,7 +53,7 @@ export const routes: Routes = [
   { 
     path: 'admin', 
     component: AdminComponent, 
-    canActivate: [adminGuard] 
+    canActivate: [authGuard, adminGuard] 
   },
   { path: '**', redirectTo: '' }
 ];

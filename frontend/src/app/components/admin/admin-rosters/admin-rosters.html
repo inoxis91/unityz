@@ -1,7 +1,19 @@
 <div class="roster-manager">
   <div class="header">
     <h2>Gestion des Rosters</h2>
-    <button class="btn-primary" (click)="showCreateModal.set(true)">+ Nouveau Roster</button>
+    <button class="btn-primary" [disabled]="limitReached()" [title]="limitReached() ? 'Limite de rosters atteinte pour votre forfait' : 'Créer un roster'" (click)="showCreateModal.set(true)">
+      + Nouveau Roster
+    </button>
+  </div>
+
+  <!-- Quota Limit Notice -->
+  <div class="quota-locked-notice animated-fade-in" *ngIf="limitReached()">
+    <span class="notice-icon">⚠️</span>
+    <div class="notice-text">
+      <strong>Limite de 2 rosters atteinte</strong>
+      <p>Votre guilde a atteint le quota maximum de rosters autorisé pour votre forfait. Pour créer des rosters illimités, mettez à niveau vers le forfait <strong>Pro</strong>.</p>
+    </div>
+    <button class="btn-upgrade-mini" routerLink="/payment">Devenir Pro 🚀</button>
   </div>
 
   <div class="manager-layout" cdkDropListGroup>

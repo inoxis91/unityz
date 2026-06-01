@@ -32,6 +32,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   mainCharacter = computed(() => this.myCharacters().find(c => c.is_main));
 
   // Computed summary for next 3 months
+  minimumFee = computed(() => this.authService.currentUser()?.active_guild_minimum_fee_amount ?? 2000);
+
   feeSummary = computed(() => {
     const months: { name: string, status: any }[] = [];
     const now = new Date();
@@ -50,10 +52,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       
       let status = { class: 'none', icon: '⭕', label: '0 PO' };
       if (alloc) {
-        if (alloc.amount >= 2000) {
+        if (alloc.amount >= this.minimumFee()) {
           status = { 
-            class: alloc.amount > 2000 ? 'donation' : 'paid', 
-            icon: alloc.amount > 2000 ? '⭐' : '✅',
+            class: alloc.amount > this.minimumFee() ? 'donation' : 'paid', 
+            icon: alloc.amount > this.minimumFee() ? '⭐' : '✅',
             label: `${alloc.amount} PO`
           };
         } else {

@@ -22,32 +22,38 @@ export interface FeeAllocation {
 }
 
 export class FeeService {
-  static async declarePayment(userId: string, data: any): Promise<FeeDeclaration> {
+  static async declarePayment(userId: string, data: any, guildId: string): Promise<FeeDeclaration> {
     const query = `
-      INSERT INTO fee_declarations (user_id, amount, start_month, duration_months, comment)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO fee_declarations (user_id, amount, start_month, duration_months, comment, guild_id)
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *
     `;
-    const result = await pool.query(query, [userId, data.amount, data.start_month, data.duration_months, data.comment]);
+    const result = await pool.query(query, [userId, data.amount, data.start_month, data.duration_months, data.comment, guildId]);
     const declaration = result.rows[0];
 
-    // Fetch user info and characters for notification
-    const userQuery = `
-      SELECT u.battletag,
-             (SELECT name FROM characters WHERE user_id = u.id AND is_main = true LIMIT 1) as main_character,
-             (SELECT json_agg(json_build_object('name', name, 'realm', realm, 'class', class, 'is_main', is_main)) FROM characters WHERE user_id = u.id) as characters
-      FROM users u
-      WHERE u.id = $1
-    `;
-    const userResult = await pool.query(userQuery, [userId]);
-    const userInfo = userResult.rows[0];
+    // Fetch guild Discord settings
+    const guildRes = await pool.query('SELECT discord_enabled, discord_fees_channel_id FROM guilds WHERE id = $1', [guildId]);
+    const guildSettings = guildRes.rows[0];
 
-    if (userInfo) {
-      await sendFeeDeclarationNotification(declaration, {
-        battletag: userInfo.battletag,
-        mainCharacter: userInfo.main_character,
-        characters: userInfo.characters || []
-      });
+    if (guildSettings && guildSettings.discord_enabled && guildSettings.discord_fees_channel_id) {
+      // Fetch user info and characters for notification
+      const userQuery = `
+        SELECT u.battletag,
+               (SELECT name FROM characters WHERE user_id = u.id AND is_main = true LIMIT 1) as main_character,
+               (SELECT json_agg(json_build_object('name', name, 'realm', realm, 'class', class, 'is_main', is_main)) FROM characters WHERE user_id = u.id) as characters
+        FROM users u
+        WHERE u.id = $1
+      `;
+      const userResult = await pool.query(userQuery, [userId]);
+      const userInfo = userResult.rows[0];
+
+      if (userInfo) {
+        await sendFeeDeclarationNotification(declaration, {
+          battletag: userInfo.battletag,
+          mainCharacter: userInfo.main_character,
+          characters: userInfo.characters || []
+        }, guildSettings.discord_fees_channel_id);
+      }
     }
 
     return declaration;
@@ -70,32 +76,54 @@ export class FeeService {
     return result.rows;
   }
 
-  static async getPendingDeclarations(): Promise<FeeDeclaration[]> {
-    const query = `
+  static async getPendingDeclarations(guildId?: string): Promise<FeeDeclaration[]> {
+    let query = `
       SELECT fd.*, u.battletag,
              (SELECT name FROM characters WHERE user_id = fd.user_id AND is_main = true LIMIT 1) as main_character,
              (SELECT json_agg(json_build_object('name', name, 'realm', realm, 'class', class, 'is_main', is_main)) FROM characters WHERE user_id = fd.user_id) as characters
       FROM fee_declarations fd
       JOIN users u ON fd.user_id = u.id
-      WHERE fd.status = 'pending'
-      ORDER BY fd.created_at ASC
     `;
-    const result = await pool.query(query);
+    const params: any[] = [];
+    if (guildId) {
+      query += ' WHERE fd.guild_id = $1 AND fd.status = \'pending\'';
+      params.push(guildId);
+    } else {
+      query += ' WHERE fd.status = \'pending\'';
+    }
+    query += ' ORDER BY fd.created_at ASC';
+    const result = await pool.query(query, params);
     return result.rows;
   }
 
-  static async getGuildOverview(year: number): Promise<any[]> {
+  static async getGuildOverview(year: number, guildId?: string): Promise<any[]> {
+    if (!guildId) {
+      const query = `
+        SELECT u.id as user_id, u.battletag, 
+               (SELECT name FROM characters WHERE user_id = u.id AND is_main = true LIMIT 1) as main_character,
+               (SELECT json_agg(json_build_object('name', name, 'realm', realm, 'class', class, 'is_main', is_main)) FROM characters WHERE user_id = u.id) as characters,
+               JSON_AGG(json_build_object('month', month_date, 'amount', amount)) as allocations
+        FROM users u
+        LEFT JOIN fee_allocations fa ON u.id = fa.user_id AND EXTRACT(YEAR FROM fa.month_date) = $1
+        GROUP BY u.id, u.battletag
+        ORDER BY u.battletag ASC
+      `;
+      const result = await pool.query(query, [year]);
+      return result.rows;
+    }
+
     const query = `
       SELECT u.id as user_id, u.battletag, 
-             (SELECT name FROM characters WHERE user_id = u.id AND is_main = true LIMIT 1) as main_character,
-             (SELECT json_agg(json_build_object('name', name, 'realm', realm, 'class', class, 'is_main', is_main)) FROM characters WHERE user_id = u.id) as characters,
-             JSON_AGG(json_build_object('month', month_date, 'amount', amount)) as allocations
+             (SELECT name FROM characters WHERE user_id = u.id AND is_main = true AND guild_id = $2 LIMIT 1) as main_character,
+             (SELECT json_agg(json_build_object('name', name, 'realm', realm, 'class', class, 'is_main', is_main)) FROM characters WHERE user_id = u.id AND guild_id = $2) as characters,
+             JSON_AGG(json_build_object('month', fa.month_date, 'amount', fa.amount)) FILTER (WHERE fa.month_date IS NOT NULL) as allocations
       FROM users u
-      LEFT JOIN fee_allocations fa ON u.id = fa.user_id AND EXTRACT(YEAR FROM fa.month_date) = $1
+      JOIN characters c ON u.id = c.user_id AND c.guild_id = $2
+      LEFT JOIN fee_allocations fa ON u.id = fa.user_id AND EXTRACT(YEAR FROM fa.month_date) = $1 AND fa.guild_id = $2
       GROUP BY u.id, u.battletag
       ORDER BY u.battletag ASC
     `;
-    const result = await pool.query(query, [year]);
+    const result = await pool.query(query, [year, guildId]);
     return result.rows;
   }
 
@@ -135,14 +163,14 @@ export class FeeService {
           const monthStr = allocDate.toISOString().split('T')[0];
 
           const allocQuery = `
-            INSERT INTO fee_allocations (user_id, month_date, amount)
-            VALUES ($1, $2, $3)
-            ON CONFLICT (user_id, month_date) 
+            INSERT INTO fee_allocations (user_id, month_date, amount, guild_id)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (user_id, month_date, guild_id) 
             DO UPDATE SET 
               amount = fee_allocations.amount + EXCLUDED.amount,
               updated_at = CURRENT_TIMESTAMP
           `;
-          await client.query(allocQuery, [decl.user_id, monthStr, monthlyAmount]);
+          await client.query(allocQuery, [decl.user_id, monthStr, monthlyAmount, decl.guild_id]);
         }
       }
 
@@ -166,15 +194,15 @@ export class FeeService {
     }
   }
 
-  static async upsertAllocation(userId: string, monthDate: string, amount: number): Promise<void> {
+  static async upsertAllocation(userId: string, monthDate: string, amount: number, guildId: string): Promise<void> {
     const query = `
-      INSERT INTO fee_allocations (user_id, month_date, amount)
-      VALUES ($1, $2, $3)
-      ON CONFLICT (user_id, month_date) 
+      INSERT INTO fee_allocations (user_id, month_date, amount, guild_id)
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT (user_id, month_date, guild_id) 
       DO UPDATE SET 
         amount = EXCLUDED.amount,
         updated_at = CURRENT_TIMESTAMP
     `;
-    await pool.query(query, [userId, monthDate, amount]);
+    await pool.query(query, [userId, monthDate, amount, guildId]);
   }
 }

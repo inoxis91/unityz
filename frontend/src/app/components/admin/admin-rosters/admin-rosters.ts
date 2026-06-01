@@ -1,6 +1,7 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { 
   CdkDragDrop, 
   moveItemInArray, 
@@ -13,11 +14,12 @@ import { RosterService, Roster } from '../../../services/roster';
 import { CharacterService, Character } from '../../../services/character';
 import { ConfirmService } from '../../../services/confirm';
 import { ToastService } from '../../../services/toast';
+import { AuthService } from '../../../services/auth';
 
 @Component({
   selector: 'app-admin-rosters',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule],
+  imports: [CommonModule, FormsModule, DragDropModule, RouterModule],
   templateUrl: './admin-rosters.html',
   styleUrl: './admin-rosters.css'
 })
@@ -28,6 +30,10 @@ export class AdminRostersComponent implements OnInit {
   // Modal for editing
   showEditModal = signal(false);
   editingRoster: Roster | null = null;
+
+  public authService = inject(AuthService);
+  isPro = computed(() => this.authService.currentUser()?.subscription_tier === 'pro');
+  limitReached = computed(() => !this.isPro() && this.rosterService.rosters().length >= 2);
 
   constructor(
     public rosterService: RosterService,
