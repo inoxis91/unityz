@@ -316,18 +316,23 @@ router.post('/webhook', async (req, res) => {
         const subscriptionObj = subscription as unknown as { current_period_end: number | undefined };
         const periodEnd = subscriptionObj?.current_period_end;
 
-        let expiresAt: Date;
-        if (periodEnd && !isNaN(Number(periodEnd))) {
-          expiresAt = new Date(Number(periodEnd) * 1000);
-        } else {
-          expiresAt = new Date();
-          expiresAt.setMonth(expiresAt.getMonth() + 1);
-        }
-
+        let expiresAt: Date | null = null;
         let tier = 'none';
+
         if (status === 'active' || status === 'trialing') {
           const guildRes = await pool.query('SELECT subscription_tier FROM guilds WHERE stripe_subscription_id = $1', [stripeSubscriptionId]);
           tier = guildRes.rows[0]?.subscription_tier || 'medium';
+
+          if (periodEnd && !isNaN(Number(periodEnd))) {
+            expiresAt = new Date(Number(periodEnd) * 1000);
+          } else {
+            expiresAt = new Date();
+            expiresAt.setMonth(expiresAt.getMonth() + 1);
+          }
+        } else {
+          // If canceled, unpaid, past_due, or fully deleted: immediately revoke access and nullify expiration date
+          tier = 'none';
+          expiresAt = null;
         }
 
         await pool.query(
@@ -337,9 +342,9 @@ router.post('/webhook', async (req, res) => {
                subscription_tier = $3,
                updated_at = CURRENT_TIMESTAMP
            WHERE stripe_subscription_id = $4`,
-          [status, expiresAt, status === 'active' || status === 'trialing' ? tier : 'none', stripeSubscriptionId]
+          [status, expiresAt, tier, stripeSubscriptionId]
         );
-        console.log(`[Stripe Webhook] Subscription ${stripeSubscriptionId} status updated to ${status}.`);
+        console.log(`[Stripe Webhook] Subscription ${stripeSubscriptionId} status updated to ${status}. Tier: ${tier}.`);
         break;
       }
 
