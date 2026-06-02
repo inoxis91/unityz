@@ -11,4 +11,4 @@ Disallow: /fees
 Disallow: /events
 Disallow: /admin
 
-Sitemap: https://unityz.up.railway.app/sitemap.xml
+Sitemap: https://guild-manager.com/sitemap.xml

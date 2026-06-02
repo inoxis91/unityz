@@ -10,7 +10,7 @@ export class SeoService {
   generateTags(config: { title?: string; description?: string; keywords?: string; image?: string }) {
     const defaultTitle = "Guild Manager - Logiciel de gestion de guilde WoW SaaS";
     const defaultDesc = "La plateforme SaaS ultime pour gérer votre guilde World of Warcraft. Synchronisation Battle.net, rosters dynamiques, calendrier de raids et gestion des cotisations.";
-    const defaultImage = "https://unityz.up.railway.app/favicon.ico";
+    const defaultImage = "https://guild-manager.com/favicon.ico";
     
     const title = config.title ? `${config.title} | Guild Manager` : defaultTitle;
     const description = config.description || defaultDesc;
