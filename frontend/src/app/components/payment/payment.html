@@ -27,13 +27,13 @@
               <span class="plan-price">0 €<span class="price-period">{{ i18n.t('pricing.period.days') }}</span></span>
             </div>
             <ul class="plan-features">
-              <li>✨ {{ i18n.t('pricing.feat.sync') }}</li>
-              <li>📊 {{ i18n.t('pricing.feat.dashboard') }}</li>
-              <li>⚔️ {{ i18n.t('pricing.feat.charspec') }}</li>
-              <li>👑 {{ i18n.t('pricing.feat.roles') }}</li>
+              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.sync') }}</li>
+              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.dashboard') }}</li>
+              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.charspec') }}</li>
+              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roles') }}</li>
               <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.free_roster_limit') }}</li>
               <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.free_event_limit') }}</li>
-              <li class="excluded">❌ {{ i18n.t('pricing.feat.discord_no') }}</li>
+              <li class="excluded"><span class="cross">❌</span> {{ i18n.t('pricing.feat.discord_no') }}</li>
               <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.fees_basic') }}</li>
             </ul>
           </div>
@@ -51,13 +51,13 @@
             </div>
             <div class="commitment-badge-small">{{ i18n.t('pricing.commitment_free') }}</div>
             <ul class="plan-features">
-              <li>✨ {{ i18n.t('pricing.feat.sync') }}</li>
-              <li>📊 {{ i18n.t('pricing.feat.dashboard') }}</li>
-              <li>⚔️ {{ i18n.t('pricing.feat.charspec') }}</li>
-              <li>👑 {{ i18n.t('pricing.feat.roles') }}</li>
+              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.sync') }}</li>
+              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.dashboard') }}</li>
+              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.charspec') }}</li>
+              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roles') }}</li>
               <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.roster_limit') }}</li>
               <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.event_limit') }}</li>
-              <li class="excluded">❌ {{ i18n.t('pricing.feat.discord_no') }}</li>
+              <li class="excluded"><span class="cross">❌</span> {{ i18n.t('pricing.feat.discord_no') }}</li>
               <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.fees_basic') }}</li>
             </ul>
           </div>
@@ -76,14 +76,14 @@
             </div>
             <div class="commitment-badge-small">{{ i18n.t('pricing.commitment_free') }}</div>
             <ul class="plan-features">
-              <li>✨ {{ i18n.t('pricing.feat.sync') }}</li>
-              <li>📊 {{ i18n.t('pricing.feat.dashboard') }}</li>
-              <li>⚔️ {{ i18n.t('pricing.feat.charspec') }}</li>
-              <li>👑 {{ i18n.t('pricing.feat.roles') }}</li>
-              <li>👥 {{ i18n.t('pricing.feat.roster_unlimited') }}</li>
-              <li>📅 {{ i18n.t('pricing.feat.event_unlimited') }}</li>
-              <li>💬 {{ i18n.t('pricing.feat.discord_yes') }}</li>
-              <li>💰 {{ i18n.t('pricing.feat.fees_pro') }}</li>
+              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.sync') }}</li>
+              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.dashboard') }}</li>
+              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.charspec') }}</li>
+              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roles') }}</li>
+              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roster_unlimited') }}</li>
+              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.event_unlimited') }}</li>
+              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.discord_yes') }}</li>
+              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.fees_pro') }}</li>
             </ul>
           </div>
         </div>
@@ -105,26 +105,31 @@
         <strong *ngIf="selectedTier() === 'free'" style="color: #10b981;">0.00 €</strong>
       </div>
 
-      <!-- Stripe simulated inputs - only for paid plans -->
-      <div class="stripe-fields" *ngIf="selectedTier() !== 'free'">
-        <div class="form-group">
-          <label>{{ i18n.t('payment.card_number') }}</label>
-          <div class="input-mimic">
-            <span>💳</span>
-            <input type="text" [placeholder]="i18n.t('payment.card_placeholder')" disabled />
-            <span class="secure-lock">🔒</span>
+      <!-- Stripe redirect info - only for paid plans -->
+      <div class="stripe-redirect-info-box" *ngIf="selectedTier() !== 'free'">
+        <div class="secure-checkout-badge">
+          <span class="secure-icon">🔒</span>
+          <span>Paiement 100% Sécurisé via Stripe</span>
+        </div>
+        
+        <div class="plan-summary-list">
+          <div class="summary-item">
+            <span class="label">Abonnement choisi :</span>
+            <span class="value highlighting">{{ selectedTier() === 'pro' ? 'Pro' : 'Standard' }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Facturation :</span>
+            <span class="value">Mensuelle (sans engagement)</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Prochain prélèvement :</span>
+            <span class="value">Dans 1 mois</span>
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group half">
-            <label>MM / YY</label>
-            <div class="input-mimic"><input type="text" placeholder="12 / 29" disabled /></div>
-          </div>
-          <div class="form-group half">
-            <label>CVC</label>
-            <div class="input-mimic"><input type="text" placeholder="123" disabled /></div>
-          </div>
+        <div class="redirect-hint">
+          <span class="info-bubble">ℹ️</span>
+          <p>Vous allez être redirigé vers la plateforme sécurisée de <strong>Stripe</strong> pour finaliser votre transaction. Aucun numéro de carte n'est saisi sur notre site.</p>
         </div>
       </div>
 

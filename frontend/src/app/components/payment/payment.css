@@ -192,11 +192,24 @@
   border: 1px solid rgba(59, 130, 246, 0.25);
 }
 
+/* Feature status icons */
+.plan-features li .check {
+  color: #10b981;
+  font-weight: 800;
+  margin-right: 0.5rem;
+  font-size: 0.9rem;
+}
+
 .plan-features li .check-partial {
   color: #f59e0b; /* Amber/Orange */
   font-weight: 800;
   margin-right: 0.5rem;
   font-size: 0.9rem;
+}
+
+.plan-features li .cross {
+  margin-right: 0.5rem;
+  font-size: 0.85rem;
 }
 
 .plan-features {
@@ -525,6 +538,80 @@
     flex: none;
     width: 100%;
   }
+}
+
+/* Stripe redirect info box and summary styling */
+.stripe-redirect-info-box {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.secure-checkout-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  padding: 0.6rem;
+  border-radius: 6px;
+  color: #10b981;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.plan-summary-list {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+}
+
+.summary-item .label {
+  color: #9ca3af;
+}
+
+.summary-item .value {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.summary-item .value.highlighting {
+  color: #635bff;
+  font-weight: 800;
+}
+
+.redirect-hint {
+  display: flex;
+  gap: 0.75rem;
+  background: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  padding: 1rem;
+  border-radius: 8px;
+  align-items: flex-start;
+}
+
+.redirect-hint p {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.info-bubble {
+  font-size: 1rem;
 }
 
 /* Verification Card Styles */

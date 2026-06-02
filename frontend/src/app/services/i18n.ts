@@ -70,7 +70,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     // Payment Page
     'payment.title': 'Activation de l\'abonnement',
     'payment.subtitle': 'Votre guilde n\'a pas encore d\'abonnement actif. Débloquez toutes les fonctionnalités professionnelles de gestion de guilde dès maintenant.',
-    'payment.stripe_simulation': 'Simulation de Paiement Stripe',
+    'payment.stripe_simulation': 'S\'abonner',
     'payment.stripe_desc': 'Il s\'agit d\'une simulation complète de l\'environnement Stripe Checkout en mode test.',
     'payment.card_number': 'Numéro de carte',
     'payment.card_placeholder': '4242 4242 4242 4242 (Stripe Test)',
@@ -441,7 +441,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     // Payment Page
     'payment.title': 'Guild Activation Required',
     'payment.subtitle': 'Your guild does not have an active subscription yet. Unlock pro-level guild management features instantly.',
-    'payment.stripe_simulation': 'Simulated Stripe Checkout',
+    'payment.stripe_simulation': 'Subscribe',
     'payment.stripe_desc': 'This is a complete simulation of a real Stripe checkout sandbox flow.',
     'payment.card_number': 'Card details',
     'payment.card_placeholder': '4242 4242 4242 4242 (Stripe Test Card)',
