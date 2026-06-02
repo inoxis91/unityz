@@ -1,10 +1,11 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, effect } from '@angular/core';
 import { AuthService } from '../../services/auth';
 import { I18nService } from '../../services/i18n';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../environments/environment';
+import { SeoService } from '../../services/seo';
 
 @Component({
   selector: 'app-login',
@@ -23,8 +24,20 @@ export class LoginComponent implements OnInit {
   isProd = environment.production;
   mockUsers = signal<any[]>([]);
   selectedMockUser = signal<string>('');
+  private seo = inject(SeoService);
 
-  constructor(public authService: AuthService) {}
+  constructor(public authService: AuthService) {
+    effect(() => {
+      const isFr = this.i18n.currentLocale() === 'fr';
+      this.seo.generateTags({
+        title: isFr ? "Connectez-vous" : "Sign In",
+        description: isFr 
+          ? "Accédez à votre espace guilde sur Guild Manager : calendrier de raids, roster, et cotisations."
+          : "Access your guild space on Guild Manager: raid calendar, roster, and membership fees.",
+        keywords: "World of Warcraft, Connexion, Battle.net"
+      });
+    });
+  }
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {

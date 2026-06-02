@@ -3,6 +3,7 @@ import { RouterOutlet, Router } from '@angular/router';
 import { NavbarComponent } from './components/navbar/navbar';
 import { ToastComponent } from './components/toast/toast';
 import { ConfirmComponent } from './components/confirm/confirm';
+import { SupportWidgetComponent } from './components/support-widget/support-widget';
 import { CommonModule } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
@@ -11,7 +12,7 @@ import { NavigationEnd } from '@angular/router';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, NavbarComponent, ToastComponent, ConfirmComponent],
+  imports: [CommonModule, RouterOutlet, NavbarComponent, ToastComponent, ConfirmComponent, SupportWidgetComponent],
   template: `
     <app-navbar *ngIf="!isPublicPage()"></app-navbar>
     <main [class.full-width]="isFullWidthPage()">
@@ -19,6 +20,7 @@ import { NavigationEnd } from '@angular/router';
     </main>
     <app-toast></app-toast>
     <app-confirm></app-confirm>
+    <app-support-widget></app-support-widget>
   `,
   styles: [`
     main {
@@ -58,5 +60,5 @@ export class AppComponent {
     return currentUrl === '/' || currentUrl.startsWith('/login') || currentUrl.startsWith('/select-guild') || currentUrl.startsWith('/payment');
   });
 
-  title = 'Guilde manager';
+  title = 'Guild Manager';
 }

@@ -1,9 +1,10 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FeeService, FeeAllocation, FeeDeclaration } from '../../services/fee';
 import { AuthService } from '../../services/auth';
 import { ToastService } from '../../services/toast';
+import { I18nService } from '../../services/i18n';
 
 @Component({
   selector: 'app-fees',
@@ -13,19 +14,22 @@ import { ToastService } from '../../services/toast';
   styleUrl: './fees.css'
 })
 export class FeesComponent implements OnInit {
+  public i18n = inject(I18nService);
+
   displayYear = signal(new Date().getFullYear());
-  months = [
-    { name: 'Janvier', index: 0 }, { name: 'Février', index: 1 }, { name: 'Mars', index: 2 },
-    { name: 'Avril', index: 3 }, { name: 'Mai', index: 4 }, { name: 'Juin', index: 5 },
-    { name: 'Juillet', index: 6 }, { name: 'Août', index: 7 }, { name: 'Septembre', index: 8 },
-    { name: 'Octobre', index: 9 }, { name: 'Novembre', index: 10 }, { name: 'Décembre', index: 11 }
-  ];
+  months = computed(() => [
+    { name: this.i18n.t('month.0'), index: 0 }, { name: this.i18n.t('month.1'), index: 1 }, { name: this.i18n.t('month.2'), index: 2 },
+    { name: this.i18n.t('month.3'), index: 3 }, { name: this.i18n.t('month.4'), index: 4 }, { name: this.i18n.t('month.5'), index: 5 },
+    { name: this.i18n.t('month.6'), index: 6 }, { name: this.i18n.t('month.7'), index: 7 }, { name: this.i18n.t('month.8'), index: 8 },
+    { name: this.i18n.t('month.9'), index: 9 }, { name: this.i18n.t('month.10'), index: 10 }, { name: this.i18n.t('month.11'), index: 11 }
+  ]);
 
   showForm = signal(false);
   selectedMonthName = '';
   discordId = '';
 
   minimumFee = computed(() => this.authService.currentUser()?.active_guild_minimum_fee_amount ?? 2000);
+  isPro = computed(() => this.authService.currentUser()?.subscription_tier === 'pro');
 
   // Form
   newDeclaration = {
@@ -54,8 +58,8 @@ export class FeesComponent implements OnInit {
 
   saveDiscordId() {
     this.authService.updateDiscordId(this.discordId).subscribe({
-      next: () => this.toast.success('ID Discord mis à jour ! Vous recevrez désormais vos notifications par MP.'),
-      error: () => this.toast.error('Erreur lors de la mise à jour.')
+      next: () => this.toast.success(this.i18n.t('fees.toast.discord_success')),
+      error: () => this.toast.error(this.i18n.t('fees.toast.discord_error'))
     });
   }
 
@@ -75,7 +79,7 @@ export class FeesComponent implements OnInit {
   }
 
   selectMonth(monthIndex: number) {
-    const month = this.months[monthIndex];
+    const month = this.months()[monthIndex];
     this.selectedMonthName = `${month.name} ${this.displayYear()}`;
     
     // Set internal date for backend YYYY-MM-01
@@ -115,11 +119,11 @@ export class FeesComponent implements OnInit {
           duration_months: 1,
           comment: ''
         };
-        this.toast.success('Déclaration envoyée avec succès ! Un administrateur va la valider prochainement.');
+        this.toast.success(this.i18n.t('fees.toast.decl_success'));
       },
       error: (err: any) => {
         console.error('Declaration error:', err);
-        this.toast.error('Erreur lors de la déclaration.');
+        this.toast.error(this.i18n.t('fees.toast.decl_error'));
       }
     });
   }

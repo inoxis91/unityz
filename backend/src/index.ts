@@ -14,6 +14,7 @@ import userRoutes from './routes/users';
 import stripeRoutes from './routes/stripe';
 import guildRoutes from './routes/guilds';
 import mockAuthRoutes from './routes/mockAuth';
+import supportRoutes from './routes/support';
 import { errorHandler } from './middlewares/errorHandler';
 import { initDiscord } from './lib/discord';
 import { initCronJobs } from './lib/cron';
@@ -63,7 +64,11 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(express.json());
+app.use(express.json({
+  verify: (req: any, res, buf) => {
+    req.rawBody = buf;
+  }
+}));
 
 app.use(session({
   name: 'unityz_sid',
@@ -91,6 +96,7 @@ app.use('/api/fees', feeRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/guilds', guildRoutes);
+app.use('/api/support', supportRoutes);
 
 if (!isProd) {
   app.use('/api/mock-auth', mockAuthRoutes);

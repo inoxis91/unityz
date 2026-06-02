@@ -34,13 +34,13 @@ export class OptionsComponent implements OnInit {
       }
       if (params['setup'] === 'true') {
         this.isSetupMode.set(true);
-        this.toast.info('Veuillez importer vos personnages Battle.net pour accéder au reste du site.');
+        this.toast.info(this.i18n.t('options.toast.import_chars'));
       }
       if (params['success'] === 'discord_linked') {
-        this.toast.success('Compte Discord lié avec succès !');
+        this.toast.success(this.i18n.t('options.toast.discord_linked'));
       }
       if (params['error'] === 'discord_failed') {
-        this.toast.error('Échec de la liaison Discord.');
+        this.toast.error(this.i18n.t('options.toast.discord_failed'));
       }
     });
   }
@@ -51,10 +51,10 @@ export class OptionsComponent implements OnInit {
 
   getTierLabel(tier: string | undefined): string {
     switch (tier) {
-      case 'free': return 'Essai Gratuit';
-      case 'medium': return 'Moyen (Standard)';
-      case 'pro': return 'Pro (Illimité)';
-      default: return 'Aucun';
+      case 'free': return this.i18n.t('options.sub.tier_free');
+      case 'medium': return this.i18n.t('options.sub.tier_medium');
+      case 'pro': return this.i18n.t('options.sub.tier_pro');
+      default: return this.i18n.t('options.sub.tier_none');
     }
   }
 }

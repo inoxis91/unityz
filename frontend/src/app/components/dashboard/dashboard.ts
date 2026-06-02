@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, OnDestroy, effect } from '@angular/core';
+import { Component, OnInit, signal, computed, OnDestroy, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth';
@@ -6,6 +6,7 @@ import { CharacterService, Character } from '../../services/character';
 import { CalendarService, CalendarEvent, Signup } from '../../services/calendar';
 import { RosterService, Roster } from '../../services/roster';
 import { FeeService, FeeAllocation } from '../../services/fee';
+import { I18nService } from '../../services/i18n';
 
 @Component({
   selector: 'app-dashboard',
@@ -15,6 +16,8 @@ import { FeeService, FeeAllocation } from '../../services/fee';
   styleUrl: './dashboard.css'
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  public i18n = inject(I18nService);
+
   myCharacters = signal<Character[]>([]);
   upcomingEvents = signal<CalendarEvent[]>([]);
   mySignups = signal<Signup[]>([]);
@@ -37,6 +40,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   feeSummary = computed(() => {
     const months: { name: string, status: any }[] = [];
     const now = new Date();
+    const locale = this.i18n.currentLocale() === 'en' ? 'en-US' : 'fr-FR';
     
     for (let i = 0; i < 3; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
@@ -47,7 +51,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       
       const alloc = this.myAllocations().find(a => a.month_date.startsWith(dateStr));
       
-      const monthName = d.toLocaleDateString('fr-FR', { month: 'long' });
+      const monthName = d.toLocaleDateString(locale, { month: 'long' });
       const capitalized = monthName.charAt(0).toUpperCase() + monthName.slice(1);
       
       let status = { class: 'none', icon: '⭕', label: '0 PO' };
@@ -172,13 +176,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const now = this.currentTime().getTime();
     const diff = start - now;
 
-    if (diff <= 0) return 'En cours';
+    if (diff <= 0) return this.i18n.t('dashboard.in_progress');
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
-    if (days > 0) return `${days}j ${hours}h`;
+    const dayUnit = this.i18n.t('dashboard.days_short');
+
+    if (days > 0) return `${days}${dayUnit} ${hours}h`;
     if (hours > 0) return `${hours}h ${minutes}m`;
     return `${minutes} min`;
   }

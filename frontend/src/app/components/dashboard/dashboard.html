@@ -4,12 +4,12 @@
   <section class="hero-section">
     <div class="welcome-box">
       <div class="user-main-info">
-        <span class="greeting">Bon retour,</span>
+        <span class="greeting">{{ i18n.t('dashboard.welcome') }}</span>
         <h1>{{ mainCharacter()?.name || user.battletag }}</h1>
       </div>
       
       <div class="roster-info-card" *ngIf="myRoster() as roster; else noRoster">
-        <span class="label">Roster Actuel</span>
+        <span class="label">{{ i18n.t('dashboard.current_roster') }}</span>
         <div class="roster-details">
           <span class="roster-icon">
             <img src="assets/icons/tank.png" class="role-icon-img" alt="Roster">
@@ -22,15 +22,15 @@
       </div>
       <ng-template #noRoster>
         <div class="roster-info-card unassigned">
-          <p>Vous n'êtes assigné à aucun roster pour le moment.</p>
+          <p>{{ i18n.t('dashboard.no_roster') }}</p>
         </div>
       </ng-template>
 
       <!-- Dashboard Cotisation Summary -->
       <div class="dashboard-fee-card">
         <div class="fee-header">
-          <h3>Statut Cotisations</h3>
-          <a routerLink="/fees" class="view-all">Détails →</a>
+          <h3>{{ i18n.t('dashboard.fee_status') }}</h3>
+          <a routerLink="/fees" class="view-all">{{ i18n.t('dashboard.details') }}</a>
         </div>
         <div class="fee-months">
           @for (m of feeSummary(); track m.name) {
@@ -94,8 +94,8 @@
     <!-- Upcoming Events Column -->
     <section class="events-column">
       <div class="section-header">
-        <h2>Événements à venir</h2>
-        <a routerLink="/calendar" class="view-all">Tout voir →</a>
+        <h2>{{ i18n.t('dashboard.upcoming_events') }}</h2>
+        <a routerLink="/calendar" class="view-all">{{ i18n.t('dashboard.view_all') }}</a>
       </div>
 
       <div class="events-list">
@@ -115,14 +115,14 @@
                 @if (getSignupStatus(event.id); as signup) {
                   <span class="status-indicator" [class]="signup.status">
                     <ng-container [ngSwitch]="signup.status">
-                      <span *ngSwitchCase="'signed_up'">✅ Inscrit</span>
-                      <span *ngSwitchCase="'standby'">❓ En attente</span>
-                      <span *ngSwitchCase="'absent'">❌ Absent</span>
-                      <span *ngSwitchDefault>✅ Inscrit</span>
+                      <span *ngSwitchCase="'signed_up'">{{ i18n.t('dashboard.signed_up') }}</span>
+                      <span *ngSwitchCase="'standby'">{{ i18n.t('dashboard.standby') }}</span>
+                      <span *ngSwitchCase="'absent'">{{ i18n.t('dashboard.absent') }}</span>
+                      <span *ngSwitchDefault>{{ i18n.t('dashboard.signed_up') }}</span>
                     </ng-container>
                   </span>
                 } @else {
-                  <span class="status-indicator none">⏳ Non inscrit</span>
+                  <span class="status-indicator none">{{ i18n.t('dashboard.unregistered') }}</span>
                 }
               </div>
             </div>
@@ -134,7 +134,7 @@
         }
         @if (upcomingEvents().length === 0) {
           <div class="empty-state">
-            <p>Aucun événement prévu prochainement.</p>
+            <p>{{ i18n.t('dashboard.no_events') }}</p>
           </div>
         }
       </div>
@@ -143,8 +143,8 @@
     <!-- My Characters Column -->
     <section class="chars-column">
       <div class="section-header">
-        <h2>Mes Personnages</h2>
-        <a [routerLink]="['/options']" [queryParams]="{tab: 'characters'}" class="view-all">Gérer →</a>
+        <h2>{{ i18n.t('dashboard.my_characters') }}</h2>
+        <a [routerLink]="['/options']" [queryParams]="{tab: 'characters'}" class="view-all">{{ i18n.t('dashboard.manage') }}</a>
       </div>
 
       <div class="chars-grid">
@@ -169,8 +169,8 @@
         }
         @if (myCharacters().length === 0) {
           <div class="empty-state">
-            <p>Aucun personnage lié.</p>
-            <button class="btn-import" [routerLink]="['/options']" [queryParams]="{tab: 'characters'}">Importer</button>
+            <p>{{ i18n.t('dashboard.no_linked_chars') }}</p>
+            <button class="btn-import" [routerLink]="['/options']" [queryParams]="{tab: 'characters'}">{{ i18n.t('dashboard.import') }}</button>
           </div>
         }
       </div>

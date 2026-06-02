@@ -1,7 +1,7 @@
 <div class="options-container animated-fade-in" *ngIf="authService.currentUser() as user">
   <div class="header-section">
     <h1>{{ i18n.t('nav.options') }}</h1>
-    <p class="subtitle">Gerez vos personnages et vos paramètres de compte.</p>
+    <p class="subtitle">{{ i18n.t('options.subtitle') }}</p>
   </div>
 
   <div class="options-tabs">
@@ -17,8 +17,8 @@
     <div class="warning-content">
       <span class="icon">⚠️</span>
       <div class="text">
-        <h3>Synchronisation requise</h3>
-        <p>Pour utiliser Unity'Z, vous devez importer au moins un personnage depuis Battle.net ci-dessous. Une fois fait, vous aurez accès au tableau de bord et au calendrier.</p>
+        <h3>{{ i18n.t('options.warning.title') }}</h3>
+        <p>{{ i18n.t('options.warning.desc') }}</p>
       </div>
     </div>
   </div>
@@ -102,7 +102,7 @@
           <div class="info-list">
             <div class="info-item">
               <span class="label">{{ i18n.t('options.sub.guild') }}</span>
-              <span class="value" style="font-weight: 700;">{{ authService.currentGuild()?.name || 'Aucune' }}</span>
+              <span class="value" style="font-weight: 700;">{{ authService.currentGuild()?.name || i18n.t('options.sub.no_guild') }}</span>
             </div>
             <div class="info-item">
               <span class="label">{{ i18n.t('options.sub.plan') }}</span>

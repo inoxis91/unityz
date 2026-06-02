@@ -9,8 +9,8 @@
       
       <!-- General Guild Settings (Fees/Cotisations) - ALWAYS UNLOCKED -->
       <div class="settings-form-box general-settings-box">
-        <h3>Configuration des Cotisations</h3>
-        <p class="section-desc">Activez ou désactivez le module de trésorerie de guilde et fixez le montant minimum de cotisation requis.</p>
+        <h3>{{ i18n.t('admin.settings.title') }}</h3>
+        <p class="section-desc">{{ i18n.t('admin.settings.desc') }}</p>
 
         <div class="form-group-switch">
           <label class="switch-label">
@@ -18,30 +18,30 @@
             <span class="slider"></span>
           </label>
           <div class="switch-text">
-            <span class="switch-title">Activer la gestion des cotisations</span>
-            <span class="switch-desc">Si désactivé, le module de Caisse/Fees sera totalement masqué pour tous les membres.</span>
+            <span class="switch-title">{{ i18n.t('admin.settings.enable_fees') }}</span>
+            <span class="switch-desc">{{ i18n.t('admin.settings.enable_fees_desc') }}</span>
           </div>
         </div>
 
         <div class="form-group" style="margin-top: 1.5rem;" *ngIf="feesEnabled()">
-          <label>Montant de la cotisation minimum (PO / Or)</label>
+          <label>{{ i18n.t('admin.settings.min_fee') }}</label>
           <div class="input-mimic gold-input-mimic" style="display: flex; align-items: center; background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; padding: 0.65rem 0.85rem; gap: 0.5rem;">
             <input type="number" [ngModel]="minimumFeeAmount()" (ngModelChange)="minimumFeeAmount.set($event)" name="minimumFeeAmount" placeholder="ex: 2000" min="0" required style="background: none; border: none; color: #ffffff; font-size: 0.9rem; width: 100%; outline: none;" />
             <span class="unit" style="color: #f59e0b; font-weight: 800; font-size: 0.85rem;">PO</span>
           </div>
-          <p class="help-text" style="color: #64748b; font-size: 0.8rem; margin: 0.25rem 0 0 0; text-align: left;">Cette valeur sera utilisée pour valider les statuts de paiement mensuels et envoyer les rappels.</p>
+          <p class="help-text" style="color: #64748b; font-size: 0.8rem; margin: 0.25rem 0 0 0; text-align: left;">{{ i18n.t('admin.settings.min_fee_help') }}</p>
         </div>
 
         <!-- Disclaimers for Discord Notifications in Unpaid/Medium plan -->
         <div class="discord-unpaid-disclaimer" style="display: flex; gap: 0.75rem; background: rgba(245, 158, 11, 0.04); border: 1px solid rgba(245, 158, 11, 0.15); border-radius: 6px; padding: 1rem; margin-top: 1.5rem; text-align: left;" *ngIf="!isPro() && feesEnabled()">
           <span style="font-size: 1.25rem; line-height: 1;">⚠️</span>
           <p style="font-size: 0.82rem; color: #d97706; margin: 0; line-height: 1.45;">
-            <strong>Note de restriction :</strong> L'envoi automatique des pings et rappels hebdomadaires de cotisations sur Discord nécessite un abonnement de guilde <strong>Pro</strong> actif. En formule gratuite ou standard, seuls les rappels visuels sur le site seront opérationnels.
+            <strong>{{ i18n.t('admin.settings.restriction_title') }}</strong> {{ i18n.t('admin.settings.restriction_desc') }}
           </p>
         </div>
 
         <button type="button" class="btn-save" (click)="saveSettings()" [disabled]="isSaving()" style="width: 100%; margin-top: 1.5rem;">
-          {{ isSaving() ? 'Enregistrement...' : 'Enregistrer les paramètres' }}
+          {{ isSaving() ? i18n.t('admin.settings.saving') : i18n.t('admin.settings.save_btn') }}
         </button>
       </div>
 
@@ -59,8 +59,8 @@
         </div>
 
         <div class="settings-form-content" [class.muted-opacity]="!isPro()">
-          <h3>Intégration Discord</h3>
-          <p class="section-desc">Activez et configurez le bot Discord officiel de votre guilde pour automatiser les pings d'événements et de cotisations.</p>
+          <h3>{{ i18n.t('admin.settings.discord_title') }}</h3>
+          <p class="section-desc">{{ i18n.t('admin.settings.discord_desc') }}</p>
 
           <div class="form-group-switch">
             <label class="switch-label">
@@ -68,34 +68,34 @@
               <span class="slider"></span>
             </label>
             <div class="switch-text">
-              <span class="switch-title">Activer les notifications Discord</span>
-              <span class="switch-desc">Si désactivé, aucun message ne sera envoyé par le bot.</span>
+              <span class="switch-title">{{ i18n.t('admin.settings.discord_enable') }}</span>
+              <span class="switch-desc">{{ i18n.t('admin.settings.discord_enable_desc') }}</span>
             </div>
           </div>
 
           <form (submit)="saveSettings()" class="settings-form">
             <div class="form-group">
-              <label>ID du Serveur Discord (Guild ID)</label>
+              <label>{{ i18n.t('admin.settings.discord_guild_id') }}</label>
               <input type="text" [ngModel]="discordGuildId()" (ngModelChange)="discordGuildId.set($event)" name="discordGuildId" placeholder="ex: 1489220257158791279" [disabled]="!discordEnabled() || !isPro()" />
             </div>
 
             <div class="form-group">
-              <label>ID de Canal pour Annonce Événements</label>
+              <label>{{ i18n.t('admin.settings.discord_events_channel') }}</label>
               <input type="text" [ngModel]="discordEventsChannelId()" (ngModelChange)="discordEventsChannelId.set($event)" name="discordEventsChannelId" placeholder="ex: 1509267337147056249" [disabled]="!discordEnabled() || !isPro()" />
             </div>
 
             <div class="form-group">
-              <label>ID de Canal pour Trésorerie (Cotisations)</label>
+              <label>{{ i18n.t('admin.settings.discord_fees_channel') }}</label>
               <input type="text" [ngModel]="discordFeesChannelId()" (ngModelChange)="discordFeesChannelId.set($event)" name="discordFeesChannelId" placeholder="ex: 1489523542780285100" [disabled]="!discordEnabled() || !isPro()" />
             </div>
 
             <div class="form-group">
-              <label>ID de Canal pour Rappels Automatiques</label>
+              <label>{{ i18n.t('admin.settings.discord_reminder_channel') }}</label>
               <input type="text" [ngModel]="discordReminderChannelId()" (ngModelChange)="discordReminderChannelId.set($event)" name="discordReminderChannelId" placeholder="ex: 1429498219142053903" [disabled]="!discordEnabled() || !isPro()" />
             </div>
 
             <button type="submit" class="btn-save" [disabled]="isSaving() || !isPro()">
-              {{ isSaving() ? 'Enregistrement...' : 'Enregistrer les paramètres' }}
+              {{ isSaving() ? i18n.t('admin.settings.saving') : i18n.t('admin.settings.save_btn') }}
             </button>
           </form>
         </div>

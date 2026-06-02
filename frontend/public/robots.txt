@@ -1,0 +1,14 @@
+# robots.txt for Guild Manager
+User-agent: *
+Allow: /
+Allow: /login
+Disallow: /select-guild
+Disallow: /payment
+Disallow: /dashboard
+Disallow: /options
+Disallow: /calendar
+Disallow: /fees
+Disallow: /events
+Disallow: /admin
+
+Sitemap: https://unityz.up.railway.app/sitemap.xml

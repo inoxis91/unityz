@@ -1,10 +1,11 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CharacterService, Character } from '../../services/character';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth';
 import { ConfirmService } from '../../services/confirm';
 import { ToastService } from '../../services/toast';
+import { I18nService } from '../../services/i18n';
 
 @Component({
   selector: 'app-character-manager',
@@ -14,13 +15,15 @@ import { ToastService } from '../../services/toast';
   styleUrl: './character-manager.css'
 })
 export class CharacterManagerComponent implements OnInit {
+  public i18n = inject(I18nService);
+
   bnetCharacters = signal<Character[]>([]);
   myCharacters = signal<Character[]>([]);
   loadingBnet = signal<boolean>(false);
 
   constructor(
     private characterService: CharacterService,
-    private authService: AuthService,
+    public authService: AuthService,
     private confirm: ConfirmService,
     private toast: ToastService
   ) {}
@@ -63,7 +66,7 @@ export class CharacterManagerComponent implements OnInit {
     this.characterService.importCharacters([char]).subscribe({
       next: () => {
         this.loadMyCharacters();
-        this.toast.success(`${char.name} a été ajouté à votre liste.`);
+        this.toast.success(this.i18n.t('char.manager.toast.add_success').replace('{name}', char.name));
         this.bnetCharacters.set(this.bnetCharacters().filter(c => c !== char));
         
         // Rafraîchir l'auth pour débloquer le site si c'est le premier perso
@@ -71,7 +74,7 @@ export class CharacterManagerComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error importing character', err);
-        this.toast.error('Erreur lors de l\'importation.');
+        this.toast.error(this.i18n.t('char.manager.toast.add_error'));
       }
     });
   }
@@ -83,10 +86,10 @@ export class CharacterManagerComponent implements OnInit {
       isHeal: char.is_heal || false,
       isDPS: char.is_dps || false
     }).subscribe({
-      next: () => this.toast.success('Rôles mis à jour.'),
+      next: () => this.toast.success(this.i18n.t('char.manager.toast.roles_success')),
       error: (err) => {
         console.error('Error updating roles', err);
-        this.toast.error('Erreur lors de la mise à jour des rôles.');
+        this.toast.error(this.i18n.t('char.manager.toast.roles_error'));
       }
     });
   }
@@ -96,11 +99,11 @@ export class CharacterManagerComponent implements OnInit {
     this.characterService.setMainCharacter(char.id).subscribe({
       next: () => {
         this.loadMyCharacters();
-        this.toast.success(`${char.name} est maintenant votre personnage principal.`);
+        this.toast.success(this.i18n.t('char.manager.toast.main_success').replace('{name}', char.name));
       },
       error: (err) => {
         console.error('Error setting main character', err);
-        this.toast.error('Erreur lors de la définition du Main.');
+        this.toast.error(this.i18n.t('char.manager.toast.main_error'));
       }
     });
   }
@@ -108,19 +111,19 @@ export class CharacterManagerComponent implements OnInit {
   async removeCharacter(char: Character) {
     if (!char.id) return;
     const ok = await this.confirm.ask(
-        'Retirer le personnage',
-        `Voulez-vous vraiment retirer ${char.name} de votre liste ?`
+        this.i18n.t('char.manager.confirm.delete_title'),
+        this.i18n.t('char.manager.confirm.delete_desc').replace('{name}', char.name)
     );
 
     if (ok) {
       this.characterService.removeCharacter(char.id).subscribe({
         next: () => {
           this.loadMyCharacters();
-          this.toast.success(`${char.name} a été retiré.`);
+          this.toast.success(this.i18n.t('char.manager.toast.delete_success').replace('{name}', char.name));
         },
         error: (err) => {
           console.error('Error removing character', err);
-          this.toast.error('Erreur lors de la suppression.');
+          this.toast.error(this.i18n.t('char.manager.toast.delete_error'));
         }
       });
     }

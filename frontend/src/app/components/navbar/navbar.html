@@ -1,7 +1,8 @@
 <nav class="navbar" [class.menu-open]="isMenuOpen()">
   <div class="navbar-container">
     <div class="navbar-brand" [routerLink]="authService.currentUser() ? '/dashboard' : '/'" (click)="closeMenu()">
-      {{ authService.currentGuild() ? authService.currentGuild().name : 'Guild manager' }}
+      <img src="favicon.ico" class="navbar-logo" alt="Logo">
+      <span>{{ authService.currentGuild() ? authService.currentGuild().name : 'Guild Manager' }}</span>
     </div>
 
     <!-- Burger Menu Button -->

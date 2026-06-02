@@ -55,7 +55,7 @@ export class AdminSettingsComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error fetching guild settings', err);
-        this.toast.error('Erreur lors du chargement des paramètres.');
+        this.toast.error(this.i18n.t('admin.settings.toast.load_error'));
         this.isLoading.set(false);
       }
     });
@@ -75,14 +75,14 @@ export class AdminSettingsComponent implements OnInit {
 
     this.http.put<any>(`${this.apiUrl}/guilds/my-settings`, body, { withCredentials: true }).subscribe({
       next: () => {
-        this.toast.success('Paramètres enregistrés avec succès !');
+        this.toast.success(this.i18n.t('admin.settings.toast.save_success'));
         // Refresh auth state to update currentUser fees details
         this.authService.checkAuth().subscribe();
         this.isSaving.set(false);
       },
       error: (err) => {
         console.error('Error saving guild settings', err);
-        this.toast.error('Erreur lors de la sauvegarde des paramètres.');
+        this.toast.error(this.i18n.t('admin.settings.toast.save_error'));
         this.isSaving.set(false);
       }
     });

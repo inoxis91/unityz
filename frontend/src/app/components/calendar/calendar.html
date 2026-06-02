@@ -1,7 +1,7 @@
 <div class="calendar-container">
   <div class="calendar-header">
-    <h1>Calendrier de Guilde</h1>
-    <p class="subtitle">Planifiez et participez aux activités de Unity'Z</p>
+    <h1>{{ i18n.t('calendar.title') }}</h1>
+    <p class="subtitle">{{ i18n.t('calendar.subtitle') }}</p>
   </div>
   
   <div class="calendar-card">
@@ -11,17 +11,17 @@
   <!-- Mobile-only list view of upcoming events -->
   <div class="mobile-events-view">
     <div class="mobile-header">
-      <h2>Événements à venir</h2>
+      <h2>{{ i18n.t('calendar.upcoming_events') }}</h2>
       <!-- "+" Button for authorized users -->
-      <button class="add-event-btn" *ngIf="canManageEvents()" (click)="onCreateEventMobile()" title="Ajouter un événement">
-        <span>➕</span> Nouveau
+      <button class="add-event-btn" *ngIf="canManageEvents()" (click)="onCreateEventMobile()" [title]="i18n.t('calendar.context.create')">
+        <span>➕</span> {{ i18n.t('calendar.new_event') }}
       </button>
     </div>
 
     <div class="mobile-events-list">
       @if (upcomingEvents().length === 0) {
         <div class="no-events-card">
-          <p>Aucun événement prévu pour le moment.</p>
+          <p>{{ i18n.t('calendar.no_events') }}</p>
         </div>
       } @else {
         @for (event of upcomingEvents(); track event.id) {
@@ -34,7 +34,7 @@
               <div class="event-type-tags">
                 <span class="event-type-tag" [class]="event.type.toLowerCase()">{{ event.type }}</span>
                 <span class="roster-tag" *ngIf="event.roster_name">{{ event.roster_name }}</span>
-                <span class="all-tag" *ngIf="!event.roster_name">Tous</span>
+                <span class="all-tag" *ngIf="!event.roster_name">{{ i18n.t('calendar.tag_all') }}</span>
               </div>
               <h3 class="event-title">{{ event.title }}</h3>
               <div class="event-time-row">
@@ -59,21 +59,21 @@
        (click)="$event.stopPropagation()">
     <ng-container *ngIf="contextMenu()!.type === 'event'">
       <button (click)="onEditEvent(contextMenu()!.data)">
-        <span>📝</span> Modifier l'événement
+        <span>📝</span> {{ i18n.t('calendar.context.edit') }}
       </button>
       <button (click)="onCopyEvent(contextMenu()!.data)">
-        <span>📋</span> Copier l'événement
+        <span>📋</span> {{ i18n.t('calendar.context.copy') }}
       </button>
       <button class="delete" (click)="onDeleteEvent(contextMenu()!.data)">
-        <span>🗑️</span> Supprimer l'événement
+        <span>🗑️</span> {{ i18n.t('calendar.context.delete') }}
       </button>
     </ng-container>
     <ng-container *ngIf="contextMenu()!.type === 'cell'">
       <button (click)="onCreateEventFromCell(contextMenu()!.data)">
-        <span>➕</span> Créer un événement
+        <span>➕</span> {{ i18n.t('calendar.context.create') }}
       </button>
       <button *ngIf="copiedEvent()" (click)="onPasteEvent(contextMenu()!.data)">
-        <span>📥</span> Coller l'événement
+        <span>📥</span> {{ i18n.t('calendar.context.paste') }}
       </button>
     </ng-container>
   </div>
@@ -84,7 +84,7 @@
       <div class="modal-header">
         <div class="header-title">
           <span class="icon">📅</span>
-          <h2>{{ isEditing() ? 'Modifier' : 'Nouvel' }} Événement</h2>
+          <h2>{{ isEditing() ? i18n.t('calendar.modal.edit_title') : i18n.t('calendar.modal.create_title') }}</h2>
         </div>
         <button class="close-btn" (click)="closeModal()">&times;</button>
       </div>
@@ -92,28 +92,28 @@
       <form (ngSubmit)="onSubmitEvent()" class="modern-form">
         <div class="modal-body">
           <div class="form-section">
-            <label>Titre de l'activité</label>
-            <input type="text" [(ngModel)]="eventForm.title" name="title" required placeholder="Ex: Raid HM Flèche du vide">
+            <label>{{ i18n.t('calendar.form.title') }}</label>
+            <input type="text" [(ngModel)]="eventForm.title" name="title" required [placeholder]="i18n.t('calendar.form.title_placeholder')">
           </div>
           
           <div class="form-section">
-            <label>Description (Optionnel)</label>
-            <textarea [(ngModel)]="eventForm.description" name="description" rows="3" placeholder="Objectifs, prérequis, vocal..."></textarea>
+            <label>{{ i18n.t('calendar.form.desc') }}</label>
+            <textarea [(ngModel)]="eventForm.description" name="description" rows="3" [placeholder]="i18n.t('calendar.form.desc_placeholder')"></textarea>
           </div>
 
           <div class="form-grid">
             <div class="form-section">
-              <label>Type</label>
+              <label>{{ i18n.t('calendar.form.type') }}</label>
               <select [(ngModel)]="eventForm.type" name="type" class="custom-select">
-                <option value="raid">Raid</option>
-                <option value="mm+">Donjon MM+</option>
-                <option value="custom">Autre / Spécial</option>
+                <option value="raid">{{ i18n.t('calendar.form.type_raid') }}</option>
+                <option value="mm+">{{ i18n.t('calendar.form.type_mm') }}</option>
+                <option value="custom">{{ i18n.t('calendar.form.type_custom') }}</option>
               </select>
             </div>
             <div class="form-section">
-              <label>Roster autorisé</label>
+              <label>{{ i18n.t('calendar.form.roster') }}</label>
               <select [(ngModel)]="eventForm.roster_id" name="roster_id" class="custom-select">
-                <option value="">Tous les membres</option>
+                <option value="">{{ i18n.t('calendar.form.roster_all') }}</option>
                 @for (roster of rosterService.rosters(); track roster.id) {
                   <option [value]="roster.id">{{ roster.name }}</option>
                 }
@@ -122,30 +122,30 @@
           </div>
 
           <div class="form-section">
-            <label>Date de l'activité</label>
+            <label>{{ i18n.t('calendar.form.date') }}</label>
             <input type="date" [(ngModel)]="eventForm.start_date" name="start_date" (change)="onDateChange()" required>
           </div>
 
           <div class="form-grid">
             <div class="form-section">
-              <label>Heure de début</label>
+              <label>{{ i18n.t('calendar.form.start_time') }}</label>
               <input type="time" [(ngModel)]="eventForm.start_time" name="start_time" required>
             </div>
             <div class="form-section">
-              <label>Heure de fin</label>
+              <label>{{ i18n.t('calendar.form.end_time') }}</label>
               <input type="time" [(ngModel)]="eventForm.end_time" name="end_time" required>
             </div>
           </div>
 
           <div class="form-section animated-fade-in" *ngIf="eventForm.type === 'custom'">
-            <label>Précisez le type d'événement</label>
-            <input type="text" [(ngModel)]="eventForm.customType" name="customType" required placeholder="Ex: Farm Montures">
+            <label>{{ i18n.t('calendar.form.custom_type') }}</label>
+            <input type="text" [(ngModel)]="eventForm.customType" name="customType" required [placeholder]="i18n.t('calendar.form.custom_type_placeholder')">
           </div>
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn-secondary" (click)="closeModal()">Annuler</button>
-          <button type="submit" class="btn-primary">{{ isEditing() ? 'Enregistrer' : 'Créer' }}</button>
+          <button type="button" class="btn-secondary" (click)="closeModal()">{{ i18n.t('calendar.form.btn_cancel') }}</button>
+          <button type="submit" class="btn-primary">{{ isEditing() ? i18n.t('calendar.form.btn_save') : i18n.t('calendar.form.btn_create') }}</button>
         </div>
       </form>
     </div>

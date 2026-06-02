@@ -23,6 +23,8 @@ export const initDb = async () => {
         subscription_tier VARCHAR(50) DEFAULT 'none',
         subscription_expires_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NULL,
         stripe_customer_id VARCHAR(255),
+        stripe_subscription_id VARCHAR(255),
+        subscription_status VARCHAR(50),
         discord_enabled BOOLEAN DEFAULT FALSE,
         discord_guild_id VARCHAR(255),
         discord_events_channel_id VARCHAR(255),
@@ -49,6 +51,18 @@ export const initDb = async () => {
           ALTER TABLE guilds ADD COLUMN subscription_expires_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NULL;
         ELSE
           ALTER TABLE guilds ALTER COLUMN subscription_expires_at SET DEFAULT NULL;
+        END IF;
+
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='stripe_customer_id') THEN
+          ALTER TABLE guilds ADD COLUMN stripe_customer_id VARCHAR(255);
+        END IF;
+
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='stripe_subscription_id') THEN
+          ALTER TABLE guilds ADD COLUMN stripe_subscription_id VARCHAR(255);
+        END IF;
+
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='subscription_status') THEN
+          ALTER TABLE guilds ADD COLUMN subscription_status VARCHAR(50);
         END IF;
 
         -- Migrate existing is_paid data

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, HostListener } from '@angular/core';
+import { Component, OnInit, signal, computed, HostListener, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { CalendarOptions, EventClickArg, DateSelectArg } from '@fullcalendar/core';
@@ -13,6 +13,7 @@ import { ToastService } from '../../services/toast';
 import { ConfirmService } from '../../services/confirm';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
+import { I18nService } from '../../services/i18n';
 
 @Component({
   selector: 'app-calendar',
@@ -22,6 +23,8 @@ import { RouterModule, Router } from '@angular/router';
   styleUrl: './calendar.css'
 })
 export class CalendarComponent implements OnInit {
+  public i18n = inject(I18nService);
+
   calendarOptions = signal<CalendarOptions>({
     plugins: [dayGridPlugin, interactionPlugin, timeGridPlugin],
     initialView: 'dayGridTwoWeeks',
@@ -60,7 +63,7 @@ export class CalendarComponent implements OnInit {
       const event = arg.event;
       const type = event.extendedProps['type'] || 'custom';
       const rosterName = event.extendedProps['roster_name'];
-      const startTime = event.start ? event.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
+      const startTime = event.start ? event.start.toLocaleTimeString(this.i18n.currentLocale() === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' }) : '';
       
       let typeClass = 'tag-custom';
       if (type.toLowerCase().includes('raid')) typeClass = 'tag-raid';
@@ -73,7 +76,7 @@ export class CalendarComponent implements OnInit {
             <div class="event-title">${event.title}</div>
             <div class="event-tags-container">
               <div class="event-tag ${typeClass}">${type.toUpperCase()}</div>
-              ${rosterName ? `<div class="event-tag tag-roster">${rosterName.toUpperCase()}</div>` : '<div class="event-tag tag-all">TOUS</div>'}
+              ${rosterName ? `<div class="event-tag tag-roster">${rosterName.toUpperCase()}</div>` : `<div class="event-tag tag-all">${this.i18n.t('calendar.tag_all').toUpperCase()}</div>`}
             </div>
           </div>
         `
@@ -146,7 +149,29 @@ export class CalendarComponent implements OnInit {
     private router: Router,
     private toast: ToastService,
     private confirm: ConfirmService
-  ) {}
+  ) {
+    effect(() => {
+      const locale = this.i18n.currentLocale();
+      this.calendarOptions.update(options => ({
+        ...options,
+        locale: locale,
+        buttonText: {
+          today: locale === 'fr' ? "Aujourd'hui" : 'Today',
+          month: locale === 'fr' ? 'Mois' : 'Month',
+          week: locale === 'fr' ? 'Semaine' : 'Week',
+          day: locale === 'fr' ? 'Jour' : 'Day',
+          list: locale === 'fr' ? 'Liste' : 'List'
+        },
+        views: {
+          dayGridTwoWeeks: {
+            type: 'dayGrid',
+            duration: { weeks: 2 },
+            buttonText: locale === 'fr' ? '2 Semaines' : '2 Weeks'
+          }
+        }
+      }));
+    });
+  }
 
   ngOnInit() {
     this.loadEvents();
@@ -243,7 +268,7 @@ export class CalendarComponent implements OnInit {
     if (!this.isPro() && !this.isEditing()) {
       const count = this.getEventsInMonthCount(this.eventForm.start_date);
       if (count >= 6) {
-        this.toast.error('Limite de 6 événements par mois atteinte pour votre abonnement. Passez au forfait Pro pour programmer des événements illimités.');
+        this.toast.error(this.i18n.t('calendar.toast.limit_reached'));
         return;
       }
     }
@@ -262,18 +287,18 @@ export class CalendarComponent implements OnInit {
         next: () => {
           this.loadEvents();
           this.closeModal();
-          this.toast.success('Événement mis à jour avec succès.');
+          this.toast.success(this.i18n.t('calendar.toast.update_success'));
         },
-        error: () => this.toast.error('Erreur lors de la mise à jour de l\'événement.')
+        error: () => this.toast.error(this.i18n.t('calendar.toast.update_error'))
       });
     } else {
       this.calendarService.createEvent(eventData).subscribe({
         next: () => {
           this.loadEvents();
           this.closeModal();
-          this.toast.success('Événement créé avec succès.');
+          this.toast.success(this.i18n.t('calendar.toast.create_success'));
         },
-        error: () => this.toast.error('Erreur lors de la création de l\'événement.')
+        error: () => this.toast.error(this.i18n.t('calendar.toast.create_error'))
       });
     }
   }
@@ -336,14 +361,14 @@ export class CalendarComponent implements OnInit {
 
   onDeleteEvent(event: any) {
     this.contextMenu.set(null);
-    this.confirm.ask('Supprimer l\'événement', `Êtes-vous sûr de vouloir supprimer "${event.title}" ?`).then(confirmed => {
+    this.confirm.ask(this.i18n.t('calendar.confirm.delete_title'), this.i18n.t('calendar.confirm.delete_desc').replace('{eventTitle}', event.title)).then(confirmed => {
       if (confirmed) {
         this.calendarService.deleteEvent(event.id).subscribe({
           next: () => {
             this.loadEvents();
-            this.toast.success('Événement supprimé.');
+            this.toast.success(this.i18n.t('calendar.toast.delete_success'));
           },
-          error: () => this.toast.error('Erreur lors de la suppression.')
+          error: () => this.toast.error(this.i18n.t('calendar.toast.delete_error'))
         });
       }
     });
@@ -368,7 +393,7 @@ export class CalendarComponent implements OnInit {
       start_time: `${startH}:${startM}:00`,
       end_time: `${endH}:${endM}:00`
     });
-    this.toast.info('Événement copié.');
+    this.toast.info(this.i18n.t('calendar.toast.copied'));
   }
 
   onCreateEventFromCell(date: Date) {
@@ -407,9 +432,9 @@ export class CalendarComponent implements OnInit {
     this.calendarService.createEvent(eventData).subscribe({
       next: () => {
         this.loadEvents();
-        this.toast.success('Événement collé avec succès.');
+        this.toast.success(this.i18n.t('calendar.toast.paste_success'));
       },
-      error: () => this.toast.error('Erreur lors du collage de l\'événement.')
+      error: () => this.toast.error(this.i18n.t('calendar.toast.paste_error'))
     });
   }
 }

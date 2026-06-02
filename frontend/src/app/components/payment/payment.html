@@ -9,7 +9,7 @@
   </div>
 
   <!-- IF USER IS GM OR OFFICER: Full Billing Page -->
-  <div class="payment-split-layout" *ngIf="authService.isGMOrOfficer()">
+  <div class="payment-split-layout" *ngIf="authService.isGMOrOfficer() && !verifyingSession()">
     <!-- Left side: Pricing plans selection -->
     <div class="pricing-plans-section">
       <h3>{{ i18n.t('payment.choose_plan') }}</h3>
@@ -28,14 +28,18 @@
             </div>
             <ul class="plan-features">
               <li>✨ {{ i18n.t('pricing.feat.sync') }}</li>
-              <li>👥 {{ i18n.t('pricing.feat.roster_limit') }}</li>
-              <li>📅 {{ i18n.t('pricing.feat.event_limit') }}</li>
+              <li>📊 {{ i18n.t('pricing.feat.dashboard') }}</li>
+              <li>⚔️ {{ i18n.t('pricing.feat.charspec') }}</li>
+              <li>👑 {{ i18n.t('pricing.feat.roles') }}</li>
+              <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.free_roster_limit') }}</li>
+              <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.free_event_limit') }}</li>
               <li class="excluded">❌ {{ i18n.t('pricing.feat.discord_no') }}</li>
+              <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.fees_basic') }}</li>
             </ul>
           </div>
         </div>
 
-        <!-- Moyen Card -->
+        <!-- Standard Card -->
         <div class="plan-card" [class.selected]="selectedTier() === 'medium'" (click)="selectTier('medium')">
           <div class="card-radio">
             <span class="radio-dot"></span>
@@ -43,13 +47,18 @@
           <div class="plan-info">
             <div class="plan-title-row">
               <span class="plan-name">{{ i18n.t('pricing.plan.medium') }}</span>
-              <span class="plan-price">4.99 €<span class="price-period">{{ i18n.t('pricing.period.months') }}</span></span>
+              <span class="plan-price">2.99 €<span class="price-period">{{ i18n.t('pricing.period.months') }}</span></span>
             </div>
+            <div class="commitment-badge-small">{{ i18n.t('pricing.commitment_free') }}</div>
             <ul class="plan-features">
               <li>✨ {{ i18n.t('pricing.feat.sync') }}</li>
-              <li>👥 {{ i18n.t('pricing.feat.roster_limit') }}</li>
-              <li>📅 {{ i18n.t('pricing.feat.event_limit') }}</li>
+              <li>📊 {{ i18n.t('pricing.feat.dashboard') }}</li>
+              <li>⚔️ {{ i18n.t('pricing.feat.charspec') }}</li>
+              <li>👑 {{ i18n.t('pricing.feat.roles') }}</li>
+              <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.roster_limit') }}</li>
+              <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.event_limit') }}</li>
               <li class="excluded">❌ {{ i18n.t('pricing.feat.discord_no') }}</li>
+              <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.fees_basic') }}</li>
             </ul>
           </div>
         </div>
@@ -63,13 +72,18 @@
           <div class="plan-info">
             <div class="plan-title-row">
               <span class="plan-name">{{ i18n.t('pricing.plan.pro') }}</span>
-              <span class="plan-price">9.99 €<span class="price-period">{{ i18n.t('pricing.period.months') }}</span></span>
+              <span class="plan-price">4.99 €<span class="price-period">{{ i18n.t('pricing.period.months') }}</span></span>
             </div>
+            <div class="commitment-badge-small">{{ i18n.t('pricing.commitment_free') }}</div>
             <ul class="plan-features">
               <li>✨ {{ i18n.t('pricing.feat.sync') }}</li>
+              <li>📊 {{ i18n.t('pricing.feat.dashboard') }}</li>
+              <li>⚔️ {{ i18n.t('pricing.feat.charspec') }}</li>
+              <li>👑 {{ i18n.t('pricing.feat.roles') }}</li>
               <li>👥 {{ i18n.t('pricing.feat.roster_unlimited') }}</li>
               <li>📅 {{ i18n.t('pricing.feat.event_unlimited') }}</li>
               <li>💬 {{ i18n.t('pricing.feat.discord_yes') }}</li>
+              <li>💰 {{ i18n.t('pricing.feat.fees_pro') }}</li>
             </ul>
           </div>
         </div>
@@ -86,8 +100,8 @@
 
       <div class="payment-amount-box">
         <span>{{ i18n.t('payment.amount') }}</span>
-        <strong *ngIf="selectedTier() === 'pro'">9.99 €</strong>
-        <strong *ngIf="selectedTier() === 'medium'">4.99 €</strong>
+        <strong *ngIf="selectedTier() === 'pro'">4.99 €</strong>
+        <strong *ngIf="selectedTier() === 'medium'">2.99 €</strong>
         <strong *ngIf="selectedTier() === 'free'" style="color: #10b981;">0.00 €</strong>
       </div>
 
@@ -129,7 +143,7 @@
   </div>
 
   <!-- IF USER IS STANDARD MEMBER: Restricted Locking Screen -->
-  <div class="restricted-member-box animated-fade-in" *ngIf="!authService.isGMOrOfficer()">
+  <div class="restricted-member-box animated-fade-in" *ngIf="!authService.isGMOrOfficer() && !verifyingSession()">
     <span class="warning-large-icon">⚠️</span>
     <h3>{{ i18n.t('payment.restricted_title') }}</h3>
     <p class="lock-desc">{{ i18n.t('payment.restricted_desc') }}</p>
@@ -140,6 +154,25 @@
         <button class="btn-change-guild" routerLink="/select-guild">{{ i18n.t('payment.btn_change_guild') }}</button>
         <button class="btn-logout-payment" (click)="authService.logout()">{{ i18n.t('payment.btn_logout') }}</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Verification Screen -->
+  <div class="verifying-payment-box animated-fade-in" *ngIf="verifyingSession()">
+    <div class="verification-card">
+      <div class="spinner-large-container" *ngIf="verificationSuccess() === null">
+        <span class="spinner-large"></span>
+      </div>
+      <span class="status-icon success" *ngIf="verificationSuccess() === true">✅</span>
+      <span class="status-icon error" *ngIf="verificationSuccess() === false">❌</span>
+      
+      <h3 *ngIf="verificationSuccess() === null">Vérification de votre paiement...</h3>
+      <h3 *ngIf="verificationSuccess() === true">Paiement validé avec succès !</h3>
+      <h3 *ngIf="verificationSuccess() === false">Échec de la validation du paiement</h3>
+      
+      <p class="verification-desc" *ngIf="verificationSuccess() === null">Veuillez patienter pendant que nous validons votre transaction avec Stripe...</p>
+      <p class="verification-desc" *ngIf="verificationSuccess() === true">Votre guilde a bien été mise à niveau. Redirection vers le tableau de bord...</p>
+      <p class="verification-desc" *ngIf="verificationSuccess() === false">Une erreur est survenue lors de la vérification de votre paiement. Veuillez réessayer ou contacter le support.</p>
     </div>
   </div>
 </div>

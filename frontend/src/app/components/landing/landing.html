@@ -2,7 +2,9 @@
   <!-- Header -->
   <header class="landing-header">
     <div class="logo">
-      <span class="logo-symbol">🛡️</span> GuildSaaS <span class="logo-beta">PRO</span>
+      <img src="favicon.ico" class="logo-img" alt="Logo">
+      <span>Guild Manager</span>
+      <span class="logo-beta">BETA</span>
     </div>
     <div class="header-actions">
       <!-- Lang Selector -->
@@ -57,6 +59,34 @@
         <h3>{{ i18n.t('landing.feature.fees.title') }}</h3>
         <p>{{ i18n.t('landing.feature.fees.desc') }}</p>
       </div>
+
+      <!-- Discord Push -->
+      <div class="feature-card">
+        <div class="feature-icon">💬</div>
+        <h3>{{ i18n.t('landing.feature.push.title') }}</h3>
+        <p>{{ i18n.t('landing.feature.push.desc') }}</p>
+      </div>
+
+      <!-- Dashboard 360 -->
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>{{ i18n.t('landing.feature.dashboard.title') }}</h3>
+        <p>{{ i18n.t('landing.feature.dashboard.desc') }}</p>
+      </div>
+
+      <!-- Character Spec -->
+      <div class="feature-card">
+        <div class="feature-icon">⚔️</div>
+        <h3>{{ i18n.t('landing.feature.charspec.title') }}</h3>
+        <p>{{ i18n.t('landing.feature.charspec.desc') }}</p>
+      </div>
+
+      <!-- Roles -->
+      <div class="feature-card">
+        <div class="feature-icon">👑</div>
+        <h3>{{ i18n.t('landing.feature.roles.title') }}</h3>
+        <p>{{ i18n.t('landing.feature.roles.desc') }}</p>
+      </div>
     </div>
   </section>
 
@@ -77,27 +107,36 @@
         </div>
         <ul class="pricing-features">
           <li><span class="check">✓</span> {{ i18n.t('pricing.feat.sync') }}</li>
-          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roster_limit') }}</li>
-          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.event_limit') }}</li>
+          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.dashboard') }}</li>
+          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.charspec') }}</li>
+          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roles') }}</li>
+          <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.free_roster_limit') }}</li>
+          <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.free_event_limit') }}</li>
           <li class="excluded"><span class="cross">❌</span> {{ i18n.t('pricing.feat.discord_no') }}</li>
+          <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.fees_basic') }}</li>
         </ul>
         <button class="btn-pricing-cta" (click)="login()">{{ i18n.t('pricing.cta.free') }}</button>
       </div>
 
-      <!-- Moyen Card -->
+      <!-- Standard Card -->
       <div class="pricing-card">
         <div class="pricing-header">
           <h3>{{ i18n.t('pricing.plan.medium') }}</h3>
           <div class="price-container">
-            <span class="price-val">4.99 €</span>
+            <span class="price-val">2.99 €</span>
             <span class="price-period">{{ i18n.t('pricing.period.months') }}</span>
           </div>
+          <div class="commitment-badge">{{ i18n.t('pricing.commitment_free') }}</div>
         </div>
         <ul class="pricing-features">
           <li><span class="check">✓</span> {{ i18n.t('pricing.feat.sync') }}</li>
-          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roster_limit') }}</li>
-          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.event_limit') }}</li>
+          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.dashboard') }}</li>
+          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.charspec') }}</li>
+          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roles') }}</li>
+          <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.roster_limit') }}</li>
+          <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.event_limit') }}</li>
           <li class="excluded"><span class="cross">❌</span> {{ i18n.t('pricing.feat.discord_no') }}</li>
+          <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.fees_basic') }}</li>
         </ul>
         <button class="btn-pricing-cta" (click)="login()">{{ i18n.t('pricing.cta.medium') }}</button>
       </div>
@@ -108,15 +147,20 @@
         <div class="pricing-header">
           <h3>{{ i18n.t('pricing.plan.pro') }}</h3>
           <div class="price-container">
-            <span class="price-val">9.99 €</span>
+            <span class="price-val">4.99 €</span>
             <span class="price-period">{{ i18n.t('pricing.period.months') }}</span>
           </div>
+          <div class="commitment-badge">{{ i18n.t('pricing.commitment_free') }}</div>
         </div>
         <ul class="pricing-features">
           <li><span class="check">✓</span> {{ i18n.t('pricing.feat.sync') }}</li>
+          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.dashboard') }}</li>
+          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.charspec') }}</li>
+          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roles') }}</li>
           <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roster_unlimited') }}</li>
           <li><span class="check">✓</span> {{ i18n.t('pricing.feat.event_unlimited') }}</li>
           <li><span class="check">✓</span> {{ i18n.t('pricing.feat.discord_yes') }}</li>
+          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.fees_pro') }}</li>
         </ul>
         <button class="btn-pricing-cta btn-pro-cta" (click)="login()">{{ i18n.t('pricing.cta.pro') }}</button>
       </div>
@@ -125,6 +169,6 @@
 
   <!-- Footer -->
   <footer class="landing-footer">
-    <p>© 2026 GuildSaaS. World of Warcraft, Warcraft and Blizzard Entertainment are trademarks or registered trademarks of Blizzard Entertainment, Inc.</p>
+    <p>© 2026 Guild Manager. World of Warcraft, Warcraft and Blizzard Entertainment are trademarks or registered trademarks of Blizzard Entertainment, Inc.</p>
   </footer>
 </div>
