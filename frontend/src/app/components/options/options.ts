@@ -66,6 +66,16 @@ export class OptionsComponent implements OnInit {
     }
   }
 
+  formatDate(dateStr: string | null | undefined): string {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString(this.i18n.currentLocale() === 'fr' ? 'fr-FR' : 'en-US', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  }
+
   getRemainingDays(expiresAt: string | null | undefined): number {
     if (!expiresAt) return 0;
     const diffTime = new Date(expiresAt).getTime() - Date.now();
@@ -96,9 +106,16 @@ export class OptionsComponent implements OnInit {
   cancelSubscription() {
     if (this.isProcessingSub()) return;
 
+    const user = this.authService.currentUser();
+    const expiryDate = user?.subscription_expires_at ? this.formatDate(user.subscription_expires_at) : '';
+    
+    const message = expiryDate 
+      ? this.i18n.t('options.sub.confirm_unsubscribe_period_end').replace('{date}', expiryDate)
+      : this.i18n.t('options.sub.confirm_unsubscribe');
+
     this.confirmService.ask(
       this.i18n.t('options.sub.unsubscribe'),
-      this.i18n.t('options.sub.confirm_unsubscribe'),
+      message,
       this.i18n.t('options.sub.unsubscribe'),
       'Annuler'
     ).then((confirmed) => {
@@ -107,7 +124,11 @@ export class OptionsComponent implements OnInit {
       this.isProcessingSub.set(true);
       this.http.post<any>(`${this.apiUrl}/stripe/cancel-subscription`, {}, { withCredentials: true }).subscribe({
         next: () => {
-          this.toast.success(this.i18n.t('options.sub.unsubscribe_success'));
+          const successMsg = expiryDate
+            ? this.i18n.t('options.sub.unsubscribe_success_period_end').replace('{date}', expiryDate)
+            : this.i18n.t('options.sub.unsubscribe_success');
+
+          this.toast.success(successMsg);
           this.authService.checkAuth().subscribe({
             next: () => this.isProcessingSub.set(false),
             error: () => this.isProcessingSub.set(false)

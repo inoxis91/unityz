@@ -220,14 +220,16 @@ app.get('/api/users/me', async (req, res, next) => {
       
       let subscription_tier = 'none';
       let subscription_expires_at = null;
+      let subscription_status = null;
       let active_guild_is_paid = false;
       let active_guild_fees_enabled = true;
       let active_guild_minimum_fee_amount = 2000;
       if (user.active_guild_id) {
-        const guildRes = await pool.query('SELECT subscription_tier, subscription_expires_at, fees_enabled, minimum_fee_amount FROM guilds WHERE id = $1', [user.active_guild_id]);
+        const guildRes = await pool.query('SELECT subscription_tier, subscription_expires_at, subscription_status, fees_enabled, minimum_fee_amount FROM guilds WHERE id = $1', [user.active_guild_id]);
         if (guildRes.rows[0]) {
           subscription_tier = guildRes.rows[0].subscription_tier;
           subscription_expires_at = guildRes.rows[0].subscription_expires_at;
+          subscription_status = guildRes.rows[0].subscription_status;
           active_guild_is_paid = subscription_expires_at ? (new Date(subscription_expires_at) > new Date()) : false;
           active_guild_fees_enabled = guildRes.rows[0].fees_enabled !== undefined ? guildRes.rows[0].fees_enabled : true;
           active_guild_minimum_fee_amount = guildRes.rows[0].minimum_fee_amount || 2000;
@@ -239,6 +241,7 @@ app.get('/api/users/me', async (req, res, next) => {
         has_characters,
         subscription_tier,
         subscription_expires_at,
+        subscription_status,
         active_guild_is_paid,
         active_guild_fees_enabled,
         active_guild_minimum_fee_amount

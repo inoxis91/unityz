@@ -288,6 +288,12 @@
   color: #065f46;
 }
 
+.status-badge-sub.canceled {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #f59e0b;
+}
+
 .status-badge-sub.expired {
   background: #fee2e2;
   color: #991b1b;

@@ -120,8 +120,16 @@
             </div>
             <div class="info-item">
               <span class="label">{{ i18n.t('options.sub.status') }}</span>
-              <span class="value status-badge-sub" [class.active]="user.active_guild_is_paid" [class.expired]="!user.active_guild_is_paid">
-                {{ user.active_guild_is_paid ? i18n.t('options.sub.status_active') : i18n.t('options.sub.status_expired') }}
+              <span class="value status-badge-sub" 
+                    [class.active]="user.active_guild_is_paid && user.subscription_status !== 'canceled'" 
+                    [class.canceled]="user.subscription_status === 'canceled'" 
+                    [class.expired]="!user.active_guild_is_paid">
+                <ng-container *ngIf="user.subscription_status === 'canceled'">
+                  {{ i18n.t('options.sub.status_canceled').replace('{date}', formatDate(user.subscription_expires_at)) }}
+                </ng-container>
+                <ng-container *ngIf="user.subscription_status !== 'canceled'">
+                  {{ user.active_guild_is_paid ? i18n.t('options.sub.status_active') : i18n.t('options.sub.status_expired') }}
+                </ng-container>
               </span>
             </div>
           </div>
@@ -141,14 +149,14 @@
               <button class="btn-sub-action pro-btn" [disabled]="isProcessingSub()" (click)="upgradeSubscription('pro')">
                 {{ i18n.t('options.sub.upgrade_pro') }}
               </button>
-              <button class="btn-sub-action cancel-btn" [disabled]="isProcessingSub()" (click)="cancelSubscription()">
+              <button class="btn-sub-action cancel-btn" *ngIf="user.subscription_status !== 'canceled'" [disabled]="isProcessingSub()" (click)="cancelSubscription()">
                 {{ i18n.t('options.sub.unsubscribe') }}
               </button>
             </ng-container>
 
             <!-- Pro Tier -->
             <ng-container *ngIf="user.subscription_tier === 'pro'">
-              <button class="btn-sub-action cancel-btn" [disabled]="isProcessingSub()" (click)="cancelSubscription()">
+              <button class="btn-sub-action cancel-btn" *ngIf="user.subscription_status !== 'canceled'" [disabled]="isProcessingSub()" (click)="cancelSubscription()">
                 {{ i18n.t('options.sub.unsubscribe') }}
               </button>
             </ng-container>

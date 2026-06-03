@@ -13,7 +13,7 @@ describe('OptionsComponent', () => {
   let fixture: ComponentFixture<OptionsComponent>;
 
   const mockAuthService = {
-    currentUser: () => ({ id: 1, role: 'member', subscription_tier: 'free', subscription_expires_at: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString() }),
+    currentUser: () => ({ id: 1, role: 'member', subscription_tier: 'free', subscription_expires_at: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), subscription_status: 'active' }),
     currentGuild: () => ({ name: 'Test Guild' }),
     isGMOrOfficer: () => true,
     isAdmin: () => false,

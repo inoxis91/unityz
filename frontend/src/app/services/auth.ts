@@ -20,6 +20,7 @@ export interface User {
   active_guild_minimum_fee_amount?: number;
   subscription_tier?: 'free' | 'medium' | 'pro';
   subscription_expires_at?: string | null;
+  subscription_status?: string | null;
   created_at?: string;
   updated_at?: string;
 }
