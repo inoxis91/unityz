@@ -410,4 +410,69 @@ router.post('/mock-payment-success', requireActiveGuild, async (req, res, next) 
   }
 });
 
+// POST /api/stripe/cancel-subscription : Résilie l'abonnement en cours pour la guilde active
+router.post('/cancel-subscription', requireActiveGuild, async (req, res, next) => {
+  try {
+    const guildId = req.user!.active_guild_id;
+
+    if (!guildId) {
+      return res.status(400).json({ status: 'error', message: 'No active guild found in session.' });
+    }
+
+    // Security check: Only GMs and Officers (rank <= 2) can manage or cancel subscriptions!
+    const userRes = await pool.query('SELECT rank FROM users WHERE id = $1', [req.user!.id]);
+    const userRank = userRes.rows[0]?.rank;
+    
+    if (userRank === null || userRank === undefined || userRank > 2) {
+      return res.status(403).json({
+        status: 'error',
+        code: 'FORBIDDEN',
+        message: 'Only Guild Masters and Officers are authorized to manage or cancel subscriptions.'
+      });
+    }
+
+    // Fetch guild subscription details
+    const guildRes = await pool.query('SELECT stripe_subscription_id, subscription_tier FROM guilds WHERE id = $1', [guildId]);
+    const guild = guildRes.rows[0];
+
+    if (!guild) {
+      return res.status(404).json({ status: 'error', message: 'Guild not found.' });
+    }
+
+    const stripeSubscriptionId = guild.stripe_subscription_id;
+
+    // Handle cancel in real Stripe vs Mock
+    if (stripeSubscriptionId && stripe) {
+      try {
+        // Cancel the subscription on Stripe
+        await stripe.subscriptions.cancel(stripeSubscriptionId);
+      } catch (err) {
+        console.error('[Stripe Cancel] Error canceling subscription on Stripe:', err);
+        // Continue to cancel in DB as a fallback
+      }
+    }
+
+    // Update database status to none and reset Stripe/expiry
+    const result = await pool.query(
+      `UPDATE guilds 
+       SET subscription_tier = 'none', 
+           subscription_expires_at = NULL, 
+           subscription_status = 'canceled',
+           stripe_subscription_id = NULL,
+           updated_at = CURRENT_TIMESTAMP 
+       WHERE id = $1 
+       RETURNING *`,
+      [guildId]
+    );
+
+    res.json({
+      status: 'success',
+      message: 'Subscription successfully canceled',
+      guild: result.rows[0]
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

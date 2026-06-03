@@ -114,6 +114,10 @@
               <span class="label">{{ i18n.t('options.sub.expires') }}</span>
               <span class="value">{{ user.subscription_expires_at | date:'dd/MM/yyyy' }}</span>
             </div>
+            <div class="info-item" *ngIf="user.subscription_tier === 'free' && user.subscription_expires_at">
+              <span class="label">Durée restante</span>
+              <span class="value remaining-duration-text">{{ i18n.t('options.sub.remaining_days').replace('{days}', getRemainingDays(user.subscription_expires_at).toString()) }}</span>
+            </div>
             <div class="info-item">
               <span class="label">{{ i18n.t('options.sub.status') }}</span>
               <span class="value status-badge-sub" [class.active]="user.active_guild_is_paid" [class.expired]="!user.active_guild_is_paid">
@@ -122,7 +126,32 @@
             </div>
           </div>
           <div class="action-box-sub" *ngIf="authService.isGMOrOfficer()">
-            <button class="btn-manage-sub" routerLink="/payment">{{ i18n.t('options.sub.btn_manage') }}</button>
+            <!-- Free Tier / None Tier -->
+            <ng-container *ngIf="user.subscription_tier === 'free' || !user.subscription_tier">
+              <button class="btn-sub-action standard-btn" [disabled]="isProcessingSub()" (click)="upgradeSubscription('medium')">
+                {{ i18n.t('options.sub.upgrade_medium') }}
+              </button>
+              <button class="btn-sub-action pro-btn" [disabled]="isProcessingSub()" (click)="upgradeSubscription('pro')">
+                {{ i18n.t('options.sub.upgrade_pro') }}
+              </button>
+            </ng-container>
+
+            <!-- Standard (Medium) Tier -->
+            <ng-container *ngIf="user.subscription_tier === 'medium'">
+              <button class="btn-sub-action pro-btn" [disabled]="isProcessingSub()" (click)="upgradeSubscription('pro')">
+                {{ i18n.t('options.sub.upgrade_pro') }}
+              </button>
+              <button class="btn-sub-action cancel-btn" [disabled]="isProcessingSub()" (click)="cancelSubscription()">
+                {{ i18n.t('options.sub.unsubscribe') }}
+              </button>
+            </ng-container>
+
+            <!-- Pro Tier -->
+            <ng-container *ngIf="user.subscription_tier === 'pro'">
+              <button class="btn-sub-action cancel-btn" [disabled]="isProcessingSub()" (click)="cancelSubscription()">
+                {{ i18n.t('options.sub.unsubscribe') }}
+              </button>
+            </ng-container>
           </div>
         </div>
       </div>
