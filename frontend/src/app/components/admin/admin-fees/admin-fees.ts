@@ -111,7 +111,8 @@ export class AdminFeesComponent implements OnInit {
   openAdjustModal(user: GuildFeeOverview, monthIndex: number) {
     this.adjustingUser = user;
     this.adjustingMonthIndex = monthIndex;
-    const currentAlloc = user.allocations.find(a => a.month?.startsWith(`${this.displayYear()}-${String(monthIndex).padStart(2, '0')}`));
+    const allocations = user.allocations || [];
+    const currentAlloc = allocations.find(a => a?.month?.startsWith(`${this.displayYear()}-${String(monthIndex).padStart(2, '0')}`));
     this.adjustingAmount = currentAlloc ? currentAlloc.amount : 0;
     this.showAdjustModal.set(true);
   }
@@ -141,7 +142,8 @@ export class AdminFeesComponent implements OnInit {
 
   getMonthAlloc(user: GuildFeeOverview, monthIndex: number) {
     const dateStr = `${this.displayYear()}-${String(monthIndex).padStart(2, '0')}-01`;
-    return user.allocations.find(a => a.month?.startsWith(dateStr.substring(0, 7)));
+    const allocations = user.allocations || [];
+    return allocations.find(a => a?.month?.startsWith(dateStr.substring(0, 7)));
   }
 
   getUserMonthStatus(user: GuildFeeOverview, monthIndex: number) {

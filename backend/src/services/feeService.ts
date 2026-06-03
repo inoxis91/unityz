@@ -102,7 +102,7 @@ export class FeeService {
         SELECT u.id as user_id, u.battletag, 
                (SELECT name FROM characters WHERE user_id = u.id AND is_main = true LIMIT 1) as main_character,
                (SELECT json_agg(json_build_object('name', name, 'realm', realm, 'class', class, 'is_main', is_main)) FROM characters WHERE user_id = u.id) as characters,
-               JSON_AGG(json_build_object('month', month_date, 'amount', amount)) as allocations
+               COALESCE(JSON_AGG(json_build_object('month', fa.month_date, 'amount', fa.amount)) FILTER (WHERE fa.month_date IS NOT NULL), '[]'::json) as allocations
         FROM users u
         LEFT JOIN fee_allocations fa ON u.id = fa.user_id AND EXTRACT(YEAR FROM fa.month_date) = $1
         GROUP BY u.id, u.battletag
@@ -116,7 +116,7 @@ export class FeeService {
       SELECT u.id as user_id, u.battletag, 
              (SELECT name FROM characters WHERE user_id = u.id AND is_main = true AND guild_id = $2 LIMIT 1) as main_character,
              (SELECT json_agg(json_build_object('name', name, 'realm', realm, 'class', class, 'is_main', is_main)) FROM characters WHERE user_id = u.id AND guild_id = $2) as characters,
-             JSON_AGG(json_build_object('month', fa.month_date, 'amount', fa.amount)) FILTER (WHERE fa.month_date IS NOT NULL) as allocations
+             COALESCE(JSON_AGG(json_build_object('month', fa.month_date, 'amount', fa.amount)) FILTER (WHERE fa.month_date IS NOT NULL), '[]'::json) as allocations
       FROM users u
       JOIN characters c ON u.id = c.user_id AND c.guild_id = $2
       LEFT JOIN fee_allocations fa ON u.id = fa.user_id AND EXTRACT(YEAR FROM fa.month_date) = $1 AND fa.guild_id = $2
