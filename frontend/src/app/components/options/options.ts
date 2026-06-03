@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
@@ -29,11 +29,30 @@ export class OptionsComponent implements OnInit {
   isPro = computed(() => this.authService.currentUser()?.subscription_tier === 'pro');
   isProcessingSub = signal(false);
 
+  birthdayValue = signal<string>('');
+
   constructor(
     public authService: AuthService, 
     private route: ActivatedRoute,
     private toast: ToastService
-  ) {}
+  ) {
+    effect(() => {
+      const bday = this.authService.currentUser()?.birthday;
+      if (bday) {
+        this.birthdayValue.set(bday.substring(0, 10));
+      } else {
+        this.birthdayValue.set('');
+      }
+    });
+  }
+
+  saveBirthday() {
+    const val = this.birthdayValue() ? this.birthdayValue() : null;
+    this.authService.updateBirthday(val).subscribe({
+      next: () => this.toast.success('Date d\'anniversaire mise à jour.'),
+      error: () => this.toast.error('Erreur lors de la mise à jour.')
+    });
+  }
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {

@@ -108,9 +108,20 @@ export const initDb = async () => {
         role VARCHAR(50) DEFAULT 'member',
         rank INTEGER,
         active_guild_id UUID REFERENCES guilds(id) ON DELETE SET NULL,
+        birthday DATE,
         created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+    `);
+
+    // Ensure birthday column exists (migration for existing tables)
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='birthday') THEN
+          ALTER TABLE users ADD COLUMN birthday DATE;
+        END IF;
+      END $$;
     `);
 
     // Ensure active_guild_id exists (migration for existing tables)

@@ -89,6 +89,33 @@
     </div>
   </section>
 
+  <!-- Birthday Section -->
+  <section class="birthday-announcements animated-fade-in" *ngIf="birthdays().length > 0" style="margin-bottom: 2.5rem;">
+    <div class="birthday-card" style="background: linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%); border: 1px solid #fde8bb; border-radius: 24px; padding: 1.75rem; display: flex; align-items: center; gap: 1.75rem; box-shadow: 0 4px 20px rgba(251, 191, 36, 0.08);">
+      <div class="birthday-icon" style="font-size: 2.8rem; line-height: 1; animation: bdayBounce 2s infinite;">🎂</div>
+      <div class="birthday-messages" style="flex-grow: 1;">
+        <h2 style="margin: 0 0 0.5rem 0; font-size: 1.25rem; font-weight: 800; color: #b45309; display: flex; align-items: center; gap: 0.5rem;">
+          Anniversaires de la guilde ce mois-ci ! 🎉
+        </h2>
+        <div class="messages-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+          @for (bday of birthdays(); track bday.id) {
+            <div class="birthday-item" style="font-size: 1.05rem; color: #78350f; font-weight: 600;">
+              @if (isBirthdayToday(bday.birthday)) {
+                <span class="special-bday" style="background: linear-gradient(90deg, #f59e0b, #ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; font-size: 1.1rem; display: inline-flex; align-items: center; gap: 0.5rem; animation: bdayPulse 1.5s infinite;">
+                  🎉 Joyeux Anniversaire à <strong>{{ bday.main_character }}</strong> aujourd'hui ! Passe une excellente journée ! 🎈🥳
+                </span>
+              } @else {
+                <span class="month-bday" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                  🎁 C'est le mois d'anniversaire de <strong>{{ bday.main_character }}</strong> ! (le {{ formatBirthdayDay(bday.birthday) }})
+                </span>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
   <div class="dashboard-grid">
     
     <!-- Upcoming Events Column -->

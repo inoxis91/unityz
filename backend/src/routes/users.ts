@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { validate } from '../middlewares/validate';
 import { findMemberByName } from '../lib/discord';
 import { UserService } from '../services/userService';
+import { CharacterService } from '../services/characterService';
 
 const router = express.Router();
 
@@ -29,6 +30,21 @@ router.get('/', isAdmin, async (req, res, next) => {
     }
     const users = await UserService.getAllForGuild(guildId);
     res.json(users);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/users/:id/characters : Liste les personnages d'un utilisateur (Admin)
+router.get('/:id/characters', isAdmin, async (req, res, next) => {
+  try {
+    const userId = req.params.id as string;
+    const guildId = req.user!.active_guild_id;
+    if (!guildId) {
+      return res.status(400).json({ status: 'error', message: 'No active guild selected' });
+    }
+    const characters = await CharacterService.getByUserId(userId, guildId);
+    res.json(characters);
   } catch (error) {
     next(error);
   }
@@ -97,6 +113,42 @@ router.patch('/discord', isAuthenticated, validate(updateDiscordSchema), async (
 
     const user = await UserService.updateDiscordId(req.user!.id, discordId);
     res.json(user);
+  } catch (error) {
+    next(error);
+  }
+});
+
+const updateBirthdaySchema = z.object({
+  body: z.object({
+    birthday: z.string().nullable().refine((val) => {
+      if (val === null) return true;
+      return !isNaN(Date.parse(val));
+    }, {
+      message: "Invalid date format",
+    }),
+  }),
+});
+
+// PATCH /api/users/birthday : Met à jour sa propre date d'anniversaire
+router.patch('/birthday', isAuthenticated, validate(updateBirthdaySchema), async (req, res, next) => {
+  try {
+    const { birthday } = req.body;
+    const user = await UserService.updateBirthday(req.user!.id, birthday);
+    res.json(user);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/users/active-guild/birthdays : Récupère les anniversaires du mois en cours pour la guilde active
+router.get('/active-guild/birthdays', isAuthenticated, async (req, res, next) => {
+  try {
+    const guildId = req.user!.active_guild_id;
+    if (!guildId) {
+      return res.status(400).json({ status: 'error', message: 'No active guild selected' });
+    }
+    const birthdays = await UserService.getGuildBirthdaysThisMonth(guildId);
+    res.json(birthdays);
   } catch (error) {
     next(error);
   }

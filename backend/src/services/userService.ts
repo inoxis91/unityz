@@ -18,12 +18,16 @@ export class UserService {
     return result.rows;
   }
 
-  static async getAllForGuild(guildId: string): Promise<User[]> {
+  static async getAllForGuild(guildId: string): Promise<any[]> {
     const query = `
-      SELECT DISTINCT u.id, u.battletag, u.bnet_id, u.discord_id, u.role, u.created_at 
+      SELECT u.id, u.battletag, u.bnet_id, u.discord_id, u.role, u.created_at,
+             (SELECT json_agg(json_build_object('name', name, 'realm', realm, 'class', class, 'is_main', is_main)) 
+              FROM characters 
+              WHERE user_id = u.id AND guild_id = $1) as characters
       FROM users u
       LEFT JOIN characters c ON u.id = c.user_id
       WHERE c.guild_id = $1 OR u.active_guild_id = $1
+      GROUP BY u.id, u.battletag, u.bnet_id, u.discord_id, u.role, u.created_at
       ORDER BY u.battletag ASC
     `;
     const result = await pool.query(query, [guildId]);
@@ -39,6 +43,12 @@ export class UserService {
   static async updateDiscordId(userId: string, discordId: string | null): Promise<User | null> {
     const query = 'UPDATE users SET discord_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *';
     const result = await pool.query(query, [discordId, userId]);
+    return result.rows[0] || null;
+  }
+
+  static async updateBirthday(userId: string, birthday: string | null): Promise<any | null> {
+    const query = 'UPDATE users SET birthday = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *';
+    const result = await pool.query(query, [birthday, userId]);
     return result.rows[0] || null;
   }
 
@@ -426,5 +436,23 @@ export class UserService {
     } finally {
       client.release();
     }
+  }
+
+  static async getGuildBirthdaysThisMonth(guildId: string): Promise<any[]> {
+    const query = `
+      SELECT u.id, u.battletag, u.birthday,
+             COALESCE(
+               (SELECT name FROM characters WHERE user_id = u.id AND is_main = true AND guild_id = $1 LIMIT 1),
+               (SELECT name FROM characters WHERE user_id = u.id AND is_main = true LIMIT 1),
+               SPLIT_PART(u.battletag, '#', 1)
+             ) as main_character
+      FROM users u
+      WHERE (u.active_guild_id = $1 OR EXISTS (SELECT 1 FROM characters WHERE user_id = u.id AND guild_id = $1))
+        AND u.birthday IS NOT NULL
+        AND EXTRACT(MONTH FROM u.birthday) = EXTRACT(MONTH FROM CURRENT_DATE)
+      ORDER BY EXTRACT(DAY FROM u.birthday) ASC
+    `;
+    const result = await pool.query(query, [guildId]);
+    return result.rows;
   }
 }

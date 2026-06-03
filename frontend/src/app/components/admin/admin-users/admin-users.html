@@ -19,13 +19,13 @@
         <tbody>
           @for (user of users(); track user.id) {
             <tr>
-              <td class="user-cell">
+              <td class="user-cell clickable" (click)="openCharactersModal(user)">
                 <div class="user-avatar">
                   {{ user.battletag.charAt(0).toUpperCase() }}
                 </div>
                 <span class="user-name">{{ user.battletag.split('#')[0] }}</span>
               </td>
-              <td class="btag-cell">{{ user.battletag }}</td>
+              <td class="btag-cell clickable" (click)="openCharactersModal(user)">{{ user.battletag }}</td>
               <td class="role-cell">
                 <select [ngModel]="user.role" (ngModelChange)="onRoleChange(user, $event)" class="role-select">
                   @for (role of roles; track role.value) {
@@ -48,6 +48,30 @@
           }
         </tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- Characters List Modal -->
+<div class="modal-backdrop" *ngIf="showCharactersModal()">
+  <div class="modal">
+    <h3>Personnages de {{ modalUser()?.battletag }}</h3>
+    
+    <div class="characters-list" *ngIf="modalUser()?.characters?.length; else noChars">
+      @for (char of modalUser()?.characters; track char.name) {
+        <div class="character-item">
+          <span class="char-name" [class.is-main]="char.is_main">{{ char.name }}</span>
+          <span class="char-details">{{ char.class }} - {{ char.realm }}</span>
+          <span class="main-badge" *ngIf="char.is_main">Main</span>
+        </div>
+      }
+    </div>
+    <ng-template #noChars>
+      <p>Aucun personnage synchronisé pour ce joueur.</p>
+    </ng-template>
+
+    <div class="modal-footer">
+      <button class="btn-primary" (click)="closeCharactersModal()">Fermer</button>
     </div>
   </div>
 </div>

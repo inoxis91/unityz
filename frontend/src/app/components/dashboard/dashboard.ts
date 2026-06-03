@@ -30,9 +30,38 @@ export class DashboardComponent implements OnInit, OnDestroy {
   mainCharacterRioScore = signal<number | null>(null);
   rioScores = signal<Map<string, number>>(new Map());
 
+  birthdays = signal<any[]>([]);
+
   private timerInterval: any;
 
   mainCharacter = computed(() => this.myCharacters().find(c => c.is_main));
+
+  isBirthdayToday(birthdayStr: string): boolean {
+    if (!birthdayStr) return false;
+    const bdayParts = birthdayStr.substring(0, 10).split('-');
+    if (bdayParts.length < 3) return false;
+    
+    const bdayMonth = parseInt(bdayParts[1], 10);
+    const bdayDay = parseInt(bdayParts[2], 10);
+    
+    const today = new Date();
+    const todayMonth = today.getMonth() + 1;
+    const todayDay = today.getDate();
+    
+    return bdayMonth === todayMonth && bdayDay === todayDay;
+  }
+
+  formatBirthdayDay(birthdayStr: string): string {
+    if (!birthdayStr) return '';
+    const bdayParts = birthdayStr.substring(0, 10).split('-');
+    if (bdayParts.length < 3) return '';
+    
+    const monthIndex = parseInt(bdayParts[1], 10) - 1;
+    const day = parseInt(bdayParts[2], 10);
+    
+    const tempDate = new Date(2000, monthIndex, day);
+    return tempDate.toLocaleDateString(this.i18n.currentLocale() === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'long' });
+  }
 
   // Computed summary for next 3 months
   minimumFee = computed(() => this.authService.currentUser()?.active_guild_minimum_fee_amount ?? 2000);
@@ -137,6 +166,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Load allocations
     const currentYear = new Date().getFullYear();
     this.feeService.loadMyAllocations(currentYear).subscribe(allocs => this.myAllocations.set(allocs));
+
+    // Load guild birthdays
+    this.authService.getGuildBirthdays().subscribe({
+      next: (birthdays) => this.birthdays.set(birthdays),
+      error: (err) => console.error('Error loading guild birthdays', err)
+    });
   }
 
   fetchCharacterDetails(char: Character) {

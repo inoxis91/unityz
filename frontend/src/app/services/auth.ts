@@ -23,6 +23,8 @@ export interface User {
   subscription_status?: string | null;
   created_at?: string;
   updated_at?: string;
+  characters?: any[];
+  birthday?: string | null;
 }
 
 @Injectable({
@@ -108,6 +110,16 @@ export class AuthService {
     return this.http.patch<User>(`${this.apiUrl}/users/discord`, { discordId }, { withCredentials: true }).pipe(
       tap(user => this.currentUser.set(user))
     );
+  }
+
+  updateBirthday(birthday: string | null): Observable<User> {
+    return this.http.patch<User>(`${this.apiUrl}/users/birthday`, { birthday }, { withCredentials: true }).pipe(
+      tap(user => this.currentUser.set(user))
+    );
+  }
+
+  getGuildBirthdays(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/users/active-guild/birthdays`, { withCredentials: true });
   }
 
   linkDiscord(): void {

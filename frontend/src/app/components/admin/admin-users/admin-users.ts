@@ -26,8 +26,21 @@ export class AdminUsersComponent implements OnInit {
     { value: 'member', label: 'Membre standard' }
   ];
 
+  showCharactersModal = signal(false);
+  modalUser = signal<any | null>(null);
+
   ngOnInit() {
     this.loadUsers();
+  }
+
+  openCharactersModal(user: any) {
+    this.modalUser.set(user);
+    this.showCharactersModal.set(true);
+  }
+
+  closeCharactersModal() {
+    this.showCharactersModal.set(false);
+    this.modalUser.set(null);
   }
 
   loadUsers() {
