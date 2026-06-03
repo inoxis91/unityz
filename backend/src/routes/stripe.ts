@@ -444,21 +444,18 @@ router.post('/cancel-subscription', requireActiveGuild, async (req, res, next) =
     // Handle cancel in real Stripe vs Mock
     if (stripeSubscriptionId && stripe) {
       try {
-        // Cancel the subscription on Stripe
-        await stripe.subscriptions.cancel(stripeSubscriptionId);
+        // Cancel the subscription on Stripe at the end of the current billing period
+        await stripe.subscriptions.update(stripeSubscriptionId, { cancel_at_period_end: true });
       } catch (err) {
         console.error('[Stripe Cancel] Error canceling subscription on Stripe:', err);
         // Continue to cancel in DB as a fallback
       }
     }
 
-    // Update database status to none and reset Stripe/expiry
+    // Update database status to canceled but do NOT reset tier or expires_at so they keep access until next expiration!
     const result = await pool.query(
       `UPDATE guilds 
-       SET subscription_tier = 'none', 
-           subscription_expires_at = NULL, 
-           subscription_status = 'canceled',
-           stripe_subscription_id = NULL,
+       SET subscription_status = 'canceled',
            updated_at = CURRENT_TIMESTAMP 
        WHERE id = $1 
        RETURNING *`,
