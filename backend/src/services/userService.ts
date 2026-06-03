@@ -104,13 +104,26 @@ export class UserService {
         const guild = mockGuilds.find((g: any) => g.id === gid);
         if (guild) {
           const dbRes = await pool.query(`
-            INSERT INTO guilds (id, blizzard_id, name, realm, region, subscription_tier, subscription_expires_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            ON CONFLICT (blizzard_id) DO UPDATE 
-            SET name = EXCLUDED.name, realm = EXCLUDED.realm, updated_at = CURRENT_TIMESTAMP
-            RETURNING id, name, realm, region, subscription_tier, subscription_expires_at
-          `, [guild.id, guild.blizzard_id, guild.name, guild.realm, guild.region, guild.subscription_tier, guild.subscription_expires_at]);
-          registeredGuilds.push(dbRes.rows[0]);
+            SELECT id, name, realm, region, subscription_tier, subscription_expires_at 
+            FROM guilds 
+            WHERE blizzard_id = $1
+          `, [guild.blizzard_id]);
+          
+          if (dbRes.rows[0]) {
+            registeredGuilds.push(dbRes.rows[0]);
+          } else {
+            const virtualId = `00000000-0000-0000-0000-${String(guild.blizzard_id).padStart(12, '0')}`;
+            registeredGuilds.push({
+              id: virtualId,
+              blizzard_id: guild.blizzard_id,
+              name: guild.name,
+              realm: guild.realm,
+              region: guild.region,
+              subscription_tier: guild.subscription_tier || 'none',
+              subscription_expires_at: guild.subscription_expires_at || null,
+              is_virtual: true
+            });
+          }
         }
       }
       return registeredGuilds;
@@ -161,35 +174,119 @@ export class UserService {
     const discoveredGuilds = Array.from(uniqueGuildsMap.values());
     const registeredGuilds: any[] = [];
 
-    // Insert or find guilds in database to get real UUIDs and statuses
+    // Check if guilds exist in database, do not automatically insert them
     for (const guild of discoveredGuilds) {
       const dbRes = await pool.query(`
-        INSERT INTO guilds (blizzard_id, name, realm, region)
-        VALUES ($1, $2, $3, $4)
-        ON CONFLICT (blizzard_id) DO UPDATE 
-        SET name = EXCLUDED.name, realm = EXCLUDED.realm, updated_at = CURRENT_TIMESTAMP
-        RETURNING id, name, realm, region, subscription_tier, subscription_expires_at
-      `, [guild.blizzard_id, guild.name, guild.realm, guild.region]);
-      registeredGuilds.push(dbRes.rows[0]);
+        SELECT id, name, realm, region, subscription_tier, subscription_expires_at 
+        FROM guilds 
+        WHERE blizzard_id = $1
+      `, [guild.blizzard_id]);
+      
+      if (dbRes.rows[0]) {
+        registeredGuilds.push(dbRes.rows[0]);
+      } else {
+        const virtualId = `00000000-0000-0000-0000-${String(guild.blizzard_id).padStart(12, '0')}`;
+        registeredGuilds.push({
+          id: virtualId,
+          blizzard_id: guild.blizzard_id,
+          name: guild.name,
+          realm: guild.realm,
+          region: guild.region,
+          subscription_tier: 'none',
+          subscription_expires_at: null,
+          is_virtual: true
+        });
+      }
     }
 
     return registeredGuilds;
   }
 
   static async fetchGuildCharacters(userId: string, guildId: string, accessToken: string): Promise<any[]> {
-    // 1. Get the guild's blizzard ID and details to match characters
-    const guildRes = await pool.query('SELECT blizzard_id, name, realm FROM guilds WHERE id = $1', [guildId]);
-    const guild = guildRes.rows[0];
+    let guild = null;
+    let realGuildId = guildId;
+
+    if (guildId.startsWith('00000000-0000-0000-0000-')) {
+      const blizzardId = parseInt(guildId.split('-').pop() || '0', 10);
+      
+      const existingRes = await pool.query('SELECT * FROM guilds WHERE blizzard_id = $1', [blizzardId]);
+      if (existingRes.rows[0]) {
+        guild = existingRes.rows[0];
+        realGuildId = guild.id;
+      } else {
+        let name = '';
+        let realm = '';
+        let region = 'eu';
+        let subTier = 'none';
+        let subExpires = null;
+
+        if (accessToken.startsWith('mock_')) {
+          const { mockGuilds } = require('../lib/mockData');
+          const mockG = mockGuilds.find((g: any) => g.blizzard_id === blizzardId);
+          if (mockG) {
+            name = mockG.name;
+            realm = mockG.realm;
+            region = mockG.region || 'eu';
+            subTier = mockG.subscription_tier || 'none';
+            subExpires = mockG.subscription_expires_at || null;
+          }
+        } else {
+          const response = await axios.get('https://eu.api.blizzard.com/profile/user/wow', {
+            headers: { Authorization: `Bearer ${accessToken}` },
+            params: { namespace: 'profile-eu', locale: 'fr_FR' }
+          });
+
+          const accounts = response.data.wow_accounts || [];
+          const characterSummaries: any[] = [];
+          accounts.forEach((account: any) => {
+            if (account.characters) {
+              account.characters.forEach((char: any) => {
+                if (char.name && (char.level || 0) >= 10) {
+                  characterSummaries.push({ name: char.name, realm: char.realm?.name || 'Inconnu' });
+                }
+              });
+            }
+          });
+
+          for (const char of characterSummaries) {
+            try {
+              const summary = await BlizzardService.getCharacterSummary(accessToken, char.realm, char.name);
+              if (summary && summary.guild && summary.guild.id === blizzardId) {
+                name = summary.guild.name;
+                realm = summary.guild.realm?.name || char.realm;
+                break;
+              }
+            } catch (err) {
+              // Ignore
+            }
+          }
+        }
+
+        const insertRes = await pool.query(`
+          INSERT INTO guilds (blizzard_id, name, realm, region, subscription_tier, subscription_expires_at)
+          VALUES ($1, $2, $3, $4, $5, $6)
+          ON CONFLICT (blizzard_id) DO UPDATE
+          SET name = EXCLUDED.name, realm = EXCLUDED.realm, updated_at = CURRENT_TIMESTAMP
+          RETURNING *
+        `, [blizzardId, name, realm, region, subTier, subExpires]);
+        guild = insertRes.rows[0];
+        realGuildId = guild.id;
+      }
+    } else {
+      const guildRes = await pool.query('SELECT * FROM guilds WHERE id = $1', [guildId]);
+      guild = guildRes.rows[0];
+    }
+
     if (!guild) throw new Error('Guild not found');
 
     // 2. Set user active guild ID
-    await pool.query('UPDATE users SET active_guild_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [guildId, userId]);
+    await pool.query('UPDATE users SET active_guild_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [realGuildId, userId]);
 
     // 3. Fetch characters from BNet Account Profile
     let matchingCharacters: any[] = [];
     if (accessToken.startsWith('mock_')) {
       const { mockCharacters } = require('../lib/mockData');
-      matchingCharacters = mockCharacters.filter((c: any) => c.user_id === userId && c.guild_id === guildId).map((c: any) => ({
+      matchingCharacters = mockCharacters.filter((c: any) => c.user_id === userId && c.guild_id === realGuildId).map((c: any) => ({
         name: c.name,
         realm: c.realm,
         class: c.class,

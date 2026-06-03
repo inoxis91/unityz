@@ -19,6 +19,7 @@ export interface Character {
     name: string;
     realm: string;
   } | null;
+  roster_name?: string | null;
 }
 
 import { environment } from '../../environments/environment';

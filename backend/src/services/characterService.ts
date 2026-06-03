@@ -14,17 +14,23 @@ export interface Character {
   is_main: boolean;
   created_at: Date;
   updated_at: Date;
+  roster_name?: string | null;
 }
 
 export class CharacterService {
   static async getByUserId(userId: string, guildId?: string): Promise<Character[]> {
-    let query = 'SELECT * FROM characters WHERE user_id = $1';
+    let query = `
+      SELECT c.*, r.name as roster_name 
+      FROM characters c
+      LEFT JOIN rosters r ON c.roster_id = r.id
+      WHERE c.user_id = $1
+    `;
     const params: any[] = [userId];
     if (guildId) {
-      query += ' AND guild_id = $2';
+      query += ' AND c.guild_id = $2';
       params.push(guildId);
     }
-    query += ' ORDER BY is_main DESC, name ASC';
+    query += ' ORDER BY c.is_main DESC, c.name ASC';
     const result = await pool.query(query, params);
     return result.rows;
   }

@@ -151,7 +151,10 @@
         @for (char of myCharacters(); track char.id) {
           <div class="simple-char-card" [class]="'border-class-' + getClassCategory(char.class)">
             <div class="char-info">
-              <span class="name" [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</span>
+              <span class="name" [class]="'class-' + getClassCategory(char.class)">
+                {{ char.name }}
+                <span class="roster-badge-dashboard" *ngIf="char.roster_name">[{{ char.roster_name }}]</span>
+              </span>
               <span class="realm">{{ char.realm }}</span>
             </div>
             <div class="char-meta">
