@@ -187,7 +187,7 @@ export class EventService {
              c.name as character_name, c.class as character_class, c.realm as character_realm,
              mc.name as main_character_name, mc.class as main_character_class, mc.realm as main_character_realm,
              u.battletag,
-             s.created_at as signup_date
+             s.updated_at as signup_date
       FROM event_signups s 
       LEFT JOIN characters c ON s.character_id = c.id 
       LEFT JOIN (
