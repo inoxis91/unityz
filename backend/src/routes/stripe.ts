@@ -177,6 +177,19 @@ router.get('/checkout-session/:sessionId', requireActiveGuild, async (req, res, 
         expiresAt.setMonth(expiresAt.getMonth() + 1);
       }
 
+      // Retrieve current subscription details to cancel old one if upgrading
+      const currentGuildRes = await pool.query('SELECT stripe_subscription_id FROM guilds WHERE id = $1', [guildId]);
+      const oldStripeSubscriptionId = currentGuildRes.rows[0]?.stripe_subscription_id;
+
+      if (oldStripeSubscriptionId && stripeSubscriptionId && oldStripeSubscriptionId !== stripeSubscriptionId) {
+        try {
+          console.log(`[Stripe Upgrade] Cancelling old subscription ${oldStripeSubscriptionId} in favor of new subscription ${stripeSubscriptionId}.`);
+          await stripe.subscriptions.cancel(oldStripeSubscriptionId);
+        } catch (err) {
+          console.error('[Stripe Upgrade] Error cancelling old subscription:', err);
+        }
+      }
+
       const result = await pool.query(
         `UPDATE guilds 
          SET subscription_tier = $1, 
@@ -256,6 +269,19 @@ router.post('/webhook', async (req, res) => {
           } else {
             expiresAt = new Date();
             expiresAt.setMonth(expiresAt.getMonth() + 1);
+          }
+
+          // Retrieve current subscription details to cancel old one if upgrading
+          const currentGuildRes = await pool.query('SELECT stripe_subscription_id FROM guilds WHERE id = $1', [guildId]);
+          const oldStripeSubscriptionId = currentGuildRes.rows[0]?.stripe_subscription_id;
+
+          if (oldStripeSubscriptionId && stripeSubscriptionId && oldStripeSubscriptionId !== stripeSubscriptionId) {
+            try {
+              console.log(`[Stripe Webhook Upgrade] Cancelling old subscription ${oldStripeSubscriptionId} in favor of new subscription ${stripeSubscriptionId}.`);
+              await stripe.subscriptions.cancel(oldStripeSubscriptionId);
+            } catch (err) {
+              console.error('[Stripe Webhook Upgrade] Error cancelling old subscription:', err);
+            }
           }
 
           await pool.query(
