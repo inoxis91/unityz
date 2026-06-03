@@ -116,6 +116,18 @@ router.get('/checkout-session/:sessionId', requireActiveGuild, async (req, res, 
       return res.status(400).json({ status: 'error', message: 'No active guild found in session.' });
     }
 
+    // Security check: Only GMs and Officers (rank <= 2) can manage or activate subscriptions!
+    const userRes = await pool.query('SELECT rank FROM users WHERE id = $1', [req.user!.id]);
+    const userRank = userRes.rows[0]?.rank;
+    
+    if (userRank === null || userRank === undefined || userRank > 2) {
+      return res.status(403).json({
+        status: 'error',
+        code: 'FORBIDDEN',
+        message: 'Only Guild Masters and Officers are authorized to manage or activate subscriptions.'
+      });
+    }
+
     // Handle mock session
     if (sessionId.startsWith('mock_')) {
       const tier = (req.query.tier as string) || 'pro';

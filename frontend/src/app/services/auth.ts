@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, switchMap, map } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 
@@ -77,18 +77,17 @@ export class AuthService {
 
   setActiveGuild(guildId: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/users/active-guild`, { guildId }, { withCredentials: true }).pipe(
-      tap(() => {
-        this.getActiveGuild().subscribe();
-      })
+      switchMap(res => this.checkAuth().pipe(
+        map(() => res)
+      ))
     );
   }
 
   importCharacters(characters: any[]): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/users/import-characters`, { characters }, { withCredentials: true }).pipe(
-      tap(() => {
-        // Refresh auth details to update has_characters signal details
-        this.checkAuth().subscribe();
-      })
+      switchMap(res => this.checkAuth().pipe(
+        map(() => res)
+      ))
     );
   }
 
