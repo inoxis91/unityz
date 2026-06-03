@@ -51,7 +51,7 @@ export const signupSchema = z.object({
     id: z.string().uuid(),
   }),
   body: z.object({
-    character_id: z.string().uuid().nullable().optional(),
+    character_id: z.preprocess(val => val === '' ? null : val, z.string().uuid().nullable().optional()),
     role: z.enum(['tank', 'heal', 'dps']),
     comment: z.string().max(1000).optional().nullable(),
     status: z.enum(['signed_up', 'standby', 'absent']).optional(),

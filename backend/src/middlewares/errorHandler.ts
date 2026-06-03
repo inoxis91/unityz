@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import axios from 'axios';
 
 export interface AppError extends Error {
   statusCode?: number;
@@ -10,11 +11,16 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ) => {
-  const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
+  let statusCode = err.statusCode || 500;
+  let message = err.message || 'Internal Server Error';
+
+  if (axios.isAxiosError(err) && err.response?.status === 401) {
+    statusCode = 401;
+    message = 'Blizzard session expired, please log in again';
+  }
 
   console.error(`[Error] ${statusCode} - ${message}`);
-  if (err.stack) {
+  if (statusCode === 500 && err.stack) {
     console.error(err.stack);
   }
 
