@@ -26,7 +26,7 @@ router.get('/my-roster', isAuthenticated, async (req, res, next) => {
 });
 
 // GET /api/rosters : Récupère tous les rosters avec leurs personnages
-router.get('/', canManageRosters, async (req, res, next) => {
+router.get('/', isAuthenticated, async (req, res, next) => {
   try {
     const rosters = await RosterService.getAll(req.user!.active_guild_id || undefined);
     res.json(rosters);
