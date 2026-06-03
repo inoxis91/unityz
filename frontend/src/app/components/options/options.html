@@ -91,19 +91,20 @@
               </span>
             </div>
           </div>
-          
-          <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 1.5rem 0;">
+        </div>
+      </div>
 
-          <!-- Birthday Input Form -->
-          <div class="birthday-section">
-            <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; font-weight: 700; color: #1e293b;">🎂 Ma date d'anniversaire</h4>
-            <p style="margin: 0 0 1rem 0; font-size: 0.8rem; color: #64748b; line-height: 1.4;">
-              Saisissez votre date de naissance. L'année restera privée, seul le jour et le mois seront affichés sur le dashboard de la guilde !
-            </p>
-            <div class="birthday-form" style="display: flex; gap: 0.75rem; align-items: center;">
-              <input type="date" [ngModel]="birthdayValue()" (ngModelChange)="birthdayValue.set($event)" class="modern-input" style="flex-grow: 1; padding: 10px 12px; font-size: 0.95rem; border: 2px solid #e2e8f0; border-radius: 12px; background: #f8fafc; font-weight: 600; color: #1e293b;">
-              <button class="btn-primary" (click)="saveBirthday()" style="padding: 10px 18px; font-size: 0.9rem; font-weight: 700; border-radius: 12px; cursor: pointer; transition: all 0.2s; background: #0074e0; color: white; border: none;">Enregistrer</button>
-            </div>
+      <!-- Birthday Card -->
+      <div class="card settings-card">
+        <div class="card-icon">🎂</div>
+        <div class="card-body">
+          <h3>Ma date d'anniversaire</h3>
+          <p style="margin: 0 0 1.25rem 0; font-size: 0.85rem; color: #64748b; line-height: 1.5;">
+            Saisissez votre date de naissance. L'année restera privée, seul le jour et le mois seront affichés sur le dashboard de la guilde !
+          </p>
+          <div class="birthday-form" style="display: flex; gap: 0.75rem; align-items: center; margin-top: 1rem;">
+            <input type="date" [ngModel]="birthdayValue()" (ngModelChange)="birthdayValue.set($event)" class="modern-input" style="flex-grow: 1; padding: 10px 12px; font-size: 0.95rem; border: 2px solid #e2e8f0; border-radius: 12px; background: #f8fafc; font-weight: 600; color: #1e293b; box-sizing: border-box; height: 44px; outline: none;">
+            <button class="btn-primary" (click)="saveBirthday()" style="padding: 10px 18px; font-size: 0.9rem; font-weight: 700; border-radius: 12px; cursor: pointer; transition: all 0.2s; background: #0074e0; color: white; border: none; height: 44px; display: flex; align-items: center; justify-content: center; white-space: nowrap;">Enregistrer</button>
           </div>
         </div>
       </div>

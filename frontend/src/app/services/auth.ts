@@ -108,13 +108,17 @@ export class AuthService {
 
   updateDiscordId(discordId: string | null): Observable<User> {
     return this.http.patch<User>(`${this.apiUrl}/users/discord`, { discordId }, { withCredentials: true }).pipe(
-      tap(user => this.currentUser.set(user))
+      switchMap(user => this.checkAuth().pipe(
+        map(() => user)
+      ))
     );
   }
 
   updateBirthday(birthday: string | null): Observable<User> {
     return this.http.patch<User>(`${this.apiUrl}/users/birthday`, { birthday }, { withCredentials: true }).pipe(
-      tap(user => this.currentUser.set(user))
+      switchMap(user => this.checkAuth().pipe(
+        map(() => user)
+      ))
     );
   }
 
