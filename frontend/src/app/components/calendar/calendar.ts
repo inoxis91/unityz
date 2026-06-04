@@ -5,7 +5,7 @@ import { CalendarOptions, EventClickArg, DateSelectArg } from '@fullcalendar/cor
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import { CalendarService, CalendarEvent } from '../../services/calendar';
+import { CalendarService, CalendarEvent, Signup } from '../../services/calendar';
 import { AuthService } from '../../services/auth';
 import { CharacterService } from '../../services/character';
 import { RosterService } from '../../services/roster';
@@ -14,6 +14,7 @@ import { ConfirmService } from '../../services/confirm';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { I18nService } from '../../services/i18n';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-calendar',
@@ -63,16 +64,32 @@ export class CalendarComponent implements OnInit {
       const event = arg.event;
       const type = event.extendedProps['type'] || 'custom';
       const rosterName = event.extendedProps['roster_name'];
+      const signupStatus = event.extendedProps['signupStatus'];
       const startTime = event.start ? event.start.toLocaleTimeString(this.i18n.currentLocale() === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' }) : '';
       
       let typeClass = 'tag-custom';
       if (type.toLowerCase().includes('raid')) typeClass = 'tag-raid';
       if (type.toLowerCase().includes('mm+')) typeClass = 'tag-mm';
 
+      // Determine signup status badge html
+      let statusHtml = '';
+      if (signupStatus === 'signed_up') {
+        statusHtml = '<span class="status-indicator-badge present" title="Présent">✅</span>';
+      } else if (signupStatus === 'standby') {
+        statusHtml = '<span class="status-indicator-badge standby" title="Peut-être">❓</span>';
+      } else if (signupStatus === 'absent') {
+        statusHtml = '<span class="status-indicator-badge absent" title="Absent">❌</span>';
+      } else {
+        statusHtml = '<span class="status-indicator-badge none" title="Non répondu">⚪</span>';
+      }
+
       return {
         html: `
           <div class="custom-event-card">
-            <div class="event-time">${startTime}</div>
+            <div class="event-time-row-calendar">
+              <div class="event-time">${startTime}</div>
+              ${statusHtml}
+            </div>
             <div class="event-title">${event.title}</div>
             <div class="event-tags-container">
               <div class="event-tag ${typeClass}">${type.toUpperCase()}</div>
@@ -122,6 +139,7 @@ export class CalendarComponent implements OnInit {
   }
 
   eventsList = signal<CalendarEvent[]>([]);
+  mySignups = signal<Signup[]>([]);
 
   upcomingEvents = computed(() => {
     const now = new Date();
@@ -188,19 +206,41 @@ export class CalendarComponent implements OnInit {
     this.contextMenu.set(null);
   }
 
+  getEventSignupStatus(eventId: string | undefined): string | null {
+    if (!eventId) return null;
+    const signup = this.mySignups().find(s => s.event_id === eventId);
+    return signup ? signup.status : null;
+  }
+
   loadEvents() {
-    this.calendarService.getEvents().subscribe(events => {
-      this.eventsList.set(events);
-      const formattedEvents = events.map(e => ({
-        id: e.id,
-        title: e.title,
-        start: e.start_time,
-        end: e.end_time,
-        allDay: false,
-        extendedProps: { ...e },
-        backgroundColor: e.type.toLowerCase() === 'raid' ? '#e74c3c' : (e.type.toLowerCase() === 'mm+' ? '#a29bfe' : '#3498db')
-      }));
-      this.calendarOptions.update(options => ({ ...options, events: formattedEvents }));
+    forkJoin({
+      events: this.calendarService.getEvents(),
+      signups: this.calendarService.getMySignups()
+    }).subscribe({
+      next: ({ events, signups }) => {
+        this.eventsList.set(events);
+        this.mySignups.set(signups);
+        
+        const formattedEvents = events.map(e => {
+          const signup = signups.find(s => s.event_id === e.id);
+          const signupStatus = signup ? signup.status : null;
+          
+          return {
+            id: e.id,
+            title: e.title,
+            start: e.start_time,
+            end: e.end_time,
+            allDay: false,
+            extendedProps: { ...e, signupStatus },
+            backgroundColor: e.type.toLowerCase() === 'raid' ? '#e74c3c' : (e.type.toLowerCase() === 'mm+' ? '#a29bfe' : '#3498db')
+          };
+        });
+        
+        this.calendarOptions.update(options => ({ ...options, events: formattedEvents }));
+      },
+      error: (err) => {
+        console.error('Error loading calendar data:', err);
+      }
     });
   }
 

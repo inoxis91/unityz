@@ -40,6 +40,12 @@
               <div class="event-time-row">
                 <span class="time-icon">🕒</span>
                 <span class="time-text">{{ event.start_time | date:'HH:mm' }}</span>
+                
+                <!-- Status Badge -->
+                <span class="mobile-status-badge present" *ngIf="getEventSignupStatus(event.id) === 'signed_up'" title="Présent">✅ Répondu</span>
+                <span class="mobile-status-badge standby" *ngIf="getEventSignupStatus(event.id) === 'standby'" title="Peut-être">❓ En attente</span>
+                <span class="mobile-status-badge absent" *ngIf="getEventSignupStatus(event.id) === 'absent'" title="Absent">❌ Absent</span>
+                <span class="mobile-status-badge none" *ngIf="!getEventSignupStatus(event.id)" title="Non répondu">⚪ Non répondu</span>
               </div>
             </div>
             <div class="arrow-indicator">
