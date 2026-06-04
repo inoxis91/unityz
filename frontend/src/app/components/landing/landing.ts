@@ -22,11 +22,13 @@ export class LandingComponent implements OnInit {
     effect(() => {
       const isFr = this.i18n.currentLocale() === 'fr';
       this.seo.generateTags({
-        title: isFr ? "Gérez votre Guilde WoW comme des Pros" : "Manage Your WoW Guild Like a Pro",
+        title: isFr ? "Logiciel de Gestion de Guilde WoW & Raid Planner" : "WoW Guild Management Software & Raid Planner",
         description: isFr 
-          ? "La plateforme SaaS ultime pour coordonner vos rosters, calendrier de raids, cotisations de banque et plus."
-          : "The ultimate all-in-one SaaS platform to coordinate rosters, raid calendars, guild bank fees, and more.",
-        keywords: "World of Warcraft, WoW, Guilde, Roster, Raid, Trésorerie, Battle.net"
+          ? "Optimisez la gestion de votre guilde World of Warcraft. Synchronisation Battle.net, gestionnaire de rosters, calendrier de raids dynamique et suivi de la trésorerie pour les officiers et Guild Masters."
+          : "Streamline your World of Warcraft guild management. Battle.net sync, dynamic roster manager, raid calendar planner, and guild treasury tracker for Guild Masters and officers.",
+        keywords: isFr
+          ? "logiciel gestion guilde wow, gestion de guilde world of warcraft, outil roster wow, raid planner wow, calendrier de raid wow, cotisations guilde wow, guild manager, battle.net api wow"
+          : "wow guild management software, world of warcraft guild tools, wow roster manager, wow raid planner, wow raid calendar, guild manager, wow guild bank tracker, battle.net api"
       });
     });
   }
