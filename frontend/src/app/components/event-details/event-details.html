@@ -139,7 +139,7 @@
                [ngClass]="[
                  s.status, 
                  s.status === 'absent' ? 'is-absent' : '', 
-                 'class-' + getClassCategory(s.status === 'absent' ? s.main_character_class : s.character_class)
+                 'class-' + getClassCategory(s.status === 'absent' ? s.main_character_class : (s.character_class || s.main_character_class))
                ]"
                (click)="s.status !== 'absent' ? openAltsModal(s) : null"
                [class.clickable]="s.status !== 'absent'">
@@ -159,7 +159,7 @@
               
               <div class="char-info">
                 <span class="participant-name">
-                  {{ s.status === 'absent' ? (s.main_character_name || (s.battletag?.split('#')?.[0]) || 'Inconnu') : (s.character_name || (s.battletag?.split('#')?.[0]) || 'Inconnu') }}
+                  {{ s.status === 'absent' ? (s.main_character_name || (s.battletag?.split('#')?.[0]) || 'Inconnu') : (s.character_name || s.main_character_name || (s.battletag?.split('#')?.[0]) || 'Inconnu') }}
                 </span>
                 <span *ngIf="s.status === 'absent'" class="absent-label">Absent</span>
                 <span class="signup-time">{{ (s.signup_date || s.created_at) | date:'dd/MM HH:mm' }}</span>
@@ -218,8 +218,8 @@
             <span class="count">{{ tanks().length }}</span>
           </div>
           <div class="comp-grid">
-            <div *ngFor="let s of tanks()" class="modern-comp-card clickable" [class]="'class-' + getClassCategory(s.character_class)" (click)="openAltsModal(s)">
-              <div class="card-content"><span class="name">{{ s.character_name }}</span></div>
+            <div *ngFor="let s of tanks()" class="modern-comp-card clickable" [class]="'class-' + getClassCategory(s.character_class || s.main_character_class)" (click)="openAltsModal(s)">
+              <div class="card-content"><span class="name">{{ s.character_name || s.main_character_name || (s.battletag?.split('#')?.[0]) }}</span></div>
             </div>
           </div>
         </div>
@@ -232,8 +232,8 @@
             <span class="count">{{ heals().length }}</span>
           </div>
           <div class="comp-grid">
-            <div *ngFor="let s of heals()" class="modern-comp-card clickable" [class]="'class-' + getClassCategory(s.character_class)" (click)="openAltsModal(s)">
-              <div class="card-content"><span class="name">{{ s.character_name }}</span></div>
+            <div *ngFor="let s of heals()" class="modern-comp-card clickable" [class]="'class-' + getClassCategory(s.character_class || s.main_character_class)" (click)="openAltsModal(s)">
+              <div class="card-content"><span class="name">{{ s.character_name || s.main_character_name || (s.battletag?.split('#')?.[0]) }}</span></div>
             </div>
           </div>
         </div>
@@ -246,8 +246,8 @@
             <span class="count">{{ dps().length }}</span>
           </div>
           <div class="comp-grid dps-layout">
-            <div *ngFor="let s of dps()" class="modern-comp-card clickable" [class]="'class-' + getClassCategory(s.character_class)" (click)="openAltsModal(s)">
-              <div class="card-content"><span class="name">{{ s.character_name }}</span></div>
+            <div *ngFor="let s of dps()" class="modern-comp-card clickable" [class]="'class-' + getClassCategory(s.character_class || s.main_character_class)" (click)="openAltsModal(s)">
+              <div class="card-content"><span class="name">{{ s.character_name || s.main_character_name || (s.battletag?.split('#')?.[0]) }}</span></div>
             </div>
           </div>
         </div>
@@ -272,16 +272,16 @@
                (cdkDropListDropped)="dropToGroup($event, 0)">
             @for (m of unassignedMembers(); track m.user_id) {
               <div class="mm-member-card" 
-                   [class]="'class-' + getClassCategory(m.character_class)"
+                   [class]="'class-' + getClassCategory(m.character_class || m.main_character_class)"
                    [class.can-drag]="canManageEvents()"
                    [cdkDragDisabled]="!canManageEvents()"
                    cdkDrag>
                 <div class="role-badge" [class]="m.role">
                   <img [src]="'assets/icons/' + m.role + '.png'" class="role-icon-img small" [alt]="m.role">
                 </div>
-                <span class="name">{{ m.character_name }}</span>
-                <span class="rio-mini" *ngIf="getRioScoreForKey(m.character_name, m.character_realm || m.main_character_realm)">
-                  {{ getRioScoreForKey(m.character_name, m.character_realm || m.main_character_realm) }}
+                <span class="name">{{ m.character_name || m.main_character_name || (m.battletag?.split('#')?.[0]) }}</span>
+                <span class="rio-mini" *ngIf="getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm)">
+                  {{ getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm) }}
                 </span>
                 <button class="btn-alts-mini" (click)="openAltsModal(m)">🔍</button>
               </div>
@@ -325,10 +325,10 @@
                     </span>
                     <div class="slot-members">
                       @for (m of group.tanks; track m.user_id) {
-                        <div class="mm-member-card small" [class]="'class-' + getClassCategory(m.character_class)" cdkDrag [cdkDragDisabled]="!canManageEvents()">
-                          <span class="name">{{ m.character_name }}</span>
-                          <span class="rio-micro" *ngIf="getRioScoreForKey(m.character_name, m.character_realm || m.main_character_realm)">
-                            {{ getRioScoreForKey(m.character_name, m.character_realm || m.main_character_realm) }}
+                        <div class="mm-member-card small" [class]="'class-' + getClassCategory(m.character_class || m.main_character_class)" cdkDrag [cdkDragDisabled]="!canManageEvents()">
+                          <span class="name">{{ m.character_name || m.main_character_name || (m.battletag?.split('#')?.[0]) }}</span>
+                          <span class="rio-micro" *ngIf="getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm)">
+                            {{ getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm) }}
                           </span>
                         </div>
                       }
@@ -341,10 +341,10 @@
                     </span>
                     <div class="slot-members">
                       @for (m of group.heals; track m.user_id) {
-                        <div class="mm-member-card small" [class]="'class-' + getClassCategory(m.character_class)" cdkDrag [cdkDragDisabled]="!canManageEvents()">
-                          <span class="name">{{ m.character_name }}</span>
-                          <span class="rio-micro" *ngIf="getRioScoreForKey(m.character_name, m.character_realm || m.main_character_realm)">
-                            {{ getRioScoreForKey(m.character_name, m.character_realm || m.main_character_realm) }}
+                        <div class="mm-member-card small" [class]="'class-' + getClassCategory(m.character_class || m.main_character_class)" cdkDrag [cdkDragDisabled]="!canManageEvents()">
+                          <span class="name">{{ m.character_name || m.main_character_name || (m.battletag?.split('#')?.[0]) }}</span>
+                          <span class="rio-micro" *ngIf="getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm)">
+                            {{ getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm) }}
                           </span>
                         </div>
                       }
@@ -357,10 +357,10 @@
                     </span>
                     <div class="slot-members dps-slots">
                       @for (m of group.dps; track m.user_id) {
-                        <div class="mm-member-card small" [class]="'class-' + getClassCategory(m.character_class)" cdkDrag [cdkDragDisabled]="!canManageEvents()">
-                          <span class="name">{{ m.character_name }}</span>
-                          <span class="rio-micro" *ngIf="getRioScoreForKey(m.character_name, m.character_realm || m.main_character_realm)">
-                            {{ getRioScoreForKey(m.character_name, m.character_realm || m.main_character_realm) }}
+                        <div class="mm-member-card small" [class]="'class-' + getClassCategory(m.character_class || m.main_character_class)" cdkDrag [cdkDragDisabled]="!canManageEvents()">
+                          <span class="name">{{ m.character_name || m.main_character_name || (m.battletag?.split('#')?.[0]) }}</span>
+                          <span class="rio-micro" *ngIf="getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm)">
+                            {{ getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm) }}
                           </span>
                         </div>
                       }
