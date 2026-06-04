@@ -278,8 +278,11 @@ export class EventService {
     if (frontendUrl.endsWith('/')) frontendUrl = frontendUrl.slice(0, -1);
     const eventLink = `${frontendUrl}/events/${event.id}`;
 
-    let message = isManual ? `📣 **RAPPEL D'ÉVÉNEMENT**\n` : `📅 **ÉVÉNEMENTS DU JOUR**\n`;
-    message += '------------------------------------------\n';
+    let message = '';
+    if (isManual) {
+      message += `📣 **RAPPEL D'ÉVÉNEMENT**\n`;
+      message += '------------------------------------------\n';
+    }
     message += `\n${typeIcon} **${event.title}**\n`;
     if (isManual) message += `📅 Date : ${startDate}\n`;
     message += `⏰ Heure : ${startTime}\n`;
