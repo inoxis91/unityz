@@ -286,9 +286,9 @@
 }
 
 /* Borders for status on colored cards */
-.participant-card.signed_up { border-left: 6px solid #22c55e; }
-.participant-card.standby { border-left: 6px solid #f59e0b; }
-.participant-card.absent { border-left: 6px solid #ef4444; }
+.participant-card.signed_up { border-left: 12px solid #22c55e; }
+.participant-card.standby { border-left: 12px solid #f59e0b; }
+.participant-card.absent { border-left: 12px solid #ef4444; }
 
 .participant-main {
   display: flex;
@@ -309,13 +309,31 @@
   height: 28px;
 }
 
+.char-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
 .participant-name {
   font-weight: 800; font-size: 1.1rem;
   color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
 .signup-time {
-  font-size: 0.75rem; color: rgba(255,255,255,0.8);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #ffffff !important;
+  background: rgba(15, 23, 42, 0.45) !important;
+  padding: 3px 8px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-top: 4px;
+  width: fit-content;
+  letter-spacing: 0.3px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  text-shadow: none !important;
 }
 
 .status-pill {

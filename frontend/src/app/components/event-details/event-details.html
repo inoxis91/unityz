@@ -164,12 +164,6 @@
                 <span *ngIf="s.status === 'absent'" class="absent-label">Absent</span>
                 <span class="signup-time">{{ (s.signup_date || s.created_at) | date:'dd/MM HH:mm' }}</span>
               </div>
-
-              <div class="status-indicators">
-                <div class="status-pill present" *ngIf="s.status === 'signed_up'" title="Présent">✅</div>
-                <div class="status-pill standby" *ngIf="s.status === 'standby'" title="Peut-être">❓</div>
-                <div class="status-pill absent" *ngIf="s.status === 'absent'" title="Absent">❌</div>
-              </div>
             </div>
             
             <div class="participant-comment" *ngIf="s.comment">
