@@ -38,6 +38,26 @@ body {
 .class-warlock { color: var(--color-warlock) !important; }
 .class-warrior { color: var(--color-warrior) !important; }
 
+/* Specific rules for Priest text legibility on cards and lists */
+.class-priest.modern-comp-card .name,
+.class-priest.participant-card .participant-name,
+.class-priest.mm-member-card .name,
+.class-priest.alt-row .alt-name,
+.class-priest .name,
+.class-priest .participant-name,
+.class-priest .alt-name {
+  color: #1e293b !important;
+  text-shadow: none !important;
+}
+
+.class-priest .participant-comment p {
+  color: #1e293b !important;
+}
+
+.class-priest .participant-comment {
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+
 /* Background variants */
 .bg-class-death-knight { background-color: var(--color-death-knight) !important; color: white; }
 .bg-class-demon-hunter { background-color: var(--color-demon-hunter) !important; color: white; }
