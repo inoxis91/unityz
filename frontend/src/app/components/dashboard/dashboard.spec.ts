@@ -14,7 +14,8 @@ describe('DashboardComponent', () => {
 
   const mockAuthService = {
     currentUser: () => ({ id: 1, active_guild_id: 1, subscription_tier: 'free' }),
-    currentGuild: () => ({ id: 1, name: 'Test Guild' })
+    currentGuild: () => ({ id: 1, name: 'Test Guild' }),
+    getGuildBirthdays: () => of([])
   };
 
   const mockI18nService = {

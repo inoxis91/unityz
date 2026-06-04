@@ -64,7 +64,7 @@ router.post('/create-checkout-session', requireActiveGuild, async (req, res, nex
     }
 
     // Set up product price and description
-    const planName = tier === 'pro' ? "Unity'Z Guild - Pro Subscription" : "Unity'Z Guild - Standard Subscription";
+    const planName = tier === 'pro' ? "Guild Manager - Pro Subscription" : "Guild Manager - Standard Subscription";
     const planDesc = tier === 'pro'
       ? "Accès complet aux fonctionnalités de la guilde, synchronisation Discord complète, et gestion de cotisations Pro."
       : "Accès standard aux fonctionnalités de la guilde et gestion de cotisations.";

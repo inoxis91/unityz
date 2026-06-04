@@ -775,7 +775,7 @@ export class I18nService {
 
   constructor() {
     // Auto-detect browser language if available
-    const saved = localStorage.getItem('unityz_locale') as SupportedLocale;
+    const saved = localStorage.getItem('guild_manager_locale') as SupportedLocale;
     if (saved === 'fr' || saved === 'en') {
       this.currentLocale.set(saved);
     } else {
@@ -790,7 +790,7 @@ export class I18nService {
 
   setLocale(locale: SupportedLocale) {
     this.currentLocale.set(locale);
-    localStorage.setItem('unityz_locale', locale);
+    localStorage.setItem('guild_manager_locale', locale);
   }
 
   // Reactive translation getter

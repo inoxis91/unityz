@@ -3,9 +3,9 @@ services:
     image: postgres:15-alpine
     restart: always
     environment:
-      - POSTGRES_USER=unityz_user
-      - POSTGRES_PASSWORD=unityz_password
-      - POSTGRES_DB=unityz_db
+      - POSTGRES_USER=guild_manager_user
+      - POSTGRES_PASSWORD=guild_manager_password
+      - POSTGRES_DB=guild_manager_db
     ports:
       - '5432:5432'
     volumes:
@@ -29,7 +29,7 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      - DATABASE_URL=postgresql://unityz_user:unityz_password@db:5432/unityz_db
+      - DATABASE_URL=postgresql://guild_manager_user:guild_manager_password@db:5432/guild_manager_db
     depends_on:
       - db
     volumes:

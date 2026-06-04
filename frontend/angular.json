@@ -61,7 +61,7 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
-            "allowedHosts": ["localhost", "0.0.0.0", "guild-manager.com", "unityz.up.railway.app", ".railway.app"]
+            "allowedHosts": ["localhost", "0.0.0.0", "guild-manager.com", "guild-manager.up.railway.app", ".railway.app"]
           },
           "configurations": {
             "production": {

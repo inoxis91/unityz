@@ -1,8 +1,8 @@
-# Unity'Z Guild Website - Context & Instructions
+# Guild Manager Website - Context & Instructions
 
 ## Project Overview
-- **Name**: Unity'Z Guild Website
-- **Goal**: A World of Warcraft guild management site similar to Warcraft Roster.
+- **Name**: Guild Manager Website
+- **Goal**: A multi-guild World of Warcraft guild management site similar to Warcraft Roster.
 - **Key Feature**: Battle.net SSO integration for roster and role synchronization.
 
 ## Tech Stack

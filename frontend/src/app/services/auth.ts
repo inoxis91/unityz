@@ -95,11 +95,17 @@ export class AuthService {
 
   checkAuth(): Observable<User> {
     return this.http.get<User>(`${this.apiUrl}/users/me`, { withCredentials: true }).pipe(
-      tap(user => {
-        this.currentUser.set(user);
-        if (user && user.active_guild_id) {
-          this.getActiveGuild().subscribe();
-        } else {
+      tap({
+        next: user => {
+          this.currentUser.set(user);
+          if (user && user.active_guild_id) {
+            this.getActiveGuild().subscribe();
+          } else {
+            this.currentGuild.set(null);
+          }
+        },
+        error: () => {
+          this.currentUser.set(null);
           this.currentGuild.set(null);
         }
       })

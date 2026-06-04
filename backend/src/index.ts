@@ -71,8 +71,8 @@ app.use(express.json({
 }));
 
 app.use(session({
-  name: 'unityz_sid',
-  secret: process.env.SESSION_SECRET || 'unityz-secret',
+  name: 'guild_manager_sid',
+  secret: process.env.SESSION_SECRET || 'guild-manager-secret',
   resave: true, 
   saveUninitialized: false,
   rolling: true,
@@ -192,11 +192,11 @@ app.get('/api/auth/logout', (req, res, next) => {
     if (req.session) {
       req.session.destroy((err) => {
         if (err) { console.error('[Auth] Logout session destroy error:', err); }
-        res.clearCookie('connect.sid', cookieOptions);
+        res.clearCookie('guild_manager_sid', cookieOptions);
         return res.status(200).json({ status: 'success' });
       });
     } else {
-      res.clearCookie('connect.sid', cookieOptions);
+      res.clearCookie('guild_manager_sid', cookieOptions);
       res.status(200).json({ status: 'success' });
     }
   });
