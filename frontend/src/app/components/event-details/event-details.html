@@ -125,7 +125,11 @@
         <div class="list-header">
           <div class="list-title-group">
             <h3>Liste des participants</h3>
-            <span class="count-badge">{{ signups().length }}</span>
+            <div class="status-counts">
+              <span class="count-badge present" title="Présents">✅ {{ presentCount() }}</span>
+              <span class="count-badge standby" title="Peut-être">❓ {{ standbyCount() }}</span>
+              <span class="count-badge absent" title="Absents">❌ {{ absentCount() }}</span>
+            </div>
           </div>
           <div class="sort-controls">
             <button [class.active]="sortMethod() === 'date'" (click)="sortMethod.set('date')" title="Trier par date">🕒</button>

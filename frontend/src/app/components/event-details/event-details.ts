@@ -73,6 +73,10 @@ export class EventDetailsComponent implements OnInit {
   dps = computed(() => this.signups().filter(s => s.role === 'dps' && s.status === 'signed_up'));
   absents = computed(() => this.signups().filter(s => s.status === 'absent'));
 
+  presentCount = computed(() => this.signups().filter(s => s.status === 'signed_up').length);
+  standbyCount = computed(() => this.signups().filter(s => s.status === 'standby').length);
+  absentCount = computed(() => this.signups().filter(s => s.status === 'absent').length);
+
   // Sorted list for Participants tab
   sortedSignups = computed(() => {
     const list = [...this.signups()];
