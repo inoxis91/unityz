@@ -24,6 +24,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   myRoster = signal<Roster | null>(null);
   myAllocations = signal<FeeAllocation[]>([]);
   currentTime = signal(new Date());
+  myAttendance = signal<{ percentage: number; total_eligible: number; attended: number; events: any[] } | null>(null);
+  showAttendanceModal = signal(false);
 
   charDetails = signal<any>(null);
   loadingDetails = signal(false);
@@ -171,6 +173,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.authService.getGuildBirthdays().subscribe({
       next: (birthdays) => this.birthdays.set(birthdays),
       error: (err) => console.error('Error loading guild birthdays', err)
+    });
+
+    // Load attendance
+    this.authService.getAttendance().subscribe({
+      next: (attendance) => this.myAttendance.set(attendance),
+      error: (err) => console.error('Error loading attendance', err)
     });
   }
 

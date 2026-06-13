@@ -455,4 +455,56 @@ export class UserService {
     const result = await pool.query(query, [guildId]);
     return result.rows;
   }
+
+  static async getUserAttendance(userId: string, guildId: string): Promise<{
+    percentage: number;
+    total_eligible: number;
+    attended: number;
+    events: any[];
+  }> {
+    const query = `
+      SELECT 
+        e.id, 
+        e.title, 
+        to_char(e.start_time, 'YYYY-MM-DD"T"HH24:MI:SS') as start_time,
+        e.type, 
+        e.roster_id, 
+        r.name AS roster_name,
+        s.status,
+        s.character_id,
+        c.name AS character_name
+      FROM events e
+      LEFT JOIN rosters r ON e.roster_id = r.id
+      LEFT JOIN event_signups s ON e.id = s.event_id AND s.user_id = $2
+      LEFT JOIN characters c ON s.character_id = c.id
+      WHERE e.guild_id = $1
+        AND e.start_time < CURRENT_TIMESTAMP
+        AND DATE_TRUNC('month', e.start_time) = DATE_TRUNC('month', CURRENT_TIMESTAMP)
+        AND (
+          e.roster_id IS NULL
+          OR EXISTS (
+            SELECT 1 
+            FROM characters c2
+            JOIN rosters rc ON c2.roster_id = rc.id
+            WHERE c2.user_id = $2
+              AND c2.guild_id = $1
+              AND rc.weight <= r.weight
+          )
+        )
+      ORDER BY e.start_time DESC
+    `;
+    const result = await pool.query(query, [guildId, userId]);
+    const rows = result.rows;
+    
+    const totalEligible = rows.length;
+    const attended = rows.filter(r => r.status === 'signed_up' || r.status === 'standby').length;
+    const percentage = totalEligible > 0 ? Math.round((attended / totalEligible) * 100) : 100;
+
+    return {
+      percentage,
+      total_eligible: totalEligible,
+      attended,
+      events: rows
+    };
+  }
 }

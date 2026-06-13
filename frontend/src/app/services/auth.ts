@@ -132,6 +132,15 @@ export class AuthService {
     return this.http.get<any[]>(`${this.apiUrl}/users/active-guild/birthdays`, { withCredentials: true });
   }
 
+  getAttendance(): Observable<{
+    percentage: number;
+    total_eligible: number;
+    attended: number;
+    events: any[];
+  }> {
+    return this.http.get<any>(`${this.apiUrl}/users/me/attendance`, { withCredentials: true });
+  }
+
   linkDiscord(): void {
     window.location.href = `${this.apiUrl}/auth/discord`;
   }

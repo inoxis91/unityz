@@ -207,6 +207,20 @@ router.get('/me/guilds', isAuthenticated, async (req, res, next) => {
   }
 });
 
+// GET /api/users/me/attendance : Récupère les statistiques d'assiduité de l'utilisateur pour le mois en cours
+router.get('/me/attendance', isAuthenticated, async (req, res, next) => {
+  try {
+    const guildId = req.user!.active_guild_id;
+    if (!guildId) {
+      return res.status(400).json({ status: 'error', message: 'No active guild selected' });
+    }
+    const attendance = await UserService.getUserAttendance(req.user!.id, guildId);
+    res.json(attendance);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/users/me/active-guild : Récupère la guilde active courante
 router.get('/me/active-guild', isAuthenticated, async (req, res, next) => {
   try {
@@ -219,7 +233,7 @@ router.get('/me/active-guild', isAuthenticated, async (req, res, next) => {
 
 const updateActiveGuildSchema = z.object({
   body: z.object({
-    guildId: z.string().uuid(),
+    guildId: z.string().min(1).max(255), // Can be a standard UUID or virtual UUID (00000000-0000-0000-0000-...)
   }),
 });
 
