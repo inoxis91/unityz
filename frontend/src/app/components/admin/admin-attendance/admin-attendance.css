@@ -196,16 +196,6 @@
   font-weight: 800;
 }
 
-.character-cell .char-class-badge {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: white;
-  padding: 2px 8px;
-  border-radius: 9999px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
 .no-char {
   font-size: 0.9rem;
   color: #94a3b8;

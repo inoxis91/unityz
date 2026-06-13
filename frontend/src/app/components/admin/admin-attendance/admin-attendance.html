@@ -13,9 +13,9 @@
   <div class="filters-row">
     <div class="search-box">
       <span class="search-icon">🔍</span>
-      <input 
-        type="text" 
-        [placeholder]="'Rechercher un membre ou un personnage...'" 
+      <input
+        type="text"
+        [placeholder]="'Rechercher un membre ou un personnage...'"
         [ngModel]="searchTerm()"
         (ngModelChange)="searchTerm.set($event)"
       />
@@ -57,9 +57,6 @@
               <span class="char-name" [class]="'class-' + getClassCategory(item.main_character_class)">
                 {{ item.main_character_name }}
               </span>
-              <span class="char-class-badge" [class]="'bg-class-' + getClassCategory(item.main_character_class)">
-                {{ item.main_character_class }}
-              </span>
             </div>
             <span class="no-char" *ngIf="!item.main_character_name">Aucun personnage lié</span>
           </td>
@@ -76,8 +73,8 @@
           </td>
           <td class="progress-col">
             <div class="progress-bar-container">
-              <div 
-                class="progress-bar-fill" 
+              <div
+                class="progress-bar-fill"
                 [class]="getAttendanceClass(item.percentage)"
                 [style.width]="item.percentage + '%'">
               </div>
