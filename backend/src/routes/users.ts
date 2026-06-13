@@ -1,6 +1,6 @@
 import express from 'express';
 import pool from '../lib/db';
-import { isAuthenticated, isAdmin } from '../middlewares/auth';
+import { isAuthenticated, isAdmin, canManageEvents } from '../middlewares/auth';
 import { z } from 'zod';
 import { validate } from '../middlewares/validate';
 import { findMemberByName } from '../lib/discord';
@@ -149,6 +149,20 @@ router.get('/active-guild/birthdays', isAuthenticated, async (req, res, next) =>
     }
     const birthdays = await UserService.getGuildBirthdaysThisMonth(guildId);
     res.json(birthdays);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/users/active-guild/attendance : Récupère les statistiques d'assiduité de tous les membres pour la guilde active (Admin/Manager/Raid Leader)
+router.get('/active-guild/attendance', canManageEvents, async (req, res, next) => {
+  try {
+    const guildId = req.user!.active_guild_id;
+    if (!guildId) {
+      return res.status(400).json({ status: 'error', message: 'No active guild selected' });
+    }
+    const attendance = await UserService.getGuildAttendance(guildId);
+    res.json(attendance);
   } catch (error) {
     next(error);
   }

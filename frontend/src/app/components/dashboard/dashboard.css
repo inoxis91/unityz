@@ -185,7 +185,7 @@
   width: auto;
   object-fit: contain;
   position: absolute;
-  right: 0;
+  right: -250px;
   top: -20%;
   mask-image: linear-gradient(to left, black 40%, transparent 90%);
   -webkit-mask-image: linear-gradient(to left, black 40%, transparent 90%);

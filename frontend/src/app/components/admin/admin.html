@@ -3,6 +3,7 @@
 <div class="admin-tabs">
   <button *ngIf="authService.isAdmin()" [class.active]="activeTab() === 'users'" (click)="activeTab.set('users')">Membres</button>
   <button *ngIf="authService.canManageRosters()" [class.active]="activeTab() === 'rosters'" (click)="activeTab.set('rosters')">Rosters</button>
+  <button *ngIf="authService.canManageEvents()" [class.active]="activeTab() === 'attendance'" (click)="activeTab.set('attendance')">Assiduité</button>
   <button *ngIf="authService.canManageFees()" [class.active]="activeTab() === 'fees'" (click)="activeTab.set('fees')">Cotisations</button>
   <button *ngIf="authService.isAdmin()" [class.active]="activeTab() === 'settings'" (click)="activeTab.set('settings')">Configuration Guilde</button>
 </div>
@@ -13,6 +14,10 @@
 
 <div class="tab-content" *ngIf="activeTab() === 'rosters' && authService.canManageRosters()">
     <app-admin-rosters></app-admin-rosters>
+  </div>
+
+  <div class="tab-content" *ngIf="activeTab() === 'attendance' && authService.canManageEvents()">
+    <app-admin-attendance></app-admin-attendance>
   </div>
 
   <div class="tab-content" *ngIf="activeTab() === 'fees' && authService.canManageFees()">

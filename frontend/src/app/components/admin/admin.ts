@@ -5,18 +5,27 @@ import { AdminRostersComponent } from './admin-rosters/admin-rosters';
 import { AdminFeesComponent } from './admin-fees/admin-fees';
 import { AdminUsersComponent } from './admin-users/admin-users';
 import { AdminSettingsComponent } from './admin-settings/admin-settings';
+import { AdminAttendanceComponent } from './admin-attendance/admin-attendance';
 import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, AdminRostersComponent, AdminFeesComponent, AdminUsersComponent, AdminSettingsComponent],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    AdminRostersComponent, 
+    AdminFeesComponent, 
+    AdminUsersComponent, 
+    AdminSettingsComponent,
+    AdminAttendanceComponent
+  ],
   templateUrl: './admin.html',
   styleUrl: './admin.css'
 })
 export class AdminComponent implements OnInit {
   public authService = inject(AuthService);
-  activeTab = signal<'users' | 'rosters' | 'fees' | 'settings'>('users');
+  activeTab = signal<'users' | 'rosters' | 'fees' | 'attendance' | 'settings'>('users');
 
   constructor() {}
 
@@ -26,6 +35,8 @@ export class AdminComponent implements OnInit {
       this.activeTab.set('users');
     } else if (this.authService.canManageRosters()) {
       this.activeTab.set('rosters');
+    } else if (this.authService.canManageEvents()) {
+      this.activeTab.set('attendance');
     } else if (this.authService.canManageFees()) {
       this.activeTab.set('fees');
     }

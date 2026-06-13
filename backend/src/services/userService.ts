@@ -507,4 +507,73 @@ export class UserService {
       events: rows
     };
   }
+
+  static async getGuildAttendance(guildId: string): Promise<any[]> {
+    const query = `
+      WITH guild_users AS (
+        SELECT DISTINCT u.id, u.battletag
+        FROM users u
+        LEFT JOIN characters c ON u.id = c.user_id
+        WHERE c.guild_id = $1 OR u.active_guild_id = $1
+      ),
+      past_events AS (
+        SELECT e.id, e.title, e.roster_id, r.weight as roster_weight
+        FROM events e
+        LEFT JOIN rosters r ON e.roster_id = r.id
+        WHERE e.guild_id = $1
+          AND e.start_time < CURRENT_TIMESTAMP
+          AND DATE_TRUNC('month', e.start_time) = DATE_TRUNC('month', CURRENT_TIMESTAMP)
+      ),
+      user_eligibility AS (
+        SELECT 
+          gu.id as user_id,
+          pe.id as event_id
+        FROM guild_users gu
+        CROSS JOIN past_events pe
+        WHERE pe.roster_id IS NULL
+           OR EXISTS (
+             SELECT 1 
+             FROM characters c2
+             JOIN rosters rc ON c2.roster_id = rc.id
+             WHERE c2.user_id = gu.id
+               AND c2.guild_id = $1
+               AND rc.weight <= pe.roster_weight
+           )
+      ),
+      user_attendance AS (
+        SELECT 
+          ue.user_id,
+          COUNT(ue.event_id) as total_eligible,
+          COUNT(CASE WHEN s.status IN ('signed_up', 'standby') THEN 1 END) as attended
+        FROM user_eligibility ue
+        LEFT JOIN event_signups s ON ue.event_id = s.event_id AND ue.user_id = s.user_id
+        GROUP BY ue.user_id
+      )
+      SELECT 
+        gu.id,
+        gu.battletag,
+        COALESCE(
+          (SELECT name FROM characters WHERE user_id = gu.id AND is_main = true AND guild_id = $1 LIMIT 1),
+          (SELECT name FROM characters WHERE user_id = gu.id AND is_main = true LIMIT 1),
+          SPLIT_PART(gu.battletag, '#', 1)
+        ) as main_character_name,
+        COALESCE(
+          (SELECT class FROM characters WHERE user_id = gu.id AND is_main = true AND guild_id = $1 LIMIT 1),
+          (SELECT class FROM characters WHERE user_id = gu.id AND is_main = true LIMIT 1),
+          'Unknown'
+        ) as main_character_class,
+        COALESCE(ua.total_eligible, 0) as total_eligible,
+        COALESCE(ua.attended, 0) as attended,
+        CASE 
+          WHEN COALESCE(ua.total_eligible, 0) > 0 
+          THEN ROUND((COALESCE(ua.attended, 0)::float / ua.total_eligible) * 100)
+          ELSE 100 
+        END as percentage
+      FROM guild_users gu
+      LEFT JOIN user_attendance ua ON gu.id = ua.user_id
+      ORDER BY percentage DESC, gu.battletag ASC
+    `;
+    const result = await pool.query(query, [guildId]);
+    return result.rows;
+  }
 }

@@ -1,0 +1,90 @@
+<div class="admin-attendance-container">
+  <div class="attendance-header-row">
+    <div>
+      <h2>Suivi d'assiduité des membres</h2>
+      <p class="subtitle">Statistiques calculées sur les événements passés du mois en cours, adaptées à l'éligibilité des rosters de chaque joueur.</p>
+    </div>
+    <button class="btn-refresh" (click)="loadAttendance()" [disabled]="isLoading()">
+      <span class="refresh-icon" [class.spinning]="isLoading()">🔄</span> Rafraîchir
+    </button>
+  </div>
+
+  <!-- Search and Stats row -->
+  <div class="filters-row">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input 
+        type="text" 
+        [placeholder]="'Rechercher un membre ou un personnage...'" 
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+      />
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading()">
+    <div class="spinner"></div>
+    <p>Chargement des statistiques d'assiduité...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!isLoading() && getFilteredList().length === 0">
+    <p>Aucun membre trouvé ou aucun événement éligible ce mois-ci.</p>
+  </div>
+
+  <!-- Attendance Table -->
+  <div class="attendance-table-wrapper" *ngIf="!isLoading() && getFilteredList().length > 0">
+    <table class="attendance-table">
+      <thead>
+        <tr>
+          <th>Membre</th>
+          <th>Personnage Principal</th>
+          <th>Événements Participés</th>
+          <th>Taux d'Assiduité</th>
+          <th class="progress-col">Progression</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of getFilteredList()">
+          <td>
+            <div class="member-cell">
+              <span class="battletag">{{ item.battletag }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="character-cell" *ngIf="item.main_character_name">
+              <span class="char-name" [class]="'class-' + getClassCategory(item.main_character_class)">
+                {{ item.main_character_name }}
+              </span>
+              <span class="char-class-badge" [class]="'bg-class-' + getClassCategory(item.main_character_class)">
+                {{ item.main_character_class }}
+              </span>
+            </div>
+            <span class="no-char" *ngIf="!item.main_character_name">Aucun personnage lié</span>
+          </td>
+          <td>
+            <div class="stats-cell">
+              <span class="stats-value">{{ item.attended }} / {{ item.total_eligible }}</span>
+              <span class="stats-sub">événements</span>
+            </div>
+          </td>
+          <td>
+            <span class="percentage-badge" [class]="getAttendanceClass(item.percentage)">
+              {{ item.percentage }}%
+            </span>
+          </td>
+          <td class="progress-col">
+            <div class="progress-bar-container">
+              <div 
+                class="progress-bar-fill" 
+                [class]="getAttendanceClass(item.percentage)"
+                [style.width]="item.percentage + '%'">
+              </div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
