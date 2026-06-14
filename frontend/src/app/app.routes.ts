@@ -11,6 +11,7 @@ import { EventDetailsComponent } from './components/event-details/event-details'
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { FeesComponent } from './components/fees/fees';
+import { CraftsComponent } from './components/crafts/crafts';
 
 export const routes: Routes = [
   { path: '', component: LandingComponent },
@@ -43,6 +44,11 @@ export const routes: Routes = [
   { 
     path: 'fees', 
     component: FeesComponent, 
+    canActivate: [authGuard] 
+  },
+  { 
+    path: 'crafts', 
+    component: CraftsComponent, 
     canActivate: [authGuard] 
   },
   { 

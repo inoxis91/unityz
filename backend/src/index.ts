@@ -15,6 +15,7 @@ import stripeRoutes from './routes/stripe';
 import guildRoutes from './routes/guilds';
 import mockAuthRoutes from './routes/mockAuth';
 import supportRoutes from './routes/support';
+import craftRoutes from './routes/crafts';
 import { errorHandler } from './middlewares/errorHandler';
 import { initDiscord } from './lib/discord';
 import { initCronJobs } from './lib/cron';
@@ -97,6 +98,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/guilds', guildRoutes);
 app.use('/api/support', supportRoutes);
+app.use('/api/crafts', craftRoutes);
 
 if (!isProd) {
   app.use('/api/mock-auth', mockAuthRoutes);

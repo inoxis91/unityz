@@ -1,0 +1,109 @@
+<div class="crafts-container">
+  <div class="crafts-header">
+    <div class="header-info">
+      <span class="icon">⚒️</span>
+      <div>
+        <h1>{{ i18n.t('crafts.title') }}</h1>
+        <p class="subtitle">{{ i18n.t('crafts.subtitle') }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button [class.active]="activeTab() === 'pending_requests'" (click)="activeTab.set('pending_requests')">
+      {{ i18n.t('crafts.tabs.pending') }}
+      <span class="badge-count-red" *ngIf="craftService.pendingRequestsCount() > 0">
+        {{ craftService.pendingRequestsCount() }}
+      </span>
+    </button>
+    <button [class.active]="activeTab() === 'make_request'" (click)="activeTab.set('make_request')">
+      {{ i18n.t('crafts.tabs.request') }}
+    </button>
+  </div>
+
+  <!-- TAB: Pending Requests -->
+  <div class="tab-content" *ngIf="activeTab() === 'pending_requests'">
+    <div class="requests-card">
+      <h2>{{ i18n.t('crafts.pending_title') }}</h2>
+
+      @if (craftService.pendingRequests().length === 0) {
+        <div class="empty-state">
+          <span class="empty-icon">🎉</span>
+          <p>{{ i18n.t('crafts.empty_state') }}</p>
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="requests-table">
+            <thead>
+              <tr>
+                <th>{{ i18n.t('crafts.th_item') }}</th>
+                <th>{{ i18n.t('crafts.th_armor') }}</th>
+                <th>{{ i18n.t('crafts.th_by') }}</th>
+                <th>{{ i18n.t('crafts.th_date') }}</th>
+                <th class="actions-col">{{ i18n.t('crafts.th_action') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let req of craftService.pendingRequests()" class="request-row">
+                <td>
+                  <div class="slot-cell">
+                    <span class="slot-badge">{{ getSlotLabel(req.slot) }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="armor-badge" [class]="req.armor_type">{{ getArmorTypeLabel(req.armor_type) }}</span>
+                </td>
+                <td>
+                  <div class="user-cell">
+                    <strong class="char-name">{{ req.main_character_name || 'Sans Personnage' }}</strong>
+                    <span class="btag">{{ req.battletag }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="date">{{ req.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+                </td>
+                <td class="actions-col">
+                  <label class="complete-checkbox-label">
+                    <input type="checkbox" (change)="onCompleteRequest(req)" class="complete-checkbox" />
+                    <span class="checkmark"></span>
+                    <span class="label-text">{{ i18n.t('crafts.action_complete') }}</span>
+                  </label>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- TAB: Make Request -->
+  <div class="tab-content" *ngIf="activeTab() === 'make_request'">
+    <div class="form-card">
+      <h2>{{ i18n.t('crafts.request_title') }}</h2>
+      <p class="form-help">{{ i18n.t('crafts.request_help') }}</p>
+
+      <form (submit)="onSubmitRequest()" class="request-form">
+        <div class="form-group">
+          <label for="slot-select">{{ i18n.t('crafts.form.slot') }}</label>
+          <select id="slot-select" [ngModel]="selectedSlot()" (ngModelChange)="selectedSlot.set($event)" name="slot" class="custom-select" required>
+            <option value="" disabled selected>{{ i18n.t('crafts.form.select_slot') }}</option>
+            <option *ngFor="let s of slots" [value]="s.value">{{ getSlotLabel(s.value) }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="armor-select">{{ i18n.t('crafts.form.armor') }}</label>
+          <select id="armor-select" [ngModel]="selectedArmorType()" (ngModelChange)="selectedArmorType.set($event)" name="armorType" class="custom-select" required>
+            <option value="" disabled selected>{{ i18n.t('crafts.form.select_armor') }}</option>
+            <option *ngFor="let t of armorTypes" [value]="t.value">{{ getArmorTypeLabel(t.value) }}</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn-primary-craft" [disabled]="isSaving() || !selectedSlot() || !selectedArmorType()">
+          {{ isSaving() ? i18n.t('crafts.form.submitting') : i18n.t('crafts.form.submit') }}
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

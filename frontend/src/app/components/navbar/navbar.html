@@ -23,6 +23,10 @@
         <a *ngIf="user.has_characters && user.active_guild_id && user.active_guild_is_paid" routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMenu()">{{ i18n.t('nav.dashboard') }}</a>
         <a *ngIf="user.has_characters && user.active_guild_id && user.active_guild_is_paid" routerLink="/calendar" routerLinkActive="active" (click)="closeMenu()">{{ i18n.t('nav.calendar') }}</a>
         <a *ngIf="user.has_characters && user.active_guild_id && user.active_guild_is_paid && user.active_guild_fees_enabled" routerLink="/fees" routerLinkActive="active" (click)="closeMenu()">{{ i18n.t('nav.fees') }}</a>
+        <a *ngIf="user.has_characters && user.active_guild_id && user.active_guild_is_paid" routerLink="/crafts" routerLinkActive="active" (click)="closeMenu()" class="nav-crafts-link">
+          {{ i18n.t('nav.crafts') }}
+          <span class="badge-count-navbar" *ngIf="pendingCraftsCount() > 0">{{ pendingCraftsCount() }}</span>
+        </a>
         <a *ngIf="user.has_characters && user.active_guild_id && user.active_guild_is_paid" routerLink="/options" routerLinkActive="active" (click)="closeMenu()">{{ i18n.t('nav.options') }}</a>
         <a routerLink="/admin" routerLinkActive="active" *ngIf="user.has_characters && user.active_guild_id && user.active_guild_is_paid && authService.canAccessAdmin()" (click)="closeMenu()">{{ i18n.t('nav.admin') }}</a>
         <button (click)="logout()" class="btn-logout">{{ i18n.t('nav.logout') }}</button>

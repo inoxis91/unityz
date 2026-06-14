@@ -343,6 +343,20 @@ export const initDb = async () => {
       );
     `);
 
+    // Craft Requests table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS craft_requests (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        guild_id UUID REFERENCES guilds(id) ON DELETE CASCADE,
+        user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE,
+        slot VARCHAR(100) NOT NULL,
+        armor_type VARCHAR(100) NOT NULL,
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     // Ensure comment column exists
     await client.query(`
       DO $$ 
