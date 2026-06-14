@@ -86,17 +86,28 @@
       <form (submit)="onSubmitRequest()" class="request-form">
         <div class="form-group">
           <label for="slot-select">{{ i18n.t('crafts.form.slot') }}</label>
-          <select id="slot-select" [ngModel]="selectedSlot()" (ngModelChange)="selectedSlot.set($event)" name="slot" class="custom-select" required>
+          <select id="slot-select" [ngModel]="selectedSlot()" (ngModelChange)="onSlotChange($event)" name="slot" class="custom-select" required>
             <option value="" disabled selected>{{ i18n.t('crafts.form.select_slot') }}</option>
             <option *ngFor="let s of slots" [value]="s.value">{{ getSlotLabel(s.value) }}</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label for="armor-select">{{ i18n.t('crafts.form.armor') }}</label>
+          <label for="armor-select">
+            {{ selectedSlot() === 'weapon' ? i18n.t('crafts.form.weapon_type') : i18n.t('crafts.form.armor') }}
+          </label>
           <select id="armor-select" [ngModel]="selectedArmorType()" (ngModelChange)="selectedArmorType.set($event)" name="armorType" class="custom-select" required>
-            <option value="" disabled selected>{{ i18n.t('crafts.form.select_armor') }}</option>
-            <option *ngFor="let t of armorTypes" [value]="t.value">{{ getArmorTypeLabel(t.value) }}</option>
+            <option value="" disabled selected>
+              {{ selectedSlot() === 'weapon' ? i18n.t('crafts.form.select_weapon_type') : i18n.t('crafts.form.select_armor') }}
+            </option>
+            
+            <ng-container *ngIf="selectedSlot() !== 'weapon'">
+              <option *ngFor="let t of armorTypes" [value]="t.value">{{ getArmorTypeLabel(t.value) }}</option>
+            </ng-container>
+            
+            <ng-container *ngIf="selectedSlot() === 'weapon'">
+              <option *ngFor="let w of weaponTypes" [value]="w.value">{{ getWeaponTypeLabel(w.value) }}</option>
+            </ng-container>
           </select>
         </div>
 

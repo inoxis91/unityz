@@ -387,6 +387,19 @@ export const initDb = async () => {
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='discord_officer_channel_id') THEN
           ALTER TABLE guilds ADD COLUMN discord_officer_channel_id VARCHAR(255);
         END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='discord_crafts_channel_id') THEN
+          ALTER TABLE guilds ADD COLUMN discord_crafts_channel_id VARCHAR(255);
+        END IF;
+      END $$;
+    `);
+
+    // Ensure discord_message_id column exists in craft_requests table
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='craft_requests' AND column_name='discord_message_id') THEN
+          ALTER TABLE craft_requests ADD COLUMN discord_message_id VARCHAR(255);
+        END IF;
       END $$;
     `);
 

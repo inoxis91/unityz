@@ -28,6 +28,7 @@ export class AdminSettingsComponent implements OnInit {
   discordGuildId = signal('');
   discordEventsChannelId = signal('');
   discordOfficerChannelId = signal('');
+  discordCraftsChannelId = signal('');
   discordFeesChannelId = signal('');
   discordReminderChannelId = signal('');
   
@@ -49,6 +50,7 @@ export class AdminSettingsComponent implements OnInit {
         this.discordGuildId.set(data.discord_guild_id || '');
         this.discordEventsChannelId.set(data.discord_events_channel_id || '');
         this.discordOfficerChannelId.set(data.discord_officer_channel_id || '');
+        this.discordCraftsChannelId.set(data.discord_crafts_channel_id || '');
         this.discordFeesChannelId.set(data.discord_fees_channel_id || '');
         this.discordReminderChannelId.set(data.discord_reminder_channel_id || '');
         this.feesEnabled.set(data.fees_enabled !== undefined ? data.fees_enabled : true);
@@ -70,6 +72,7 @@ export class AdminSettingsComponent implements OnInit {
       discordGuildId: this.discordGuildId() || null,
       discordEventsChannelId: this.discordEventsChannelId() || null,
       discordOfficerChannelId: this.discordOfficerChannelId() || null,
+      discordCraftsChannelId: this.discordCraftsChannelId() || null,
       discordFeesChannelId: this.discordFeesChannelId() || null,
       discordReminderChannelId: this.discordReminderChannelId() || null,
       feesEnabled: this.feesEnabled(),

@@ -90,6 +90,11 @@
             </div>
 
             <div class="form-group">
+              <label>{{ i18n.t('admin.settings.discord_crafts_channel') }}</label>
+              <input type="text" [ngModel]="discordCraftsChannelId()" (ngModelChange)="discordCraftsChannelId.set($event)" name="discordCraftsChannelId" placeholder="ex: 1509267337147056249" [disabled]="!discordEnabled() || !isPro()" />
+            </div>
+
+            <div class="form-group">
               <label>{{ i18n.t('admin.settings.discord_fees_channel') }}</label>
               <input type="text" [ngModel]="discordFeesChannelId()" (ngModelChange)="discordFeesChannelId.set($event)" name="discordFeesChannelId" placeholder="ex: 1489523542780285100" [disabled]="!discordEnabled() || !isPro()" />
             </div>

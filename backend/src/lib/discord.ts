@@ -77,6 +77,35 @@ export const sendDiscordChannelMessage = async (channelId: string, message: stri
   return false;
 };
 
+export const sendDiscordChannelMessageWithResult = async (channelId: string, message: string): Promise<string | null> => {
+  try {
+    const channel = await client.channels.fetch(channelId);
+    if (channel?.isTextBased()) {
+      const sentMessage = await (channel as any).send(message);
+      return sentMessage.id;
+    }
+  } catch (error) {
+    console.error(`Failed to send Discord message with result to channel ${channelId}:`, error);
+  }
+  return null;
+};
+
+export const reactToDiscordMessage = async (channelId: string, messageId: string, emoji: string): Promise<boolean> => {
+  try {
+    const channel = await client.channels.fetch(channelId);
+    if (channel?.isTextBased()) {
+      const message = await (channel as any).messages.fetch(messageId);
+      if (message) {
+        await message.react(emoji);
+        return true;
+      }
+    }
+  } catch (error) {
+    console.error(`Failed to react to Discord message ${messageId} in channel ${channelId}:`, error);
+  }
+  return false;
+};
+
 export const sendFeeDeclarationNotification = async (declaration: any, userDetails: { battletag: string, mainCharacter: string, characters: any[] }, discordFeesChannelId?: string) => {
   try {
     const channelId = discordFeesChannelId || process.env.DISCORD_FEES_CHANNEL_ID;

@@ -27,29 +27,37 @@ export class CraftsComponent implements OnInit {
 
   // WoW Slots
   slots = [
-    { value: 'head', label: 'Tête / Head' },
-    { value: 'neck', label: 'Cou / Neck' },
-    { value: 'shoulders', label: 'Épaules / Shoulders' },
-    { value: 'back', label: 'Dos / Back' },
-    { value: 'chest', label: 'Torse / Chest' },
-    { value: 'wrists', label: 'Poignets / Wrists' },
-    { value: 'hands', label: 'Mains / Hands' },
-    { value: 'waist', label: 'Taille / Waist' },
-    { value: 'legs', label: 'Jambes / Legs' },
-    { value: 'feet', label: 'Pieds / Feet' },
-    { value: 'finger', label: 'Anneau / Finger' },
-    { value: 'trinket', label: 'Bijou / Trinket' },
-    { value: 'weapon', label: 'Arme / Weapon' },
-    { value: 'offhand', label: 'Bouclier & Main gauche / Shield & Off-hand' }
+    { value: 'head', label: 'Tête' },
+    { value: 'neck', label: 'Cou' },
+    { value: 'shoulders', label: 'Épaules' },
+    { value: 'back', label: 'Dos' },
+    { value: 'chest', label: 'Torse' },
+    { value: 'wrists', label: 'Poignets' },
+    { value: 'hands', label: 'Mains' },
+    { value: 'waist', label: 'Taille' },
+    { value: 'legs', label: 'Jambes' },
+    { value: 'feet', label: 'Pieds' },
+    { value: 'finger', label: 'Anneau' },
+    { value: 'trinket', label: 'Bijou' },
+    { value: 'weapon', label: 'Arme' },
+    { value: 'offhand', label: 'Bouclier & Main gauche' }
   ];
 
   // Armor Types
   armorTypes = [
-    { value: 'cloth', label: 'Tissu / Cloth' },
-    { value: 'leather', label: 'Cuir / Leather' },
-    { value: 'mail', label: 'Mailles / Mail' },
-    { value: 'plate', label: 'Plaques / Plate' },
-    { value: 'other', label: 'Autre / Divers (Bijoux, Armes, etc.)' }
+    { value: 'cloth', label: 'Tissu' },
+    { value: 'leather', label: 'Cuir' },
+    { value: 'mail', label: 'Mailles' },
+    { value: 'plate', label: 'Plaques' },
+    { value: 'other', label: 'Autre / Divers' }
+  ];
+
+  // Weapon Types
+  weaponTypes = [
+    { value: 'wand', label: 'Baguette' },
+    { value: 'staff', label: 'Bâton' },
+    { value: 'onehanded', label: 'Arme 1 main' },
+    { value: 'twohanded', label: 'Arme 2 mains' }
   ];
 
   ngOnInit() {
@@ -61,15 +69,26 @@ export class CraftsComponent implements OnInit {
   getSlotLabel(value: string): string {
     const slot = this.slots.find(s => s.value === value);
     if (!slot) return value;
-    // Map to nice localized label
     return this.i18n.t(`crafts.slots.${value}`) || slot.label;
   }
 
   getArmorTypeLabel(value: string): string {
     const type = this.armorTypes.find(t => t.value === value);
-    if (!type) return value;
-    // Map to nice localized label
+    if (!type) {
+      return this.getWeaponTypeLabel(value);
+    }
     return this.i18n.t(`crafts.armor_types.${value}`) || type.label;
+  }
+
+  getWeaponTypeLabel(value: string): string {
+    const type = this.weaponTypes.find(t => t.value === value);
+    if (!type) return value;
+    return this.i18n.t(`crafts.weapon_types.${value}`) || type.label;
+  }
+
+  onSlotChange(newSlot: string) {
+    this.selectedSlot.set(newSlot);
+    this.selectedArmorType.set(''); // Reset selected armor/weapon type on slot change
   }
 
   onSubmitRequest() {
