@@ -22,7 +22,8 @@ router.get('/my-signups', isAuthenticated, async (req, res, next) => {
 // GET /api/events : Récupère tous les événements
 router.get('/', isAuthenticated, async (req, res, next) => {
   try {
-    const events = await EventService.getAll(req.user!.active_guild_id || undefined);
+    const userRole = req.user!.role || 'member';
+    const events = await EventService.getAll(req.user!.active_guild_id || undefined, userRole);
     res.json(events);
   } catch (error) {
     next(error);
@@ -36,6 +37,16 @@ router.get('/:id', isAuthenticated, async (req, res, next) => {
     if (!event) {
       return res.status(404).json({ status: 'error', message: 'Event not found' });
     }
+    
+    // Check 'reunion' visibility
+    if (event.type === 'reunion' && event.invited_groups && event.invited_groups.length > 0) {
+      const userRole = req.user!.role || 'member';
+      const hasAccess = event.invited_groups.includes('all') || userRole === 'admin' || event.invited_groups.includes(userRole);
+      if (!hasAccess) {
+        return res.status(403).json({ status: 'error', message: 'Forbidden: You are not invited to this meeting' });
+      }
+    }
+    
     res.json(event);
   } catch (error) {
     next(error);

@@ -356,6 +356,26 @@ export const initDb = async () => {
       END $$;
     `);
 
+    // Ensure invited_groups column exists in events table
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='events' AND column_name='invited_groups') THEN
+          ALTER TABLE events ADD COLUMN invited_groups VARCHAR(50)[] DEFAULT '{}'::VARCHAR[];
+        END IF;
+      END $$;
+    `);
+
+    // Ensure discord_officer_channel_id column exists in guilds table
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='discord_officer_channel_id') THEN
+          ALTER TABLE guilds ADD COLUMN discord_officer_channel_id VARCHAR(255);
+        END IF;
+      END $$;
+    `);
+
     console.log('Database tables initialized successfully.');
   } catch (err) {
     console.error('Error initializing database:', err);

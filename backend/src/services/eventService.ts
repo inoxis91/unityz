@@ -14,6 +14,7 @@ export interface Event {
   roster_weight?: number | null;
   created_by: string;
   guild_id?: string;
+  invited_groups?: string[];
   created_at: Date;
   updated_at: Date;
 }
@@ -45,12 +46,12 @@ export class EventService {
     return result.rows;
   }
 
-  static async getAll(guildId?: string): Promise<Event[]> {
+  static async getAll(guildId?: string, userRole?: string): Promise<Event[]> {
     let query = `
       SELECT e.id, e.title, e.description, 
              to_char(e.start_time, 'YYYY-MM-DD"T"HH24:MI:SS') as start_time,
              to_char(e.end_time, 'YYYY-MM-DD"T"HH24:MI:SS') as end_time,
-             e.type, e.roster_id, e.mm_groups_count, e.created_by,
+             e.type, e.roster_id, e.mm_groups_count, e.created_by, e.invited_groups,
              r.name as roster_name, r.weight as roster_weight
       FROM events e
       LEFT JOIN rosters r ON e.roster_id = r.id
@@ -62,7 +63,17 @@ export class EventService {
     }
     query += ' ORDER BY e.start_time ASC';
     const result = await pool.query(query, params);
-    return result.rows;
+    const events = result.rows;
+
+    if (!userRole) return events;
+
+    return events.filter(e => {
+      if (e.type !== 'reunion') return true;
+      if (!e.invited_groups || e.invited_groups.length === 0) return true;
+      if (e.invited_groups.includes('all')) return true;
+      if (userRole === 'admin') return true;
+      return e.invited_groups.includes(userRole);
+    });
   }
 
   static async getById(id: string): Promise<Event | null> {
@@ -70,7 +81,7 @@ export class EventService {
       SELECT e.id, e.title, e.description, 
              to_char(e.start_time, 'YYYY-MM-DD"T"HH24:MI:SS') as start_time,
              to_char(e.end_time, 'YYYY-MM-DD"T"HH24:MI:SS') as end_time,
-             e.type, e.roster_id, e.mm_groups_count, e.created_by, e.guild_id,
+             e.type, e.roster_id, e.mm_groups_count, e.created_by, e.guild_id, e.invited_groups,
              r.name as roster_name, r.weight as roster_weight
       FROM events e
       LEFT JOIN rosters r ON e.roster_id = r.id
@@ -82,8 +93,8 @@ export class EventService {
 
   static async create(data: Partial<Event>, userId: string, guildId: string): Promise<Event> {
     const query = `
-      INSERT INTO events (title, description, start_time, end_time, type, roster_id, mm_groups_count, created_by, guild_id)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      INSERT INTO events (title, description, start_time, end_time, type, roster_id, mm_groups_count, created_by, guild_id, invited_groups)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *
     `;
     const result = await pool.query(query, [
@@ -95,7 +106,8 @@ export class EventService {
       data.roster_id || null, 
       data.mm_groups_count || 0,
       userId,
-      guildId
+      guildId,
+      data.invited_groups || []
     ]);
     
     const createdEvent = result.rows[0];
@@ -115,36 +127,85 @@ export class EventService {
     if (!event.guild_id) return;
 
     // Fetch guild Discord settings
-    const guildRes = await pool.query('SELECT discord_enabled, discord_events_channel_id FROM guilds WHERE id = $1', [event.guild_id]);
+    const guildRes = await pool.query(
+      'SELECT discord_enabled, discord_events_channel_id, discord_officer_channel_id FROM guilds WHERE id = $1', 
+      [event.guild_id]
+    );
     const guild = guildRes.rows[0];
 
-    if (!guild || !guild.discord_enabled || !guild.discord_events_channel_id) {
-      return; // Skip if Discord is disabled or channel not set
+    if (!guild || !guild.discord_enabled) {
+      return; // Skip if Discord is disabled
     }
 
-    const channelId = guild.discord_events_channel_id;
+    let channelId: string | null = null;
+    
+    // For 'reunion', if 'all' is invited, notify the events channel. Otherwise, notify the officer channel.
+    if (event.type === 'reunion') {
+      const invited = event.invited_groups || [];
+      if (invited.includes('all')) {
+        channelId = guild.discord_events_channel_id;
+      } else {
+        channelId = guild.discord_officer_channel_id;
+      }
+    } else {
+      channelId = guild.discord_events_channel_id;
+    }
+
+    if (!channelId) {
+      console.warn(`[Discord] Notification channel not set for event type ${event.type}, skipping notification`);
+      return; // Skip if channel not set
+    }
     
     const startTime = new Date(event.start_time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     const startDate = new Date(event.start_time).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
-    const typeIcon = event.type.toLowerCase() === 'raid' ? '⚔️' : '💎';
+    
+    let typeIcon = '💎';
+    if (event.type.toLowerCase() === 'raid') {
+      typeIcon = '⚔️';
+    } else if (event.type.toLowerCase() === 'reunion') {
+      typeIcon = '👥';
+    }
     
     let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     if (frontendUrl.endsWith('/')) frontendUrl = frontendUrl.slice(0, -1);
     const eventLink = `${frontendUrl}/events/${event.id}`;
 
-    // Mise en avant du roster
-    const rosterTag = event.roster_name 
-      ? `🔴 **ROSTER : ${event.roster_name.toUpperCase()}** 🔴` 
-      : `🟢 **OUVERT À TOUS** 🟢`;
+    // Mise en avant du roster / groupe invité
+    let rosterTag = '';
+    if (event.type === 'reunion') {
+      const invited = event.invited_groups || [];
+      if (invited.includes('all')) {
+        rosterTag = `🟢 **INVITATION : TOUS LES MEMBRES** 🟢`;
+      } else {
+        const roleNames = invited.map(r => {
+          if (r === 'admin') return 'Admin';
+          if (r === 'raid_leader') return 'Raid Leader';
+          if (r === 'treasurer') return 'Trésorier';
+          if (r === 'event_manager') return 'Event Manager';
+          return r;
+        });
+        rosterTag = `🔒 **RÉUNION PRIVÉE - INVITÉS : ${roleNames.join(', ').toUpperCase()}** 🔒`;
+      }
+    } else {
+      rosterTag = event.roster_name 
+        ? `🔴 **ROSTER : ${event.roster_name.toUpperCase()}** 🔴` 
+        : `🟢 **OUVERT À TOUS** 🟢`;
+    }
 
     let message = `🆕 **NOUVEL ÉVÉNEMENT CRÉÉ !**\n`;
+    if (event.type === 'reunion') {
+      message = `📅 **NOUVELLE RÉUNION PLANIFIÉE !**\n`;
+    }
     message += `Venez nombreux vous inscrire pour faire briller la guilde ! 🚀\n\n`;
+    if (event.type === 'reunion' && !event.invited_groups?.includes('all')) {
+      message = `🔒 **NOUVELLE RÉUNION PRIVÉE !**\n\n`;
+    }
     message += `${rosterTag}\n`;
     message += `------------------------------------------\n`;
     message += `\n${typeIcon} **${event.title}**\n`;
     message += `📅 Date : ${startDate}\n`;
     message += `⏰ Heure : ${startTime}\n`;
-    message += `📝 Type : ${event.type}\n`;
+    message += `📝 Type : ${event.type === 'reunion' ? 'Réunion' : event.type}\n`;
     if (event.description) {
       message += `📖 Description : ${event.description}\n`;
     }
@@ -158,8 +219,8 @@ export class EventService {
   static async update(id: string, data: Partial<Event>): Promise<Event | null> {
     const query = `
       UPDATE events 
-      SET title = $1, description = $2, start_time = $3, end_time = $4, type = $5, roster_id = $6, mm_groups_count = $7, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $8
+      SET title = $1, description = $2, start_time = $3, end_time = $4, type = $5, roster_id = $6, mm_groups_count = $7, invited_groups = $8, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $9
       RETURNING *
     `;
     const result = await pool.query(query, [
@@ -170,6 +231,7 @@ export class EventService {
       data.type, 
       data.roster_id || null, 
       data.mm_groups_count ?? 0,
+      data.invited_groups || [],
       id
     ]);
     return result.rows[0] || null;

@@ -9,6 +9,7 @@ export const createEventSchema = z.object({
     type: z.string().min(1),
     roster_id: z.string().uuid().optional().nullable(),
     mm_groups_count: z.number().int().min(0).optional(),
+    invited_groups: z.array(z.string()).optional().nullable(),
   }),
 });
 
@@ -24,6 +25,7 @@ export const updateEventSchema = z.object({
     type: z.string().min(1),
     roster_id: z.string().uuid().optional().nullable(),
     mm_groups_count: z.number().int().min(0).optional(),
+    invited_groups: z.array(z.string()).optional().nullable(),
   }),
 });
 

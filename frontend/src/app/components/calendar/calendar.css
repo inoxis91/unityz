@@ -691,3 +691,47 @@
   color: #475569;
   border: 1px solid #e2e8f0;
 }
+
+/* Reunion Specific styling */
+.event-type-tag.reunion {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+:host ::ng-deep .tag-reunion {
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: #10b981 !important;
+}
+
+.invited-groups-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: #f8fafc;
+  border: 2px solid #f1f5f9;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+}
+
+.checkbox-label {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500 !important;
+  font-size: 0.85rem !important;
+  color: #1e293b !important;
+  margin-bottom: 0 !important;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: auto !important;
+  cursor: pointer;
+  margin: 0;
+}
+
+.checkbox-label.disabled,
+.checkbox-label input[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

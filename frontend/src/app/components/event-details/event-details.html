@@ -7,10 +7,14 @@
     <div class="event-header-top">
       <div class="event-title-row">
         <div class="type-badge" [ngClass]="event()?.type?.toLowerCase() === 'mm+' ? 'mm-plus' : event()?.type?.toLowerCase()">
-          {{ event()?.type }}
+          {{ event()?.type === 'reunion' ? i18n.t('calendar.form.type_reunion') : event()?.type }}
         </div>
-        <div class="roster-badge" *ngIf="event()?.roster_name" [title]="'Poids: ' + event()?.roster_weight">{{ event()?.roster_name }}</div>
-        <div class="roster-badge all" *ngIf="!event()?.roster_name">Tous</div>
+        <div class="roster-badge" *ngIf="event()?.roster_name && event()?.type !== 'reunion'" [title]="'Poids: ' + event()?.roster_weight">{{ event()?.roster_name }}</div>
+        <div class="roster-badge all" *ngIf="!event()?.roster_name && event()?.type !== 'reunion'">Tous</div>
+        <div class="roster-badge all" *ngIf="event()?.type === 'reunion' && event()?.invited_groups?.includes('all')">Tous les membres</div>
+        <div class="roster-badge" *ngIf="event()?.type === 'reunion' && !event()?.invited_groups?.includes('all')">
+          {{ getInvitedGroupsLabel(event()?.invited_groups) }}
+        </div>
         <h1>{{ event()?.title }}</h1>
       </div>
       
@@ -409,10 +413,11 @@
             <select [(ngModel)]="editEventData.type" name="type" class="custom-select">
               <option value="raid">Raid</option>
               <option value="mm+">Donjon MM+</option>
+              <option value="reunion">Réunion</option>
               <option value="custom">Autre / Spécial</option>
             </select>
           </div>
-          <div class="form-section">
+          <div class="form-section" *ngIf="editEventData.type !== 'reunion'">
             <label>Roster autorisé</label>
             <select [(ngModel)]="editEventData.roster_id" name="roster_id" class="custom-select">
               <option value="">Tous les membres</option>
@@ -420,6 +425,31 @@
                 <option [value]="roster.id">{{ roster.name }} (Poids: {{ roster.weight }})</option>
               }
             </select>
+          </div>
+          <div class="form-section" *ngIf="editEventData.type === 'reunion'">
+            <label>{{ i18n.t('calendar.form.invited_group') }}</label>
+            <div class="invited-groups-checkboxes">
+              <label class="checkbox-label">
+                <input type="checkbox" [checked]="isGroupChecked('all')" (change)="toggleGroup('all')" />
+                {{ i18n.t('calendar.form.all_members') }}
+              </label>
+              <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
+                <input type="checkbox" [checked]="isGroupChecked('admin')" (change)="toggleGroup('admin')" [disabled]="isGroupChecked('all')" />
+                {{ i18n.t('calendar.form.role_admin') }}
+              </label>
+              <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
+                <input type="checkbox" [checked]="isGroupChecked('raid_leader')" (change)="toggleGroup('raid_leader')" [disabled]="isGroupChecked('all')" />
+                {{ i18n.t('calendar.form.role_raid_leader') }}
+              </label>
+              <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
+                <input type="checkbox" [checked]="isGroupChecked('treasurer')" (change)="toggleGroup('treasurer')" [disabled]="isGroupChecked('all')" />
+                {{ i18n.t('calendar.form.role_treasurer') }}
+              </label>
+              <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
+                <input type="checkbox" [checked]="isGroupChecked('event_manager')" (change)="toggleGroup('event_manager')" [disabled]="isGroupChecked('all')" />
+                {{ i18n.t('calendar.form.role_event_manager') }}
+              </label>
+            </div>
           </div>
         </div>
 

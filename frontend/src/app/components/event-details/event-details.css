@@ -795,6 +795,10 @@
 .event-title-row h1 { margin: 0; font-size: 2.25rem; color: #1e293b; font-weight: 800; }
 .type-badge { padding: 6px 16px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; height: fit-content; }
 .type-badge.raid { background: #fee2e2; color: #dc2626; }
+.type-badge.reunion {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
 .type-badge.mm-plus {
   background: #e0e7ff;
   color: #4338ca;
@@ -847,4 +851,38 @@
   background: rgba(255, 255, 255, 0.9);
   padding: 1px 4px;
   border-radius: 3px;
+}
+
+/* Checkboxes inside edit event modal */
+.invited-groups-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: #f8fafc;
+  border: 2px solid #f1f5f9;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+}
+
+.checkbox-label {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500 !important;
+  font-size: 0.85rem !important;
+  color: #1e293b !important;
+  margin-bottom: 0 !important;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: auto !important;
+  cursor: pointer;
+  margin: 0;
+}
+
+.checkbox-label.disabled,
+.checkbox-label input[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

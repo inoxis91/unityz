@@ -13,6 +13,7 @@ const updateGuildSettingsSchema = z.object({
     discordEventsChannelId: z.string().max(255).nullable(),
     discordFeesChannelId: z.string().max(255).nullable(),
     discordReminderChannelId: z.string().max(255).nullable(),
+    discordOfficerChannelId: z.string().max(255).nullable().optional(),
     feesEnabled: z.boolean().optional(),
     minimumFeeAmount: z.number().int().min(0).optional(),
   }),
@@ -24,7 +25,7 @@ router.get('/my-settings', requireActiveGuild, isAdmin, async (req, res, next) =
     const guildId = req.user!.active_guild_id;
 
     const result = await pool.query(
-      'SELECT id, name, realm, region, subscription_tier, subscription_expires_at, discord_enabled, discord_guild_id, discord_events_channel_id, discord_fees_channel_id, discord_reminder_channel_id, fees_enabled, minimum_fee_amount FROM guilds WHERE id = $1',
+      'SELECT id, name, realm, region, subscription_tier, subscription_expires_at, discord_enabled, discord_guild_id, discord_events_channel_id, discord_fees_channel_id, discord_reminder_channel_id, discord_officer_channel_id, fees_enabled, minimum_fee_amount FROM guilds WHERE id = $1',
       [guildId]
     );
 
@@ -49,12 +50,13 @@ router.put('/my-settings', requireActiveGuild, isAdmin, validate(updateGuildSett
       discordEventsChannelId,
       discordFeesChannelId,
       discordReminderChannelId,
+      discordOfficerChannelId,
       feesEnabled,
       minimumFeeAmount,
     } = req.body;
 
     // Check subscription tier (Discord integration is a Pro-only feature)
-    const guildRes = await pool.query('SELECT subscription_tier, discord_enabled, discord_guild_id, discord_events_channel_id, discord_fees_channel_id, discord_reminder_channel_id FROM guilds WHERE id = $1', [guildId]);
+    const guildRes = await pool.query('SELECT subscription_tier, discord_enabled, discord_guild_id, discord_events_channel_id, discord_fees_channel_id, discord_reminder_channel_id, discord_officer_channel_id FROM guilds WHERE id = $1', [guildId]);
     const guild = guildRes.rows[0];
     const tier = guild?.subscription_tier || 'free';
 
@@ -63,7 +65,8 @@ router.put('/my-settings', requireActiveGuild, isAdmin, validate(updateGuildSett
       discordGuildId !== guild.discord_guild_id ||
       discordEventsChannelId !== guild.discord_events_channel_id ||
       discordFeesChannelId !== guild.discord_fees_channel_id ||
-      discordReminderChannelId !== guild.discord_reminder_channel_id
+      discordReminderChannelId !== guild.discord_reminder_channel_id ||
+      discordOfficerChannelId !== guild.discord_officer_channel_id
     );
 
     if (hasDiscordChanges && tier !== 'pro') {
@@ -81,10 +84,11 @@ router.put('/my-settings', requireActiveGuild, isAdmin, validate(updateGuildSett
            discord_events_channel_id = $3, 
            discord_fees_channel_id = $4, 
            discord_reminder_channel_id = $5,
-           fees_enabled = $6,
-           minimum_fee_amount = $7,
+           discord_officer_channel_id = $6,
+           fees_enabled = $7,
+           minimum_fee_amount = $8,
            updated_at = CURRENT_TIMESTAMP 
-       WHERE id = $8 
+       WHERE id = $9 
        RETURNING *`,
       [
         tier === 'pro' ? discordEnabled : false,
@@ -92,6 +96,7 @@ router.put('/my-settings', requireActiveGuild, isAdmin, validate(updateGuildSett
         tier === 'pro' ? discordEventsChannelId : null,
         tier === 'pro' ? discordFeesChannelId : null,
         tier === 'pro' ? discordReminderChannelId : null,
+        tier === 'pro' ? discordOfficerChannelId : null,
         feesEnabled !== undefined ? feesEnabled : true,
         minimumFeeAmount !== undefined ? minimumFeeAmount : 2000,
         guildId,

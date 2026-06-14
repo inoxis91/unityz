@@ -32,9 +32,13 @@
             </div>
             <div class="event-details-content">
               <div class="event-type-tags">
-                <span class="event-type-tag" [class]="event.type.toLowerCase()">{{ event.type }}</span>
-                <span class="roster-tag" *ngIf="event.roster_name">{{ event.roster_name }}</span>
-                <span class="all-tag" *ngIf="!event.roster_name">{{ i18n.t('calendar.tag_all') }}</span>
+                <span class="event-type-tag" [class]="event.type.toLowerCase()">{{ event.type === 'reunion' ? i18n.t('calendar.form.type_reunion') : event.type }}</span>
+                <span class="roster-tag" *ngIf="event.roster_name && event.type !== 'reunion'">{{ event.roster_name }}</span>
+                <span class="all-tag" *ngIf="!event.roster_name && event.type !== 'reunion'">{{ i18n.t('calendar.tag_all') }}</span>
+                <span class="all-tag" *ngIf="event.type === 'reunion' && event.invited_groups?.includes('all')">{{ i18n.t('calendar.tag_all') }}</span>
+                <span class="roster-tag" *ngIf="event.type === 'reunion' && !event.invited_groups?.includes('all')">
+                  {{ getInvitedGroupsLabel(event.invited_groups) }}
+                </span>
               </div>
               <h3 class="event-title">{{ event.title }}</h3>
               <div class="event-time-row">
@@ -113,10 +117,11 @@
               <select [(ngModel)]="eventForm.type" name="type" class="custom-select">
                 <option value="raid">{{ i18n.t('calendar.form.type_raid') }}</option>
                 <option value="mm+">{{ i18n.t('calendar.form.type_mm') }}</option>
+                <option value="reunion">{{ i18n.t('calendar.form.type_reunion') }}</option>
                 <option value="custom">{{ i18n.t('calendar.form.type_custom') }}</option>
               </select>
             </div>
-            <div class="form-section">
+            <div class="form-section" *ngIf="eventForm.type !== 'reunion'">
               <label>{{ i18n.t('calendar.form.roster') }}</label>
               <select [(ngModel)]="eventForm.roster_id" name="roster_id" class="custom-select">
                 <option value="">{{ i18n.t('calendar.form.roster_all') }}</option>
@@ -124,6 +129,31 @@
                   <option [value]="roster.id">{{ roster.name }}</option>
                 }
               </select>
+            </div>
+            <div class="form-section" *ngIf="eventForm.type === 'reunion'">
+              <label>{{ i18n.t('calendar.form.invited_group') }}</label>
+              <div class="invited-groups-checkboxes">
+                <label class="checkbox-label">
+                  <input type="checkbox" [checked]="isGroupChecked('all')" (change)="toggleGroup('all')" />
+                  {{ i18n.t('calendar.form.all_members') }}
+                </label>
+                <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
+                  <input type="checkbox" [checked]="isGroupChecked('admin')" (change)="toggleGroup('admin')" [disabled]="isGroupChecked('all')" />
+                  {{ i18n.t('calendar.form.role_admin') }}
+                </label>
+                <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
+                  <input type="checkbox" [checked]="isGroupChecked('raid_leader')" (change)="toggleGroup('raid_leader')" [disabled]="isGroupChecked('all')" />
+                  {{ i18n.t('calendar.form.role_raid_leader') }}
+                </label>
+                <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
+                  <input type="checkbox" [checked]="isGroupChecked('treasurer')" (change)="toggleGroup('treasurer')" [disabled]="isGroupChecked('all')" />
+                  {{ i18n.t('calendar.form.role_treasurer') }}
+                </label>
+                <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
+                  <input type="checkbox" [checked]="isGroupChecked('event_manager')" (change)="toggleGroup('event_manager')" [disabled]="isGroupChecked('all')" />
+                  {{ i18n.t('calendar.form.role_event_manager') }}
+                </label>
+              </div>
             </div>
           </div>
 

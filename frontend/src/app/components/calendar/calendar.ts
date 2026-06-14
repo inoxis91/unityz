@@ -70,6 +70,7 @@ export class CalendarComponent implements OnInit {
       let typeClass = 'tag-custom';
       if (type.toLowerCase().includes('raid')) typeClass = 'tag-raid';
       if (type.toLowerCase().includes('mm+')) typeClass = 'tag-mm';
+      if (type.toLowerCase().includes('reunion')) typeClass = 'tag-reunion';
 
       // Determine signup status badge html
       let statusHtml = '';
@@ -83,6 +84,17 @@ export class CalendarComponent implements OnInit {
         statusHtml = '<span class="status-indicator-badge none" title="Non répondu">⚪</span>';
       }
 
+      const isReunion = type.toLowerCase() === 'reunion';
+      const invitedGroups = event.extendedProps['invited_groups'];
+      const isReunionAll = isReunion && (!invitedGroups || invitedGroups.includes('all'));
+      const reunionLabel = isReunion && !isReunionAll ? this.getInvitedGroupsLabel(invitedGroups) : '';
+
+      const rosterHtml = rosterName 
+        ? `<div class="event-tag tag-roster">${rosterName.toUpperCase()}</div>` 
+        : (isReunion && !isReunionAll 
+            ? `<div class="event-tag tag-roster" title="${reunionLabel}">${reunionLabel.toUpperCase()}</div>` 
+            : `<div class="event-tag tag-all">${this.i18n.t('calendar.tag_all').toUpperCase()}</div>`);
+
       return {
         html: `
           <div class="custom-event-card">
@@ -92,8 +104,8 @@ export class CalendarComponent implements OnInit {
             </div>
             <div class="event-title">${event.title}</div>
             <div class="event-tags-container">
-              <div class="event-tag ${typeClass}">${type.toUpperCase()}</div>
-              ${rosterName ? `<div class="event-tag tag-roster">${rosterName.toUpperCase()}</div>` : `<div class="event-tag tag-all">${this.i18n.t('calendar.tag_all').toUpperCase()}</div>`}
+              <div class="event-tag ${typeClass}">${isReunion ? this.i18n.t('calendar.form.type_reunion').toUpperCase() : type.toUpperCase()}</div>
+              ${rosterHtml}
             </div>
           </div>
         `
@@ -117,7 +129,8 @@ export class CalendarComponent implements OnInit {
     end_time: '22:30',
     type: 'raid',
     customType: '',
-    roster_id: '' as string | null
+    roster_id: '' as string | null,
+    invited_groups: [] as string[]
   };
 
   canManageEvents = computed(() => {
@@ -232,7 +245,7 @@ export class CalendarComponent implements OnInit {
             end: e.end_time,
             allDay: false,
             extendedProps: { ...e, signupStatus },
-            backgroundColor: e.type.toLowerCase() === 'raid' ? '#e74c3c' : (e.type.toLowerCase() === 'mm+' ? '#a29bfe' : '#3498db')
+            backgroundColor: e.type.toLowerCase() === 'raid' ? '#e74c3c' : (e.type.toLowerCase() === 'mm+' ? '#a29bfe' : (e.type.toLowerCase() === 'reunion' ? '#10b981' : '#3498db'))
           };
         });
         
@@ -319,7 +332,8 @@ export class CalendarComponent implements OnInit {
       start_time: `${this.eventForm.start_date}T${this.eventForm.start_time}:00`,
       end_time: `${finalEndDate}T${this.eventForm.end_time}:00`,
       type: finalType,
-      roster_id: this.eventForm.roster_id || null
+      roster_id: finalType === 'reunion' ? null : (this.eventForm.roster_id || null),
+      invited_groups: finalType === 'reunion' ? (this.eventForm.invited_groups || []) : []
     };
 
     if (this.isEditing() && this.selectedEventId()) {
@@ -343,6 +357,41 @@ export class CalendarComponent implements OnInit {
     }
   }
 
+  isGroupChecked(group: string): boolean {
+    return this.eventForm.invited_groups?.includes(group) || false;
+  }
+
+  toggleGroup(group: string) {
+    if (!this.eventForm.invited_groups) {
+      this.eventForm.invited_groups = [];
+    }
+    
+    if (group === 'all') {
+      if (this.isGroupChecked('all')) {
+        this.eventForm.invited_groups = [];
+      } else {
+        this.eventForm.invited_groups = ['all'];
+      }
+    } else {
+      if (this.isGroupChecked(group)) {
+        this.eventForm.invited_groups = this.eventForm.invited_groups.filter(g => g !== group);
+      } else {
+        this.eventForm.invited_groups = [...this.eventForm.invited_groups, group];
+      }
+    }
+  }
+
+  getInvitedGroupsLabel(invitedGroups: string[] | undefined): string {
+    if (!invitedGroups || invitedGroups.length === 0) return '';
+    return invitedGroups.map(g => {
+      if (g === 'admin') return this.i18n.t('calendar.form.role_admin');
+      if (g === 'raid_leader') return this.i18n.t('calendar.form.role_raid_leader');
+      if (g === 'treasurer') return this.i18n.t('calendar.form.role_treasurer');
+      if (g === 'event_manager') return this.i18n.t('calendar.form.role_event_manager');
+      return g;
+    }).join(', ');
+  }
+
   closeModal() {
     this.showModal.set(false);
     this.isEditing.set(false);
@@ -356,7 +405,8 @@ export class CalendarComponent implements OnInit {
       end_time: '22:30',
       type: 'raid',
       customType: '',
-      roster_id: ''
+      roster_id: '',
+      invited_groups: []
     };
   }
 
@@ -391,8 +441,9 @@ export class CalendarComponent implements OnInit {
       end_date: end.toISOString().split('T')[0],
       end_time: `${endH}:${endM}`,
       type: props.type,
-      customType: ['raid', 'mm+'].includes(props.type) ? '' : props.type,
-      roster_id: props.roster_id || ''
+      customType: ['raid', 'mm+', 'reunion'].includes(props.type) ? '' : props.type,
+      roster_id: props.roster_id || '',
+      invited_groups: props.invited_groups || []
     };
     if (this.eventForm.customType) this.eventForm.type = 'custom';
 
@@ -430,6 +481,7 @@ export class CalendarComponent implements OnInit {
       description: props.description || '',
       type: props.type,
       roster_id: props.roster_id || null,
+      invited_groups: props.invited_groups || [],
       start_time: `${startH}:${startM}:00`,
       end_time: `${endH}:${endM}:00`
     });
@@ -465,6 +517,7 @@ export class CalendarComponent implements OnInit {
       description: copied.description,
       type: copied.type,
       roster_id: copied.roster_id,
+      invited_groups: copied.invited_groups,
       start_time: `${dateStr}T${copied.start_time}`,
       end_time: `${finalEndDate}T${copied.end_time}`
     };

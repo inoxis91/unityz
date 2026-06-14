@@ -14,6 +14,7 @@ import { RosterService, Roster } from '../../services/roster';
 import { AuthService } from '../../services/auth';
 import { ToastService } from '../../services/toast';
 import { ConfirmService } from '../../services/confirm';
+import { I18nService } from '../../services/i18n';
 import { CLASS_BUFFS, BuffInfo } from '../../constants/wow';
 
 export interface Buff extends BuffInfo {
@@ -31,6 +32,7 @@ export interface Buff extends BuffInfo {
 export class EventDetailsComponent implements OnInit {
   private router = inject(Router);
   private confirm = inject(ConfirmService);
+  public i18n = inject(I18nService);
   
   event = signal<CalendarEvent | null>(null);
   signups = signal<Signup[]>([]);
@@ -64,6 +66,7 @@ export class EventDetailsComponent implements OnInit {
     type: '',
     customType: '',
     roster_id: '' as string | null,
+    invited_groups: [] as string[],
     mm_groups_count: 0
   };
 
@@ -234,12 +237,48 @@ export class EventDetailsComponent implements OnInit {
       start_time: evt.start_time.split('T')[1].substring(0, 5),
       end_date: evt.end_time.split('T')[0],
       end_time: evt.end_time.split('T')[1].substring(0, 5),
-      type: ['raid', 'mm+'].includes(evt.type) ? evt.type : 'custom',
-      customType: ['raid', 'mm+'].includes(evt.type) ? '' : evt.type,
+      type: ['raid', 'mm+', 'reunion'].includes(evt.type) ? evt.type : 'custom',
+      customType: ['raid', 'mm+', 'reunion'].includes(evt.type) ? '' : evt.type,
       roster_id: evt.roster_id || '',
+      invited_groups: evt.invited_groups || [],
       mm_groups_count: evt.mm_groups_count || 0
     };
     this.showEditModal.set(true);
+  }
+
+  isGroupChecked(group: string): boolean {
+    return this.editEventData.invited_groups?.includes(group) || false;
+  }
+
+  toggleGroup(group: string) {
+    if (!this.editEventData.invited_groups) {
+      this.editEventData.invited_groups = [];
+    }
+    
+    if (group === 'all') {
+      if (this.isGroupChecked('all')) {
+        this.editEventData.invited_groups = [];
+      } else {
+        this.editEventData.invited_groups = ['all'];
+      }
+    } else {
+      if (this.isGroupChecked(group)) {
+        this.editEventData.invited_groups = this.editEventData.invited_groups.filter(g => g !== group);
+      } else {
+        this.editEventData.invited_groups = [...this.editEventData.invited_groups, group];
+      }
+    }
+  }
+
+  getInvitedGroupsLabel(invitedGroups: string[] | undefined): string {
+    if (!invitedGroups || invitedGroups.length === 0) return '';
+    return invitedGroups.map(g => {
+      if (g === 'admin') return this.i18n.t('calendar.form.role_admin');
+      if (g === 'raid_leader') return this.i18n.t('calendar.form.role_raid_leader');
+      if (g === 'treasurer') return this.i18n.t('calendar.form.role_treasurer');
+      if (g === 'event_manager') return this.i18n.t('calendar.form.role_event_manager');
+      return g;
+    }).join(', ');
   }
 
   onUpdateEvent() {
@@ -252,7 +291,8 @@ export class EventDetailsComponent implements OnInit {
       start_time: `${this.editEventData.start_date}T${this.editEventData.start_time}:00`,
       end_time: `${this.editEventData.end_date}T${this.editEventData.end_time}:00`,
       type: finalType,
-      roster_id: this.editEventData.roster_id || null,
+      roster_id: finalType === 'reunion' ? null : (this.editEventData.roster_id || null),
+      invited_groups: finalType === 'reunion' ? (this.editEventData.invited_groups || []) : [],
       mm_groups_count: this.editEventData.mm_groups_count
     };
     this.calendarService.updateEvent(this.event()!.id!, updatedData).subscribe({

@@ -14,6 +14,7 @@ export interface CalendarEvent {
   mm_groups_count?: number;
   roster_name?: string | null;
   roster_weight?: number | null;
+  invited_groups?: string[];
   created_by?: string;
   creator_name?: string;
 }
