@@ -117,12 +117,22 @@
   background-color: #ef4444;
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 10px;
+  width: 40px;
+  height: 40px;
   border-radius: 12px;
-  font-weight: 800;
   cursor: pointer;
   margin-left: 1rem;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logout-icon {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
 }
 
 .btn-logout:hover {
@@ -193,6 +203,7 @@
     margin-left: 0;
     margin-top: 1rem;
     width: 100%;
+    height: 44px;
   }
 
   .menu-backdrop {

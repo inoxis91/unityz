@@ -29,7 +29,11 @@
         </a>
         <a *ngIf="user.has_characters && user.active_guild_id && user.active_guild_is_paid" routerLink="/options" routerLinkActive="active" (click)="closeMenu()">{{ i18n.t('nav.options') }}</a>
         <a routerLink="/admin" routerLinkActive="active" *ngIf="user.has_characters && user.active_guild_id && user.active_guild_is_paid && authService.canAccessAdmin()" (click)="closeMenu()">{{ i18n.t('nav.admin') }}</a>
-        <button (click)="logout()" class="btn-logout">{{ i18n.t('nav.logout') }}</button>
+        <button (click)="logout()" class="btn-logout" [title]="i18n.t('nav.logout')">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="logout-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" />
+          </svg>
+        </button>
       }
     </div>
   </div>

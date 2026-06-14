@@ -82,11 +82,12 @@ export class CraftService {
         const charName = user.main_character_name || 'Sans Personnage';
         const btag = user.battletag;
 
+        const requesterText = charName !== 'Sans Personnage' ? charName : btag;
+
         let msg = `🛠️ **NOUVELLE DEMANDE DE CRAFT !**\n`;
-        msg += `Un membre a besoin d'un artisan ! 🚀\n\n`;
+        msg += `**${requesterText}** a besoin d'un artisan ! 🚀\n\n`;
         msg += `• **Objet / Emplacement :** ${slotLabel}\n`;
-        msg += `• **Type d'armure / arme :** ${typeLabel}\n`;
-        msg += `• **Demandé par :** ${charName} (${btag})\n\n`;
+        msg += `• **Type d'armure / arme :** ${typeLabel}\n\n`;
         msg += `_Répondez à cette demande directement sur le site de la guilde !_`;
 
         const messageId = await sendDiscordChannelMessageWithResult(guild.discord_crafts_channel_id, msg);
