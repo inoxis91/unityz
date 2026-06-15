@@ -48,17 +48,17 @@
       <!-- Dashboard Attendance Summary -->
       <div class="dashboard-attendance-card" *ngIf="myAttendance() as att">
         <div class="attendance-header">
-          <h3>Suivi d'assiduité</h3>
-          <a href="javascript:void(0)" (click)="showAttendanceModal.set(true)" class="view-all">Détails</a>
+          <h3>{{ i18n.t('dashboard.attendance.title') }}</h3>
+          <a href="javascript:void(0)" (click)="showAttendanceModal.set(true)" class="view-all">{{ i18n.t('dashboard.attendance.details') }}</a>
         </div>
         <div class="attendance-body">
           <div class="attendance-circular" [style.--progress]="att.percentage + '%'">
             <span class="attendance-value">{{ att.percentage }}%</span>
           </div>
           <div class="attendance-details">
-            <span class="label">Mois en cours</span>
-            <span class="stats">{{ att.attended }} / {{ att.total_eligible }} événements</span>
-            <span class="help-text">Basé sur vos personnages éligibles</span>
+            <span class="label">{{ i18n.t('dashboard.attendance.current_month') }}</span>
+            <span class="stats">{{ i18n.t('dashboard.attendance.events_count').split('{attended}').join(att.attended.toString()).split('{eligible}').join(att.total_eligible.toString()) }}</span>
+            <span class="help-text">{{ i18n.t('dashboard.attendance.help_text') }}</span>
           </div>
         </div>
       </div>
@@ -230,26 +230,26 @@
   <div class="modal-overlay" *ngIf="showAttendanceModal() && myAttendance() as att" (click)="showAttendanceModal.set(false)">
     <div class="modal-container" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h2>Suivi d'assiduité</h2>
+        <h2>{{ i18n.t('dashboard.attendance.title') }}</h2>
         <button class="modal-close" (click)="showAttendanceModal.set(false)">×</button>
       </div>
       <div class="modal-content">
         <div class="attendance-modal-summary">
           <div class="summary-stat">
-            <span class="label">Taux d'assiduité</span>
+            <span class="label">{{ i18n.t('dashboard.attendance.rate') }}</span>
             <span class="val">{{ att.percentage }}%</span>
           </div>
           <div class="summary-stat">
-            <span class="label">Présences</span>
+            <span class="label">{{ i18n.t('dashboard.attendance.presences') }}</span>
             <span class="val">{{ att.attended }}</span>
           </div>
           <div class="summary-stat">
-            <span class="label">Événements éligibles</span>
+            <span class="label">{{ i18n.t('dashboard.attendance.eligible_events') }}</span>
             <span class="val">{{ att.total_eligible }}</span>
           </div>
         </div>
 
-        <h3 style="margin-bottom: 1rem; color: #1e293b;">Historique du mois</h3>
+        <h3 style="margin-bottom: 1rem; color: #1e293b;">{{ i18n.t('dashboard.attendance.history_title') }}</h3>
         <div class="attendance-events-list">
           @for (evt of att.events; track evt.id) {
             <div class="attendance-event-row">
@@ -266,18 +266,18 @@
               <div class="event-row-status">
                 <span class="status-badge" [class.attended]="evt.status === 'signed_up' || evt.status === 'standby'" [class.absent]="evt.status === 'absent'" [class.unregistered]="!evt.status">
                   @if (evt.status === 'signed_up' || evt.status === 'standby') {
-                    Présent
+                    {{ i18n.t('dashboard.attendance.status_present') }}
                   } @else if (evt.status === 'absent') {
-                    Absent
+                    {{ i18n.t('dashboard.attendance.status_absent') }}
                   } @else {
-                    Non inscrit
+                    {{ i18n.t('dashboard.attendance.status_unregistered') }}
                   }
                 </span>
               </div>
             </div>
           }
           @if (att.events.length === 0) {
-            <p style="text-align: center; color: #64748b; margin-top: 2rem;">Aucun événement éligible passé ce mois-ci.</p>
+            <p style="text-align: center; color: #64748b; margin-top: 2rem;">{{ i18n.t('dashboard.attendance.no_events') }}</p>
           }
         </div>
       </div>

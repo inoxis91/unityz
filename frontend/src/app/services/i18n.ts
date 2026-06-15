@@ -565,6 +565,21 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'dashboard.birthday.month_prefix': "🎁 C'est le mois d'anniversaire de ",
     'dashboard.birthday.month_suffix': ' ! (le {date})',
 
+    // Dashboard Attendance
+    'dashboard.attendance.title': "Suivi d'assiduité",
+    'dashboard.attendance.details': 'Détails',
+    'dashboard.attendance.current_month': 'Mois en cours',
+    'dashboard.attendance.events_count': '{attended} / {eligible} événements',
+    'dashboard.attendance.help_text': 'Basé sur vos personnages éligibles',
+    'dashboard.attendance.rate': "Taux d'assiduité",
+    'dashboard.attendance.presences': 'Présences',
+    'dashboard.attendance.eligible_events': 'Événements éligibles',
+    'dashboard.attendance.history_title': 'Historique du mois',
+    'dashboard.attendance.status_present': 'Présent',
+    'dashboard.attendance.status_absent': 'Absent',
+    'dashboard.attendance.status_unregistered': 'Non inscrit',
+    'dashboard.attendance.no_events': 'Aucun événement éligible passé ce mois-ci.',
+
     // Options Birthday Settings
     'options.birthday.title': "Ma date d'anniversaire",
     'options.birthday.desc': "Saisissez votre date de naissance. L'année restera privée, seul le jour et le mois seront affichés sur le dashboard de la guilde !",
@@ -1149,6 +1164,21 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'dashboard.birthday.today_suffix': ' today! Have a wonderful day! 🎈🥳',
     'dashboard.birthday.month_prefix': "🎁 It's ",
     'dashboard.birthday.month_suffix': '\'s birthday month! (on {date})',
+
+    // Dashboard Attendance
+    'dashboard.attendance.title': 'Attendance Tracker',
+    'dashboard.attendance.details': 'Details',
+    'dashboard.attendance.current_month': 'Current month',
+    'dashboard.attendance.events_count': '{attended} / {eligible} events',
+    'dashboard.attendance.help_text': 'Based on your eligible characters',
+    'dashboard.attendance.rate': 'Attendance rate',
+    'dashboard.attendance.presences': 'Attendance',
+    'dashboard.attendance.eligible_events': 'Eligible events',
+    'dashboard.attendance.history_title': 'Monthly history',
+    'dashboard.attendance.status_present': 'Present',
+    'dashboard.attendance.status_absent': 'Absent',
+    'dashboard.attendance.status_unregistered': 'Unregistered',
+    'dashboard.attendance.no_events': 'No eligible past events this month.',
 
     // Options Birthday Settings
     'options.birthday.title': 'My Birthday',
