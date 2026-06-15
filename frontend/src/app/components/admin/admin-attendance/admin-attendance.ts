@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth';
 import { CharacterService } from '../../../services/character';
 import { ToastService } from '../../../services/toast';
+import { I18nService } from '../../../services/i18n';
 
 @Component({
   selector: 'app-admin-attendance',
@@ -16,6 +17,7 @@ export class AdminAttendanceComponent implements OnInit {
   public authService = inject(AuthService);
   private characterService = inject(CharacterService);
   private toast = inject(ToastService);
+  public i18n = inject(I18nService);
 
   attendanceList = signal<any[]>([]);
   isLoading = signal(true);
@@ -34,7 +36,7 @@ export class AdminAttendanceComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading guild attendance:', err);
-        this.toast.error("Erreur lors du chargement de l'assiduité des membres.");
+        this.toast.error(this.i18n.t('admin.attendance.toast_load_error'));
         this.isLoading.set(false);
       }
     });

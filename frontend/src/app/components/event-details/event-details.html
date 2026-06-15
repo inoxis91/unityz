@@ -76,7 +76,7 @@
             <label>{{ i18n.t('event.details.select_character') }}</label>
             <select [(ngModel)]="selectedCharacterId" (change)="onCharacterChange()" class="modern-select">
               <option *ngFor="let char of myCharacters()" [value]="char.id" [disabled]="!isCharacterAllowed(char)">
-                {{ char.name }} ({{ char.class }})
+                {{ char.name }} ({{ i18n.t('class.' + getClassCategory(char.class)) }})
                 {{ !isCharacterAllowed(char) ? ' — [' + i18n.t('event.details.roster_not_allowed') + ']' : '' }}
               </option>
             </select>

@@ -113,18 +113,18 @@
       <div class="birthday-icon" style="font-size: 2.8rem; line-height: 1; animation: bdayBounce 2s infinite;">🎂</div>
       <div class="birthday-messages" style="flex-grow: 1;">
         <h2 style="margin: 0 0 0.5rem 0; font-size: 1.25rem; font-weight: 800; color: #b45309; display: flex; align-items: center; gap: 0.5rem;">
-          Anniversaires de la guilde ce mois-ci ! 🎉
+          {{ i18n.t('dashboard.birthday.title') }}
         </h2>
         <div class="messages-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
           @for (bday of birthdays(); track bday.id) {
             <div class="birthday-item" style="font-size: 1.05rem; color: #78350f; font-weight: 600;">
               @if (isBirthdayToday(bday.birthday)) {
                 <span class="special-bday" style="background: linear-gradient(90deg, #f59e0b, #ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; font-size: 1.1rem; display: inline-flex; align-items: center; gap: 0.5rem; animation: bdayPulse 1.5s infinite;">
-                  🎉 Joyeux Anniversaire à <strong>{{ bday.main_character }}</strong> aujourd'hui ! Passe une excellente journée ! 🎈🥳
+                  {{ i18n.t('dashboard.birthday.today_prefix') }}<strong>{{ bday.main_character }}</strong>{{ i18n.t('dashboard.birthday.today_suffix') }}
                 </span>
               } @else {
                 <span class="month-bday" style="display: inline-flex; align-items: center; gap: 0.4rem;">
-                  🎁 C'est le mois d'anniversaire de <strong>{{ bday.main_character }}</strong> ! (le {{ formatBirthdayDay(bday.birthday) }})
+                  {{ i18n.t('dashboard.birthday.month_prefix') }}<strong>{{ bday.main_character }}</strong>{{ i18n.t('dashboard.birthday.month_suffix').replace('{date}', formatBirthdayDay(bday.birthday)) }}
                 </span>
               }
             </div>

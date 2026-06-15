@@ -540,7 +540,53 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'buff.label.mastery': 'Maîtrise',
     'buff.desc.mastery': '3% de Maîtrise',
     'buff.label.misdirection': 'Détournement / 3% dégâts',
-    'buff.desc.misdirection': 'Détournement / 3% dégâts'
+    'buff.desc.misdirection': 'Détournement / 3% dégâts',
+
+    // Admin Attendance Component
+    'admin.attendance.title': "Suivi d'assiduité des membres",
+    'admin.attendance.subtitle': "Statistiques calculées sur les événements passés du mois en cours, adaptées à l'éligibilité des rosters de chaque joueur.",
+    'admin.attendance.btn_refresh': 'Rafraîchir',
+    'admin.attendance.search_placeholder': 'Rechercher un membre ou un personnage...',
+    'admin.attendance.loading': "Chargement des statistiques d'assiduité...",
+    'admin.attendance.empty_state': 'Aucun membre trouvé ou aucun événement éligible ce mois-ci.',
+    'admin.attendance.th_member': 'Membre',
+    'admin.attendance.th_main_char': 'Personnage Principal',
+    'admin.attendance.th_events_attended': 'Événements Participés',
+    'admin.attendance.th_attendance_rate': "Taux d'Assiduité",
+    'admin.attendance.th_progress': 'Progression',
+    'admin.attendance.no_character': 'Aucun personnage lié',
+    'admin.attendance.events_label': 'événements',
+    'admin.attendance.toast_load_error': "Erreur lors du chargement de l'assiduité des membres.",
+
+    // Dashboard Birthdays
+    'dashboard.birthday.title': 'Anniversaires de la guilde ce mois-ci ! 🎉',
+    'dashboard.birthday.today_prefix': '🎉 Joyeux Anniversaire à ',
+    'dashboard.birthday.today_suffix': " aujourd'hui ! Passe une excellente journée ! 🎈🥳",
+    'dashboard.birthday.month_prefix': "🎁 C'est le mois d'anniversaire de ",
+    'dashboard.birthday.month_suffix': ' ! (le {date})',
+
+    // Options Birthday Settings
+    'options.birthday.title': "Ma date d'anniversaire",
+    'options.birthday.desc': "Saisissez votre date de naissance. L'année restera privée, seul le jour et le mois seront affichés sur le dashboard de la guilde !",
+    'options.birthday.save': 'Enregistrer',
+    'options.birthday.toast_success': "Date d'anniversaire mise à jour.",
+    'options.birthday.toast_error': "Erreur lors de la mise à jour.",
+
+    // Character Classes
+    'class.warrior': 'Guerrier',
+    'class.paladin': 'Paladin',
+    'class.hunter': 'Chasseur',
+    'class.rogue': 'Voleur',
+    'class.priest': 'Prêtre',
+    'class.death-knight': 'Chevalier de la mort',
+    'class.shaman': 'Chaman',
+    'class.mage': 'Mage',
+    'class.warlock': 'Démoniste',
+    'class.monk': 'Moine',
+    'class.druid': 'Druide',
+    'class.demon-hunter': 'Chasseur de démons',
+    'class.evoker': 'Évocateur',
+    'class.unknown': 'Inconnu'
   },
   en: {
     // Navbar
@@ -1079,7 +1125,53 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'buff.label.mastery': 'Mastery',
     'buff.desc.mastery': '3% Mastery',
     'buff.label.misdirection': 'Misdirection / 3% damage',
-    'buff.desc.misdirection': 'Misdirection / 3% damage'
+    'buff.desc.misdirection': 'Misdirection / 3% damage',
+
+    // Admin Attendance Component
+    'admin.attendance.title': 'Member Attendance Tracker',
+    'admin.attendance.subtitle': 'Statistics calculated on past events of the current month, adapted to each player\'s roster eligibility.',
+    'admin.attendance.btn_refresh': 'Refresh',
+    'admin.attendance.search_placeholder': 'Search a member or a character...',
+    'admin.attendance.loading': 'Loading attendance statistics...',
+    'admin.attendance.empty_state': 'No members found or no eligible events this month.',
+    'admin.attendance.th_member': 'Member',
+    'admin.attendance.th_main_char': 'Main Character',
+    'admin.attendance.th_events_attended': 'Events Attended',
+    'admin.attendance.th_attendance_rate': 'Attendance Rate',
+    'admin.attendance.th_progress': 'Progress',
+    'admin.attendance.no_character': 'No linked character',
+    'admin.attendance.events_label': 'events',
+    'admin.attendance.toast_load_error': 'Error loading member attendance.',
+
+    // Dashboard Birthdays
+    'dashboard.birthday.title': 'Guild birthdays this month! 🎉',
+    'dashboard.birthday.today_prefix': '🎉 Happy Birthday to ',
+    'dashboard.birthday.today_suffix': ' today! Have a wonderful day! 🎈🥳',
+    'dashboard.birthday.month_prefix': "🎁 It's ",
+    'dashboard.birthday.month_suffix': '\'s birthday month! (on {date})',
+
+    // Options Birthday Settings
+    'options.birthday.title': 'My Birthday',
+    'options.birthday.desc': 'Enter your birth date. The year will remain private, only the day and month will be displayed on the guild dashboard!',
+    'options.birthday.save': 'Save',
+    'options.birthday.toast_success': 'Birthday updated successfully.',
+    'options.birthday.toast_error': 'Error updating birthday.',
+
+    // Character Classes
+    'class.warrior': 'Warrior',
+    'class.paladin': 'Paladin',
+    'class.hunter': 'Hunter',
+    'class.rogue': 'Rogue',
+    'class.priest': 'Priest',
+    'class.death-knight': 'Death Knight',
+    'class.shaman': 'Shaman',
+    'class.mage': 'Mage',
+    'class.warlock': 'Warlock',
+    'class.monk': 'Monk',
+    'class.druid': 'Druid',
+    'class.demon-hunter': 'Demon Hunter',
+    'class.evoker': 'Evoker',
+    'class.unknown': 'Unknown'
   }
 };
 

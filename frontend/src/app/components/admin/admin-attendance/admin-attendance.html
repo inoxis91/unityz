@@ -1,11 +1,11 @@
 <div class="admin-attendance-container">
   <div class="attendance-header-row">
     <div>
-      <h2>Suivi d'assiduité des membres</h2>
-      <p class="subtitle">Statistiques calculées sur les événements passés du mois en cours, adaptées à l'éligibilité des rosters de chaque joueur.</p>
+      <h2>{{ i18n.t('admin.attendance.title') }}</h2>
+      <p class="subtitle">{{ i18n.t('admin.attendance.subtitle') }}</p>
     </div>
     <button class="btn-refresh" (click)="loadAttendance()" [disabled]="isLoading()">
-      <span class="refresh-icon" [class.spinning]="isLoading()">🔄</span> Rafraîchir
+      <span class="refresh-icon" [class.spinning]="isLoading()">🔄</span> {{ i18n.t('admin.attendance.btn_refresh') }}
     </button>
   </div>
 
@@ -15,7 +15,7 @@
       <span class="search-icon">🔍</span>
       <input
         type="text"
-        [placeholder]="'Rechercher un membre ou un personnage...'"
+        [placeholder]="i18n.t('admin.attendance.search_placeholder')"
         [ngModel]="searchTerm()"
         (ngModelChange)="searchTerm.set($event)"
       />
@@ -25,12 +25,12 @@
   <!-- Loading State -->
   <div class="loading-state" *ngIf="isLoading()">
     <div class="spinner"></div>
-    <p>Chargement des statistiques d'assiduité...</p>
+    <p>{{ i18n.t('admin.attendance.loading') }}</p>
   </div>
 
   <!-- Empty State -->
   <div class="empty-state" *ngIf="!isLoading() && getFilteredList().length === 0">
-    <p>Aucun membre trouvé ou aucun événement éligible ce mois-ci.</p>
+    <p>{{ i18n.t('admin.attendance.empty_state') }}</p>
   </div>
 
   <!-- Attendance Table -->
@@ -38,11 +38,11 @@
     <table class="attendance-table">
       <thead>
         <tr>
-          <th>Membre</th>
-          <th>Personnage Principal</th>
-          <th>Événements Participés</th>
-          <th>Taux d'Assiduité</th>
-          <th class="progress-col">Progression</th>
+          <th>{{ i18n.t('admin.attendance.th_member') }}</th>
+          <th>{{ i18n.t('admin.attendance.th_main_char') }}</th>
+          <th>{{ i18n.t('admin.attendance.th_events_attended') }}</th>
+          <th>{{ i18n.t('admin.attendance.th_attendance_rate') }}</th>
+          <th class="progress-col">{{ i18n.t('admin.attendance.th_progress') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -58,12 +58,12 @@
                 {{ item.main_character_name }}
               </span>
             </div>
-            <span class="no-char" *ngIf="!item.main_character_name">Aucun personnage lié</span>
+            <span class="no-char" *ngIf="!item.main_character_name">{{ i18n.t('admin.attendance.no_character') }}</span>
           </td>
           <td>
             <div class="stats-cell">
               <span class="stats-value">{{ item.attended }} / {{ item.total_eligible }}</span>
-              <span class="stats-sub">événements</span>
+              <span class="stats-sub">{{ i18n.t('admin.attendance.events_label') }}</span>
             </div>
           </td>
           <td>

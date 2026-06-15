@@ -49,8 +49,8 @@ export class OptionsComponent implements OnInit {
   saveBirthday() {
     const val = this.birthdayValue() ? this.birthdayValue() : null;
     this.authService.updateBirthday(val).subscribe({
-      next: () => this.toast.success('Date d\'anniversaire mise à jour.'),
-      error: () => this.toast.error('Erreur lors de la mise à jour.')
+      next: () => this.toast.success(this.i18n.t('options.birthday.toast_success')),
+      error: () => this.toast.error(this.i18n.t('options.birthday.toast_error'))
     });
   }
 
