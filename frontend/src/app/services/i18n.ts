@@ -372,6 +372,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'admin.settings.toast.save_success': 'Paramètres enregistrés avec succès !',
     'admin.settings.toast.save_error': 'Erreur lors de la sauvegarde des paramètres.',
 
+    'char.level': 'Niveau {level}',
     'char.manager.title': 'Gestion de mes personnages',
     'char.manager.list_title': 'Mes personnages {guildName}',
     'char.manager.empty': 'Aucun personnage importé. Utilisez le bouton ci-dessous pour les récupérer de Battle.net.',
@@ -973,6 +974,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'admin.settings.toast.save_success': 'Settings saved successfully!',
     'admin.settings.toast.save_error': 'Error saving settings.',
 
+    'char.level': 'Level {level}',
     'char.manager.title': 'Manage my characters',
     'char.manager.list_title': 'My {guildName} Characters',
     'char.manager.empty': 'No characters imported. Use the button below to fetch them from Battle.net.',

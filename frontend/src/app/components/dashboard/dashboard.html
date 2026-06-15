@@ -72,7 +72,7 @@
       
       <div class="char-content">
         <div class="char-top">
-          <span class="level">Niveau {{ char.level }}</span>
+          <span class="level">{{ i18n.t('char.level').split('{level}').join(char.level.toString()) }}</span>
           <div class="char-badges">
             <span class="ilvl-badge" *ngIf="charDetails()?.summary as sum">{{ sum.equipped_item_level }} iLvl</span>
             <span class="rio-badge" *ngIf="mainCharacterRioScore()">{{ mainCharacterRioScore() }} RIO</span>
