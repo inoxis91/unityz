@@ -518,7 +518,29 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'event.details.toast_remind_error': "Erreur lors de l'envoi du rappel.",
     'event.details.toast_signup_success': 'Votre choix a été enregistré !',
     'event.details.toast_signup_error': "Erreur lors de l'enregistrement de votre choix.",
-    'event.details.toast_move_error': 'Erreur lors du déplacement du joueur.'
+    'event.details.toast_move_error': 'Erreur lors du déplacement du joueur.',
+
+    // Raid Buffs
+    'buff.label.intellect': 'Intelligence',
+    'buff.desc.intellect': '3% Intelligence',
+    'buff.label.attack_power': "Puissance d'attaque",
+    'buff.desc.attack_power': "5% Puissance d'attaque",
+    'buff.label.stamina': 'Endurance',
+    'buff.desc.stamina': '5% Endurance',
+    'buff.label.physical_damage': 'Dégâts physiques',
+    'buff.desc.physical_damage': '5% Dégâts physiques',
+    'buff.label.magic_damage': 'Dégâts magiques',
+    'buff.desc.magic_damage': '3% Dégâts magiques',
+    'buff.label.damage_reduction': 'Réduction de dégâts',
+    'buff.desc.damage_reduction': '3% de réduction de dégâts',
+    'buff.label.versatility': 'Polyvalence',
+    'buff.desc.versatility': '3% de Polyvalence',
+    'buff.label.movement_speed': 'Vitesse de déplacement',
+    'buff.desc.movement_speed': 'Vitesse de déplacement',
+    'buff.label.mastery': 'Maîtrise',
+    'buff.desc.mastery': '3% de Maîtrise',
+    'buff.label.misdirection': 'Détournement / 3% dégâts',
+    'buff.desc.misdirection': 'Détournement / 3% dégâts'
   },
   en: {
     // Navbar
@@ -1035,7 +1057,29 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'event.details.toast_remind_error': 'Error sending the reminder.',
     'event.details.toast_signup_success': 'Your choice has been saved!',
     'event.details.toast_signup_error': 'Error saving your choice.',
-    'event.details.toast_move_error': 'Error moving the player.'
+    'event.details.toast_move_error': 'Error moving the player.',
+
+    // Raid Buffs
+    'buff.label.intellect': 'Intellect',
+    'buff.desc.intellect': '3% Intellect',
+    'buff.label.attack_power': 'Attack Power',
+    'buff.desc.attack_power': '5% Attack Power',
+    'buff.label.stamina': 'Stamina',
+    'buff.desc.stamina': '5% Stamina',
+    'buff.label.physical_damage': 'Physical Damage',
+    'buff.desc.physical_damage': '5% Physical Damage',
+    'buff.label.magic_damage': 'Magic Damage',
+    'buff.desc.magic_damage': '3% Magic Damage',
+    'buff.label.damage_reduction': 'Damage Reduction',
+    'buff.desc.damage_reduction': '3% Damage Reduction',
+    'buff.label.versatility': 'Versatility',
+    'buff.desc.versatility': '3% Versatility',
+    'buff.label.movement_speed': 'Movement Speed',
+    'buff.desc.movement_speed': 'Movement Speed',
+    'buff.label.mastery': 'Mastery',
+    'buff.desc.mastery': '3% Mastery',
+    'buff.label.misdirection': 'Misdirection / 3% damage',
+    'buff.desc.misdirection': 'Misdirection / 3% damage'
   }
 };
 

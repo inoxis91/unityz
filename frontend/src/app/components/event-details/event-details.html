@@ -196,13 +196,13 @@
       <div class="buffs-container animated-fade-in">
         <h3>{{ i18n.t('event.details.raid_buffs') }}</h3>
         <div class="buffs-grid">
-          <div *ngFor="let buff of buffs()" class="buff-card" [class.missing]="!buff.present" [title]="buff.label">
+          <div *ngFor="let buff of buffs()" class="buff-card" [class.missing]="!buff.present" [title]="i18n.t('buff.label.' + buff.id)">
             <div class="buff-icon">
-              <img *ngIf="buff.icon.includes('/')" [src]="buff.icon" [alt]="buff.label">
+              <img *ngIf="buff.icon.includes('/')" [src]="buff.icon" [alt]="i18n.t('buff.label.' + buff.id)">
               <span *ngIf="!buff.icon.includes('/')">{{ buff.icon }}</span>
             </div>
             <div class="buff-info">
-              <span class="buff-label">{{ buff.description }}</span>
+              <span class="buff-label">{{ i18n.t('buff.desc.' + buff.id) }}</span>
               <span class="buff-count" *ngIf="buff.present">x{{ buff.count }}</span>
               <span class="buff-status" *ngIf="!buff.present">{{ i18n.t('event.details.buff_missing') }}</span>
             </div>
@@ -305,8 +305,8 @@
                 </div>
                 <div class="group-buffs">
                   @for (buff of group.buffs; track buff.id) {
-                    <div class="mini-buff" [class.missing]="!buff.present" [title]="buff.label + ': ' + (buff.present ? i18n.t('event.details.status_present').toUpperCase() : i18n.t('event.details.buff_missing'))">
-                      <img *ngIf="buff.icon.includes('/')" [src]="buff.icon" [alt]="buff.label">
+                    <div class="mini-buff" [class.missing]="!buff.present" [title]="i18n.t('buff.label.' + buff.id) + ': ' + (buff.present ? i18n.t('event.details.status_present').toUpperCase() : i18n.t('event.details.buff_missing'))">
+                      <img *ngIf="buff.icon.includes('/')" [src]="buff.icon" [alt]="i18n.t('buff.label.' + buff.id)">
                       <span *ngIf="!buff.icon.includes('/')">{{ buff.icon }}</span>
                     </div>
                   }

@@ -72,8 +72,8 @@ export const CLASS_BUFFS: BuffInfo[] = [
   },
   {
     id: 'misdirection',
-    label: 'Détournement',
-    description: 'Détournement',
+    label: 'Détournement / 3% dégâts',
+    description: 'Détournement / 3% dégâts',
     icon: 'assets/icons/class/hunt.webp',
     classes: ['Chasseur']
   }
