@@ -32,6 +32,7 @@ export class AdminSettingsComponent implements OnInit {
   discordFeesChannelId = signal('');
   discordReminderChannelId = signal('');
   discordLocale = signal<'en' | 'fr'>('en');
+  discordClientId = signal('');
   
   feesEnabled = signal(true);
   minimumFeeAmount = signal(2000);
@@ -55,6 +56,7 @@ export class AdminSettingsComponent implements OnInit {
         this.discordFeesChannelId.set(data.discord_fees_channel_id || '');
         this.discordReminderChannelId.set(data.discord_reminder_channel_id || '');
         this.discordLocale.set(data.discord_locale || 'en');
+        this.discordClientId.set(data.discord_client_id || '');
         this.feesEnabled.set(data.fees_enabled !== undefined ? data.fees_enabled : true);
         this.minimumFeeAmount.set(data.minimum_fee_amount || 2000);
         this.isLoading.set(false);

@@ -35,7 +35,10 @@ router.get('/my-settings', requireActiveGuild, isAdmin, async (req, res, next) =
       return res.status(404).json({ status: 'error', message: 'Guild not found.' });
     }
 
-    res.json(result.rows[0]);
+    res.json({
+      ...result.rows[0],
+      discord_client_id: process.env.DISCORD_CLIENT_ID || null
+    });
   } catch (error) {
     next(error);
   }
