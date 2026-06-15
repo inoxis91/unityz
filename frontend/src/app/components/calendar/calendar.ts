@@ -65,6 +65,7 @@ export class CalendarComponent implements OnInit {
       const type = event.extendedProps['type'] || 'custom';
       const rosterName = event.extendedProps['roster_name'];
       const signupStatus = event.extendedProps['signupStatus'];
+      const isCanceled = event.extendedProps['is_canceled'];
       const startTime = event.start ? event.start.toLocaleTimeString(this.i18n.currentLocale() === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' }) : '';
       
       let typeClass = 'tag-custom';
@@ -95,14 +96,20 @@ export class CalendarComponent implements OnInit {
             ? `<div class="event-tag tag-roster" title="${reunionLabel}">${reunionLabel.toUpperCase()}</div>` 
             : `<div class="event-tag tag-all">${this.i18n.t('calendar.tag_all').toUpperCase()}</div>`);
 
+      const borderStyle = isCanceled 
+        ? 'border-left: 5px solid #94a3b8 !important;' 
+        : (type.toLowerCase() === 'raid' ? 'border-left: 5px solid #e74c3c !important;' : (type.toLowerCase() === 'mm+' ? 'border-left: 5px solid #a29bfe !important;' : (type.toLowerCase() === 'reunion' ? 'border-left: 5px solid #10b981 !important;' : 'border-left: 5px solid #3498db !important;')));
+
+      const titlePrefix = isCanceled ? `<span class="canceled-tag">[${this.i18n.t('event.details.canceled')}]</span> ` : '';
+
       return {
         html: `
-          <div class="custom-event-card">
+          <div class="custom-event-card ${isCanceled ? 'canceled-event' : ''}" style="${borderStyle}">
             <div class="event-time-row-calendar">
               <div class="event-time">${startTime}</div>
               ${statusHtml}
             </div>
-            <div class="event-title">${event.title}</div>
+            <div class="event-title">${titlePrefix}${event.title}</div>
             <div class="event-tags-container">
               <div class="event-tag ${typeClass}">${isReunion ? this.i18n.t('calendar.form.type_reunion').toUpperCase() : type.toUpperCase()}</div>
               ${rosterHtml}

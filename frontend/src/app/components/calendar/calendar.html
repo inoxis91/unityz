@@ -25,7 +25,7 @@
         </div>
       } @else {
         @for (event of upcomingEvents(); track event.id) {
-          <div class="mobile-event-card" [routerLink]="['/events', event.id]">
+          <div class="mobile-event-card" [class.is-canceled]="event.is_canceled" [routerLink]="['/events', event.id]">
             <div class="event-date-badge">
               <span class="day">{{ event.start_time | date:'dd' }}</span>
               <span class="month">{{ event.start_time | date:'MMM' }}</span>
@@ -40,16 +40,21 @@
                   {{ getInvitedGroupsLabel(event.invited_groups) }}
                 </span>
               </div>
-              <h3 class="event-title">{{ event.title }}</h3>
+              <h3 class="event-title" [class.is-canceled]="event.is_canceled">
+                {{ event.is_canceled ? '[' + i18n.t('event.details.canceled') + '] ' : '' }}{{ event.title }}
+              </h3>
               <div class="event-time-row">
                 <span class="time-icon">🕒</span>
                 <span class="time-text">{{ event.start_time | date:'HH:mm' }}</span>
                 
                 <!-- Status Badge -->
-                <span class="mobile-status-badge present" *ngIf="getEventSignupStatus(event.id) === 'signed_up'" title="Présent">✅ Répondu</span>
-                <span class="mobile-status-badge standby" *ngIf="getEventSignupStatus(event.id) === 'standby'" title="Peut-être">❓ En attente</span>
-                <span class="mobile-status-badge absent" *ngIf="getEventSignupStatus(event.id) === 'absent'" title="Absent">❌ Absent</span>
-                <span class="mobile-status-badge none" *ngIf="!getEventSignupStatus(event.id)" title="Non répondu">⚪ Non répondu</span>
+                <span class="mobile-status-badge absent" *ngIf="event.is_canceled" style="background: #94a3b8 !important; color: #ffffff !important;">🚫 {{ i18n.t('event.details.canceled') }}</span>
+                <ng-container *ngIf="!event.is_canceled">
+                  <span class="mobile-status-badge present" *ngIf="getEventSignupStatus(event.id) === 'signed_up'" title="Présent">✅ Répondu</span>
+                  <span class="mobile-status-badge standby" *ngIf="getEventSignupStatus(event.id) === 'standby'" title="Peut-être">❓ En attente</span>
+                  <span class="mobile-status-badge absent" *ngIf="getEventSignupStatus(event.id) === 'absent'" title="Absent">❌ Absent</span>
+                  <span class="mobile-status-badge none" *ngIf="!getEventSignupStatus(event.id)" title="Non répondu">⚪ Non répondu</span>
+                </ng-container>
               </div>
             </div>
             <div class="arrow-indicator">

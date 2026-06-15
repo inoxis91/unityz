@@ -165,6 +165,21 @@
   white-space: normal !important;
 }
 
+:host ::ng-deep .custom-event-card.canceled-event {
+  background: #f1f5f9 !important;
+  opacity: 0.65;
+}
+
+:host ::ng-deep .custom-event-card.canceled-event .event-title {
+  text-decoration: line-through;
+  color: #64748b !important;
+}
+
+:host ::ng-deep .custom-event-card.canceled-event .canceled-tag {
+  color: #ef4444;
+  font-weight: 800;
+}
+
 :host ::ng-deep .event-tags-container {
   display: flex;
   flex-wrap: wrap;
@@ -522,6 +537,16 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.mobile-event-card.is-canceled {
+  background: #f1f5f9;
+  opacity: 0.65;
+}
+
+.mobile-event-card.is-canceled .event-title.is-canceled {
+  text-decoration: line-through;
+  color: #64748b;
 }
 
 .mobile-event-card:hover {

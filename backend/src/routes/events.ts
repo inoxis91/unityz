@@ -182,4 +182,21 @@ router.delete('/:id/signup', isAuthenticated, async (req, res, next) => {
   }
 });
 
+// POST /api/events/:id/cancel : Annule un événement
+router.post('/:id/cancel', canManageEvents, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    
+    const event = await EventService.cancel(id as string, reason || '');
+    if (!event) {
+      return res.status(404).json({ status: 'error', message: 'Event not found' });
+    }
+    
+    res.json({ status: 'success', message: 'Event canceled successfully', event });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

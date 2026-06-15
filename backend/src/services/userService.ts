@@ -478,6 +478,7 @@ export class UserService {
       LEFT JOIN event_signups s ON e.id = s.event_id AND s.user_id = $2
       LEFT JOIN characters c ON s.character_id = c.id
       WHERE e.guild_id = $1
+        AND e.is_canceled = FALSE
         AND e.start_time < CURRENT_TIMESTAMP
         AND DATE_TRUNC('month', e.start_time) = DATE_TRUNC('month', CURRENT_TIMESTAMP)
         AND (
@@ -521,6 +522,7 @@ export class UserService {
         FROM events e
         LEFT JOIN rosters r ON e.roster_id = r.id
         WHERE e.guild_id = $1
+          AND e.is_canceled = FALSE
           AND e.start_time < CURRENT_TIMESTAMP
           AND DATE_TRUNC('month', e.start_time) = DATE_TRUNC('month', CURRENT_TIMESTAMP)
       ),

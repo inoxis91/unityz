@@ -3,6 +3,15 @@
     <a routerLink="/calendar">{{ i18n.t('event.details.back_to_calendar') }}</a>
   </div>
 
+  <!-- Cancellation Banner -->
+  <div class="canceled-banner animated-fade-in" *ngIf="event()?.is_canceled">
+    <div class="banner-title-row">
+      <span class="icon">🚨</span>
+      <h2>{{ i18n.t('event.details.canceled_banner_title') }}</h2>
+    </div>
+    <p class="reason" *ngIf="event()?.canceled_reason">{{ i18n.t('event.details.canceled_banner_reason').split('{reason}').join(event()?.canceled_reason || '') }}</p>
+  </div>
+
   <div class="event-header-card">
     <div class="event-header-top">
       <div class="event-title-row">
@@ -15,15 +24,20 @@
         <div class="roster-badge" *ngIf="event()?.type === 'reunion' && !event()?.invited_groups?.includes('all')">
           {{ getInvitedGroupsLabel(event()?.invited_groups) }}
         </div>
-        <h1>{{ event()?.title }}</h1>
+        <h1>
+          {{ event()?.is_canceled ? '[' + i18n.t('event.details.canceled') + '] ' : '' }}{{ event()?.title }}
+        </h1>
       </div>
       
       <div class="admin-actions" *ngIf="canManageEvents()">
-        <button class="btn-admin remind" (click)="onRemindEvent()" [title]="i18n.t('event.details.btn_remind')">
+        <button class="btn-admin remind" (click)="onRemindEvent()" [title]="i18n.t('event.details.btn_remind')" *ngIf="!event()?.is_canceled">
           <span class="icon">🔔</span> {{ i18n.t('event.details.btn_remind') }}
         </button>
-        <button class="btn-admin edit" (click)="openEditModal()" [title]="i18n.t('event.details.btn_edit')">
+        <button class="btn-admin edit" (click)="openEditModal()" [title]="i18n.t('event.details.btn_edit')" *ngIf="!event()?.is_canceled">
           <span class="icon">✏️</span> {{ i18n.t('event.details.btn_edit') }}
+        </button>
+        <button class="btn-admin edit" (click)="onCancelEvent()" [title]="i18n.t('event.details.btn_cancel_activity')" *ngIf="!event()?.is_canceled" style="background-color: #f59e0b !important; color: #ffffff !important;">
+          <span class="icon">🚫</span> {{ i18n.t('event.details.btn_cancel_activity') }}
         </button>
         <button class="btn-admin delete" (click)="onDeleteEvent()" [title]="i18n.t('event.details.btn_delete')">
           <span class="icon">🗑️</span> {{ i18n.t('event.details.btn_delete') }}
@@ -56,7 +70,7 @@
   <div class="tab-content" *ngIf="activeTab() === 'participants'">
     <div class="content-grid">
       <!-- Signup Form -->
-      <div class="form-card">
+      <div class="form-card" *ngIf="!event()?.is_canceled">
         <h3>{{ i18n.t('event.details.your_signup') }}</h3>
         
         <div class="status-selector">

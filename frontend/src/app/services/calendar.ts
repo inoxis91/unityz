@@ -15,6 +15,8 @@ export interface CalendarEvent {
   roster_name?: string | null;
   roster_weight?: number | null;
   invited_groups?: string[];
+  is_canceled?: boolean;
+  canceled_reason?: string | null;
   created_by?: string;
   creator_name?: string;
 }
@@ -71,6 +73,10 @@ export class CalendarService {
 
   remindEvent(id: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/${id}/remind`, {}, { withCredentials: true });
+  }
+
+  cancelEvent(id: string, reason: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${id}/cancel`, { reason }, { withCredentials: true });
   }
 
   updateGroupsCount(eventId: string, count: number): Observable<any> {

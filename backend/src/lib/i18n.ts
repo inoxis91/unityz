@@ -24,6 +24,9 @@ const TRANSLATIONS: Record<SupportedDiscordLocale, Record<string, string>> = {
     'discord.event.label_daily_events_title': '📅 **ÉVÉNEMENTS DU JOUR**',
     'discord.event.label_reunion': 'Réunion',
     'discord.event.label_manual_reminder': '📣 **RAPPEL D\'ÉVÉNEMENT**',
+    'discord.event.canceled_title': '🚨 **ÉVÉNEMENT ANNULÉ** 🚨',
+    'discord.event.canceled_body': 'L\'événement **{eventTitle}** prévu le {date} à {time} a été annulé.',
+    'discord.event.canceled_reason': '• **Motif d\'annulation :** {reason}',
 
     // Craft Service
     'discord.craft.title': '🛠️ **NOUVELLE DEMANDE DE CRAFT !**',
@@ -92,6 +95,9 @@ const TRANSLATIONS: Record<SupportedDiscordLocale, Record<string, string>> = {
     'discord.event.label_daily_events_title': '📅 **TODAY\'S EVENTS**',
     'discord.event.label_reunion': 'Meeting',
     'discord.event.label_manual_reminder': '📣 **EVENT REMINDER**',
+    'discord.event.canceled_title': '🚨 **EVENT CANCELED** 🚨',
+    'discord.event.canceled_body': 'The event **{eventTitle}** scheduled for {date} at {time} has been canceled.',
+    'discord.event.canceled_reason': '• **Reason for cancellation:** {reason}',
 
     // Craft Service
     'discord.craft.title': '🛠️ **NEW CRAFT REQUEST!**',

@@ -321,6 +321,22 @@ export class EventDetailsComponent implements OnInit {
     }
   }
 
+  async onCancelEvent() {
+    const evt = this.event();
+    if (!evt) return;
+
+    const reason = prompt(this.i18n.t('event.details.prompt_cancel_desc'));
+    if (reason !== null) {
+      this.calendarService.cancelEvent(evt.id!, reason).subscribe({
+        next: () => {
+          this.toast.success(this.i18n.t('event.details.toast_cancel_success'));
+          this.loadEvent(evt.id!);
+        },
+        error: () => this.toast.error(this.i18n.t('event.details.toast_cancel_error'))
+      });
+    }
+  }
+
   async onRemindEvent() {
     const evt = this.event();
     if (!evt) return;

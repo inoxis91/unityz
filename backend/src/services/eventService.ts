@@ -16,6 +16,8 @@ export interface Event {
   created_by: string;
   guild_id?: string;
   invited_groups?: string[];
+  is_canceled?: boolean;
+  canceled_reason?: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -53,6 +55,7 @@ export class EventService {
              to_char(e.start_time, 'YYYY-MM-DD"T"HH24:MI:SS') as start_time,
              to_char(e.end_time, 'YYYY-MM-DD"T"HH24:MI:SS') as end_time,
              e.type, e.roster_id, e.mm_groups_count, e.created_by, e.invited_groups,
+             e.is_canceled, e.canceled_reason,
              r.name as roster_name, r.weight as roster_weight
       FROM events e
       LEFT JOIN rosters r ON e.roster_id = r.id
@@ -83,6 +86,7 @@ export class EventService {
              to_char(e.start_time, 'YYYY-MM-DD"T"HH24:MI:SS') as start_time,
              to_char(e.end_time, 'YYYY-MM-DD"T"HH24:MI:SS') as end_time,
              e.type, e.roster_id, e.mm_groups_count, e.created_by, e.guild_id, e.invited_groups,
+             e.is_canceled, e.canceled_reason,
              r.name as roster_name, r.weight as roster_weight
       FROM events e
       LEFT JOIN rosters r ON e.roster_id = r.id
@@ -246,6 +250,59 @@ export class EventService {
     const query = 'DELETE FROM events WHERE id = $1';
     const result = await pool.query(query, [id]);
     return (result.rowCount ?? 0) > 0;
+  }
+
+  static async cancel(id: string, reason: string): Promise<Event | null> {
+    const query = `
+      UPDATE events 
+      SET is_canceled = TRUE, canceled_reason = $1, updated_at = CURRENT_TIMESTAMP 
+      WHERE id = $2 
+      RETURNING *
+    `;
+    const result = await pool.query(query, [reason, id]);
+    const event = result.rows[0] || null;
+
+    if (event && event.guild_id) {
+      const fullEvent = await this.getById(id);
+      
+      const guildRes = await pool.query(
+        'SELECT discord_enabled, discord_events_channel_id, discord_officer_channel_id, discord_locale FROM guilds WHERE id = $1', 
+        [event.guild_id]
+      );
+      const guild = guildRes.rows[0];
+
+      if (fullEvent && guild && guild.discord_enabled) {
+        let channelId: string | null = null;
+        if (fullEvent.type === 'reunion') {
+          const invited = fullEvent.invited_groups || [];
+          if (invited.includes('all')) {
+            channelId = guild.discord_events_channel_id;
+          } else {
+            channelId = guild.discord_officer_channel_id;
+          }
+        } else {
+          channelId = guild.discord_events_channel_id;
+        }
+
+        if (channelId) {
+          const locale = getDiscordLocale(guild);
+          const startTime = new Date(fullEvent.start_time).toLocaleTimeString(locale === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+          const startDate = new Date(fullEvent.start_time).toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' });
+          
+          let message = `${t(locale, 'discord.event.canceled_title')}\n\n`;
+          message += `${t(locale, 'discord.event.canceled_body', { eventTitle: fullEvent.title, date: startDate, time: startTime })}\n`;
+          if (reason) {
+            message += `${t(locale, 'discord.event.canceled_reason', { reason })}\n`;
+          }
+
+          sendDiscordChannelMessage(channelId, message).catch(err =>
+            console.error('[Discord] Error sending cancellation notification:', err)
+          );
+        }
+      }
+    }
+
+    return event;
   }
 
   static async getSignups(eventId: string): Promise<Signup[]> {

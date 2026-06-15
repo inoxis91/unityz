@@ -308,6 +308,8 @@ export const initDb = async () => {
         type VARCHAR(50) NOT NULL, -- 'raid', 'other'
         roster_id UUID REFERENCES rosters(id) ON DELETE SET NULL,
         mm_groups_count INTEGER DEFAULT 0,
+        is_canceled BOOLEAN DEFAULT FALSE,
+        canceled_reason TEXT,
         created_by VARCHAR(255) REFERENCES users(id),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -316,8 +318,8 @@ export const initDb = async () => {
 
     // Ensure roster_id and guild_id columns exist in events
     await client.query(`
-      DO $$ 
-      BEGIN 
+      DO $$
+      BEGIN
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='events' AND column_name='roster_id') THEN
           ALTER TABLE events ADD COLUMN roster_id UUID REFERENCES rosters(id) ON DELETE SET NULL;
         END IF;
@@ -326,6 +328,12 @@ export const initDb = async () => {
         END IF;
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='events' AND column_name='guild_id') THEN
           ALTER TABLE events ADD COLUMN guild_id UUID REFERENCES guilds(id) ON DELETE CASCADE;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='events' AND column_name='is_canceled') THEN
+          ALTER TABLE events ADD COLUMN is_canceled BOOLEAN DEFAULT FALSE;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='events' AND column_name='canceled_reason') THEN
+          ALTER TABLE events ADD COLUMN canceled_reason TEXT;
         END IF;
       END $$;
     `);
