@@ -125,7 +125,7 @@
               </div>
               <div class="decl-body">
                 <div class="main-val">{{ decl.amount }} PO</div>
-                <p class="details">Dès {{ decl.start_month | date:'MMMM yyyy' }} ({{ decl.duration_months }} {{ decl.duration_months > 1 ? i18n.t('fees.history.months') : i18n.t('fees.history.month') }})</p>
+                <p class="details">{{ i18n.t('fees.history.starting_from') }} {{ decl.start_month | date:'MMMM yyyy' : '' : i18n.currentLocale() }} ({{ decl.duration_months }} {{ decl.duration_months > 1 ? i18n.t('fees.history.months') : i18n.t('fees.history.month') }})</p>
                 
                 <div class="admin-feedback" *ngIf="decl.status === 'rejected' && decl.admin_comment">
                   <strong>{{ i18n.t('fees.history.motif') }}</strong>
