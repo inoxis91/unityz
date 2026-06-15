@@ -48,6 +48,10 @@ export class EventDetailsComponent implements OnInit {
   showAltsModal = signal(false);
   selectedSignup = signal<Signup | null>(null);
 
+  // Cancellation Modal
+  showCancelModal = signal(false);
+  cancelReason = '';
+
   // Signup Form
   selectedCharacterId = '';
   selectedRole = 'dps';
@@ -321,20 +325,26 @@ export class EventDetailsComponent implements OnInit {
     }
   }
 
-  async onCancelEvent() {
+  onCancelEvent() {
     const evt = this.event();
     if (!evt) return;
 
-    const reason = prompt(this.i18n.t('event.details.prompt_cancel_desc'));
-    if (reason !== null) {
-      this.calendarService.cancelEvent(evt.id!, reason).subscribe({
-        next: () => {
-          this.toast.success(this.i18n.t('event.details.toast_cancel_success'));
-          this.loadEvent(evt.id!);
-        },
-        error: () => this.toast.error(this.i18n.t('event.details.toast_cancel_error'))
-      });
-    }
+    this.cancelReason = '';
+    this.showCancelModal.set(true);
+  }
+
+  confirmCancelEvent() {
+    const evt = this.event();
+    if (!evt) return;
+
+    this.calendarService.cancelEvent(evt.id!, this.cancelReason).subscribe({
+      next: () => {
+        this.toast.success(this.i18n.t('event.details.toast_cancel_success'));
+        this.loadEvent(evt.id!);
+        this.showCancelModal.set(false);
+      },
+      error: () => this.toast.error(this.i18n.t('event.details.toast_cancel_error'))
+    });
   }
 
   async onRemindEvent() {
