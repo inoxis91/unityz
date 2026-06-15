@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 
 export type SupportedLocale = 'fr' | 'en';
 
@@ -20,28 +20,28 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'landing.hero.subtitle': 'La plateforme SaaS tout-en-un ultime pour gérer vos rosters de raid, organiser vos événements, automatiser le suivi des cotisations, et synchroniser vos personnages en un clic grâce à l\'intégration officielle Battle.net.',
     'landing.hero.cta.start': 'Commencer l\'Aventure',
     'landing.hero.cta.demo': 'Voir les Tarifs',
-    
+
     'landing.feature.sync.title': 'Synchronisation Battle.net SSO',
     'landing.feature.sync.desc': 'Connectez-vous de manière hautement sécurisée avec votre compte Blizzard. Synchronisez instantanément vos personnages, niveaux et classes en temps réel sans saisie manuelle.',
-    
+
     'landing.feature.roster.title': 'Gestionnaires de Rosters Dynamiques',
     'landing.feature.roster.desc': 'Créez et organisez vos compositions de raid. Distribuez vos joueurs par rôles (Tank, Soigneur, DPS) et optimisez votre efficacité pour les raids héroïques et mythiques.',
-    
+
     'landing.feature.calendar.title': 'Calendrier Interactif & Inscriptions',
     'landing.feature.calendar.desc': 'Planifiez vos soirs de raids et donjons mythiques+. Les membres s\'inscrivent en sélectionnant leur rôle, et les officiers peuvent valider ou placer les joueurs en liste d\'attente.',
-    
+
     'landing.feature.fees.title': 'Suivi Intelligent des Cotisations',
     'landing.feature.fees.desc': 'Un livre de comptes transparent pour gérer la trésorerie de votre guilde. Déclarations de dépôts de PO de banque, validations par le trésorier et tableau de présence financière annuel.',
-    
+
     'landing.feature.push.title': 'Notifications Push Discord',
     'landing.feature.push.desc': 'Automatisez la communication de votre guilde. Vos nouveaux événements et les rappels hebdomadaires de cotisations sont directement envoyés sur vos canaux Discord.',
-    
+
     'landing.feature.dashboard.title': 'Dashboard 360°',
     'landing.feature.dashboard.desc': 'Visualisez toutes les statistiques clés de votre guilde en un coup d\'œil. Activités récentes, prochains raids, cotisations en attente, et progression des membres.',
-    
+
     'landing.feature.charspec.title': 'Gestion des Personnages & Spés',
     'landing.feature.charspec.desc': 'Suivez les spécialisations primaires et secondaires de vos joueurs. Synchronisation automatique de l\'équipement, de l\'ilvl et des statistiques Blizzard.',
-    
+
     'landing.feature.roles.title': 'Gestion des Rôles & Rangs',
     'landing.feature.roles.desc': 'Attribuez des rôles (Officiers, Trésorier, Raider, Recrue) et gérez finement les permissions d\'administration de la guilde, de la trésorerie et du calendrier.',
 
@@ -241,7 +241,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
 
     // Calendar Component
     'calendar.title': 'Calendrier de Guilde',
-    'calendar.subtitle': 'Planifiez et participez aux activités de Unity\'Z',
+    'calendar.subtitle': 'Planifiez et participez aux activités de la guilde',
     'calendar.upcoming_events': 'Événements à venir',
     'calendar.new_event': 'Nouveau',
     'calendar.no_events': 'Aucun événement prévu pour le moment.',
@@ -332,7 +332,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     // Options Component
     'options.subtitle': 'Gérez vos personnages et vos paramètres de compte.',
     'options.warning.title': 'Synchronisation requise',
-    'options.warning.desc': 'Pour utiliser Unity\'Z, vous devez importer au moins un personnage depuis Battle.net ci-dessous. Une fois fait, vous aurez accès au tableau de bord et au calendrier.',
+    'options.warning.desc': 'Pour utiliser les fonctionnalités, vous devez importer au moins un personnage depuis Battle.net ci-dessous. Une fois fait, vous aurez accès au tableau de bord et au calendrier.',
     'options.sub.no_guild': 'Aucune',
     'options.sub.tier_free': 'Essai Gratuit',
     'options.sub.tier_medium': 'Standard',
@@ -466,28 +466,28 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'landing.hero.subtitle': 'The ultimate all-in-one SaaS platform to coordinate raid rosters, schedule events, automate fee tracking, and sync characters instantly with official Battle.net integration.',
     'landing.hero.cta.start': 'Get Started',
     'landing.hero.cta.demo': 'View Pricing',
-    
+
     'landing.feature.sync.title': 'Battle.net SSO Synchronization',
     'landing.feature.sync.desc': 'Log in securely using your official Blizzard credentials. Automatically fetch and sync characters, levels, and classes in real-time without tedious manual entry.',
-    
+
     'landing.feature.roster.title': 'Dynamic Roster Management',
     'landing.feature.roster.desc': 'Create and fine-tune your core progression teams. Organize raiders by specific roles (Tank, Healer, DPS) to optimize heroic and mythic roster setups.',
-    
+
     'landing.feature.calendar.title': 'Interactive Event Calendar',
     'landing.feature.calendar.desc': 'Schedule raid nights and Mythic+ runs effortlessly. Members sign up selecting their preferred roles, while leaders easily confirm or bench players.',
-    
+
     'landing.feature.fees.title': 'Smart Guild Bank & Fee Ledger',
     'landing.feature.fees.desc': 'A fully transparent treasury log to track your guild\'s finances. Easily record gold contributions, review auditor validations, and visualize the annual financial report.',
-    
+
     'landing.feature.push.title': 'Discord Push Notifications',
     'landing.feature.push.desc': 'Automate your guild\'s communication. Your new events and weekly membership fee reminders are automatically pushed straight to your Discord channels.',
-    
+
     'landing.feature.dashboard.title': '360° Dashboard',
     'landing.feature.dashboard.desc': 'View all key stats of your guild at a single glance. Recent activities, upcoming raids, pending membership fees, and member progression.',
-    
+
     'landing.feature.charspec.title': 'Character & Spec Management',
     'landing.feature.charspec.desc': 'Track primary and secondary specializations of your raiders. Auto-sync gear, item level (ilvl), and official Blizzard character statistics.',
-    
+
     'landing.feature.roles.title': 'Role & Rank Management',
     'landing.feature.roles.desc': 'Assign custom roles (Officers, Treasurer, Raider, Recruit) and finely control administration, treasury log, and event calendar permissions.',
 
@@ -687,7 +687,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
 
     // Calendar Component
     'calendar.title': 'Guild Calendar',
-    'calendar.subtitle': 'Plan and participate in Unity\'Z activities',
+    'calendar.subtitle': 'Plan and participate in guild activities',
     'calendar.upcoming_events': 'Upcoming Events',
     'calendar.new_event': 'New',
     'calendar.no_events': 'No events scheduled at this time.',
@@ -778,7 +778,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     // Options Component
     'options.subtitle': 'Manage your characters and account settings.',
     'options.warning.title': 'Synchronization required',
-    'options.warning.desc': 'To use Unity\'Z, you must import at least one character from Battle.net below. Once done, you will have access to the dashboard and calendar.',
+    'options.warning.desc': 'To use these features, you must import at least one character from Battle.net below. Once done, you will have access to the dashboard and calendar.',
     'options.sub.no_guild': 'None',
     'options.sub.tier_free': 'Free Trial',
     'options.sub.tier_medium': 'Standard',
