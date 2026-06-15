@@ -299,21 +299,24 @@ export class EventDetailsComponent implements OnInit {
       next: () => {
         this.loadEvent(this.event()!.id!);
         this.showEditModal.set(false);
-        this.toast.success('Événement mis à jour.');
+        this.toast.success(this.i18n.t('event.details.toast_update_success'));
       },
-      error: () => this.toast.error('Erreur lors de la mise à jour.')
+      error: () => this.toast.error(this.i18n.t('event.details.toast_update_error'))
     });
   }
 
   async onDeleteEvent() {
-    const ok = await this.confirm.ask('Supprimer l\'événement', 'Êtes-vous sûr de vouloir supprimer cet événement ? Cette action est irréversible.');
+    const ok = await this.confirm.ask(
+      this.i18n.t('event.details.confirm_delete_title'),
+      this.i18n.t('event.details.confirm_delete_desc')
+    );
     if (ok && this.event()) {
       this.calendarService.deleteEvent(this.event()!.id!).subscribe({
         next: () => {
-          this.toast.success('Événement supprimé.');
+          this.toast.success(this.i18n.t('event.details.toast_delete_success'));
           this.router.navigate(['/calendar']);
         },
-        error: () => this.toast.error('Erreur lors de la suppression.')
+        error: () => this.toast.error(this.i18n.t('event.details.toast_delete_error'))
       });
     }
   }
@@ -323,14 +326,14 @@ export class EventDetailsComponent implements OnInit {
     if (!evt) return;
 
     const ok = await this.confirm.ask(
-      'Envoyer un rappel',
-      `Voulez-vous envoyer un rappel Discord pour l'événement "${evt.title}" ?`
+      this.i18n.t('event.details.confirm_remind_title'),
+      this.i18n.t('event.details.confirm_remind_desc').replace('{eventTitle}', evt.title)
     );
 
     if (ok) {
       this.calendarService.remindEvent(evt.id!).subscribe({
-        next: () => this.toast.success('Rappel envoyé sur Discord !'),
-        error: () => this.toast.error('Erreur lors de l\'envoi du rappel.')
+        next: () => this.toast.success(this.i18n.t('event.details.toast_remind_success')),
+        error: () => this.toast.error(this.i18n.t('event.details.toast_remind_error'))
       });
     }
   }
@@ -366,11 +369,11 @@ export class EventDetailsComponent implements OnInit {
     this.calendarService.signup(this.event()!.id!, signupData).subscribe({
       next: () => {
         this.loadSignups(this.event()!.id!);
-        this.toast.success('Votre choix a été enregistré !');
+        this.toast.success(this.i18n.t('event.details.toast_signup_success'));
       },
       error: (err) => {
         console.error('Signup error:', err);
-        this.toast.error('Erreur lors de l\'enregistrement de votre choix.');
+        this.toast.error(this.i18n.t('event.details.toast_signup_error'));
       }
     });
   }
@@ -435,7 +438,7 @@ export class EventDetailsComponent implements OnInit {
     // Backend update
     this.calendarService.updateSignupGroup(evt.id, member.user_id, groupIndex).subscribe({
       error: () => {
-        this.toast.error('Erreur lors du déplacement du joueur.');
+        this.toast.error(this.i18n.t('event.details.toast_move_error'));
         this.loadSignups(evt.id!);
       }
     });

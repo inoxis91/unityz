@@ -1,5 +1,6 @@
 import { Client, Events, GatewayIntentBits, EmbedBuilder, TextChannel } from 'discord.js';
 import dotenv from 'dotenv';
+import { t } from './i18n';
 import { FeeService } from '../services/feeService';
 
 dotenv.config();
@@ -106,7 +107,7 @@ export const reactToDiscordMessage = async (channelId: string, messageId: string
   return false;
 };
 
-export const sendFeeDeclarationNotification = async (declaration: any, userDetails: { battletag: string, mainCharacter: string, characters: any[] }, discordFeesChannelId?: string) => {
+export const sendFeeDeclarationNotification = async (declaration: any, userDetails: { battletag: string, mainCharacter: string, characters: any[] }, discordFeesChannelId?: string, discordLocale: string = 'en') => {
   try {
     const channelId = discordFeesChannelId || process.env.DISCORD_FEES_CHANNEL_ID;
     if (!channelId) {
@@ -120,23 +121,25 @@ export const sendFeeDeclarationNotification = async (declaration: any, userDetai
       return false;
     }
 
+    const locale = (discordLocale === 'fr' || discordLocale === 'en') ? discordLocale : 'en';
+
     let charsList = userDetails.characters && userDetails.characters.length > 0 
       ? userDetails.characters.map(c => `- ${c.name} (${c.class} - ${c.realm})${c.is_main ? ' **[MAIN]**' : ''}`).join('\n')
-      : 'Aucun personnage synchronisé';
+      : t(locale, 'discord.fees.no_char');
 
     const embed = new EmbedBuilder()
-      .setTitle('Nouvelle Déclaration de Cotisation')
+      .setTitle(t(locale, 'discord.fees.embed_title'))
       .setColor(0xFFA500) // Orange
       .addFields(
-        { name: 'Membre', value: `${userDetails.mainCharacter || userDetails.battletag}\n(${userDetails.battletag})`, inline: true },
-        { name: 'Montant Total', value: `${declaration.amount} PO`, inline: true },
-        { name: 'Périodicité', value: `${declaration.duration_months} mois (dès ${new Date(declaration.start_month).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })})`, inline: false },
-        { name: 'Personnages', value: charsList, inline: false }
+        { name: t(locale, 'discord.fees.label_member'), value: `${userDetails.mainCharacter || userDetails.battletag}\n(${userDetails.battletag})`, inline: true },
+        { name: t(locale, 'discord.fees.label_total_amount'), value: `${declaration.amount} PO`, inline: true },
+        { name: t(locale, 'discord.fees.label_period'), value: t(locale, 'discord.fees.label_period_value', { months: declaration.duration_months.toString(), date: new Date(declaration.start_month).toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' }) }), inline: false },
+        { name: t(locale, 'discord.fees.label_characters'), value: charsList, inline: false }
       )
       .setTimestamp();
 
     if (declaration.comment) {
-      embed.addFields({ name: 'Commentaire', value: `"${declaration.comment}"`, inline: false });
+      embed.addFields({ name: t(locale, 'discord.fees.label_comment'), value: `"${declaration.comment}"`, inline: false });
     }
 
     await channel.send({ embeds: [embed] });

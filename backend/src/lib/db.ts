@@ -30,6 +30,7 @@ export const initDb = async () => {
         discord_events_channel_id VARCHAR(255),
         discord_fees_channel_id VARCHAR(255),
         discord_reminder_channel_id VARCHAR(255),
+        discord_locale VARCHAR(50) DEFAULT 'en',
         fees_enabled BOOLEAN DEFAULT TRUE,
         minimum_fee_amount INTEGER DEFAULT 2000,
         created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -93,6 +94,9 @@ export const initDb = async () => {
         END IF;
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='discord_reminder_channel_id') THEN
           ALTER TABLE guilds ADD COLUMN discord_reminder_channel_id VARCHAR(255);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='discord_locale') THEN
+          ALTER TABLE guilds ADD COLUMN discord_locale VARCHAR(50) DEFAULT 'en';
         END IF;
       END $$;
     `);

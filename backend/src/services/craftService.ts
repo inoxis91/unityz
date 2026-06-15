@@ -1,5 +1,6 @@
 import pool from '../lib/db';
 import { sendDiscordChannelMessageWithResult, reactToDiscordMessage } from '../lib/discord';
+import { t, getDiscordLocale } from '../lib/i18n';
 
 export interface CraftRequest {
   id: string;
@@ -71,24 +72,25 @@ export class CraftService {
       const user = userRes.rows[0];
 
       const guildRes = await pool.query(
-        'SELECT discord_enabled, discord_crafts_channel_id FROM guilds WHERE id = $1',
+        'SELECT discord_enabled, discord_crafts_channel_id, discord_locale FROM guilds WHERE id = $1',
         [guildId]
       );
       const guild = guildRes.rows[0];
 
       if (guild && guild.discord_enabled && guild.discord_crafts_channel_id && user) {
-        const slotLabel = SLOT_TRANSLATIONS_FR[slot] || slot;
-        const typeLabel = ARMOR_TRANSLATIONS_FR[armorType] || armorType;
-        const charName = user.main_character_name || 'Sans Personnage';
+        const locale = getDiscordLocale(guild);
+        const slotLabel = t(locale, `slot.${slot}`);
+        const typeLabel = t(locale, `armor.${armorType}`);
+        const charName = user.main_character_name || t(locale, 'discord.craft.no_char');
         const btag = user.battletag;
 
-        const requesterText = charName !== 'Sans Personnage' ? charName : btag;
+        const requesterText = charName !== t(locale, 'discord.craft.no_char') ? charName : btag;
 
-        let msg = `🛠️ **NOUVELLE DEMANDE DE CRAFT !**\n`;
-        msg += `**${requesterText}** a besoin d'un artisan ! 🚀\n\n`;
-        msg += `• **Objet / Emplacement :** ${slotLabel}\n`;
-        msg += `• **Type d'armure / arme :** ${typeLabel}\n\n`;
-        msg += `_Répondez à cette demande directement sur le site de la guilde !_`;
+        let msg = `${t(locale, 'discord.craft.title')}\n`;
+        msg += `${t(locale, 'discord.craft.body', { requesterText })}\n\n`;
+        msg += `${t(locale, 'discord.craft.item_label', { slot: slotLabel })}\n`;
+        msg += `${t(locale, 'discord.craft.type_label', { type: typeLabel })}\n\n`;
+        msg += t(locale, 'discord.craft.footer');
 
         const messageId = await sendDiscordChannelMessageWithResult(guild.discord_crafts_channel_id, msg);
         if (messageId) {

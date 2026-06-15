@@ -32,7 +32,7 @@ export class FeeService {
     const declaration = result.rows[0];
 
     // Fetch guild Discord settings
-    const guildRes = await pool.query('SELECT discord_enabled, discord_fees_channel_id FROM guilds WHERE id = $1', [guildId]);
+    const guildRes = await pool.query('SELECT discord_enabled, discord_fees_channel_id, discord_locale FROM guilds WHERE id = $1', [guildId]);
     const guildSettings = guildRes.rows[0];
 
     if (guildSettings && guildSettings.discord_enabled && guildSettings.discord_fees_channel_id) {
@@ -52,7 +52,7 @@ export class FeeService {
           battletag: userInfo.battletag,
           mainCharacter: userInfo.main_character,
           characters: userInfo.characters || []
-        }, guildSettings.discord_fees_channel_id);
+        }, guildSettings.discord_fees_channel_id, guildSettings.discord_locale || 'en');
       }
     }
 

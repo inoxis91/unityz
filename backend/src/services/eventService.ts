@@ -1,5 +1,6 @@
 import pool from '../lib/db';
 import { sendDiscordChannelMessage } from '../lib/discord';
+import { t, getDiscordLocale, SupportedDiscordLocale } from '../lib/i18n';
 
 export interface Event {
   id: string;
@@ -128,7 +129,7 @@ export class EventService {
 
     // Fetch guild Discord settings
     const guildRes = await pool.query(
-      'SELECT discord_enabled, discord_events_channel_id, discord_officer_channel_id FROM guilds WHERE id = $1', 
+      'SELECT discord_enabled, discord_events_channel_id, discord_officer_channel_id, discord_locale FROM guilds WHERE id = $1', 
       [event.guild_id]
     );
     const guild = guildRes.rows[0];
@@ -156,8 +157,9 @@ export class EventService {
       return; // Skip if channel not set
     }
     
-    const startTime = new Date(event.start_time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    const startDate = new Date(event.start_time).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    const locale = getDiscordLocale(guild);
+    const startTime = new Date(event.start_time).toLocaleTimeString(locale === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+    const startDate = new Date(event.start_time).toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' });
     
     let typeIcon = '💎';
     if (event.type.toLowerCase() === 'raid') {
@@ -175,43 +177,46 @@ export class EventService {
     if (event.type === 'reunion') {
       const invited = event.invited_groups || [];
       if (invited.includes('all')) {
-        rosterTag = `🟢 **INVITATION : TOUS LES MEMBRES** 🟢`;
+        rosterTag = t(locale, 'discord.event.roster_all');
       } else {
         const roleNames = invited.map(r => {
           if (r === 'admin') return 'Admin';
           if (r === 'raid_leader') return 'Raid Leader';
-          if (r === 'treasurer') return 'Trésorier';
+          if (r === 'treasurer') return locale === 'fr' ? 'Trésorier' : 'Treasurer';
           if (r === 'event_manager') return 'Event Manager';
           return r;
         });
-        rosterTag = `🔒 **RÉUNION PRIVÉE - INVITÉS : ${roleNames.join(', ').toUpperCase()}** 🔒`;
+        rosterTag = t(locale, 'discord.event.roster_private', { roles: roleNames.join(', ').toUpperCase() });
       }
     } else {
       rosterTag = event.roster_name 
-        ? `🔴 **ROSTER : ${event.roster_name.toUpperCase()}** 🔴` 
-        : `🟢 **OUVERT À TOUS** 🟢`;
+        ? t(locale, 'discord.event.roster_tag', { rosterName: event.roster_name.toUpperCase() }) 
+        : t(locale, 'discord.event.roster_open_all');
     }
 
-    let message = `🆕 **NOUVEL ÉVÉNEMENT CRÉÉ !**\n`;
+    let titleKey = 'discord.event.new_title';
     if (event.type === 'reunion') {
-      message = `📅 **NOUVELLE RÉUNION PLANIFIÉE !**\n`;
+      if (!event.invited_groups?.includes('all')) {
+        titleKey = 'discord.event.new_private_reunion';
+      } else {
+        titleKey = 'discord.event.new_reunion';
+      }
     }
-    message += `Venez nombreux vous inscrire pour faire briller la guilde ! 🚀\n\n`;
-    if (event.type === 'reunion' && !event.invited_groups?.includes('all')) {
-      message = `🔒 **NOUVELLE RÉUNION PRIVÉE !**\n\n`;
-    }
+
+    let message = `${t(locale, titleKey)}\n`;
+    message += `${t(locale, 'discord.event.intro')}\n\n`;
     message += `${rosterTag}\n`;
     message += `------------------------------------------\n`;
     message += `\n${typeIcon} **${event.title}**\n`;
-    message += `📅 Date : ${startDate}\n`;
-    message += `⏰ Heure : ${startTime}\n`;
-    message += `📝 Type : ${event.type === 'reunion' ? 'Réunion' : event.type}\n`;
+    message += `${t(locale, 'discord.event.label_date')} : ${startDate}\n`;
+    message += `${t(locale, 'discord.event.label_time')} : ${startTime}\n`;
+    message += `${t(locale, 'discord.event.label_type')} : ${event.type === 'reunion' ? t(locale, 'discord.event.label_reunion') : event.type}\n`;
     if (event.description) {
-      message += `📖 Description : ${event.description}\n`;
+      message += `${t(locale, 'discord.event.label_description')} : ${event.description}\n`;
     }
-    message += `🔗 **S'inscrire ici :** ${eventLink}\n`;
+    message += `${t(locale, 'discord.event.label_register_here')} ${eventLink}\n`;
     message += `------------------------------------------\n`;
-    message += `\nOn compte sur vous ! 🔥`;
+    message += `\n${t(locale, 'discord.event.outro')}`;
 
     await sendDiscordChannelMessage(channelId, message);
   }
@@ -330,9 +335,9 @@ export class EventService {
     return result.rows;
   }
 
-  static formatReminderMessage(event: Event, isManual: boolean = false, standbyMentions: string[] = []): string {
-    const startTime = new Date(event.start_time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    const startDate = new Date(event.start_time).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  static formatReminderMessage(event: Event, isManual: boolean = false, standbyMentions: string[] = [], locale: SupportedDiscordLocale = 'en'): string {
+    const startTime = new Date(event.start_time).toLocaleTimeString(locale === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+    const startDate = new Date(event.start_time).toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' });
     const typeIcon = event.type.toLowerCase() === 'raid' ? '⚔️' : '💎';
     const rosterInfo = event.roster_name ? ` (Roster: ${event.roster_name})` : '';
     
@@ -342,21 +347,21 @@ export class EventService {
 
     let message = '';
     if (isManual) {
-      message += `📣 **RAPPEL D'ÉVÉNEMENT**\n`;
+      message += `${t(locale, 'discord.event.label_manual_reminder')}\n`;
       message += '------------------------------------------\n';
     }
     message += `\n${typeIcon} **${event.title}**\n`;
-    if (isManual) message += `📅 Date : ${startDate}\n`;
-    message += `⏰ Heure : ${startTime}\n`;
-    message += `📝 Type : ${event.type}${rosterInfo}\n`;
+    if (isManual) message += `${t(locale, 'discord.event.label_date')} : ${startDate}\n`;
+    message += `${t(locale, 'discord.event.label_time')} : ${startTime}\n`;
+    message += `${t(locale, 'discord.event.label_type')} : ${event.type}${rosterInfo}\n`;
     if (event.description) {
-      message += `📖 Description : ${event.description}\n`;
+      message += `${t(locale, 'discord.event.label_description')} : ${event.description}\n`;
     }
-    message += `🔗 **Lien :** ${eventLink}\n`;
+    message += `${t(locale, 'discord.event.label_link')} ${eventLink}\n`;
     message += '------------------------------------------\n';
 
     if (standbyMentions.length > 0) {
-      message += `\n⚠️ **Rappel aux "Peut-être" :**\n${standbyMentions.join(', ')}\nMerci de confirmer votre présence dès que possible ! 🙏\n`;
+      message += `\n${t(locale, 'discord.event.label_maybe_reminder')}\n${standbyMentions.join(', ')}\n${t(locale, 'discord.event.label_maybe_outro')}\n`;
     }
 
     return message;
@@ -368,7 +373,7 @@ export class EventService {
     if (!event.guild_id) return;
 
     // Fetch guild Discord settings
-    const guildRes = await pool.query('SELECT discord_enabled, discord_events_channel_id FROM guilds WHERE id = $1', [event.guild_id]);
+    const guildRes = await pool.query('SELECT discord_enabled, discord_events_channel_id, discord_locale FROM guilds WHERE id = $1', [event.guild_id]);
     const guild = guildRes.rows[0];
 
     if (!guild || !guild.discord_enabled || !guild.discord_events_channel_id) {
@@ -387,11 +392,12 @@ export class EventService {
       return `**${r.battletag.split('#')[0]}**`;
     });
 
+    const locale = getDiscordLocale(guild);
     const channelId = guild.discord_events_channel_id;
-    let message = this.formatReminderMessage(event, true, mentions);
+    let message = this.formatReminderMessage(event, true, mentions, locale);
     
     if (mentions.length === 0) {
-      message += '\nN\'oubliez pas de vous inscrire sur le site ! 🚀';
+      message += `\n${t(locale, 'discord.event.label_register_reminder_outro')}`;
     }
 
     await sendDiscordChannelMessage(channelId, message);
@@ -413,14 +419,15 @@ export class EventService {
     }
 
     for (const [guildId, guildEvents] of Object.entries(eventsByGuild)) {
-      const guildRes = await pool.query('SELECT discord_enabled, discord_events_channel_id FROM guilds WHERE id = $1', [guildId]);
+      const guildRes = await pool.query('SELECT discord_enabled, discord_events_channel_id, discord_locale FROM guilds WHERE id = $1', [guildId]);
       const guild = guildRes.rows[0];
 
       if (!guild || !guild.discord_enabled || !guild.discord_events_channel_id) {
         continue; // Skip guild if Discord is disabled or channel not set
       }
 
-      let fullMessage = '📅 **ÉVÉNEMENTS DU JOUR**\n';
+      const locale = getDiscordLocale(guild);
+      let fullMessage = `${t(locale, 'discord.event.label_daily_events_title')}\n`;
       fullMessage += '------------------------------------------\n';
 
       for (const event of guildEvents) {
@@ -435,7 +442,7 @@ export class EventService {
           return `**${r.battletag.split('#')[0]}**`;
         });
 
-        fullMessage += `\n${this.formatReminderMessage(event, false, mentions)}`;
+        fullMessage += `\n${this.formatReminderMessage(event, false, mentions, locale)}`;
       }
 
       await sendDiscordChannelMessage(guild.discord_events_channel_id, fullMessage);

@@ -17,6 +17,7 @@ const updateGuildSettingsSchema = z.object({
     discordCraftsChannelId: z.string().max(255).nullable().optional(),
     feesEnabled: z.boolean().optional(),
     minimumFeeAmount: z.number().int().min(0).optional(),
+    discordLocale: z.enum(['en', 'fr']).optional(),
   }),
 });
 
@@ -26,7 +27,7 @@ router.get('/my-settings', requireActiveGuild, isAdmin, async (req, res, next) =
     const guildId = req.user!.active_guild_id;
 
     const result = await pool.query(
-      'SELECT id, name, realm, region, subscription_tier, subscription_expires_at, discord_enabled, discord_guild_id, discord_events_channel_id, discord_fees_channel_id, discord_reminder_channel_id, discord_officer_channel_id, discord_crafts_channel_id, fees_enabled, minimum_fee_amount FROM guilds WHERE id = $1',
+      'SELECT id, name, realm, region, subscription_tier, subscription_expires_at, discord_enabled, discord_guild_id, discord_events_channel_id, discord_fees_channel_id, discord_reminder_channel_id, discord_officer_channel_id, discord_crafts_channel_id, fees_enabled, minimum_fee_amount, discord_locale FROM guilds WHERE id = $1',
       [guildId]
     );
 
@@ -55,6 +56,7 @@ router.put('/my-settings', requireActiveGuild, isAdmin, validate(updateGuildSett
       discordCraftsChannelId,
       feesEnabled,
       minimumFeeAmount,
+      discordLocale,
     } = req.body;
 
     // Check subscription tier (Discord integration is a Pro-only feature)
@@ -91,8 +93,9 @@ router.put('/my-settings', requireActiveGuild, isAdmin, validate(updateGuildSett
            discord_crafts_channel_id = $7,
            fees_enabled = $8,
            minimum_fee_amount = $9,
+           discord_locale = $10,
            updated_at = CURRENT_TIMESTAMP 
-       WHERE id = $10 
+       WHERE id = $11 
        RETURNING *`,
       [
         tier === 'pro' ? discordEnabled : false,
@@ -104,6 +107,7 @@ router.put('/my-settings', requireActiveGuild, isAdmin, validate(updateGuildSett
         tier === 'pro' ? discordCraftsChannelId : null,
         feesEnabled !== undefined ? feesEnabled : true,
         minimumFeeAmount !== undefined ? minimumFeeAmount : 2000,
+        discordLocale || 'en',
         guildId,
       ]
     );

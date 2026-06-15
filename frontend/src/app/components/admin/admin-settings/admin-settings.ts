@@ -31,6 +31,7 @@ export class AdminSettingsComponent implements OnInit {
   discordCraftsChannelId = signal('');
   discordFeesChannelId = signal('');
   discordReminderChannelId = signal('');
+  discordLocale = signal<'en' | 'fr'>('en');
   
   feesEnabled = signal(true);
   minimumFeeAmount = signal(2000);
@@ -53,6 +54,7 @@ export class AdminSettingsComponent implements OnInit {
         this.discordCraftsChannelId.set(data.discord_crafts_channel_id || '');
         this.discordFeesChannelId.set(data.discord_fees_channel_id || '');
         this.discordReminderChannelId.set(data.discord_reminder_channel_id || '');
+        this.discordLocale.set(data.discord_locale || 'en');
         this.feesEnabled.set(data.fees_enabled !== undefined ? data.fees_enabled : true);
         this.minimumFeeAmount.set(data.minimum_fee_amount || 2000);
         this.isLoading.set(false);
@@ -76,7 +78,8 @@ export class AdminSettingsComponent implements OnInit {
       discordFeesChannelId: this.discordFeesChannelId() || null,
       discordReminderChannelId: this.discordReminderChannelId() || null,
       feesEnabled: this.feesEnabled(),
-      minimumFeeAmount: this.minimumFeeAmount()
+      minimumFeeAmount: this.minimumFeeAmount(),
+      discordLocale: this.discordLocale()
     };
 
     this.http.put<any>(`${this.apiUrl}/guilds/my-settings`, body, { withCredentials: true }).subscribe({

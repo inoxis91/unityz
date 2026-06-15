@@ -1,6 +1,6 @@
 <div class="details-container" *ngIf="event()">
   <div class="back-link">
-    <a routerLink="/calendar">← Retour au calendrier</a>
+    <a routerLink="/calendar">{{ i18n.t('event.details.back_to_calendar') }}</a>
   </div>
 
   <div class="event-header-card">
@@ -10,8 +10,8 @@
           {{ event()?.type === 'reunion' ? i18n.t('calendar.form.type_reunion') : event()?.type }}
         </div>
         <div class="roster-badge" *ngIf="event()?.roster_name && event()?.type !== 'reunion'" [title]="'Poids: ' + event()?.roster_weight">{{ event()?.roster_name }}</div>
-        <div class="roster-badge all" *ngIf="!event()?.roster_name && event()?.type !== 'reunion'">Tous</div>
-        <div class="roster-badge all" *ngIf="event()?.type === 'reunion' && event()?.invited_groups?.includes('all')">Tous les membres</div>
+        <div class="roster-badge all" *ngIf="!event()?.roster_name && event()?.type !== 'reunion'">{{ i18n.t('calendar.tag_all') }}</div>
+        <div class="roster-badge all" *ngIf="event()?.type === 'reunion' && event()?.invited_groups?.includes('all')">{{ i18n.t('calendar.form.all_members') }}</div>
         <div class="roster-badge" *ngIf="event()?.type === 'reunion' && !event()?.invited_groups?.includes('all')">
           {{ getInvitedGroupsLabel(event()?.invited_groups) }}
         </div>
@@ -19,14 +19,14 @@
       </div>
       
       <div class="admin-actions" *ngIf="canManageEvents()">
-        <button class="btn-admin remind" (click)="onRemindEvent()" title="Envoyer un rappel sur Discord">
-          <span class="icon">🔔</span> Rappeler
+        <button class="btn-admin remind" (click)="onRemindEvent()" [title]="i18n.t('event.details.btn_remind')">
+          <span class="icon">🔔</span> {{ i18n.t('event.details.btn_remind') }}
         </button>
-        <button class="btn-admin edit" (click)="openEditModal()" title="Modifier l'événement">
-          <span class="icon">✏️</span> Modifier
+        <button class="btn-admin edit" (click)="openEditModal()" [title]="i18n.t('event.details.btn_edit')">
+          <span class="icon">✏️</span> {{ i18n.t('event.details.btn_edit') }}
         </button>
-        <button class="btn-admin delete" (click)="onDeleteEvent()" title="Supprimer l'événement">
-          <span class="icon">🗑️</span> Supprimer
+        <button class="btn-admin delete" (click)="onDeleteEvent()" [title]="i18n.t('event.details.btn_delete')">
+          <span class="icon">🗑️</span> {{ i18n.t('event.details.btn_delete') }}
         </button>
       </div>
     </div>
@@ -34,7 +34,7 @@
     <div class="event-meta">
       <div class="meta-item">
         <span class="icon">📅</span>
-        <span class="text">{{ event()?.start_time | date:'EEEE d MMMM yyyy' : '' : 'fr' }}</span>
+        <span class="text">{{ event()?.start_time | date:'EEEE d MMMM yyyy' : '' : i18n.currentLocale() }}</span>
       </div>
       <div class="meta-item">
         <span class="icon">🕒</span>
@@ -48,8 +48,8 @@
   </div>
 
   <div class="tabs">
-    <button [class.active]="activeTab() === 'participants'" (click)="activeTab.set('participants')">Participants</button>
-    <button [class.active]="activeTab() === 'composition'" (click)="activeTab.set('composition')">Composition</button>
+    <button [class.active]="activeTab() === 'participants'" (click)="activeTab.set('participants')">{{ i18n.t('event.details.tab_participants') }}</button>
+    <button [class.active]="activeTab() === 'composition'" (click)="activeTab.set('composition')">{{ i18n.t('event.details.tab_composition') }}</button>
   </div>
 
   <!-- TAB: Participants -->
@@ -57,69 +57,69 @@
     <div class="content-grid">
       <!-- Signup Form -->
       <div class="form-card">
-        <h3>Votre inscription</h3>
+        <h3>{{ i18n.t('event.details.your_signup') }}</h3>
         
         <div class="status-selector">
           <button [class.active]="signupStatus === 'signed_up'" (click)="setStatus('signed_up')" class="status-btn present">
-            <span class="dot"></span> Présent
+            <span class="dot"></span> {{ i18n.t('event.details.status_present') }}
           </button>
           <button [class.active]="signupStatus === 'standby'" (click)="setStatus('standby')" class="status-btn standby">
-            <span class="dot"></span> Peut-être
+            <span class="dot"></span> {{ i18n.t('event.details.status_maybe') }}
           </button>
           <button [class.active]="signupStatus === 'absent'" (click)="setStatus('absent')" class="status-btn absent">
-            <span class="dot"></span> Absent
+            <span class="dot"></span> {{ i18n.t('event.details.status_absent') }}
           </button>
         </div>
 
         <div class="signup-fields animated-fade-in" *ngIf="signupStatus !== 'absent'">
           <div class="form-group" *ngIf="myCharacters().length > 0; else noChars">
-            <label>Sélectionnez votre personnage :</label>
+            <label>{{ i18n.t('event.details.select_character') }}</label>
             <select [(ngModel)]="selectedCharacterId" (change)="onCharacterChange()" class="modern-select">
               <option *ngFor="let char of myCharacters()" [value]="char.id" [disabled]="!isCharacterAllowed(char)">
                 {{ char.name }} ({{ char.class }})
-                {{ !isCharacterAllowed(char) ? ' — [ROSTER NON AUTORISÉ]' : '' }}
+                {{ !isCharacterAllowed(char) ? ' — [' + i18n.t('event.details.roster_not_allowed') + ']' : '' }}
               </option>
             </select>
           </div>
           <ng-template #noChars>
             <div class="warning-box">
               <p>
-                ⚠️ Aucun personnage trouvé. <a [routerLink]="['/options']" [queryParams]="{tab: 'characters'}">Importez vos personnages</a> pour vous inscrire.
+                ⚠️ {{ i18n.t('event.details.no_characters') }} <a [routerLink]="['/options']" [queryParams]="{tab: 'characters'}">{{ i18n.t('event.details.import_characters') }}</a>{{ i18n.t('event.details.to_signup') }}
               </p>
             </div>
           </ng-template>
 
           <div class="warning-box" *ngIf="myCharacters().length > 0 && allowedCharacters().length === 0">
             <p>
-              ⚠️ Aucun de vos personnages n'est autorisé pour cet événement. 
-              Cet événement est restreint au roster <strong>{{ event()?.roster_name }}</strong> (ou supérieur).
+              ⚠️ {{ i18n.t('event.details.no_allowed_characters') }} 
+              {{ i18n.t('event.details.restricted_to_roster') }} <strong>{{ event()?.roster_name }}</strong> {{ i18n.t('event.details.or_higher') }}
             </p>
           </div>
 
           <div class="form-group" *ngIf="allowedCharacters().length > 0">
-            <label>Votre rôle pour cet événement :</label>
+            <label>{{ i18n.t('event.details.your_role') }}</label>
             <div class="role-selector">
               <button [class.active]="selectedRole === 'tank'" (click)="selectedRole = 'tank'">
-                <img src="assets/icons/tank.png" class="role-icon-img" alt="Tank"> Tank
+                <img src="assets/icons/tank.png" class="role-icon-img" alt="Tank"> {{ i18n.t('event.details.role_tank') }}
               </button>
               <button [class.active]="selectedRole === 'heal'" (click)="selectedRole = 'heal'">
-                <img src="assets/icons/heal.png" class="role-icon-img" alt="Heal"> Heal
+                <img src="assets/icons/heal.png" class="role-icon-img" alt="Heal"> {{ i18n.t('event.details.role_heal') }}
               </button>
               <button [class.active]="selectedRole === 'dps'" (click)="selectedRole = 'dps'">
-                <img src="assets/icons/dps.png" class="role-icon-img" alt="DPS"> DPS
+                <img src="assets/icons/dps.png" class="role-icon-img" alt="DPS"> {{ i18n.t('event.details.role_dps') }}
               </button>
             </div>
           </div>
         </div>
 
         <div class="form-group">
-          <label>Commentaire / Note :</label>
-          <textarea [(ngModel)]="comment" placeholder="Ex: Un peu de retard possible..." rows="3"></textarea>
+          <label>{{ i18n.t('event.details.comment_label') }}</label>
+          <textarea [(ngModel)]="comment" [placeholder]="i18n.t('event.details.comment_placeholder')" rows="3"></textarea>
         </div>
 
         <div class="actions">
           <button class="btn-action confirm" (click)="onSignup()">
-            <span class="icon">💾</span> Enregistrer mon choix
+            <span class="icon">💾</span> {{ i18n.t('event.details.btn_save_choice') }}
           </button>
         </div>
       </div>
@@ -128,16 +128,16 @@
       <div class="list-card">
         <div class="list-header">
           <div class="list-title-group">
-            <h3>Liste des participants</h3>
+            <h3>{{ i18n.t('event.details.participants_list') }}</h3>
             <div class="status-counts">
-              <span class="count-badge present" title="Présents">✅ {{ presentCount() }}</span>
-              <span class="count-badge standby" title="Peut-être">❓ {{ standbyCount() }}</span>
-              <span class="count-badge absent" title="Absents">❌ {{ absentCount() }}</span>
+              <span class="count-badge present" [title]="i18n.t('event.details.tooltip_present')">✅ {{ presentCount() }}</span>
+              <span class="count-badge standby" [title]="i18n.t('event.details.tooltip_maybe')">❓ {{ standbyCount() }}</span>
+              <span class="count-badge absent" [title]="i18n.t('event.details.tooltip_absent')">❌ {{ absentCount() }}</span>
             </div>
           </div>
           <div class="sort-controls">
-            <button [class.active]="sortMethod() === 'date'" (click)="sortMethod.set('date')" title="Trier par date">🕒</button>
-            <button [class.active]="sortMethod() === 'status'" (click)="sortMethod.set('status')" title="Trier par statut">📊</button>
+            <button [class.active]="sortMethod() === 'date'" (click)="sortMethod.set('date')" [title]="i18n.t('event.details.sort_by_date')">🕒</button>
+            <button [class.active]="sortMethod() === 'status'" (click)="sortMethod.set('status')" [title]="i18n.t('event.details.sort_by_status')">📊</button>
           </div>
         </div>
         
@@ -167,9 +167,9 @@
               
               <div class="char-info">
                 <span class="participant-name">
-                  {{ s.status === 'absent' ? (s.main_character_name || (s.battletag?.split('#')?.[0]) || 'Inconnu') : (s.character_name || s.main_character_name || (s.battletag?.split('#')?.[0]) || 'Inconnu') }}
+                  {{ s.status === 'absent' ? (s.main_character_name || (s.battletag?.split('#')?.[0]) || i18n.t('event.details.unknown_user')) : (s.character_name || s.main_character_name || (s.battletag?.split('#')?.[0]) || i18n.t('event.details.unknown_user')) }}
                 </span>
-                <span *ngIf="s.status === 'absent'" class="absent-label">Absent</span>
+                <span *ngIf="s.status === 'absent'" class="absent-label">{{ i18n.t('event.details.label_absent') }}</span>
                 <span class="signup-time">{{ (s.signup_date || s.created_at) | date:'dd/MM HH:mm' }}</span>
               </div>
             </div>
@@ -181,7 +181,7 @@
           
           <div *ngIf="signups().length === 0" class="empty-state">
             <div class="empty-icon">👥</div>
-            <p>Aucun inscrit pour le moment</p>
+            <p>{{ i18n.t('event.details.no_signups') }}</p>
           </div>
         </div>
       </div>
@@ -194,7 +194,7 @@
     <!-- MODE: RAID -->
     <ng-container *ngIf="event()?.type?.toLowerCase() !== 'mm+'">
       <div class="buffs-container animated-fade-in">
-        <h3>Buffs de Raid</h3>
+        <h3>{{ i18n.t('event.details.raid_buffs') }}</h3>
         <div class="buffs-grid">
           <div *ngFor="let buff of buffs()" class="buff-card" [class.missing]="!buff.present" [title]="buff.label">
             <div class="buff-icon">
@@ -204,7 +204,7 @@
             <div class="buff-info">
               <span class="buff-label">{{ buff.description }}</span>
               <span class="buff-count" *ngIf="buff.present">x{{ buff.count }}</span>
-              <span class="buff-status" *ngIf="!buff.present">MANQUANT</span>
+              <span class="buff-status" *ngIf="!buff.present">{{ i18n.t('event.details.buff_missing') }}</span>
             </div>
           </div>
         </div>
@@ -216,7 +216,7 @@
             <span class="icon">
               <img src="assets/icons/tank.png" class="role-icon-img" alt="Tank">
             </span>
-            <h4>Tanks</h4>
+            <h4>{{ i18n.t('event.details.header_tanks') }}</h4>
             <span class="count">{{ tanks().length }}</span>
           </div>
           <div class="comp-grid">
@@ -230,7 +230,7 @@
             <span class="icon">
               <img src="assets/icons/heal.png" class="role-icon-img" alt="Heal">
             </span>
-            <h4>Heals</h4>
+            <h4>{{ i18n.t('event.details.header_heals') }}</h4>
             <span class="count">{{ heals().length }}</span>
           </div>
           <div class="comp-grid">
@@ -244,7 +244,7 @@
             <span class="icon">
               <img src="assets/icons/dps.png" class="role-icon-img" alt="DPS">
             </span>
-            <h4>DPS</h4>
+            <h4>{{ i18n.t('event.details.header_dps') }}</h4>
             <span class="count">{{ dps().length }}</span>
           </div>
           <div class="comp-grid dps-layout">
@@ -262,10 +262,10 @@
         
         <!-- Unassigned Members -->
         <div class="mm-unassigned-panel">
-          <button *ngIf="canManageEvents()" class="btn-add-group-top" (click)="onAddGroup()">+ Ajouter un groupe</button>
+          <button *ngIf="canManageEvents()" class="btn-add-group-top" (click)="onAddGroup()">+ {{ i18n.t('event.details.mm_add_group') }}</button>
           
           <div class="panel-header">
-            <h3>Sans groupe</h3>
+            <h3>{{ i18n.t('event.details.mm_no_group') }}</h3>
             <span class="count-badge">{{ unassignedMembers().length }}</span>
           </div>
           <div class="mm-drop-zone unassigned"
@@ -289,7 +289,7 @@
               </div>
             }
             @if (unassignedMembers().length === 0) {
-              <p class="empty-msg">Tous les joueurs sont placés.</p>
+              <p class="empty-msg">{{ i18n.t('event.details.mm_all_placed') }}</p>
             }
           </div>
         </div>
@@ -300,12 +300,12 @@
             <div class="mm-group-card animated-fade-in">
               <div class="group-header">
                 <div class="group-title-row">
-                  <h4>GROUPE {{ group.index }}</h4>
-                  <button *ngIf="canManageEvents()" class="btn-delete-group" (click)="onRemoveGroup(group.index)" title="Supprimer ce groupe">×</button>
+                  <h4>{{ i18n.t('event.details.mm_group_title').replace('{index}', group.index.toString()) }}</h4>
+                  <button *ngIf="canManageEvents()" class="btn-delete-group" (click)="onRemoveGroup(group.index)" [title]="i18n.t('event.details.mm_delete_group')">×</button>
                 </div>
                 <div class="group-buffs">
                   @for (buff of group.buffs; track buff.id) {
-                    <div class="mini-buff" [class.missing]="!buff.present" [title]="buff.label + ': ' + (buff.present ? 'PRÉSENT' : 'MANQUANT')">
+                    <div class="mini-buff" [class.missing]="!buff.present" [title]="buff.label + ': ' + (buff.present ? i18n.t('event.details.status_present').toUpperCase() : i18n.t('event.details.buff_missing'))">
                       <img *ngIf="buff.icon.includes('/')" [src]="buff.icon" [alt]="buff.label">
                       <span *ngIf="!buff.icon.includes('/')">{{ buff.icon }}</span>
                     </div>
@@ -344,7 +344,7 @@
                     <div class="slot-members">
                       @for (m of group.heals; track m.user_id) {
                         <div class="mm-member-card small" [class]="'class-' + getClassCategory(m.character_class || m.main_character_class)" cdkDrag [cdkDragDisabled]="!canManageEvents()">
-                          <span class="name">{{ m.character_name || m.main_character_name || (m.battletag?.split('#')?.[0]) }}</span>
+                          <span class="name">{{ m.character_name || m.main_character_name || (m?.battletag?.split('#')?.[0]) }}</span>
                           <span class="rio-micro" *ngIf="getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm)">
                             {{ getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm) }}
                           </span>
@@ -371,7 +371,7 @@
                 </div>
 
                 @if (group.members.length === 0) {
-                  <p class="empty-msg">Glissez des joueurs ici.</p>
+                  <p class="empty-msg">{{ i18n.t('event.details.mm_drag_hint') }}</p>
                 }
               </div>
             </div>
@@ -390,7 +390,7 @@
     <div class="modal-header">
       <div class="header-title">
         <span class="icon">📝</span>
-        <h2>Modifier l'Événement</h2>
+        <h2>{{ i18n.t('calendar.modal.edit_title') }}</h2>
       </div>
       <button class="close-btn" (click)="showEditModal.set(false)">&times;</button>
     </div>
@@ -398,29 +398,29 @@
     <form (ngSubmit)="onUpdateEvent()" class="modern-form">
       <div class="modal-body">
         <div class="form-section">
-          <label>Titre de l'activité</label>
-          <input type="text" [(ngModel)]="editEventData.title" name="title" required placeholder="Ex: Raid HM Flèche du vide">
+          <label>{{ i18n.t('calendar.form.title') }}</label>
+          <input type="text" [(ngModel)]="editEventData.title" name="title" required [placeholder]="i18n.t('calendar.form.title_placeholder')">
         </div>
         
         <div class="form-section">
-          <label>Description (Optionnel)</label>
+          <label>{{ i18n.t('calendar.form.desc') }}</label>
           <textarea [(ngModel)]="editEventData.description" name="description" rows="3"></textarea>
         </div>
 
         <div class="form-grid">
           <div class="form-section">
-            <label>Type</label>
+            <label>{{ i18n.t('calendar.form.type') }}</label>
             <select [(ngModel)]="editEventData.type" name="type" class="custom-select">
-              <option value="raid">Raid</option>
-              <option value="mm+">Donjon MM+</option>
-              <option value="reunion">Réunion</option>
-              <option value="custom">Autre / Spécial</option>
+              <option value="raid">{{ i18n.t('calendar.form.type_raid') }}</option>
+              <option value="mm+">{{ i18n.t('calendar.form.type_mm') }}</option>
+              <option value="reunion">{{ i18n.t('calendar.form.type_reunion') }}</option>
+              <option value="custom">{{ i18n.t('calendar.form.type_custom') }}</option>
             </select>
           </div>
           <div class="form-section" *ngIf="editEventData.type !== 'reunion'">
-            <label>Roster autorisé</label>
+            <label>{{ i18n.t('calendar.form.roster') }}</label>
             <select [(ngModel)]="editEventData.roster_id" name="roster_id" class="custom-select">
-              <option value="">Tous les membres</option>
+              <option value="">{{ i18n.t('calendar.form.roster_all') }}</option>
               @for (roster of rosterService.rosters(); track roster.id) {
                 <option [value]="roster.id">{{ roster.name }} (Poids: {{ roster.weight }})</option>
               }
@@ -454,40 +454,40 @@
         </div>
 
         <div class="form-section" *ngIf="editEventData.type === 'mm+'">
-          <label>Nombre de groupes MM+</label>
+          <label>{{ i18n.t('event.details.mm_groups_count') }}</label>
           <input type="number" [(ngModel)]="editEventData.mm_groups_count" name="mm_groups_count" min="0">
         </div>
 
         <div class="form-section" *ngIf="editEventData.type === 'custom'">
-          <label>Nom du type personnalisé</label>
-          <input type="text" [(ngModel)]="editEventData.customType" name="customType" placeholder="Ex: PvP, Succès...">
+          <label>{{ i18n.t('calendar.form.custom_type') }}</label>
+          <input type="text" [(ngModel)]="editEventData.customType" name="customType" [placeholder]="i18n.t('calendar.form.custom_type_placeholder')">
         </div>
 
         <div class="form-grid">
           <div class="form-section">
-            <label>Date de début</label>
+            <label>{{ i18n.t('event.details.start_date') }}</label>
             <input type="date" [(ngModel)]="editEventData.start_date" name="start_date" required>
           </div>
           <div class="form-section">
-            <label>Heure de début</label>
+            <label>{{ i18n.t('calendar.form.start_time') }}</label>
             <input type="time" [(ngModel)]="editEventData.start_time" name="start_time" required>
           </div>
         </div>
 
         <div class="form-grid">
           <div class="form-section">
-            <label>Date de fin</label>
+            <label>{{ i18n.t('event.details.end_date') }}</label>
             <input type="date" [(ngModel)]="editEventData.end_date" name="end_date" required>
           </div>
           <div class="form-section">
-            <label>Heure de fin</label>
+            <label>{{ i18n.t('calendar.form.end_time') }}</label>
             <input type="time" [(ngModel)]="editEventData.end_time" name="end_time" required>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn-secondary" (click)="showEditModal.set(false)">Annuler</button>
-        <button type="submit" class="btn-primary">Enregistrer les modifications</button>
+        <button type="button" class="btn-secondary" (click)="showEditModal.set(false)">{{ i18n.t('calendar.form.btn_cancel') }}</button>
+        <button type="submit" class="btn-primary">{{ i18n.t('event.details.btn_save_changes') }}</button>
       </div>
     </form>
   </div>
@@ -499,7 +499,7 @@
     <div class="modal-header">
       <div class="header-title">
         <span class="icon">👥</span>
-        <h2>Personnages de {{ selectedSignup()?.battletag?.split('#')?.[0] }}</h2>
+        <h2>{{ i18n.t('event.details.characters_of').replace('{name}', selectedSignup()?.battletag?.split('#')?.[0] || '') }}</h2>
       </div>
       <button class="close-btn" (click)="showAltsModal.set(false)">&times;</button>
     </div>
@@ -508,7 +508,7 @@
         <div *ngFor="let char of selectedSignup()?.user_characters" class="alt-row" [class]="'class-' + getClassCategory(char.class)">
           <div class="alt-info-vertical">
             <span class="alt-name">{{ char.name }}</span>
-            <span class="alt-roster-text">{{ char.roster_name || 'Sans Roster' }}</span>
+            <span class="alt-roster-text">{{ char.roster_name || i18n.t('event.details.no_roster') }}</span>
           </div>
           <div class="alt-roles">
             <span class="rio-mini" *ngIf="getRioScoreForKey(char.name, char.realm)">{{ getRioScoreForKey(char.name, char.realm) }}</span>
@@ -526,7 +526,7 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" (click)="showAltsModal.set(false)">Fermer</button>
+      <button class="btn-secondary" (click)="showAltsModal.set(false)">{{ i18n.t('event.details.btn_close') }}</button>
     </div>
   </div>
 </div>
