@@ -12,10 +12,14 @@ import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { FeesComponent } from './components/fees/fees';
 import { CraftsComponent } from './components/crafts/crafts';
+import { TermsOfServiceComponent } from './components/legal/terms';
+import { PrivacyPolicyComponent } from './components/legal/privacy';
 
 export const routes: Routes = [
   { path: '', component: LandingComponent },
   { path: 'login', component: LoginComponent },
+  { path: 'terms', component: TermsOfServiceComponent },
+  { path: 'privacy', component: PrivacyPolicyComponent },
   { 
     path: 'select-guild', 
     component: SelectGuildComponent, 

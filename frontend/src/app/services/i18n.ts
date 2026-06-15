@@ -577,6 +577,10 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'dashboard.birthday.month_prefix': "🎁 C'est le mois d'anniversaire de ",
     'dashboard.birthday.month_suffix': ' ! (le {date})',
 
+    // Footer
+    'footer.terms': "Conditions d'utilisation",
+    'footer.privacy': "Politique de confidentialité",
+
     // Dashboard Attendance
     'dashboard.attendance.title': "Suivi d'assiduité",
     'dashboard.attendance.details': 'Détails',
@@ -1188,6 +1192,10 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'dashboard.birthday.today_suffix': ' today! Have a wonderful day! 🎈🥳',
     'dashboard.birthday.month_prefix': "🎁 It's ",
     'dashboard.birthday.month_suffix': '\'s birthday month! (on {date})',
+
+    // Footer
+    'footer.terms': 'Terms of Service',
+    'footer.privacy': 'Privacy Policy',
 
     // Dashboard Attendance
     'dashboard.attendance.title': 'Attendance Tracker',
