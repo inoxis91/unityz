@@ -395,7 +395,14 @@ export class EventService {
   static formatReminderMessage(event: Event, isManual: boolean = false, standbyMentions: string[] = [], locale: SupportedDiscordLocale = 'en'): string {
     const startTime = new Date(event.start_time).toLocaleTimeString(locale === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' });
     const startDate = new Date(event.start_time).toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' });
-    const typeIcon = event.type.toLowerCase() === 'raid' ? '⚔️' : '💎';
+    
+    let typeIcon = '💎';
+    if (event.type.toLowerCase() === 'raid') {
+      typeIcon = '⚔️';
+    } else if (event.type.toLowerCase() === 'reunion') {
+      typeIcon = '👥';
+    }
+    
     const rosterInfo = event.roster_name ? ` (Roster: ${event.roster_name})` : '';
     
     let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
@@ -410,7 +417,9 @@ export class EventService {
     message += `\n${typeIcon} **${event.title}**\n`;
     if (isManual) message += `${t(locale, 'discord.event.label_date')} : ${startDate}\n`;
     message += `${t(locale, 'discord.event.label_time')} : ${startTime}\n`;
-    message += `${t(locale, 'discord.event.label_type')} : ${event.type}${rosterInfo}\n`;
+    
+    const translatedType = event.type === 'reunion' ? t(locale, 'discord.event.label_reunion') : event.type;
+    message += `${t(locale, 'discord.event.label_type')} : ${translatedType}${rosterInfo}\n`;
     if (event.description) {
       message += `${t(locale, 'discord.event.label_description')} : ${event.description}\n`;
     }
@@ -430,11 +439,30 @@ export class EventService {
     if (!event.guild_id) return;
 
     // Fetch guild Discord settings
-    const guildRes = await pool.query('SELECT discord_enabled, discord_events_channel_id, discord_locale FROM guilds WHERE id = $1', [event.guild_id]);
+    const guildRes = await pool.query(
+      'SELECT discord_enabled, discord_events_channel_id, discord_officer_channel_id, discord_locale FROM guilds WHERE id = $1',
+      [event.guild_id]
+    );
     const guild = guildRes.rows[0];
 
-    if (!guild || !guild.discord_enabled || !guild.discord_events_channel_id) {
-      return; // Skip if Discord disabled or channel not set
+    if (!guild || !guild.discord_enabled) {
+      return; // Skip if Discord disabled
+    }
+
+    let channelId: string | null = null;
+    if (event.type === 'reunion') {
+      const invited = event.invited_groups || [];
+      if (invited.includes('all')) {
+        channelId = guild.discord_events_channel_id;
+      } else {
+        channelId = guild.discord_officer_channel_id;
+      }
+    } else {
+      channelId = guild.discord_events_channel_id;
+    }
+
+    if (!channelId) {
+      return; // Skip if target channel not set
     }
 
     // Récupérer les personnes en "standby" (peut-être) avec leur Discord ID ou BattleTag en secours
@@ -450,7 +478,6 @@ export class EventService {
     });
 
     const locale = getDiscordLocale(guild);
-    const channelId = guild.discord_events_channel_id;
     let message = this.formatReminderMessage(event, true, mentions, locale);
     
     if (mentions.length === 0) {
@@ -476,33 +503,80 @@ export class EventService {
     }
 
     for (const [guildId, guildEvents] of Object.entries(eventsByGuild)) {
-      const guildRes = await pool.query('SELECT discord_enabled, discord_events_channel_id, discord_locale FROM guilds WHERE id = $1', [guildId]);
+      const guildRes = await pool.query(
+        'SELECT discord_enabled, discord_events_channel_id, discord_officer_channel_id, discord_locale FROM guilds WHERE id = $1',
+        [guildId]
+      );
       const guild = guildRes.rows[0];
 
-      if (!guild || !guild.discord_enabled || !guild.discord_events_channel_id) {
-        continue; // Skip guild if Discord is disabled or channel not set
+      if (!guild || !guild.discord_enabled) {
+        continue; // Skip guild if Discord is disabled
       }
 
       const locale = getDiscordLocale(guild);
-      let fullMessage = `${t(locale, 'discord.event.label_daily_events_title')}\n`;
-      fullMessage += '------------------------------------------\n';
+
+      // Distribute events based on their target channel
+      const publicEvents: Event[] = [];
+      const officerEvents: Event[] = [];
 
       for (const event of guildEvents) {
-        const standbyQuery = `
-          SELECT u.discord_id, u.battletag FROM users u
-          JOIN event_signups s ON u.id = s.user_id
-          WHERE s.event_id = $1 AND s.status = 'standby'
-        `;
-        const standbyRes = await pool.query(standbyQuery, [event.id]);
-        const mentions = standbyRes.rows.map(r => {
-          if (r.discord_id) return `<@${r.discord_id}>`;
-          return `**${r.battletag.split('#')[0]}**`;
-        });
-
-        fullMessage += `\n${this.formatReminderMessage(event, false, mentions, locale)}`;
+        if (event.type === 'reunion') {
+          const invited = event.invited_groups || [];
+          if (invited.includes('all')) {
+            publicEvents.push(event);
+          } else {
+            officerEvents.push(event);
+          }
+        } else {
+          publicEvents.push(event);
+        }
       }
 
-      await sendDiscordChannelMessage(guild.discord_events_channel_id, fullMessage);
+      // Send public events daily reminder
+      if (publicEvents.length > 0 && guild.discord_events_channel_id) {
+        let fullMessage = `${t(locale, 'discord.event.label_daily_events_title')}\n`;
+        fullMessage += '------------------------------------------\n';
+
+        for (const event of publicEvents) {
+          const standbyQuery = `
+            SELECT u.discord_id, u.battletag FROM users u
+            JOIN event_signups s ON u.id = s.user_id
+            WHERE s.event_id = $1 AND s.status = 'standby'
+          `;
+          const standbyRes = await pool.query(standbyQuery, [event.id]);
+          const mentions = standbyRes.rows.map(r => {
+            if (r.discord_id) return `<@${r.discord_id}>`;
+            return `**${r.battletag.split('#')[0]}**`;
+          });
+
+          fullMessage += `\n${this.formatReminderMessage(event, false, mentions, locale)}`;
+        }
+
+        await sendDiscordChannelMessage(guild.discord_events_channel_id, fullMessage);
+      }
+
+      // Send officer events daily reminder
+      if (officerEvents.length > 0 && guild.discord_officer_channel_id) {
+        let fullMessage = `${t(locale, 'discord.event.label_daily_events_title')}\n`;
+        fullMessage += '------------------------------------------\n';
+
+        for (const event of officerEvents) {
+          const standbyQuery = `
+            SELECT u.discord_id, u.battletag FROM users u
+            JOIN event_signups s ON u.id = s.user_id
+            WHERE s.event_id = $1 AND s.status = 'standby'
+          `;
+          const standbyRes = await pool.query(standbyQuery, [event.id]);
+          const mentions = standbyRes.rows.map(r => {
+            if (r.discord_id) return `<@${r.discord_id}>`;
+            return `**${r.battletag.split('#')[0]}**`;
+          });
+
+          fullMessage += `\n${this.formatReminderMessage(event, false, mentions, locale)}`;
+        }
+
+        await sendDiscordChannelMessage(guild.discord_officer_channel_id, fullMessage);
+      }
     }
   }
 }
