@@ -3,7 +3,7 @@ import pool from '../lib/db';
 import { EventService } from '../services/eventService';
 import { isAuthenticated, canManageEvents, requireActiveGuild, requirePaidGuild } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
-import { createEventSchema, updateEventSchema, signupSchema, updateSignupGroupSchema, updateGroupsCountSchema } from '../schemas/eventSchemas';
+import { createEventSchema, updateEventSchema, signupSchema, updateSignupGroupSchema, updateGroupsCountSchema, updateSignupSchema } from '../schemas/eventSchemas';
 
 const router = express.Router();
 
@@ -154,6 +154,19 @@ router.patch('/:id/signups/:userId/group', canManageEvents, validate(updateSignu
       return res.status(404).json({ status: 'error', message: 'Signup not found' });
     }
     res.json({ status: 'success', message: 'Signup group updated' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PATCH /api/events/:id/signups/:userId : Met à jour l'inscription d'un utilisateur (Admin/Manager)
+router.patch('/:id/signups/:userId', canManageEvents, validate(updateSignupSchema), async (req, res, next) => {
+  try {
+    const success = await EventService.updateSignup(req.params.id as string, req.params.userId as string, req.body);
+    if (!success) {
+      return res.status(404).json({ status: 'error', message: 'Signup not found' });
+    }
+    res.json({ status: 'success', message: 'Signup updated successfully' });
   } catch (error) {
     next(error);
   }

@@ -374,6 +374,39 @@ export class EventService {
     return (result.rowCount ?? 0) > 0;
   }
 
+  static async updateSignup(eventId: string, userId: string, data: { character_id?: string | null; role?: string; status?: string }): Promise<boolean> {
+    const fields: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    if (data.character_id !== undefined) {
+      fields.push(`character_id = $${paramIndex}`);
+      values.push(data.character_id);
+      paramIndex++;
+    }
+    if (data.role !== undefined) {
+      fields.push(`role = $${paramIndex}`);
+      values.push(data.role);
+      paramIndex++;
+    }
+    if (data.status !== undefined) {
+      fields.push(`status = $${paramIndex}`);
+      values.push(data.status);
+      paramIndex++;
+    }
+
+    if (fields.length === 0) return false;
+
+    values.push(eventId, userId);
+    const query = `
+      UPDATE event_signups 
+      SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP 
+      WHERE event_id = $${paramIndex} AND user_id = $${paramIndex + 1}
+    `;
+    const result = await pool.query(query, values);
+    return (result.rowCount ?? 0) > 0;
+  }
+
   static async updateGroupsCount(eventId: string, count: number): Promise<boolean> {
     const query = 'UPDATE events SET mm_groups_count = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2';
     const result = await pool.query(query, [count, eventId]);

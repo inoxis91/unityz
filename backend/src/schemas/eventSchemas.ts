@@ -59,3 +59,15 @@ export const signupSchema = z.object({
     status: z.enum(['signed_up', 'standby', 'absent']).optional(),
   }),
 });
+
+export const updateSignupSchema = z.object({
+  params: z.object({
+    id: z.string().uuid(),
+    userId: z.string(),
+  }),
+  body: z.object({
+    character_id: z.preprocess(val => val === '' ? null : val, z.string().uuid().nullable().optional()),
+    role: z.enum(['tank', 'heal', 'dps']).optional(),
+    status: z.enum(['signed_up', 'standby', 'absent']).optional(),
+  }),
+});

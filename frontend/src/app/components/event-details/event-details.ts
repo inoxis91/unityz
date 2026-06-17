@@ -418,6 +418,33 @@ export class EventDetailsComponent implements OnInit {
     this.showAltsModal.set(true);
   }
 
+  isSelectedCharacterAndRole(characterId: string, role: string): boolean {
+    const signup = this.selectedSignup();
+    return signup ? (signup.character_id === characterId && signup.role === role) : false;
+  }
+
+  onAdminUpdateSignup(characterId: string, role: string) {
+    const signup = this.selectedSignup();
+    const evt = this.event();
+    if (!signup || !evt || !evt.id) return;
+
+    this.calendarService.updateSignup(evt.id, signup.user_id, {
+      character_id: characterId,
+      role: role
+    }).subscribe({
+      next: () => {
+        this.toast.success(this.i18n.t('event.details.toast_signup_updated_success'));
+        this.showAltsModal.set(false);
+        this.loadEvent(evt.id!);
+        this.loadSignups(evt.id!);
+      },
+      error: (err) => {
+        console.error('Admin update signup error:', err);
+        this.toast.error(this.i18n.t('event.details.toast_signup_updated_error'));
+      }
+    });
+  }
+
   // MM+ Group Management
   onAddGroup() {
     const evt = this.event();

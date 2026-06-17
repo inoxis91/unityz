@@ -533,6 +533,8 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'event.details.toast_signup_success': 'Votre choix a été enregistré !',
     'event.details.toast_signup_error': "Erreur lors de l'enregistrement de votre choix.",
     'event.details.toast_move_error': 'Erreur lors du déplacement du joueur.',
+    'event.details.toast_signup_updated_success': "Inscription mise à jour avec succès !",
+    'event.details.toast_signup_updated_error': "Erreur lors de la mise à jour de l'inscription.",
 
     // Raid Buffs
     'buff.label.intellect': 'Intelligence',
@@ -1151,6 +1153,8 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'event.details.toast_signup_success': 'Your choice has been saved!',
     'event.details.toast_signup_error': 'Error saving your choice.',
     'event.details.toast_move_error': 'Error moving the player.',
+    'event.details.toast_signup_updated_success': 'Signup updated successfully!',
+    'event.details.toast_signup_updated_error': 'Error updating the signup.',
 
     // Raid Buffs
     'buff.label.intellect': 'Intellect',

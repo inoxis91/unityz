@@ -346,6 +346,7 @@
                           <span class="rio-micro" *ngIf="getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm)">
                             {{ getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm) }}
                           </span>
+                          <button class="btn-alts-mini" (click)="openAltsModal(m)">🔍</button>
                         </div>
                       }
                     </div>
@@ -362,6 +363,7 @@
                           <span class="rio-micro" *ngIf="getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm)">
                             {{ getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm) }}
                           </span>
+                          <button class="btn-alts-mini" (click)="openAltsModal(m)">🔍</button>
                         </div>
                       }
                     </div>
@@ -378,6 +380,7 @@
                           <span class="rio-micro" *ngIf="getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm)">
                             {{ getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm) }}
                           </span>
+                          <button class="btn-alts-mini" (click)="openAltsModal(m)">🔍</button>
                         </div>
                       }
                     </div>
@@ -526,9 +529,37 @@
           </div>
           <div class="alt-roles">
             <span class="rio-mini" *ngIf="getRioScoreForKey(char.name, char.realm)">{{ getRioScoreForKey(char.name, char.realm) }}</span>
-            <img *ngIf="char.is_tank" src="assets/icons/tank.png" class="role-icon-img small" title="Tank" alt="Tank">
-            <img *ngIf="char.is_heal" src="assets/icons/heal.png" class="role-icon-img small" title="Heal" alt="Heal">
-            <img *ngIf="char.is_dps" src="assets/icons/dps.png" class="role-icon-img small" title="DPS" alt="DPS">
+            
+            <ng-container *ngIf="canManageEvents(); else readOnlyRoles">
+              <button *ngIf="char.is_tank" 
+                      [class.active-role]="isSelectedCharacterAndRole(char.id, 'tank')"
+                      class="role-select-btn" 
+                      (click)="onAdminUpdateSignup(char.id, 'tank')" 
+                      title="Assigner en tant que Tank">
+                <img src="assets/icons/tank.png" class="role-icon-img small" alt="Tank">
+              </button>
+              <button *ngIf="char.is_heal" 
+                      [class.active-role]="isSelectedCharacterAndRole(char.id, 'heal')"
+                      class="role-select-btn" 
+                      (click)="onAdminUpdateSignup(char.id, 'heal')" 
+                      title="Assigner en tant que Soigneur">
+                <img src="assets/icons/heal.png" class="role-icon-img small" alt="Heal">
+              </button>
+              <button *ngIf="char.is_dps" 
+                      [class.active-role]="isSelectedCharacterAndRole(char.id, 'dps')"
+                      class="role-select-btn" 
+                      (click)="onAdminUpdateSignup(char.id, 'dps')" 
+                      title="Assigner en tant que DPS">
+                <img src="assets/icons/dps.png" class="role-icon-img small" alt="DPS">
+              </button>
+            </ng-container>
+
+            <ng-template #readOnlyRoles>
+              <img *ngIf="char.is_tank" src="assets/icons/tank.png" class="role-icon-img small" title="Tank" alt="Tank">
+              <img *ngIf="char.is_heal" src="assets/icons/heal.png" class="role-icon-img small" title="Heal" alt="Heal">
+              <img *ngIf="char.is_dps" src="assets/icons/dps.png" class="role-icon-img small" title="DPS" alt="DPS">
+            </ng-template>
+
             <a [href]="characterService.getRaiderIoUrl(char.name, char.realm)" target="_blank" class="logs-link-mini" (click)="$event.stopPropagation()">
               <img src="assets/icons/raiderio.webp" alt="Raider.IO">
             </a>

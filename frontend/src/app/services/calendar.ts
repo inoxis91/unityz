@@ -87,6 +87,10 @@ export class CalendarService {
     return this.http.patch(`${this.apiUrl}/${eventId}/signups/${userId}/group`, { group_index: groupIndex }, { withCredentials: true });
   }
 
+  updateSignup(eventId: string, userId: string, data: { character_id?: string | null, role?: string, status?: string }): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${eventId}/signups/${userId}`, data, { withCredentials: true });
+  }
+
   getSignups(eventId: string): Observable<Signup[]> {
     return this.http.get<Signup[]>(`${this.apiUrl}/${eventId}/signups`, { withCredentials: true });
   }
