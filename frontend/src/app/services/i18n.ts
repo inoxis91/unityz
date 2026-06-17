@@ -184,7 +184,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'admin.discord.step4_title': 'IDs des Salons',
     'admin.discord.step4_desc': 'Faites un clic droit sur vos salons textuels correspondants (ex: #annonces), cliquez sur "Copier l\'ID", puis collez-les dans les salons ci-contre.',
     'admin.discord.step5_title': 'Permissions des Salons',
-    'admin.discord.step5_desc': 'IMPORTANT : Dans Discord, assurez-vous que le bot ou son rôle possède les permissions "Voir le salon" (View Channel) et "Envoyer des messages" (Send Messages) dans chacun des salons configurés ci-contre pour qu\'il soit autorisé à y écrire.',
+    'admin.discord.step5_desc': 'Dans Discord, allez dans les paramètres du salon ("Modifier le salon") > "Permissions", puis cliquez sur "Ajouter des membres ou des rôles" et ajoutez le bot Guild Manager pour l\'autoriser à écrire.',
 
     'support.widget.trigger': 'Besoin d\'aide ?',
     'support.widget.option.bug': 'Signaler un bug 🐛',
@@ -802,7 +802,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'admin.discord.step4_title': 'Channel IDs',
     'admin.discord.step4_desc': 'Right-click your corresponding text channels (e.g., #announcements), click "Copy ID", then paste them into the fields.',
     'admin.discord.step5_title': 'Channel Permissions',
-    'admin.discord.step5_desc': 'IMPORTANT: In Discord, make sure the bot or its role has "View Channel" and "Send Messages" permissions in each of the channels configured on the left so that it is authorized to write to them.',
+    'admin.discord.step5_desc': 'In Discord, go to the channel settings ("Edit Channel") > "Permissions", then click "Add members or roles" and add the Guild Manager bot to authorize it to write.',
 
     'support.widget.trigger': 'Need help?',
     'support.widget.option.bug': 'Report a bug 🐛',
