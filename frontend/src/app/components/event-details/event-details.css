@@ -466,7 +466,7 @@
 .class-paladin { background-color: var(--color-paladin) !important; }
 .class-hunter { background-color: var(--color-hunter) !important; }
 .class-rogue { background-color: var(--color-rogue) !important; }
-.class-priest { background-color: #f0f0f0 !important; border-color: #ccc !important; }
+.class-priest { background-color: #f0f0f0 !important; border-color: #ccc; }
 .class-priest .participant-name, .class-priest .name, .class-priest .alt-name { color: #1e293b !important; text-shadow: none !important; }
 .class-priest .alt-class, .class-priest .signup-time { color: #64748b !important; }
 .class-death-knight { background-color: var(--color-death-knight) !important; }
