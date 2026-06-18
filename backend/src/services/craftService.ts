@@ -48,34 +48,49 @@ const ARMOR_TRANSLATIONS_FR: Record<string, string> = {
 export const getProfessionsForCraft = (slot: string, armorType: string): string[] => {
   const professions: string[] = [];
 
-  // Match based on slot & armorType
-  if (armorType === 'leather' || armorType === 'mail') {
-    professions.push('leatherworking');
-  } else if (armorType === 'plate') {
+  // 1. Anneau, collier -> Joaillier (Exclusive check to avoid fallback overlap)
+  if (slot === 'finger' || slot === 'neck') {
+    professions.push('jewelcrafting');
+    return professions;
+  }
+
+  // 2. Armure en plaque, mailles, armes 1M, 2M et Bouclier (offhand) -> Forge
+  if (
+    armorType === 'plate' ||
+    armorType === 'mail' ||
+    armorType === 'onehanded' ||
+    armorType === 'twohanded' ||
+    slot === 'offhand'
+  ) {
     professions.push('blacksmithing');
-  } else if (armorType === 'cloth' || slot === 'back') {
+  }
+
+  // 3. Cuir -> Travail du cuir
+  if (armorType === 'leather') {
+    professions.push('leatherworking');
+  }
+
+  // 4. Armures en tissu -> Couture
+  if (armorType === 'cloth' || slot === 'back') {
     professions.push('tailoring');
   }
 
-  if (slot === 'neck' || slot === 'finger') {
-    professions.push('jewelcrafting');
+  // 5. Bâtons -> Calligraphie (inscription)
+  if (armorType === 'staff') {
+    professions.push('inscription');
   }
 
-  if (slot === 'weapon') {
-    if (armorType === 'staff') {
-      professions.push('inscription');
-    } else if (armorType === 'wand') {
-      professions.push('enchanting');
-    } else {
-      professions.push('blacksmithing', 'engineering', 'inscription');
-    }
+  // 6. Baguettes -> Enchantement (enchanting)
+  if (armorType === 'wand') {
+    professions.push('enchanting');
   }
 
+  // Fallbacks for general items like trinkets
   if (slot === 'trinket') {
     professions.push('jewelcrafting', 'alchemy', 'engineering');
   }
 
-  if (armorType === 'other') {
+  if (armorType === 'other' && slot !== 'trinket') {
     professions.push('alchemy', 'enchanting', 'inscription');
   }
 
@@ -151,9 +166,8 @@ export class CraftService {
             WHERE (c.guild_id = $1 OR u.active_guild_id = $1)
               AND u.discord_id IS NOT NULL
               AND u.discord_id <> ''
-              AND u.id <> $2
-              AND u.professions && $3::VARCHAR[]
-          `, [guildId, userId, professions]);
+              AND u.professions && $2::VARCHAR[]
+          `, [guildId, professions]);
 
           for (const targetUser of matchingUsersRes.rows) {
             try {
