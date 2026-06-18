@@ -52,6 +52,12 @@ export class UserService {
     return result.rows[0] || null;
   }
 
+  static async updateProfessions(userId: string, professions: string[]): Promise<any | null> {
+    const query = 'UPDATE users SET professions = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *';
+    const result = await pool.query(query, [professions, userId]);
+    return result.rows[0] || null;
+  }
+
   static async hasCharacters(userId: string): Promise<boolean> {
     const query = 'SELECT 1 FROM characters WHERE user_id = $1 LIMIT 1';
     const result = await pool.query(query, [userId]);

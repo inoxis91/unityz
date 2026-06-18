@@ -31,6 +31,22 @@ export class OptionsComponent implements OnInit {
 
   birthdayValue = signal<string>('');
 
+  professionsList = [
+    { id: 'blacksmithing' },
+    { id: 'leatherworking' },
+    { id: 'tailoring' },
+    { id: 'alchemy' },
+    { id: 'jewelcrafting' },
+    { id: 'engineering' },
+    { id: 'inscription' },
+    { id: 'enchanting' },
+    { id: 'herbalism' },
+    { id: 'mining' },
+    { id: 'skinning' }
+  ];
+
+  selectedProfessions = signal<string[]>([]);
+
   constructor(
     public authService: AuthService, 
     private route: ActivatedRoute,
@@ -44,6 +60,11 @@ export class OptionsComponent implements OnInit {
         this.birthdayValue.set('');
       }
     });
+
+    effect(() => {
+      const userProfs = this.authService.currentUser()?.professions || [];
+      this.selectedProfessions.set([...userProfs]);
+    });
   }
 
   saveBirthday() {
@@ -51,6 +72,26 @@ export class OptionsComponent implements OnInit {
     this.authService.updateBirthday(val).subscribe({
       next: () => this.toast.success(this.i18n.t('options.birthday.toast_success')),
       error: () => this.toast.error(this.i18n.t('options.birthday.toast_error'))
+    });
+  }
+
+  hasProfession(profId: string): boolean {
+    return this.selectedProfessions().includes(profId);
+  }
+
+  toggleProfession(profId: string) {
+    const current = this.selectedProfessions();
+    if (current.includes(profId)) {
+      this.selectedProfessions.set(current.filter(p => p !== profId));
+    } else {
+      this.selectedProfessions.set([...current, profId]);
+    }
+  }
+
+  saveProfessions() {
+    this.authService.updateProfessions(this.selectedProfessions()).subscribe({
+      next: () => this.toast.success(this.i18n.t('options.professions.toast_success')),
+      error: () => this.toast.error(this.i18n.t('options.professions.toast_error'))
     });
   }
 

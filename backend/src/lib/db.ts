@@ -113,6 +113,7 @@ export const initDb = async () => {
         rank INTEGER,
         active_guild_id UUID REFERENCES guilds(id) ON DELETE SET NULL,
         birthday DATE,
+        professions VARCHAR(100)[] DEFAULT '{}'::VARCHAR[],
         created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
@@ -164,6 +165,16 @@ export const initDb = async () => {
       BEGIN 
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='discord_id') THEN
           ALTER TABLE users ADD COLUMN discord_id VARCHAR(255);
+        END IF;
+      END $$;
+    `);
+
+    // Ensure professions exists (migration for existing tables)
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='professions') THEN
+          ALTER TABLE users ADD COLUMN professions VARCHAR(100)[] DEFAULT '{}'::VARCHAR[];
         END IF;
       END $$;
     `);

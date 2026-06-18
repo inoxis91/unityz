@@ -465,3 +465,92 @@
 @media (max-width: 1024px) {
   .settings-grid { grid-template-columns: 1fr; }
 }
+
+/* Professions Styles */
+.professions-card-box {
+  grid-column: span 1;
+}
+
+.professions-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 600px) {
+  .professions-checkbox-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.profession-checkbox-item {
+  display: flex;
+  align-items: center;
+}
+
+.modern-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+.modern-checkbox-label input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkbox-custom {
+  height: 18px;
+  width: 18px;
+  background-color: #f1f5f9;
+  border: 2px solid #cbd5e1;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: inline-block;
+  position: relative;
+}
+
+.modern-checkbox-label:hover input ~ .checkbox-custom {
+  background-color: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+.modern-checkbox-label input:checked ~ .checkbox-custom {
+  background-color: #0074e0;
+  border-color: #0074e0;
+}
+
+.checkbox-custom::after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.modern-checkbox-label input:checked ~ .checkbox-custom::after {
+  display: block;
+}
+
+.profession-name {
+  transition: color 0.2s;
+}
+
+.modern-checkbox-label input:checked ~ .profession-name {
+  color: #0f172a;
+}

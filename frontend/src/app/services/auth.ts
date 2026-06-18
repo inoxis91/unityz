@@ -25,6 +25,7 @@ export interface User {
   updated_at?: string;
   characters?: any[];
   birthday?: string | null;
+  professions?: string[];
 }
 
 @Injectable({
@@ -122,6 +123,14 @@ export class AuthService {
 
   updateBirthday(birthday: string | null): Observable<User> {
     return this.http.patch<User>(`${this.apiUrl}/users/birthday`, { birthday }, { withCredentials: true }).pipe(
+      switchMap(user => this.checkAuth().pipe(
+        map(() => user)
+      ))
+    );
+  }
+
+  updateProfessions(professions: string[]): Observable<User> {
+    return this.http.patch<User>(`${this.apiUrl}/users/professions`, { professions }, { withCredentials: true }).pipe(
       switchMap(user => this.checkAuth().pipe(
         map(() => user)
       ))

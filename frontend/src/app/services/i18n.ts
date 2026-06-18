@@ -607,6 +607,25 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'options.birthday.toast_success': "Date d'anniversaire mise à jour.",
     'options.birthday.toast_error': "Erreur lors de la mise à jour.",
 
+    // Options Professions Settings
+    'options.professions.title': 'Mes Métiers',
+    'options.professions.desc': 'Sélectionnez vos métiers en jeu pour recevoir des notifications Discord privées lorsqu\'un membre fait une demande de craft correspondante !',
+    'options.professions.save': 'Enregistrer mes métiers',
+    'options.professions.toast_success': 'Métiers mis à jour avec succès.',
+    'options.professions.toast_error': 'Erreur lors de la mise à jour des métiers.',
+
+    'profession.blacksmithing': 'Forge',
+    'profession.leatherworking': 'Travail du cuir',
+    'profession.tailoring': 'Couture',
+    'profession.alchemy': 'Alchimie',
+    'profession.jewelcrafting': 'Joaillerie',
+    'profession.engineering': 'Ingénierie',
+    'profession.inscription': 'Inscription',
+    'profession.enchanting': 'Enchantement',
+    'profession.herbalism': 'Herboristerie',
+    'profession.mining': 'Minage',
+    'profession.skinning': 'Dépeçage',
+
     // Character Classes
     'class.warrior': 'Guerrier',
     'class.paladin': 'Paladin',
@@ -1226,6 +1245,25 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'options.birthday.save': 'Save',
     'options.birthday.toast_success': 'Birthday updated successfully.',
     'options.birthday.toast_error': 'Error updating birthday.',
+
+    // Options Professions Settings
+    'options.professions.title': 'My Professions',
+    'options.professions.desc': 'Select your in-game professions to receive private Discord DMs when a guild member makes a matching craft request!',
+    'options.professions.save': 'Save my professions',
+    'options.professions.toast_success': 'Professions updated successfully.',
+    'options.professions.toast_error': 'Error updating professions.',
+
+    'profession.blacksmithing': 'Blacksmithing',
+    'profession.leatherworking': 'Leatherworking',
+    'profession.tailoring': 'Tailoring',
+    'profession.alchemy': 'Alchemy',
+    'profession.jewelcrafting': 'Jewelcrafting',
+    'profession.engineering': 'Engineering',
+    'profession.inscription': 'Inscription',
+    'profession.enchanting': 'Enchanting',
+    'profession.herbalism': 'Herbalism',
+    'profession.mining': 'Mining',
+    'profession.skinning': 'Skinning',
 
     // Character Classes
     'class.warrior': 'Warrior',

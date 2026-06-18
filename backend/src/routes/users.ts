@@ -140,6 +140,23 @@ router.patch('/birthday', isAuthenticated, validate(updateBirthdaySchema), async
   }
 });
 
+const updateProfessionsSchema = z.object({
+  body: z.object({
+    professions: z.array(z.string().min(1).max(100)).max(20),
+  }),
+});
+
+// PATCH /api/users/professions : Met à jour ses propres métiers
+router.patch('/professions', isAuthenticated, validate(updateProfessionsSchema), async (req, res, next) => {
+  try {
+    const { professions } = req.body;
+    const user = await UserService.updateProfessions(req.user!.id, professions);
+    res.json(user);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/users/active-guild/birthdays : Récupère les anniversaires du mois en cours pour la guilde active
 router.get('/active-guild/birthdays', isAuthenticated, async (req, res, next) => {
   try {

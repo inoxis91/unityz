@@ -35,6 +35,8 @@ const TRANSLATIONS: Record<SupportedDiscordLocale, Record<string, string>> = {
     'discord.craft.type_label': '• **Type d\'armure / arme :** {type}',
     'discord.craft.footer': '_Répondez à cette demande directement sur le site de la guilde !_',
     'discord.craft.no_char': 'Sans Personnage',
+    'discord.craft.dm_title': '🛠️ **BESOIN DE TON MÉTIER POUR UN CRAFT !**',
+    'discord.craft.dm_body': 'Bonjour ! Une demande de craft correspondant à l\'un de tes métiers a été faite dans la guilde. 🚀',
 
     // Fees Service
     'discord.fees.embed_title': 'Nouvelle Déclaration de Cotisation',
@@ -106,6 +108,8 @@ const TRANSLATIONS: Record<SupportedDiscordLocale, Record<string, string>> = {
     'discord.craft.type_label': '• **Armor / Weapon Type:** {type}',
     'discord.craft.footer': '_Reply to this request directly on the guild website!_',
     'discord.craft.no_char': 'No Character',
+    'discord.craft.dm_title': '🛠️ **CRAFT REQUEST FOR YOUR PROFESSION!**',
+    'discord.craft.dm_body': 'Hello! A craft request matching one of your professions has been submitted in the guild. 🚀',
 
     // Fees Service
     'discord.fees.embed_title': 'New Membership Fee Declaration',

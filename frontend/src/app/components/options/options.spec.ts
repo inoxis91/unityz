@@ -13,12 +13,13 @@ describe('OptionsComponent', () => {
   let fixture: ComponentFixture<OptionsComponent>;
 
   const mockAuthService = {
-    currentUser: () => ({ id: 1, role: 'member', subscription_tier: 'free', subscription_expires_at: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), subscription_status: 'active' }),
+    currentUser: () => ({ id: 1, role: 'member', subscription_tier: 'free', subscription_expires_at: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), subscription_status: 'active', professions: ['alchemy'] }),
     currentGuild: () => ({ name: 'Test Guild' }),
     isGMOrOfficer: () => true,
     isAdmin: () => false,
     checkAuth: () => of({}),
-    updateDiscordId: () => of({})
+    updateDiscordId: () => of({}),
+    updateProfessions: () => of({})
   };
 
   const mockI18nService = {
@@ -84,5 +85,23 @@ describe('OptionsComponent', () => {
     expect(component.getTierLabel('medium')).toBe('options.sub.tier_medium');
     expect(component.getTierLabel('pro')).toBe('options.sub.tier_pro');
     expect(component.getTierLabel(undefined)).toBe('options.sub.tier_none');
+  });
+
+  it('should correctly determine if user has a profession', () => {
+    expect(component.hasProfession('alchemy')).toBe(true);
+    expect(component.hasProfession('tailoring')).toBe(false);
+  });
+
+  it('should toggle professions correctly', () => {
+    component.toggleProfession('tailoring');
+    expect(component.hasProfession('tailoring')).toBe(true);
+    component.toggleProfession('alchemy');
+    expect(component.hasProfession('alchemy')).toBe(false);
+  });
+
+  it('should call updateProfessions when saving', () => {
+    const spy = vi.spyOn(mockAuthService, 'updateProfessions');
+    component.saveProfessions();
+    expect(spy).toHaveBeenCalled();
   });
 });

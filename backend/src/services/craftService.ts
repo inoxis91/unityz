@@ -1,5 +1,5 @@
 import pool from '../lib/db';
-import { sendDiscordChannelMessageWithResult, reactToDiscordMessage } from '../lib/discord';
+import { sendDiscordChannelMessageWithResult, reactToDiscordMessage, sendDiscordDM } from '../lib/discord';
 import { t, getDiscordLocale } from '../lib/i18n';
 
 export interface CraftRequest {
@@ -45,6 +45,43 @@ const ARMOR_TRANSLATIONS_FR: Record<string, string> = {
   twohanded: 'Arme 2 mains'
 };
 
+export const getProfessionsForCraft = (slot: string, armorType: string): string[] => {
+  const professions: string[] = [];
+
+  // Match based on slot & armorType
+  if (armorType === 'leather' || armorType === 'mail') {
+    professions.push('leatherworking');
+  } else if (armorType === 'plate') {
+    professions.push('blacksmithing');
+  } else if (armorType === 'cloth' || slot === 'back') {
+    professions.push('tailoring');
+  }
+
+  if (slot === 'neck' || slot === 'finger') {
+    professions.push('jewelcrafting');
+  }
+
+  if (slot === 'weapon') {
+    if (armorType === 'staff') {
+      professions.push('inscription');
+    } else if (armorType === 'wand') {
+      professions.push('enchanting');
+    } else {
+      professions.push('blacksmithing', 'engineering', 'inscription');
+    }
+  }
+
+  if (slot === 'trinket') {
+    professions.push('jewelcrafting', 'alchemy', 'engineering');
+  }
+
+  if (armorType === 'other') {
+    professions.push('alchemy', 'enchanting', 'inscription');
+  }
+
+  return professions;
+};
+
 export class CraftService {
   static async create(guildId: string, userId: string, slot: string, armorType: string): Promise<CraftRequest> {
     // 1. Insert into database
@@ -77,7 +114,7 @@ export class CraftService {
       );
       const guild = guildRes.rows[0];
 
-      if (guild && guild.discord_enabled && guild.discord_crafts_channel_id && user) {
+      if (guild && guild.discord_enabled && user) {
         const locale = getDiscordLocale(guild);
         const slotLabel = t(locale, `slot.${slot}`);
         const typeLabel = t(locale, `armor.${armorType}`);
@@ -86,19 +123,52 @@ export class CraftService {
 
         const requesterText = charName !== t(locale, 'discord.craft.no_char') ? charName : btag;
 
-        let msg = `${t(locale, 'discord.craft.title')}\n`;
-        msg += `${t(locale, 'discord.craft.body', { requesterText })}\n\n`;
-        msg += `${t(locale, 'discord.craft.item_label', { slot: slotLabel })}\n`;
-        msg += `${t(locale, 'discord.craft.type_label', { type: typeLabel })}\n\n`;
-        msg += t(locale, 'discord.craft.footer');
+        // A. Channel Notification
+        if (guild.discord_crafts_channel_id) {
+          let msg = `${t(locale, 'discord.craft.title')}\n`;
+          msg += `${t(locale, 'discord.craft.body', { requesterText })}\n\n`;
+          msg += `${t(locale, 'discord.craft.item_label', { slot: slotLabel })}\n`;
+          msg += `${t(locale, 'discord.craft.type_label', { type: typeLabel })}\n\n`;
+          msg += t(locale, 'discord.craft.footer');
 
-        const messageId = await sendDiscordChannelMessageWithResult(guild.discord_crafts_channel_id, msg);
-        if (messageId) {
-          await pool.query(
-            'UPDATE craft_requests SET discord_message_id = $1 WHERE id = $2',
-            [messageId, craft.id]
-          );
-          craft.discord_message_id = messageId;
+          const messageId = await sendDiscordChannelMessageWithResult(guild.discord_crafts_channel_id, msg);
+          if (messageId) {
+            await pool.query(
+              'UPDATE craft_requests SET discord_message_id = $1 WHERE id = $2',
+              [messageId, craft.id]
+            );
+            craft.discord_message_id = messageId;
+          }
+        }
+
+        // B. Private Messages (DMs) to matching players with appropriate professions
+        const professions = getProfessionsForCraft(slot, armorType);
+        if (professions.length > 0) {
+          const matchingUsersRes = await pool.query(`
+            SELECT DISTINCT u.id, u.discord_id, u.battletag
+            FROM users u
+            JOIN characters c ON u.id = c.user_id
+            WHERE (c.guild_id = $1 OR u.active_guild_id = $1)
+              AND u.discord_id IS NOT NULL
+              AND u.discord_id <> ''
+              AND u.id <> $2
+              AND u.professions && $3::VARCHAR[]
+          `, [guildId, userId, professions]);
+
+          for (const targetUser of matchingUsersRes.rows) {
+            try {
+              let dmMsg = `${t(locale, 'discord.craft.dm_title')}\n`;
+              dmMsg += `${t(locale, 'discord.craft.dm_body')}\n\n`;
+              dmMsg += `• **${t(locale, 'discord.fees.label_member') || 'Membre'} :** ${requesterText}\n`;
+              dmMsg += `${t(locale, 'discord.craft.item_label', { slot: slotLabel })}\n`;
+              dmMsg += `${t(locale, 'discord.craft.type_label', { type: typeLabel })}\n\n`;
+              dmMsg += t(locale, 'discord.craft.footer');
+
+              await sendDiscordDM(targetUser.discord_id, dmMsg);
+            } catch (dmErr) {
+              console.error(`[Discord] Failed to send craft DM to user ${targetUser.id}:`, dmErr);
+            }
+          }
         }
       }
     } catch (discordErr) {

@@ -109,6 +109,31 @@
         </div>
       </div>
 
+      <!-- Professions Card -->
+      <div class="card settings-card professions-card-box">
+        <div class="card-icon">⚒️</div>
+        <div class="card-body">
+          <h3>{{ i18n.t('options.professions.title') }}</h3>
+          <p style="margin: 0 0 1.25rem 0; font-size: 0.85rem; color: #64748b; line-height: 1.5;">
+            {{ i18n.t('options.professions.desc') }}
+          </p>
+          <div class="professions-checkbox-grid">
+            <div *ngFor="let prof of professionsList" class="profession-checkbox-item">
+              <label class="modern-checkbox-label">
+                <input type="checkbox" [checked]="hasProfession(prof.id)" (change)="toggleProfession(prof.id)">
+                <span class="checkbox-custom"></span>
+                <span class="profession-name">{{ i18n.t('profession.' + prof.id) }}</span>
+              </label>
+            </div>
+          </div>
+          <div style="margin-top: 1.25rem; display: flex; justify-content: flex-end;">
+            <button class="btn-primary" (click)="saveProfessions()" style="padding: 10px 18px; font-size: 0.9rem; font-weight: 700; border-radius: 12px; cursor: pointer; transition: all 0.2s; background: #0074e0; color: white; border: none; height: 44px; display: flex; align-items: center; justify-content: center; white-space: nowrap;">
+              {{ i18n.t('options.professions.save') }}
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Guild Subscription Card -->
       <div class="card settings-card subscription-highlight">
         <div class="card-icon">👑</div>
