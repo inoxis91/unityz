@@ -528,7 +528,8 @@
 .warning-box { background: #fffbeb; border: 1px solid #fef3c7; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; }
 .btn-action { width: 100%; padding: 14px 20px; border-radius: 14px; font-size: 1rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.3s; border: none; }
 .btn-action.confirm { background: #0074e0; color: white; box-shadow: 0 4px 12px rgba(0, 116, 224, 0.2); }
-.btn-action.confirm:hover { background: #0056a3; transform: translateY(-2px); }
+.btn-action.confirm:hover:not(:disabled) { background: #0056a3; transform: translateY(-2px); }
+.btn-action:disabled { background: #cbd5e1 !important; color: #94a3b8 !important; cursor: not-allowed !important; transform: none !important; box-shadow: none !important; }
 
 /* MM+ Composition Mode */
 .mm-composition-layout {
