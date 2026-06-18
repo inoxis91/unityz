@@ -32,17 +32,14 @@ export class OptionsComponent implements OnInit {
   birthdayValue = signal<string>('');
 
   professionsList = [
-    { id: 'blacksmithing' },
-    { id: 'leatherworking' },
-    { id: 'tailoring' },
     { id: 'alchemy' },
-    { id: 'jewelcrafting' },
-    { id: 'engineering' },
     { id: 'inscription' },
+    { id: 'tailoring' },
     { id: 'enchanting' },
-    { id: 'herbalism' },
-    { id: 'mining' },
-    { id: 'skinning' }
+    { id: 'blacksmithing' },
+    { id: 'engineering' },
+    { id: 'jewelcrafting' },
+    { id: 'leatherworking' }
   ];
 
   selectedProfessions = signal<string[]>([]);

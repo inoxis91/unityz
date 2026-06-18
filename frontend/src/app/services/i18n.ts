@@ -619,12 +619,9 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'profession.tailoring': 'Couture',
     'profession.alchemy': 'Alchimie',
     'profession.jewelcrafting': 'Joaillerie',
-    'profession.engineering': 'Ingénierie',
-    'profession.inscription': 'Inscription',
+    'profession.engineering': 'Ingénieurie',
+    'profession.inscription': 'Calligraphie',
     'profession.enchanting': 'Enchantement',
-    'profession.herbalism': 'Herboristerie',
-    'profession.mining': 'Minage',
-    'profession.skinning': 'Dépeçage',
 
     // Character Classes
     'class.warrior': 'Guerrier',
@@ -1261,9 +1258,6 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'profession.engineering': 'Engineering',
     'profession.inscription': 'Inscription',
     'profession.enchanting': 'Enchanting',
-    'profession.herbalism': 'Herbalism',
-    'profession.mining': 'Mining',
-    'profession.skinning': 'Skinning',
 
     // Character Classes
     'class.warrior': 'Warrior',
