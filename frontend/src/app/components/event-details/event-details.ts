@@ -148,6 +148,14 @@ export class EventDetailsComponent implements OnInit {
     return this.myCharacters().filter(c => this.isCharacterAllowed(c));
   });
 
+  isSignupDisabled = computed(() => {
+    if (!this.event()) return true;
+    if (this.signupStatus === 'absent') return false;
+    if (!this.selectedCharacterId) return true;
+    const char = this.myCharacters().find(c => c.id === this.selectedCharacterId);
+    return !char || !this.isCharacterAllowed(char);
+  });
+
   isCharacterAllowed(char: Character): boolean {
     const evt = this.event();
     if (!evt || !evt.roster_id) return true;
@@ -385,7 +393,7 @@ export class EventDetailsComponent implements OnInit {
   }
 
   onSignup() {
-    if (!this.event()) return;
+    if (!this.event() || this.isSignupDisabled()) return;
     const signupData = {
       character_id: this.signupStatus === 'absent' ? null : this.selectedCharacterId,
       role: this.selectedRole,

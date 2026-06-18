@@ -132,7 +132,7 @@
         </div>
 
         <div class="actions">
-          <button class="btn-action confirm" (click)="onSignup()">
+          <button class="btn-action confirm" (click)="onSignup()" [disabled]="isSignupDisabled()">
             <span class="icon">💾</span> {{ i18n.t('event.details.btn_save_choice') }}
           </button>
         </div>
