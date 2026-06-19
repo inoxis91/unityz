@@ -92,7 +92,6 @@
     <app-logs-dashboard [eventId]="event()!.id!"></app-logs-dashboard>
   </div>
 </div>
-</div>
 
 <!-- Modal de Modification (Admin Only) -->
 <div class="modal-overlay" *ngIf="showEditModal() && canManageEvents()" (click)="showEditModal.set(false)">
