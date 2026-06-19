@@ -26,6 +26,21 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'admin.tab.fees': 'Cotisations',
     'admin.tab.settings': 'Configuration Guilde',
 
+    // Admin Absences
+    'admin.absences.title': 'Suivi des Absences des Membres',
+    'admin.absences.subtitle': 'Suivi global et historique des absences déclarées par les membres de la guilde.',
+    'admin.absences.search_placeholder': 'Rechercher un membre ou un motif...',
+    'admin.absences.th_member': 'Membre',
+    'admin.absences.th_main_char': 'Perso Principal',
+    'admin.absences.th_start': 'Date de Début',
+    'admin.absences.th_end': 'Date de Fin',
+    'admin.absences.th_reason': 'Motif / Commentaire',
+    'admin.absences.th_actions': 'Actions',
+    'admin.absences.btn_delete': 'Retirer',
+    'admin.absences.status_active': 'En cours',
+    'admin.absences.loading': 'Chargement des absences...',
+    'admin.absences.empty_state': 'Aucune absence déclarée ne correspond à votre recherche.',
+
     // Absences Section
     'absences.title': 'Déclarer une absence',
     'absences.subtitle': 'Planifiez vos absences pour que les officiers sachent quand vous ne serez pas disponible.',
@@ -696,6 +711,21 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'admin.tab.absences': 'Absences',
     'admin.tab.fees': 'Fees Ledger',
     'admin.tab.settings': 'Guild Settings',
+
+    // Admin Absences
+    'admin.absences.title': 'Member Absences Tracker',
+    'admin.absences.subtitle': 'Global overview and history of absences declared by guild members.',
+    'admin.absences.search_placeholder': 'Search a member or a reason...',
+    'admin.absences.th_member': 'Member',
+    'admin.absences.th_main_char': 'Main Character',
+    'admin.absences.th_start': 'Start Date',
+    'admin.absences.th_end': 'End Date',
+    'admin.absences.th_reason': 'Reason / Note',
+    'admin.absences.th_actions': 'Actions',
+    'admin.absences.btn_delete': 'Remove',
+    'admin.absences.status_active': 'Ongoing',
+    'admin.absences.loading': 'Loading absences...',
+    'admin.absences.empty_state': 'No absences match your search.',
 
     // Absences Section
     'absences.title': 'Declare an Absence',

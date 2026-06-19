@@ -45,15 +45,29 @@ export class AdminAbsencesComponent implements OnInit {
 
   getFilteredList = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
-    if (!term) return this.absencesList();
+    let list = this.absencesList();
 
-    return this.absencesList().filter(item => {
-      const btag = item.battletag ? item.battletag.toLowerCase() : '';
-      const charName = item.main_character_name ? item.main_character_name.toLowerCase() : '';
-      const reason = item.reason ? item.reason.toLowerCase() : '';
-      return btag.includes(term) || charName.includes(term) || reason.includes(term);
-    });
+    if (term) {
+      list = list.filter(item => {
+        const btag = item.battletag ? item.battletag.toLowerCase() : '';
+        const charName = item.main_character_name ? item.main_character_name.toLowerCase() : '';
+        const reason = item.reason ? item.reason.toLowerCase() : '';
+        return btag.includes(term) || charName.includes(term) || reason.includes(term);
+      });
+    }
+
+    // Sort by start_date descending (newest first)
+    return [...list].sort((a, b) => b.start_date.localeCompare(a.start_date));
   });
+
+  isAbsenceActive(startDate: string, endDate: string): boolean {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
+    return todayStr >= startDate && todayStr <= endDate;
+  }
 
   onDelete(id: string) {
     this.confirmService.ask(

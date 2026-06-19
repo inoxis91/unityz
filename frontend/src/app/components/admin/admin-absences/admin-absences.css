@@ -1,53 +1,61 @@
 .admin-absences-container {
-  color: white;
-  animation: fadeIn 0.4s ease-out;
+  padding: 1rem;
 }
 
 .absences-header-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 2rem;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .absences-header-row h2 {
-  font-size: 1.8rem;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
   font-weight: 800;
-  margin: 0;
-  color: #f1f5f9;
-  letter-spacing: -0.02em;
+  color: #0f172a;
 }
 
 .absences-header-row .subtitle {
-  color: #94a3b8;
-  margin-top: 0.25rem;
+  margin: 0;
+  color: #64748b;
   font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 .btn-refresh {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #f1f5f9;
-  padding: 0.6rem 1.2rem;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
+  background: white;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  padding: 0.6rem 1.25rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
 }
 
 .btn-refresh:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
+
+.btn-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .refresh-icon {
+  font-size: 1rem;
   display: inline-block;
-  font-size: 0.9rem;
 }
 
 .refresh-icon.spinning {
@@ -59,52 +67,87 @@
   to { transform: rotate(360deg); }
 }
 
-.search-bar-row {
+.filters-row {
   margin-bottom: 1.5rem;
-  display: flex;
-  gap: 1rem;
 }
 
 .search-box {
-  flex: 1;
-  max-width: 450px;
+  position: relative;
+  max-width: 400px;
 }
 
-.form-control {
-  background-color: #0f172a;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  padding: 0.75rem 1rem;
-  color: white;
-  font-size: 0.95rem;
-  font-family: inherit;
-  transition: all 0.2s ease;
+.search-box .search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.search-box input {
   width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  font-size: 0.95rem;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.2s;
   box-sizing: border-box;
 }
 
-.form-control:focus {
-  outline: none;
+.search-box input:focus {
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  background: white;
 }
 
+/* Loading and Empty States */
 .loading-state, .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
   text-align: center;
-  padding: 4rem 1rem;
-  color: #94a3b8;
-  font-size: 1rem;
-  background-color: #1e293b;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: white;
+  border-radius: 20px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.02);
 }
 
+.loading-state .spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f1f5f9;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+.loading-state p {
+  color: #64748b;
+  font-weight: 600;
+  margin: 0;
+}
+
+.empty-state p {
+  color: #64748b;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Absences Table */
 .absences-table-wrapper {
-  background-color: #1e293b;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  overflow-x: auto;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
 }
 
 .absences-table {
@@ -114,21 +157,22 @@
 }
 
 .absences-table th {
-  background-color: #0f172a;
+  background-color: #f8fafc;
   padding: 1.1rem 1.5rem;
   font-weight: 700;
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #94a3b8;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #64748b;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .absences-table td {
   padding: 1.1rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid #f1f5f9;
   font-size: 0.95rem;
-  color: #e2e8f0;
+  color: #334155;
+  vertical-align: middle;
 }
 
 .absences-table tr:last-child td {
@@ -136,12 +180,39 @@
 }
 
 .absences-table tr:hover td {
-  background-color: rgba(255, 255, 255, 0.01);
+  background-color: #f8fafc;
+}
+
+/* Active/Ongoing Absence Row Highlighting */
+.absences-table tr.active-absence-row td {
+  background-color: #f0fdf4 !important;
+}
+
+.absences-table tr.active-absence-row:hover td {
+  background-color: #dcfce7 !important;
+}
+
+.member-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .member-cell .battletag {
   font-weight: 700;
-  color: #f1f5f9;
+  color: #0f172a;
+}
+
+.active-badge {
+  background-color: #22c55e;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
 }
 
 .character-cell {
@@ -155,8 +226,14 @@
 }
 
 .class-label {
-  color: #64748b;
+  color: #94a3b8;
   font-size: 0.85rem;
+}
+
+.no-char {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-style: italic;
 }
 
 .date-cell {
@@ -165,7 +242,7 @@
 }
 
 .date-cell.start-date {
-  color: #60a5fa;
+  color: #3b82f6;
 }
 
 .date-cell.end-date {
@@ -177,7 +254,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #94a3b8;
+  color: #64748b;
 }
 
 .actions-col, .actions-cell {
@@ -185,9 +262,9 @@
 }
 
 .btn-delete {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  background-color: #fef2f2;
+  color: #ef4444;
+  border: 1px solid #fee2e2;
   padding: 0.5rem 1rem;
   border-radius: 8px;
   cursor: pointer;
@@ -195,7 +272,7 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
   transition: all 0.2s ease;
 }
 
@@ -203,7 +280,7 @@
   background-color: #ef4444;
   color: white;
   border-color: #ef4444;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
 }
 
 .delete-icon {
