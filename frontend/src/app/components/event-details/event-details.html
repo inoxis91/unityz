@@ -646,6 +646,21 @@
         </div>
       </div>
 
+      <!-- Warning: Missing API Credentials Banner -->
+      <div class="logs-warning-banner animated-fade-in" *ngIf="logsMetrics()?.wclKeysMissing">
+        <span class="banner-icon">💡</span>
+        <div class="banner-content">
+          <h4>Données de démonstration actives</h4>
+          <p>
+            Le backend utilise actuellement des données simulées réalistes pour cette démonstration car aucune clé d'API Warcraft Logs (WCL_CLIENT_ID / WCL_CLIENT_SECRET) n'est configurée dans votre fichier <code>backend/.env</code>.
+          </p>
+          <p class="small">
+            Pour afficher les véritables données de ce combat, créez un client gratuit sur 
+            <a href="https://www.warcraftlogs.com/api/clients/" target="_blank" rel="noopener noreferrer">WCL Developer Portal</a>, renseignez les clés, et redémarrez votre serveur.
+          </p>
+        </div>
+      </div>
+
       <!-- Loading / Error states -->
       <div class="logs-loading-card" *ngIf="loadingLogs()">
         <div class="spinner"></div>

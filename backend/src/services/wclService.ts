@@ -40,6 +40,7 @@ export interface WclReportMetrics {
   mostDeadlyBoss: string;
   mvpPlayer: { name: string; class: string; score: number };
   fights: WclFight[];
+  wclKeysMissing?: boolean;
 }
 
 // Fallback boss list for procedural generator
@@ -409,7 +410,9 @@ export class WclService {
     }
 
     // 4. Fallback: Procedural generator (if WCL fails or credentials missing)
-    return this.generateSimulatedMetrics(event, participants);
+    const fallbackMetrics = this.generateSimulatedMetrics(event, participants);
+    fallbackMetrics.wclKeysMissing = true;
+    return fallbackMetrics;
   }
 
   /**

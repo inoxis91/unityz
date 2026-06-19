@@ -82,6 +82,7 @@ export interface WclReportMetrics {
   mostDeadlyBoss: string;
   mvpPlayer: { name: string; class: string; score: number };
   fights: WclFight[];
+  wclKeysMissing?: boolean;
 }
 
 @Injectable({
