@@ -108,6 +108,7 @@ async function run() {
               damageTable: table(fightIDs: [$fightId], dataType: DamageDone)
               healingTable: table(fightIDs: [$fightId], dataType: Healing)
               rankings: rankings(fightIDs: [$fightId])
+              deathsTable: table(fightIDs: [$fightId], dataType: Deaths)
             }
           }
         }
@@ -133,11 +134,13 @@ async function run() {
       const dEntries = tables?.damageTable?.data?.entries || [];
       const hEntries = tables?.healingTable?.data?.entries || [];
       const rankings = tables?.rankings || {};
+      const deathsEntries = tables?.deathsTable?.data?.entries || [];
 
       console.log('✅ Tables fetched successfully!');
       console.log(`DamageDone entries: ${dEntries.length}`);
       console.log(`Healing entries: ${hEntries.length}`);
-      console.log('Full JSON of rankings:', JSON.stringify(rankings, null, 2));
+      console.log(`Deaths entries: ${deathsEntries.length}`);
+      console.log('Full JSON of first 3 deaths:', JSON.stringify(deathsEntries.slice(0, 3), null, 2));
       if (dEntries.length > 0) {
         console.log('Full JSON of first Damage Entry:', JSON.stringify(dEntries[0], null, 2));
         console.log('Top 3 Damage Entries:', dEntries.slice(0, 3).map((e: any) => `${entryInfo(e)}`).join(', '));

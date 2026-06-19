@@ -80,7 +80,7 @@ export interface WclReportMetrics {
   totalHealing: number;
   raidAvgDps: number;
   raidAvgHps: number;
-  avgSurvivalRate: number;
+  totalDeaths: number;
   avgActiveTime: number;
   mostDeadlyBoss: string;
   mvpPlayer: { name: string; class: string; score: number };

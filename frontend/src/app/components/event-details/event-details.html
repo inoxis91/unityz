@@ -679,12 +679,12 @@
         <div class="logs-overview-panel animated-fade-in" *ngIf="logsSubTab() === 'overview'">
           <div class="logs-stats-grid">
             <div class="stat-card">
-              <span class="label">Survivabilité Raid</span>
-              <span class="value duration-text" style="color: #d97706 !important;">{{ logsMetrics()!.avgSurvivalRate }}%</span>
-              <span class="sub-label">Taux de Survie Moyen</span>
+              <span class="label">Total des Morts</span>
+              <span class="value duration-text" style="color: #dc2626 !important;">☠️ {{ logsMetrics()!.totalDeaths }}</span>
+              <span class="sub-label">Sur l'ensemble du log</span>
             </div>
             <div class="stat-card">
-              <span class="label">Activité Raid</span>
+              <span class="label">Activité Moyenne</span>
               <span class="value heal-text" style="color: #4f46e5 !important;">{{ logsMetrics()!.avgActiveTime }}%</span>
               <span class="sub-label">Temps actif moyen</span>
             </div>
@@ -788,10 +788,10 @@
                   <h4>⚔️ Top DPS</h4>
                   <div class="brief-ranking-list">
                     @for (p of getSortedPlayersForSelectedFight().slice(0, 5); track p.name) {
-                      <div class="ranking-row" [class]="'class-' + p.class">
+                      <div class="ranking-row">
                         <div class="rank-name-col">
                           <span class="rank-num">{{ $index + 1 }}</span>
-                          <span class="player-name">{{ p.name }}</span>
+                          <span class="player-name" [class]="'text-class-' + p.class">{{ p.name }}</span>
                         </div>
                         <div class="rank-bar-col">
                           <div class="progress-bar-bg">
@@ -809,10 +809,10 @@
                   <div class="brief-ranking-list">
                     @for (p of getSortedHealersForFight(fight.players).slice(0, 5); track p.name) {
                       @if (p.hps > 0) {
-                        <div class="ranking-row" [class]="'class-' + p.class">
+                        <div class="ranking-row">
                           <div class="rank-name-col">
                             <span class="rank-num">{{ $index + 1 }}</span>
-                            <span class="player-name">{{ p.name }}</span>
+                            <span class="player-name" [class]="'text-class-' + p.class">{{ p.name }}</span>
                           </div>
                           <div class="rank-bar-col">
                             <div class="progress-bar-bg">
@@ -874,7 +874,7 @@
                     <td>
                       <div class="player-cell">
                         <img [src]="'assets/icons/class/' + getClassIcon(player.class)" class="class-icon-img" alt="">
-                        <span class="player-name-bold" [class]="'class-' + player.class">{{ player.name }}</span>
+                        <span class="player-name-bold" [class]="'text-class-' + player.class">{{ player.name }}</span>
                       </div>
                     </td>
                     <td>
@@ -887,7 +887,7 @@
                     <td class="text-slate-600">{{ formatNumberWithSpaces(player.damageTaken) }}</td>
                     <td>
                       <span class="death-pill" [class.dead]="player.deaths > 0">
-                        {{ player.deaths > 0 ? '☠️ ' + player.deaths : '✓' }}
+                        {{ player.deaths > 0 ? '☠️ ' + player.deaths : '0' }}
                       </span>
                     </td>
                     <td class="font-bold" [class.text-amber-600]="player.activeTime < 90" [class.text-emerald-600]="player.activeTime >= 95">
