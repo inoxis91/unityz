@@ -42,6 +42,8 @@ export interface WclReportMetrics {
   avgActiveTime: number;
   mostDeadlyBoss: string;
   mvpPlayer: { name: string; class: string; score: number };
+  mostDiedPlayer: { name: string; class: string; deaths: number } | null;
+  leastDiedPlayer: { name: string; class: string; deaths: number } | null;
   fights: WclFight[];
   wclKeysMissing?: boolean;
 }
@@ -505,6 +507,41 @@ export class WclService {
       }
     }
 
+    // Calculate player total deaths across all fights
+    const playerDeaths: Record<string, { class: string; deaths: number }> = {};
+    fights.forEach(f => {
+      f.players.forEach(p => {
+        if (!playerDeaths[p.name]) {
+          playerDeaths[p.name] = { class: p.class, deaths: 0 };
+        }
+        playerDeaths[p.name].deaths += p.deaths;
+      });
+    });
+
+    let mostDiedName = '';
+    let mostDiedClass = '';
+    let maxPlayerDeaths = -1;
+
+    let leastDiedName = '';
+    let leastDiedClass = '';
+    let minPlayerDeaths = 999999;
+
+    for (const [name, info] of Object.entries(playerDeaths)) {
+      if (info.deaths > maxPlayerDeaths) {
+        maxPlayerDeaths = info.deaths;
+        mostDiedName = name;
+        mostDiedClass = info.class;
+      }
+      if (info.deaths < minPlayerDeaths) {
+        minPlayerDeaths = info.deaths;
+        leastDiedName = name;
+        leastDiedClass = info.class;
+      }
+    }
+
+    const mostDiedPlayer = mostDiedName ? { name: mostDiedName, class: mostDiedClass, deaths: maxPlayerDeaths } : null;
+    const leastDiedPlayer = leastDiedName ? { name: leastDiedName, class: leastDiedClass, deaths: minPlayerDeaths } : null;
+
     // Calculate survival and active time averages
     let totalPlayerFights = 0;
     let totalDeaths = 0;
@@ -538,6 +575,8 @@ export class WclService {
       avgActiveTime,
       mostDeadlyBoss,
       mvpPlayer: { name: mvpName, class: mvpClass, score: Math.round(maxScore) },
+      mostDiedPlayer,
+      leastDiedPlayer,
       fights
     };
   }

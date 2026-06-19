@@ -84,6 +84,8 @@ export interface WclReportMetrics {
   avgActiveTime: number;
   mostDeadlyBoss: string;
   mvpPlayer: { name: string; class: string; score: number };
+  mostDiedPlayer: { name: string; class: string; deaths: number } | null;
+  leastDiedPlayer: { name: string; class: string; deaths: number } | null;
   fights: WclFight[];
   wclKeysMissing?: boolean;
 }

@@ -683,10 +683,22 @@
               <span class="value duration-text" style="color: #dc2626 !important;">☠️ {{ logsMetrics()!.totalDeaths }}</span>
               <span class="sub-label">Sur l'ensemble du log</span>
             </div>
-            <div class="stat-card">
-              <span class="label">Activité Moyenne</span>
-              <span class="value heal-text" style="color: #4f46e5 !important;">{{ logsMetrics()!.avgActiveTime }}%</span>
-              <span class="sub-label">Temps actif moyen</span>
+            <div class="stat-card" style="justify-content: space-between;">
+              <span class="label">Survie Individuelle</span>
+              <div class="survival-info-content" style="width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+                <div class="survival-row flex-row" style="justify-content: space-between; width: 100%; font-size: 0.9rem; font-weight: 750;">
+                  <span class="lbl-survival" style="color: #16a34a; font-weight: 800;">🛡️ Survivant :</span>
+                  <span class="val-player" [class]="'text-class-' + logsMetrics()!.leastDiedPlayer?.class" style="font-weight: 850;">
+                    {{ logsMetrics()!.leastDiedPlayer?.name || 'Aucun' }} ({{ logsMetrics()!.leastDiedPlayer?.deaths }} {{ logsMetrics()!.leastDiedPlayer?.deaths === 1 ? 'mort' : 'morts' }})
+                  </span>
+                </div>
+                <div class="survival-row flex-row" style="justify-content: space-between; width: 100%; font-size: 0.9rem; font-weight: 750;">
+                  <span class="lbl-survival" style="color: #dc2626; font-weight: 800;">☠️ Plus mort :</span>
+                  <span class="val-player" [class]="'text-class-' + logsMetrics()!.mostDiedPlayer?.class" style="font-weight: 850;">
+                    {{ logsMetrics()!.mostDiedPlayer?.name || 'Aucun' }} ({{ logsMetrics()!.mostDiedPlayer?.deaths }} {{ logsMetrics()!.mostDiedPlayer?.deaths === 1 ? 'mort' : 'morts' }})
+                  </span>
+                </div>
+              </div>
             </div>
             <div class="stat-card">
               <span class="label">Raid DPS / HPS</span>
