@@ -98,8 +98,8 @@ async function run() {
     console.log('Fights list:', bossFights.map((f: any) => `${f.name} (${f.kill ? 'KILL' : 'WIPE'} - ${f.fightPercentage}%)`).join(', '));
 
     if (bossFights.length > 0) {
-      const firstFight = bossFights[0];
-      console.log(`\nStep 3: Fetching Combat Tables for first fight: ${firstFight.name} (ID: ${firstFight.id})...`);
+      const firstFight = bossFights.find((f: any) => f.kill) || bossFights[0];
+      console.log(`\nStep 3: Fetching Combat Tables for first fight: ${firstFight.name} (ID: ${firstFight.id}, KILL: ${firstFight.kill})...`);
       
       const tableQuery = `
         query ($code: String!, $fightId: Int!) {
@@ -107,6 +107,7 @@ async function run() {
             report(code: $code) {
               damageTable: table(fightIDs: [$fightId], dataType: DamageDone)
               healingTable: table(fightIDs: [$fightId], dataType: Healing)
+              rankings: rankings(fightIDs: [$fightId])
             }
           }
         }
@@ -131,11 +132,14 @@ async function run() {
       const tables = tableRes.data?.data?.reportData?.report;
       const dEntries = tables?.damageTable?.data?.entries || [];
       const hEntries = tables?.healingTable?.data?.entries || [];
+      const rankings = tables?.rankings || {};
 
       console.log('✅ Tables fetched successfully!');
       console.log(`DamageDone entries: ${dEntries.length}`);
       console.log(`Healing entries: ${hEntries.length}`);
+      console.log('Full JSON of rankings:', JSON.stringify(rankings, null, 2));
       if (dEntries.length > 0) {
+        console.log('Full JSON of first Damage Entry:', JSON.stringify(dEntries[0], null, 2));
         console.log('Top 3 Damage Entries:', dEntries.slice(0, 3).map((e: any) => `${entryInfo(e)}`).join(', '));
       }
     }

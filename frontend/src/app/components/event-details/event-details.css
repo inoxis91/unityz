@@ -1755,3 +1755,19 @@
 .parse-common {
   background-color: #9d9d9d; /* Common Gray */
 }
+
+/* High contrast class colors for log player names and texts */
+.text-class-warrior, .text-class-paladin, .text-class-hunter, .text-class-rogue, .text-class-priest, .text-class-deathknight, .text-class-shaman, .text-class-mage, .text-class-warlock, .text-class-monk, .text-class-druid, .text-class-demonhunter, .text-class-evoker { background: transparent !important; }
+.text-class-warrior { color: var(--color-warrior) !important; }
+.text-class-paladin { color: var(--color-paladin) !important; }
+.text-class-hunter { color: var(--color-hunter) !important; }
+.text-class-rogue { color: var(--color-rogue) !important; }
+.text-class-priest { color: var(--color-priest) !important; }
+.text-class-deathknight { color: var(--color-dk) !important; }
+.text-class-shaman { color: var(--color-shaman) !important; }
+.text-class-mage { color: var(--color-mage) !important; }
+.text-class-warlock { color: var(--color-warlock) !important; }
+.text-class-monk { color: var(--color-monk) !important; }
+.text-class-druid { color: var(--color-druid) !important; }
+.text-class-demonhunter { color: var(--color-dh) !important; }
+.text-class-evoker { color: var(--color-evoker) !important; }

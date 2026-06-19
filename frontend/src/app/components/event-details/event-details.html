@@ -714,11 +714,11 @@
                 <p class="boss-name">{{ logsMetrics()!.mostDeadlyBoss }}</p>
               </div>
             </div>
-            <div class="highlight-card mvp-player" [class]="'class-' + logsMetrics()!.mvpPlayer.class">
+            <div class="highlight-card mvp-player" [class]="'text-class-' + logsMetrics()!.mvpPlayer.class">
               <div class="highlight-icon">👑</div>
               <div class="highlight-info">
                 <h4>{{ i18n.t('event.details.logs_mvp') }}</h4>
-                <p class="mvp-name" [class]="'class-' + logsMetrics()!.mvpPlayer.class">{{ logsMetrics()!.mvpPlayer.name }}</p>
+                <p class="mvp-name" [class]="'text-class-' + logsMetrics()!.mvpPlayer.class">{{ logsMetrics()!.mvpPlayer.name }}</p>
               </div>
             </div>
           </div>

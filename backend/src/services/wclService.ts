@@ -232,6 +232,7 @@ export class WclService {
                         damageTable: table(fightIDs: [$fightId], dataType: DamageDone)
                         healingTable: table(fightIDs: [$fightId], dataType: Healing)
                         damageTakenTable: table(fightIDs: [$fightId], dataType: DamageTaken)
+                        rankings: rankings(fightIDs: [$fightId])
                       }
                     }
                   }
@@ -255,6 +256,21 @@ export class WclService {
                   const hDone = reportTables.healingTable?.data?.entries || [];
                   const dTaken = reportTables.damageTakenTable?.data?.entries || [];
 
+                  // Parse Rankings to get real parses
+                  const parseMap: Record<string, number> = {};
+                  const rankingsList = reportTables.rankings?.data || [];
+                  if (rankingsList.length > 0) {
+                    const roles = rankingsList[0].roles || {};
+                    ['tanks', 'healers', 'dps'].forEach((roleKey) => {
+                      const chars = roles[roleKey]?.characters || [];
+                      chars.forEach((c: any) => {
+                        if (c.name && c.rankPercent !== undefined) {
+                          parseMap[c.name] = Math.round(c.rankPercent);
+                        }
+                      });
+                    });
+                  }
+
                   const playerMap: Record<string, WclPlayerPerf> = {};
 
                   // 1. Process Damage Done
@@ -264,7 +280,7 @@ export class WclService {
                     const dps = Math.round(entry.total / duration);
                     const activeTime = Math.min(100, parseFloat(((entry.activeTime / (duration * 1000)) * 100).toFixed(1))) || 100;
                     const deaths = entry.deaths?.length || 0;
-                    const parse = Math.round(entry.rankPercent || Math.floor(Math.random() * 30) + 60);
+                    const parse = parseMap[name] || 0;
 
                     let role: 'tank' | 'heal' | 'dps' = 'dps';
                     if (['hunter', 'mage', 'rogue', 'warlock'].includes(className)) {
@@ -288,7 +304,7 @@ export class WclService {
                   hDone.forEach((entry: any) => {
                     const name = entry.name;
                     const hps = Math.round(entry.total / duration);
-                    const parse = Math.round(entry.rankPercent || Math.floor(Math.random() * 30) + 60);
+                    const parse = parseMap[name] || 0;
                     
                     if (playerMap[name]) {
                       playerMap[name].hps = hps;
