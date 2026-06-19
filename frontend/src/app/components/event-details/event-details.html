@@ -28,7 +28,7 @@
           {{ event()?.is_canceled ? '[' + i18n.t('event.details.canceled') + '] ' : '' }}{{ event()?.title }}
         </h1>
       </div>
-      
+
       <div class="admin-actions" *ngIf="canManageEvents()">
         <button class="btn-admin remind" (click)="onRemindEvent()" [title]="i18n.t('event.details.btn_remind')" *ngIf="!event()?.is_canceled">
           <span class="icon">🔔</span> {{ i18n.t('event.details.btn_remind') }}
@@ -84,7 +84,7 @@
       <!-- Signup Form -->
       <div class="form-card" *ngIf="!event()?.is_canceled">
         <h3>{{ i18n.t('event.details.your_signup') }}</h3>
-        
+
         <!-- Past Event Warning -->
         <div class="warning-box" *ngIf="isEventPast()" style="margin-bottom: 1rem;">
           <p>
@@ -124,7 +124,7 @@
 
           <div class="warning-box" *ngIf="myCharacters().length > 0 && allowedCharacters().length === 0">
             <p>
-              ⚠️ {{ i18n.t('event.details.no_allowed_characters') }} 
+              ⚠️ {{ i18n.t('event.details.no_allowed_characters') }}
               {{ i18n.t('event.details.restricted_to_roster') }} <strong>{{ event()?.roster_name }}</strong> {{ i18n.t('event.details.or_higher') }}
             </p>
           </div>
@@ -173,13 +173,13 @@
             <button [class.active]="sortMethod() === 'status'" (click)="sortMethod.set('status')" [title]="i18n.t('event.details.sort_by_status')">📊</button>
           </div>
         </div>
-        
+
         <div class="participants-grid">
-          <div *ngFor="let s of sortedSignups()" 
-               class="participant-card" 
+          <div *ngFor="let s of sortedSignups()"
+               class="participant-card"
                [ngClass]="[
-                 s.status, 
-                 s.status === 'absent' ? 'is-absent' : '', 
+                 s.status,
+                 s.status === 'absent' ? 'is-absent' : '',
                  'class-' + getClassCategory(s.status === 'absent' ? s.main_character_class : (s.character_class || s.main_character_class))
                ]"
                (click)="s.status !== 'absent' ? openAltsModal(s) : null"
@@ -197,7 +197,7 @@
               <div class="role-icon-box absent" *ngIf="s.status === 'absent'">
                 <span class="role-icon">❌</span>
               </div>
-              
+
               <div class="char-info">
                 <span class="participant-name">
                   {{ s.status === 'absent' ? (s.main_character_name || (s.battletag?.split('#')?.[0]) || i18n.t('event.details.unknown_user')) : (s.character_name || s.main_character_name || (s.battletag?.split('#')?.[0]) || i18n.t('event.details.unknown_user')) }}
@@ -206,12 +206,12 @@
                 <span class="signup-time">{{ (s.signup_date || s.created_at) | date:'dd/MM HH:mm' }}</span>
               </div>
             </div>
-            
+
             <div class="participant-comment" *ngIf="s.comment">
               <p>"{{ s.comment }}"</p>
             </div>
           </div>
-          
+
           <div *ngIf="signups().length === 0" class="empty-state">
             <div class="empty-icon">👥</div>
             <p>{{ i18n.t('event.details.no_signups') }}</p>
@@ -223,7 +223,7 @@
 
   <!-- TAB: Composition -->
   <div class="tab-content" *ngIf="activeTab() === 'composition'">
-    
+
     <!-- MODE: RAID -->
     <ng-container *ngIf="event()?.type?.toLowerCase() !== 'mm+'">
       <div class="buffs-container animated-fade-in">
@@ -292,11 +292,11 @@
     <!-- MODE: MM+ (Groups) -->
     <ng-container *ngIf="event()?.type?.toLowerCase() === 'mm+'">
       <div class="mm-composition-layout" cdkDropListGroup>
-        
+
         <!-- Unassigned Members -->
         <div class="mm-unassigned-panel">
           <button *ngIf="canManageEvents()" class="btn-add-group-top" (click)="onAddGroup()">+ {{ i18n.t('event.details.mm_add_group') }}</button>
-          
+
           <div class="panel-header">
             <h3>{{ i18n.t('event.details.mm_no_group') }}</h3>
             <span class="count-badge">{{ unassignedMembers().length }}</span>
@@ -306,7 +306,7 @@
                [cdkDropListData]="unassignedMembers()"
                (cdkDropListDropped)="dropToGroup($event, 0)">
             @for (m of unassignedMembers(); track m.user_id) {
-              <div class="mm-member-card" 
+              <div class="mm-member-card"
                    [class]="'class-' + getClassCategory(m.character_class || m.main_character_class)"
                    [class.can-drag]="canManageEvents()"
                    [cdkDragDisabled]="!canManageEvents()"
@@ -350,7 +350,7 @@
                    cdkDropList
                    [cdkDropListData]="group.members"
                    (cdkDropListDropped)="dropToGroup($event, group.index)">
-                
+
                 <!-- Role Slots inside Group -->
                 <div class="group-roles">
                   <!-- Tank -->
@@ -430,14 +430,14 @@
       </div>
       <button class="close-btn" (click)="showEditModal.set(false)">&times;</button>
     </div>
-    
+
     <form (ngSubmit)="onUpdateEvent()" class="modern-form">
       <div class="modal-body">
         <div class="form-section">
           <label>{{ i18n.t('calendar.form.title') }}</label>
           <input type="text" [(ngModel)]="editEventData.title" name="title" required [placeholder]="i18n.t('calendar.form.title_placeholder')">
         </div>
-        
+
         <div class="form-section">
           <label>{{ i18n.t('calendar.form.desc') }}</label>
           <textarea [(ngModel)]="editEventData.description" name="description" rows="3"></textarea>
@@ -553,26 +553,26 @@
           </div>
           <div class="alt-roles">
             <span class="rio-mini" *ngIf="getRioScoreForKey(char.name, char.realm)">{{ getRioScoreForKey(char.name, char.realm) }}</span>
-            
+
             <ng-container *ngIf="canManageEvents(); else readOnlyRoles">
-              <button *ngIf="char.is_tank" 
+              <button *ngIf="char.is_tank"
                       [class.active-role]="isSelectedCharacterAndRole(char.id, 'tank')"
-                      class="role-select-btn" 
-                      (click)="onAdminUpdateSignup(char.id, 'tank')" 
+                      class="role-select-btn"
+                      (click)="onAdminUpdateSignup(char.id, 'tank')"
                       title="Assigner en tant que Tank">
                 <img src="assets/icons/tank.png" class="role-icon-img small" alt="Tank">
               </button>
-              <button *ngIf="char.is_heal" 
+              <button *ngIf="char.is_heal"
                       [class.active-role]="isSelectedCharacterAndRole(char.id, 'heal')"
-                      class="role-select-btn" 
-                      (click)="onAdminUpdateSignup(char.id, 'heal')" 
+                      class="role-select-btn"
+                      (click)="onAdminUpdateSignup(char.id, 'heal')"
                       title="Assigner en tant que Soigneur">
                 <img src="assets/icons/heal.png" class="role-icon-img small" alt="Heal">
               </button>
-              <button *ngIf="char.is_dps" 
+              <button *ngIf="char.is_dps"
                       [class.active-role]="isSelectedCharacterAndRole(char.id, 'dps')"
-                      class="role-select-btn" 
-                      (click)="onAdminUpdateSignup(char.id, 'dps')" 
+                      class="role-select-btn"
+                      (click)="onAdminUpdateSignup(char.id, 'dps')"
                       title="Assigner en tant que DPS">
                 <img src="assets/icons/dps.png" class="role-icon-img small" alt="DPS">
               </button>
@@ -655,7 +655,7 @@
             Le backend utilise actuellement des données simulées réalistes pour cette démonstration car aucune clé d'API Warcraft Logs (WCL_CLIENT_ID / WCL_CLIENT_SECRET) n'est configurée dans votre fichier <code>backend/.env</code>.
           </p>
           <p class="small">
-            Pour afficher les véritables données de ce combat, créez un client gratuit sur 
+            Pour afficher les véritables données de ce combat, créez un client gratuit sur
             <a href="https://www.warcraftlogs.com/api/clients/" target="_blank" rel="noopener noreferrer">WCL Developer Portal</a>, renseignez les clés, et redémarrez votre serveur.
           </p>
         </div>
@@ -674,7 +674,7 @@
 
       <!-- Main Logs Panels (when metrics are loaded) -->
       <ng-container *ngIf="logsMetrics() && !loadingLogs()">
-        
+
         <!-- SUB-TAB 1: Overview -->
         <div class="logs-overview-panel animated-fade-in" *ngIf="logsSubTab() === 'overview'">
           <div class="logs-stats-grid">
@@ -688,7 +688,7 @@
               <div class="survival-info-content" style="width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
                 <div class="survival-row flex-row" style="justify-content: space-between; width: 100%; font-size: 0.9rem; font-weight: 750;">
                   <span class="lbl-survival" style="color: #16a34a; font-weight: 800;">🛡️ Survivant :</span>
-                  <span class="val-player" [class]="'text-class-' + logsMetrics()!.leastDiedPlayer?.class" style="font-weight: 850;">
+                  <span class="val-player" style="font-weight: 850;">
                     {{ logsMetrics()!.leastDiedPlayer?.name || 'Aucun' }} ({{ logsMetrics()!.leastDiedPlayer?.deaths }} {{ logsMetrics()!.leastDiedPlayer?.deaths === 1 ? 'mort' : 'morts' }})
                   </span>
                 </div>

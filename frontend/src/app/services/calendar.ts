@@ -69,6 +69,15 @@ export interface WclFight {
   players: WclPlayerPerf[];
 }
 
+export interface WclMvpEntry {
+  name: string;
+  class: string;
+  score: number;
+  dpsAvg: number;
+  hpsAvg: number;
+  deathsCount: number;
+}
+
 export interface WclReportMetrics {
   title: string;
   zone: string;
@@ -86,6 +95,7 @@ export interface WclReportMetrics {
   mvpPlayer: { name: string; class: string; score: number };
   mostDiedPlayer: { name: string; class: string; deaths: number } | null;
   leastDiedPlayer: { name: string; class: string; deaths: number } | null;
+  mvpLeaderboard: WclMvpEntry[];
   fights: WclFight[];
   wclKeysMissing?: boolean;
 }

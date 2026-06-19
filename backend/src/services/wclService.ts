@@ -27,6 +27,15 @@ export interface WclFight {
   players: WclPlayerPerf[];
 }
 
+export interface WclMvpEntry {
+  name: string;
+  class: string;
+  score: number;
+  dpsAvg: number;
+  hpsAvg: number;
+  deathsCount: number;
+}
+
 export interface WclReportMetrics {
   title: string;
   zone: string;
@@ -44,6 +53,7 @@ export interface WclReportMetrics {
   mvpPlayer: { name: string; class: string; score: number };
   mostDiedPlayer: { name: string; class: string; deaths: number } | null;
   leastDiedPlayer: { name: string; class: string; deaths: number } | null;
+  mvpLeaderboard: WclMvpEntry[];
   fights: WclFight[];
   wclKeysMissing?: boolean;
 }
@@ -477,12 +487,12 @@ export class WclService {
       }
     }
 
-    // Find MVP Player (lowest death count, highest dps/hps relative to role)
-    const playerScores: Record<string, { class: string; score: number }> = {};
+    // Find MVP Player (lowest death count, highest dps/hps relative to role) and construct Leaderboard
+    const playerScores: Record<string, { class: string; score: number; dpsSum: number; hpsSum: number; deathsSum: number; fightsCount: number }> = {};
     fights.forEach(f => {
       f.players.forEach(p => {
         if (!playerScores[p.name]) {
-          playerScores[p.name] = { class: p.class, score: 0 };
+          playerScores[p.name] = { class: p.class, score: 0, dpsSum: 0, hpsSum: 0, deathsSum: 0, fightsCount: 0 };
         }
         let scoreBonus = 0;
         if (p.role === 'dps') scoreBonus = p.dps / 10000;
@@ -493,6 +503,10 @@ export class WclService {
         if (p.deaths > 0) scoreBonus -= 50;
 
         playerScores[p.name].score += scoreBonus;
+        playerScores[p.name].dpsSum += p.dps;
+        playerScores[p.name].hpsSum += p.hps;
+        playerScores[p.name].deathsSum += p.deaths;
+        playerScores[p.name].fightsCount += 1;
       });
     });
 
@@ -506,6 +520,17 @@ export class WclService {
         mvpClass = info.class;
       }
     }
+
+    const mvpLeaderboard: WclMvpEntry[] = Object.entries(playerScores).map(([name, info]) => {
+      return {
+        name,
+        class: info.class,
+        score: Math.round(info.score),
+        dpsAvg: Math.round(info.dpsSum / info.fightsCount),
+        hpsAvg: Math.round(info.hpsSum / info.fightsCount),
+        deathsCount: info.deathsSum
+      };
+    }).sort((a, b) => b.score - a.score);
 
     // Calculate player total deaths across all fights
     const playerDeaths: Record<string, { class: string; deaths: number }> = {};

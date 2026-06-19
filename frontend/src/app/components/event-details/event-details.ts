@@ -43,7 +43,7 @@ export class EventDetailsComponent implements OnInit {
   
   // Warcraft Logs Metrics Signals
   logsMetrics = signal<WclReportMetrics | null>(null);
-  logsSubTab = signal<'overview' | 'bosses' | 'players'>('overview');
+  logsSubTab = signal<'overview' | 'bosses' | 'players' | 'mvp'>('overview');
   selectedFightId = signal<number | null>(null);
   loadingLogs = signal<boolean>(false);
   logsError = signal<boolean>(false);
