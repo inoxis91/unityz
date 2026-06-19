@@ -98,7 +98,7 @@ export class LogsDashboardComponent implements OnInit {
     const sortBy = this.logsPlayerSortBy();
     const isDesc = this.logsPlayerSortOrder() === 'desc';
     
-    return [...fight.players].sort((a, b) => {
+    return [...(fight.players || [])].sort((a, b) => {
       let valA = a[sortBy];
       let valB = b[sortBy];
       
@@ -146,6 +146,6 @@ export class LogsDashboardComponent implements OnInit {
   }
 
   getSortedHealersForFight(players: WclPlayerPerf[]): WclPlayerPerf[] {
-    return [...players].sort((a, b) => b.hps - a.hps);
+    return [...(players || [])].sort((a, b) => b.hps - a.hps);
   }
 }
