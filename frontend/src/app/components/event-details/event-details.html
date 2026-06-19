@@ -76,6 +76,7 @@
     <button *ngIf="event()?.type?.toLowerCase() === 'raid' && event()?.logs" [class.active]="activeTab() === 'logs'" (click)="activeTab.set('logs')">
       {{ i18n.t('event.details.tab_logs') }}
     </button>
+  </div>
 
   <!-- TAB: Participants -->
   <div class="tab-content" *ngIf="activeTab() === 'participants'">
