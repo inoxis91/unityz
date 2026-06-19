@@ -1,0 +1,192 @@
+<!-- MODE: RAID -->
+<ng-container *ngIf="event?.type?.toLowerCase() !== 'mm+'">
+  <div class="buffs-container animated-fade-in">
+    <h3>{{ i18n.t('event.details.raid_buffs') }}</h3>
+    <div class="buffs-grid">
+      <div *ngFor="let buff of buffs()" class="buff-card" [class.missing]="!buff.present" [title]="i18n.t('buff.label.' + buff.id)">
+        <div class="buff-icon">
+          <img *ngIf="buff.icon.includes('/')" [src]="buff.icon" [alt]="i18n.t('buff.label.' + buff.id)">
+          <span *ngIf="!buff.icon.includes('/')">{{ buff.icon }}</span>
+        </div>
+        <div class="buff-info">
+          <span class="buff-label">{{ i18n.t('buff.desc.' + buff.id) }}</span>
+          <span class="buff-count" *ngIf="buff.present">x{{ buff.count }}</span>
+          <span class="buff-status" *ngIf="!buff.present">{{ i18n.t('event.details.buff_missing') }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="composition-layout">
+    <div class="role-column tanks">
+      <div class="column-header">
+        <span class="icon">
+          <img src="assets/icons/tank.png" class="role-icon-img" alt="Tank">
+        </span>
+        <h4>{{ i18n.t('event.details.header_tanks') }}</h4>
+        <span class="count">{{ tanks().length }}</span>
+      </div>
+      <div class="comp-grid">
+        <div *ngFor="let s of tanks()" class="modern-comp-card clickable" [class]="'class-' + getClassCategory(s.character_class || s.main_character_class)" (click)="onOpenAltsModal(s)">
+          <div class="card-content"><span class="name">{{ s.character_name || s.main_character_name || (s.battletag?.split('#')?.[0]) }}</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="role-column heals">
+      <div class="column-header">
+        <span class="icon">
+          <img src="assets/icons/heal.png" class="role-icon-img" alt="Heal">
+        </span>
+        <h4>{{ i18n.t('event.details.header_heals') }}</h4>
+        <span class="count">{{ heals().length }}</span>
+      </div>
+      <div class="comp-grid">
+        <div *ngFor="let s of heals()" class="modern-comp-card clickable" [class]="'class-' + getClassCategory(s.character_class || s.main_character_class)" (click)="onOpenAltsModal(s)">
+          <div class="card-content"><span class="name">{{ s.character_name || s.main_character_name || (s.battletag?.split('#')?.[0]) }}</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="role-column dps">
+      <div class="column-header">
+        <span class="icon">
+          <img src="assets/icons/dps.png" class="role-icon-img" alt="DPS">
+        </span>
+        <h4>{{ i18n.t('event.details.header_dps') }}</h4>
+        <span class="count">{{ dps().length }}</span>
+      </div>
+      <div class="comp-grid dps-layout">
+        <div *ngFor="let s of dps()" class="modern-comp-card clickable" [class]="'class-' + getClassCategory(s.character_class || s.main_character_class)" (click)="onOpenAltsModal(s)">
+          <div class="card-content"><span class="name">{{ s.character_name || s.main_character_name || (s.battletag?.split('#')?.[0]) }}</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-container>
+
+<!-- MODE: MM+ (Groups) -->
+<ng-container *ngIf="event?.type?.toLowerCase() === 'mm+'">
+  <div class="mm-composition-layout" cdkDropListGroup>
+
+    <!-- Unassigned Members -->
+    <div class="mm-unassigned-panel">
+      <button *ngIf="canManageEvents" class="btn-add-group-top" (click)="onAddGroup()">+ {{ i18n.t('event.details.mm_add_group') }}</button>
+
+      <div class="panel-header">
+        <h3>{{ i18n.t('event.details.mm_no_group') }}</h3>
+        <span class="count-badge">{{ unassignedMembers().length }}</span>
+      </div>
+      <div class="mm-drop-zone unassigned"
+           cdkDropList
+           [cdkDropListData]="unassignedMembers()"
+           (cdkDropListDropped)="dropToGroup($event, 0)">
+        @for (m of unassignedMembers(); track m.user_id) {
+          <div class="mm-member-card"
+               [class]="'class-' + getClassCategory(m.character_class || m.main_character_class)"
+               [class.can-drag]="canManageEvents"
+               [cdkDragDisabled]="!canManageEvents"
+               cdkDrag>
+            <div class="role-badge" [class]="m.role">
+              <img [src]="'assets/icons/' + m.role + '.png'" class="role-icon-img small" [alt]="m.role">
+            </div>
+            <span class="name">{{ m.character_name || m.main_character_name || (m.battletag?.split('#')?.[0]) }}</span>
+            <span class="rio-mini" *ngIf="getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm)">
+              {{ getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm) }}
+            </span>
+            <button class="btn-alts-mini" (click)="onOpenAltsModal(m)">🔍</button>
+          </div>
+        }
+        @if (unassignedMembers().length === 0) {
+          <p class="empty-msg">{{ i18n.t('event.details.mm_all_placed') }}</p>
+        }
+      </div>
+    </div>
+
+    <!-- Groups Grid -->
+    <div class="mm-groups-grid">
+      @for (group of mmGroups(); track group.index) {
+        <div class="mm-group-card animated-fade-in">
+          <div class="group-header">
+            <div class="group-title-row">
+              <h4>{{ i18n.t('event.details.mm_group_title').replace('{index}', group.index.toString()) }}</h4>
+              <button *ngIf="canManageEvents" class="btn-delete-group" (click)="onRemoveGroup(group.index)" [title]="i18n.t('event.details.mm_delete_group')">×</button>
+            </div>
+            <div class="group-buffs">
+              @for (buff of group.buffs; track buff.id) {
+                <div class="mini-buff" [class.missing]="!buff.present" [title]="i18n.t('buff.label.' + buff.id) + ': ' + (buff.present ? i18n.t('event.details.status_present').toUpperCase() : i18n.t('event.details.buff_missing'))">
+                  <img *ngIf="buff.icon.includes('/')" [src]="buff.icon" [alt]="i18n.t('buff.label.' + buff.id)">
+                  <span *ngIf="!buff.icon.includes('/')">{{ buff.icon }}</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="mm-drop-zone group-zone"
+               cdkDropList
+               [cdkDropListData]="group.members"
+               (cdkDropListDropped)="dropToGroup($event, group.index)">
+
+            <!-- Role Slots inside Group -->
+            <div class="group-roles">
+              <!-- Tank -->
+              <div class="role-slot">
+                <span class="role-label">
+                  <img src="assets/icons/tank.png" class="role-icon-img small" alt="Tank">
+                </span>
+                <div class="slot-members">
+                  @for (m of group.tanks; track m.user_id) {
+                    <div class="mm-member-card small" [class]="'class-' + getClassCategory(m.character_class || m.main_character_class)" cdkDrag [cdkDragDisabled]="!canManageEvents">
+                      <span class="name">{{ m.character_name || m.main_character_name || (m.battletag?.split('#')?.[0]) }}</span>
+                      <span class="rio-micro" *ngIf="getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm)">
+                        {{ getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm) }}
+                      </span>
+                      <button class="btn-alts-mini" (click)="onOpenAltsModal(m)">🔍</button>
+                    </div>
+                  }
+                </div>
+              </div>
+              <!-- Healer -->
+              <div class="role-slot">
+                <span class="role-label">
+                  <img src="assets/icons/heal.png" class="role-icon-img small" alt="Heal">
+                </span>
+                <div class="slot-members">
+                  @for (m of group.heals; track m.user_id) {
+                    <div class="mm-member-card small" [class]="'class-' + getClassCategory(m.character_class || m.main_character_class)" cdkDrag [cdkDragDisabled]="!canManageEvents">
+                      <span class="name">{{ m.character_name || m.main_character_name || (m?.battletag?.split('#')?.[0]) }}</span>
+                      <span class="rio-micro" *ngIf="getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm)">
+                        {{ getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm) }}
+                      </span>
+                      <button class="btn-alts-mini" (click)="onOpenAltsModal(m)">🔍</button>
+                    </div>
+                  }
+                </div>
+              </div>
+              <!-- DPS -->
+              <div class="role-slot">
+                <span class="role-label">
+                  <img src="assets/icons/dps.png" class="role-icon-img small" alt="DPS">
+                </span>
+                <div class="slot-members dps-slots">
+                  @for (m of group.dps; track m.user_id) {
+                    <div class="mm-member-card small" [class]="'class-' + getClassCategory(m.character_class || m.main_character_class)" cdkDrag [cdkDragDisabled]="!canManageEvents">
+                      <span class="name">{{ m.character_name || m.main_character_name || (m.battletag?.split('#')?.[0]) }}</span>
+                      <span class="rio-micro" *ngIf="getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm)">
+                        {{ getRioScoreForKey(m.character_name || m.main_character_name, m.character_realm || m.main_character_realm) }}
+                      </span>
+                      <button class="btn-alts-mini" (click)="onOpenAltsModal(m)">🔍</button>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+
+            @if (group.members.length === 0) {
+              <p class="empty-msg">{{ i18n.t('event.details.mm_drag_hint') }}</p>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+  </div>
+</ng-container>

@@ -1,0 +1,139 @@
+<div class="content-grid">
+  <!-- Signup Form -->
+  <div class="form-card" *ngIf="!event?.is_canceled">
+    <h3>{{ i18n.t('event.details.your_signup') }}</h3>
+    
+    <!-- Past Event Warning -->
+    <div class="warning-box" *ngIf="isEventPast()" style="margin-bottom: 1rem;">
+      <p>
+        ⚠️ {{ i18n.t('event.details.event_past_warning') }}
+      </p>
+    </div>
+
+    <div class="status-selector">
+      <button [class.active]="signupStatus() === 'signed_up'" (click)="setStatus('signed_up')" class="status-btn present" [disabled]="isEventPast()">
+        <span class="dot"></span> {{ i18n.t('event.details.status_present') }}
+      </button>
+      <button [class.active]="signupStatus() === 'standby'" (click)="setStatus('standby')" class="status-btn standby" [disabled]="isEventPast()">
+        <span class="dot"></span> {{ i18n.t('event.details.status_maybe') }}
+      </button>
+      <button [class.active]="signupStatus() === 'absent'" (click)="setStatus('absent')" class="status-btn absent" [disabled]="isEventPast()">
+        <span class="dot"></span> {{ i18n.t('event.details.status_absent') }}
+      </button>
+    </div>
+
+    <div class="signup-fields animated-fade-in" *ngIf="signupStatus() !== 'absent'">
+      <div class="form-group" *ngIf="myCharactersSig().length > 0; else noChars">
+        <label>{{ i18n.t('event.details.select_character') }}</label>
+        <select [ngModel]="selectedCharacterId()" (ngModelChange)="selectedCharacterId.set($event)" (change)="onCharacterChange()" class="modern-select" [disabled]="isEventPast()">
+          <option *ngFor="let char of myCharactersSig()" [value]="char.id" [disabled]="!isCharacterAllowed(char)">
+            {{ char.name }} ({{ i18n.t('class.' + getClassCategory(char.class)) }})
+            {{ !isCharacterAllowed(char) ? ' — [' + i18n.t('event.details.roster_not_allowed') + ']' : '' }}
+          </option>
+        </select>
+      </div>
+      <ng-template #noChars>
+        <div class="warning-box">
+          <p>
+            ⚠️ {{ i18n.t('event.details.no_characters') }} <a [routerLink]="['/options']" [queryParams]="{tab: 'characters'}">{{ i18n.t('event.details.import_characters') }}</a>{{ i18n.t('event.details.to_signup') }}
+          </p>
+        </div>
+      </ng-template>
+
+      <div class="warning-box" *ngIf="myCharactersSig().length > 0 && allowedCharacters().length === 0">
+        <p>
+          ⚠️ {{ i18n.t('event.details.no_allowed_characters') }}
+          {{ i18n.t('event.details.restricted_to_roster') }} <strong>{{ event?.roster_name }}</strong> {{ i18n.t('event.details.or_higher') }}
+        </p>
+      </div>
+
+      <div class="form-group" *ngIf="allowedCharacters().length > 0">
+        <label>{{ i18n.t('event.details.your_role') }}</label>
+        <div class="role-selector">
+          <button [class.active]="selectedRole() === 'tank'" (click)="selectedRole.set('tank')" [disabled]="isEventPast()">
+            <img src="assets/icons/tank.png" class="role-icon-img" alt="Tank"> {{ i18n.t('event.details.role_tank') }}
+          </button>
+          <button [class.active]="selectedRole() === 'heal'" (click)="selectedRole.set('heal')" [disabled]="isEventPast()">
+            <img src="assets/icons/heal.png" class="role-icon-img" alt="Heal"> {{ i18n.t('event.details.role_heal') }}
+          </button>
+          <button [class.active]="selectedRole() === 'dps'" (click)="selectedRole.set('dps')" [disabled]="isEventPast()">
+            <img src="assets/icons/dps.png" class="role-icon-img" alt="DPS"> {{ i18n.t('event.details.role_dps') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>{{ i18n.t('event.details.comment_label') }}</label>
+      <textarea [ngModel]="comment()" (ngModelChange)="comment.set($event)" [placeholder]="i18n.t('event.details.comment_placeholder')" rows="3" [disabled]="isEventPast()"></textarea>
+    </div>
+
+    <div class="actions">
+      <button class="btn-action confirm" (click)="onSignup()" [disabled]="isSignupDisabled()">
+        <span class="icon">💾</span> {{ i18n.t('event.details.btn_save_choice') }}
+      </button>
+    </div>
+  </div>
+
+  <!-- List of signups -->
+  <div class="list-card">
+    <div class="list-header">
+      <div class="list-title-group">
+        <h3>{{ i18n.t('event.details.participants_list') }}</h3>
+        <div class="status-counts">
+          <span class="count-badge present" [title]="i18n.t('event.details.tooltip_present')">✅ {{ presentCount() }}</span>
+          <span class="count-badge standby" [title]="i18n.t('event.details.tooltip_maybe')">❓ {{ standbyCount() }}</span>
+          <span class="count-badge absent" [title]="i18n.t('event.details.tooltip_absent')">❌ {{ absentCount() }}</span>
+        </div>
+      </div>
+      <div class="sort-controls">
+        <button [class.active]="sortMethod() === 'date'" (click)="sortMethod.set('date')" [title]="i18n.t('event.details.sort_by_date')">🕒</button>
+        <button [class.active]="sortMethod() === 'status'" (click)="sortMethod.set('status')" [title]="i18n.t('event.details.sort_by_status')">📊</button>
+      </div>
+    </div>
+
+    <div class="participants-grid">
+      <div *ngFor="let s of sortedSignups()"
+           class="participant-card"
+           [ngClass]="[
+             s.status,
+             s.status === 'absent' ? 'is-absent' : '',
+             'class-' + getClassCategory(s.status === 'absent' ? s.main_character_class : (s.character_class || s.main_character_class))
+           ]"
+           (click)="s.status !== 'absent' ? onOpenAltsModal(s) : null"
+           [class.clickable]="s.status !== 'absent'">
+        <div class="participant-main">
+          <div class="role-icon-box" *ngIf="s.status !== 'absent'">
+            <span class="role-icon" [class]="s.role">
+              <ng-container [ngSwitch]="s.role">
+                <img *ngSwitchCase="'tank'" src="assets/icons/tank.png" class="role-icon-img" alt="Tank">
+                <img *ngSwitchCase="'heal'" src="assets/icons/heal.png" class="role-icon-img" alt="Heal">
+                <img *ngSwitchCase="'dps'" src="assets/icons/dps.png" class="role-icon-img" alt="DPS">
+              </ng-container>
+            </span>
+          </div>
+          <div class="role-icon-box absent" *ngIf="s.status === 'absent'">
+            <span class="role-icon">❌</span>
+          </div>
+
+          <div class="char-info">
+            <span class="participant-name">
+              {{ s.status === 'absent' ? (s.main_character_name || (s.battletag?.split('#')?.[0]) || i18n.t('event.details.unknown_user')) : (s.character_name || s.main_character_name || (s.battletag?.split('#')?.[0]) || i18n.t('event.details.unknown_user')) }}
+            </span>
+            <span *ngIf="s.status === 'absent'" class="absent-label">{{ i18n.t('event.details.label_absent') }}</span>
+            <span class="signup-time">{{ (s.signup_date || s.created_at) | date:'dd/MM HH:mm' }}</span>
+          </div>
+        </div>
+
+        <div class="participant-comment" *ngIf="s.comment">
+          <p>"{{ s.comment }}"</p>
+        </div>
+      </div>
+
+      <div *ngIf="signupsSig().length === 0" class="empty-state">
+        <div class="empty-icon">👥</div>
+        <p>{{ i18n.t('event.details.no_signups') }}</p>
+      </div>
+    </div>
+  </div>
+</div>

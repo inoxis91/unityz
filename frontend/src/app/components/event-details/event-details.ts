@@ -15,18 +15,14 @@ import { AuthService } from '../../services/auth';
 import { ToastService } from '../../services/toast';
 import { ConfirmService } from '../../services/confirm';
 import { I18nService } from '../../services/i18n';
-import { CLASS_BUFFS, BuffInfo } from '../../constants/wow';
+import { ParticipantsComponent } from './participants/participants';
+import { CompositionComponent } from './composition/composition';
 import { LogsDashboardComponent } from './logs-dashboard/logs-dashboard';
-
-export interface Buff extends BuffInfo {
-  present: boolean;
-  count: number;
-}
 
 @Component({
   selector: 'app-event-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, DragDropModule, LogsDashboardComponent],
+  imports: [CommonModule, RouterModule, FormsModule, LogsDashboardComponent, ParticipantsComponent, CompositionComponent],
   templateUrl: './event-details.html',
   styleUrl: './event-details.css'
 })
@@ -43,9 +39,6 @@ export class EventDetailsComponent implements OnInit {
   // Warcraft Logs Dashboard state is now encapsulated inside LogsDashboardComponent
   activeTab = signal<'participants' | 'composition' | 'logs'>('participants');
   
-  // Sorting for participants tab
-  sortMethod = signal<'date' | 'status'>('date');
-
   // Alts View
   showAltsModal = signal(false);
   selectedSignup = signal<Signup | null>(null);
@@ -53,12 +46,6 @@ export class EventDetailsComponent implements OnInit {
   // Cancellation Modal
   showCancelModal = signal(false);
   cancelReason = '';
-
-  // Signup Form
-  selectedCharacterId = signal<string>('');
-  selectedRole = signal<string>('dps');
-  signupStatus = signal<'signed_up' | 'standby' | 'absent'>('signed_up');
-  comment = signal<string>('');
 
   isEventPast = computed(() => {
     const evt = this.event();
@@ -83,97 +70,7 @@ export class EventDetailsComponent implements OnInit {
     logs: ''
   };
 
-  // Computed views for Raid
-  tanks = computed(() => this.signups().filter(s => s.role === 'tank' && s.status === 'signed_up'));
-  heals = computed(() => this.signups().filter(s => s.role === 'heal' && s.status === 'signed_up'));
-  dps = computed(() => this.signups().filter(s => s.role === 'dps' && s.status === 'signed_up'));
-  absents = computed(() => this.signups().filter(s => s.status === 'absent'));
-
-  presentCount = computed(() => this.signups().filter(s => s.status === 'signed_up').length);
-  standbyCount = computed(() => this.signups().filter(s => s.status === 'standby').length);
-  absentCount = computed(() => this.signups().filter(s => s.status === 'absent').length);
-
-  // Sorted list for Participants tab
-  sortedSignups = computed(() => {
-    const list = [...this.signups()];
-    const method = this.sortMethod();
-
-    if (method === 'date') {
-      return list.sort((a, b) => {
-        const dateA = new Date(a.signup_date || a.created_at || 0).getTime();
-        const dateB = new Date(b.signup_date || b.created_at || 0).getTime();
-        return dateA - dateB;
-      });
-    } else {
-      const statusWeight: { [key: string]: number } = { 'signed_up': 1, 'standby': 2, 'absent': 3 };
-      return list.sort((a, b) => {
-        const weightA = statusWeight[a.status] || 99;
-        const weightB = statusWeight[b.status] || 99;
-        if (weightA !== weightB) return weightA - weightB;
-        return new Date(a.signup_date || a.created_at || 0).getTime() - new Date(b.signup_date || b.created_at || 0).getTime();
-      });
-    }
-  });
-
-  // Computed views for MM+
-  unassignedMembers = computed(() => this.signups().filter(s => s.status === 'signed_up' && (s.group_index === 0 || !s.group_index)));
-  
-  mmGroups = computed(() => {
-    const count = this.event()?.mm_groups_count || 0;
-    const groups = [];
-    for (let i = 1; i <= count; i++) {
-      const members = this.signups().filter(s => s.group_index === i);
-      groups.push({
-        index: i,
-        members: members,
-        tanks: members.filter(m => m.role === 'tank'),
-        heals: members.filter(m => m.role === 'heal'),
-        dps: members.filter(m => m.role === 'dps'),
-        buffs: this.calculateBuffs(members)
-      });
-    }
-    return groups;
-  });
-
-  buffs = computed(() => {
-    const activeSignups = this.signups().filter(s => s.status === 'signed_up');
-    return this.calculateBuffs(activeSignups);
-  });
-
-  calculateBuffs(members: Signup[]): Buff[] {
-    return CLASS_BUFFS.map(baseBuff => {
-      const count = members.filter(s => baseBuff.classes.includes(s.character_class || '')).length;
-      return {
-        ...baseBuff,
-        present: count > 0,
-        count: count
-      } as Buff;
-    });
-  }
-
   canManageEvents = computed(() => this.authService.canManageEvents());
-
-  allowedCharacters = computed(() => {
-    return this.myCharacters().filter(c => this.isCharacterAllowed(c));
-  });
-
-  isSignupDisabled = computed(() => {
-    if (!this.event()) return true;
-    if (this.isEventPast()) return true;
-    if (this.signupStatus() === 'absent') return false;
-    if (!this.selectedCharacterId()) return true;
-    const char = this.myCharacters().find(c => c.id === this.selectedCharacterId());
-    return !char || !this.isCharacterAllowed(char);
-  });
-
-  isCharacterAllowed(char: Character): boolean {
-    const evt = this.event();
-    if (!evt || !evt.roster_id) return true;
-    const targetWeight = evt.roster_weight || 999;
-    if (!char.roster_id) return false;
-    const charRoster = this.rosters().find(r => r.id === char.roster_id);
-    return charRoster ? charRoster.weight <= targetWeight : false;
-  }
 
   constructor(
     private route: ActivatedRoute,
@@ -182,20 +79,7 @@ export class EventDetailsComponent implements OnInit {
     public rosterService: RosterService,
     public authService: AuthService,
     private toast: ToastService
-  ) {
-    effect(() => {
-      const allowed = this.allowedCharacters();
-      if (allowed.length > 0 && !this.selectedCharacterId() && this.signupStatus() !== 'absent') {
-        const mainChar = allowed.find(c => c.is_main);
-        if (mainChar) {
-          this.selectedCharacterId.set(mainChar.id || '');
-        } else {
-          this.selectedCharacterId.set(allowed[0].id || '');
-        }
-        this.onCharacterChange();
-      }
-    }, { allowSignalWrites: true });
-  }
+  ) {}
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -234,14 +118,6 @@ export class EventDetailsComponent implements OnInit {
           });
         }
       });
-
-      const mySignup = signups.find(s => s.user_id === this.authService.currentUser()?.id);
-      if (mySignup) {
-        this.selectedCharacterId.set(mySignup.character_id || '');
-        this.selectedRole.set(mySignup.role);
-        this.signupStatus.set(mySignup.status as any);
-        this.comment.set(mySignup.comment || '');
-      }
     });
   }
 
@@ -384,46 +260,6 @@ export class EventDetailsComponent implements OnInit {
     }
   }
 
-  onCharacterChange() {
-    const char = this.myCharacters().find(c => c.id === this.selectedCharacterId());
-    if (char) {
-      if (char.is_tank) this.selectedRole.set('tank');
-      else if (char.is_heal) this.selectedRole.set('heal');
-      else this.selectedRole.set('dps');
-    }
-  }
-
-  setStatus(status: 'signed_up' | 'standby' | 'absent') {
-    this.signupStatus.set(status);
-    if (status !== 'absent' && (!this.selectedCharacterId() || this.selectedCharacterId() === '')) {
-      const allowed = this.allowedCharacters();
-      const mainChar = allowed.find(c => c.is_main);
-      if (mainChar) this.selectedCharacterId.set(mainChar.id || '');
-      else if (allowed.length > 0) this.selectedCharacterId.set(allowed[0].id || '');
-      this.onCharacterChange();
-    }
-  }
-
-  onSignup() {
-    if (!this.event() || this.isSignupDisabled()) return;
-    const signupData = {
-      character_id: this.signupStatus() === 'absent' ? null : this.selectedCharacterId(),
-      role: this.selectedRole(),
-      status: this.signupStatus(),
-      comment: this.comment()
-    };
-    this.calendarService.signup(this.event()!.id!, signupData).subscribe({
-      next: () => {
-        this.loadSignups(this.event()!.id!);
-        this.toast.success(this.i18n.t('event.details.toast_signup_success'));
-      },
-      error: (err) => {
-        console.error('Signup error:', err);
-        this.toast.error(this.i18n.t('event.details.toast_signup_error'));
-      }
-    });
-  }
-
   getClassCategory(className: string | undefined): string {
     return CharacterService.getClassId(className);
   }
@@ -465,55 +301,16 @@ export class EventDetailsComponent implements OnInit {
     });
   }
 
-  // MM+ Group Management
-  onAddGroup() {
+  onReloadSignups() {
     const evt = this.event();
-    if (!evt || !evt.id) return;
-    const newCount = (evt.mm_groups_count || 0) + 1;
-    this.calendarService.updateGroupsCount(evt.id, newCount).subscribe(() => {
-      this.loadEvent(evt.id!);
-    });
+    if (evt && evt.id) {
+      this.loadSignups(evt.id);
+      this.loadEvent(evt.id);
+    }
   }
 
-  onRemoveGroup(index: number) {
-    const evt = this.event();
-    if (!evt || !evt.id) return;
-    
-    // 1. Move all members of this group back to unassigned (index 0)
-    const membersInGroup = this.signups().filter(s => s.group_index === index);
-    const movePromises = membersInGroup.map(m => 
-      this.calendarService.updateSignupGroup(evt.id!, m.user_id, 0).toPromise()
-    );
-
-    Promise.all(movePromises).then(() => {
-      // 2. Decrement group count
-      const newCount = Math.max(0, (evt.mm_groups_count || 0) - 1);
-      this.calendarService.updateGroupsCount(evt.id!, newCount).subscribe(() => {
-        this.loadEvent(evt.id!);
-        this.loadSignups(evt.id!); // Refresh members positions
-      });
-    });
-  }
-
-  dropToGroup(event: CdkDragDrop<Signup[]>, groupIndex: number) {
-    if (event.previousContainer === event.container) return;
-    const member = event.previousContainer.data[event.previousIndex];
-    const evt = this.event();
-    if (!evt || !evt.id || !member) return;
-
-    // Optimistic UI update
-    const currentSignups = this.signups();
-    const updatedSignups = currentSignups.map(s => 
-      s.user_id === member.user_id ? { ...s, group_index: groupIndex } : s
-    );
-    this.signups.set(updatedSignups);
-
-    // Backend update
-    this.calendarService.updateSignupGroup(evt.id, member.user_id, groupIndex).subscribe({
-      error: () => {
-        this.toast.error(this.i18n.t('event.details.toast_move_error'));
-        this.loadSignups(evt.id!);
-      }
-    });
+  onOpenAltsModal(signup: Signup) {
+    this.selectedSignup.set(signup);
+    this.showAltsModal.set(true);
   }
 }
