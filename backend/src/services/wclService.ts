@@ -602,6 +602,7 @@ export class WclService {
       mvpPlayer: { name: mvpName, class: mvpClass, score: Math.round(maxScore) },
       mostDiedPlayer,
       leastDiedPlayer,
+      mvpLeaderboard,
       fights
     };
   }
