@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 import { AppComponent } from './app';
 import { AuthService } from './services/auth';
@@ -36,6 +36,7 @@ describe('AppComponent', () => {
       imports: [AppComponent],
       providers: [
         { provide: Router, useValue: mockRouter },
+        { provide: ActivatedRoute, useValue: { queryParams: of({}) } },
         { provide: AuthService, useValue: mockAuthService },
         { provide: I18nService, useValue: mockI18nService },
         { provide: ToastService, useValue: mockToastService },

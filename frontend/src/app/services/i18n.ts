@@ -650,6 +650,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'nav.logout': 'Log Out',
     'nav.admin': 'Administration',
     'nav.options': 'Settings',
+    'nav.profile': 'Profile',
 
     // Landing Page
     'landing.hero.title': 'Manage Your WoW Guild Like a Pro',
