@@ -181,7 +181,7 @@
                     </div>
                     <div class="rank-bar-col">
                       <div class="progress-bar-bg">
-                        <div class="progress-bar-fill dps-fill" [style.width.%]="(p.dps / getSortedPlayersForSelectedFight()[0].dps) * 100"></div>
+                        <div class="progress-bar-fill dps-fill" [style.width.%]="(p.dps / (getSortedPlayersForSelectedFight()[0]?.dps || 1)) * 100"></div>
                       </div>
                       <span class="value-label">{{ formatBigNumber(p.dps) }}</span>
                     </div>
@@ -202,7 +202,7 @@
                       </div>
                       <div class="rank-bar-col">
                         <div class="progress-bar-bg">
-                          <div class="progress-bar-fill heal-fill" [style.width.%]="(p.hps / getSortedHealersForFight(fight.players)[0].hps) * 100"></div>
+                          <div class="progress-bar-fill heal-fill" [style.width.%]="(p.hps / (getSortedHealersForFight(fight.players)[0]?.hps || 1)) * 100"></div>
                         </div>
                         <span class="value-label">{{ formatBigNumber(p.hps) }}</span>
                       </div>
