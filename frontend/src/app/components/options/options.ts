@@ -96,6 +96,8 @@ export class OptionsComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       if (params['tab'] === 'settings') {
         this.activeTab.set('settings');
+      } else {
+        this.activeTab.set('characters');
       }
       if (params['setup'] === 'true') {
         this.isSetupMode.set(true);

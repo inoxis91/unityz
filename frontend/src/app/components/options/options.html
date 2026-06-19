@@ -1,6 +1,6 @@
 <div class="options-container animated-fade-in" *ngIf="authService.currentUser() as user">
   <div class="header-section">
-    <h1>{{ i18n.t('nav.options') }}</h1>
+    <h1>{{ activeTab() === 'characters' ? i18n.t('options.tabs.characters') : i18n.t('options.tabs.settings') }}</h1>
     <p class="subtitle">{{ i18n.t('options.subtitle') }}</p>
   </div>
 
