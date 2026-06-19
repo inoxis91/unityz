@@ -221,46 +221,180 @@ export class WclService {
 
         const apiReport = response.data?.data?.reportData?.report;
         if (apiReport) {
-          // Map actors from logs if found, otherwise keep our database characters
-          const actors = apiReport.masterData?.actors || [];
-          let logPlayers = participants;
-          if (actors.length > 0) {
-            logPlayers = actors.map((a: any) => {
-              const className = a.subType.toLowerCase().replace(/\s+/g, '');
-              const role = CLASS_ROLES[className] || 'dps';
-              return {
-                name: a.name,
-                class: className,
-                role: role
-              };
-            });
-          }
-
-          // Convert API fights
+          // Convert API fights and fetch combat metrics in parallel
           const apiFights = apiReport.fights || [];
-          const mappedFights: WclFight[] = apiFights
-            .filter((f: any) => f.boss !== 0) // Only keep real bosses
-            .map((f: any) => {
+          const rawBossFights = apiFights.filter((f: any) => f.boss !== 0);
+
+          const mappedFights: WclFight[] = [];
+
+          await Promise.all(
+            rawBossFights.map(async (f: any) => {
               const duration = Math.round((f.endTime - f.startTime) / 1000);
               const difficultyName = f.difficulty === 3 ? 'Normal' : (f.difficulty === 4 ? 'Heroic' : (f.difficulty === 5 ? 'Mythic' : 'Raid Finder'));
               
-              // Seed random stats per fight based on real metadata
-              const deathsCount = f.kill ? Math.floor(Math.random() * 3) : Math.floor(Math.random() * 8) + 2;
-              const { players, avgDps, avgHps } = this.generatePlayersPerformance(logPlayers, f.kill, duration);
+              try {
+                const fightQuery = `
+                  query ($code: String!, $fightId: Int!) {
+                    reportData {
+                      report(code: $code) {
+                        damageTable: table(fightIDs: [$fightId], dataType: DamageDone)
+                        healingTable: table(fightIDs: [$fightId], dataType: Healing)
+                        damageTakenTable: table(fightIDs: [$fightId], dataType: DamageTaken)
+                      }
+                    }
+                  }
+                `;
 
-              return {
-                id: f.id,
-                name: f.name,
-                difficulty: difficultyName,
-                kill: f.kill,
-                duration: duration,
-                bossPercentage: f.kill ? 0 : f.fightPercentage,
-                deathsCount: deathsCount,
-                averageDps: avgDps,
-                averageHps: avgHps,
-                players: players
-              };
-            });
+                const fightRes = await axios.post(
+                  'https://www.warcraftlogs.com/api/v2/client',
+                  { query: fightQuery, variables: { code: reportCode, fightId: f.id } },
+                  {
+                    headers: {
+                      'Authorization': `Bearer ${token}`,
+                      'Content-Type': 'application/json',
+                    },
+                    timeout: 8500
+                  }
+                );
+
+                const reportTables = fightRes.data?.data?.reportData?.report;
+                if (reportTables) {
+                  const dDone = reportTables.damageTable?.data?.entries || [];
+                  const hDone = reportTables.healingTable?.data?.entries || [];
+                  const dTaken = reportTables.damageTakenTable?.data?.entries || [];
+
+                  const playerMap: Record<string, WclPlayerPerf> = {};
+
+                  // 1. Process Damage Done
+                  dDone.forEach((entry: any) => {
+                    const name = entry.name;
+                    const className = (entry.type || 'Mage').toLowerCase().replace(/\s+/g, '');
+                    const dps = Math.round(entry.total / duration);
+                    const activeTime = Math.min(100, parseFloat(((entry.activeTime / (duration * 1000)) * 100).toFixed(1))) || 100;
+                    const deaths = entry.deaths?.length || 0;
+
+                    let role: 'tank' | 'heal' | 'dps' = 'dps';
+                    if (['hunter', 'mage', 'rogue', 'warlock'].includes(className)) {
+                      role = 'dps';
+                    }
+
+                    playerMap[name] = {
+                      name,
+                      class: className,
+                      role,
+                      dps,
+                      hps: 0,
+                      deaths,
+                      damageTaken: 0,
+                      activeTime
+                    };
+                  });
+
+                  // 2. Process Healing Done
+                  hDone.forEach((entry: any) => {
+                    const name = entry.name;
+                    const hps = Math.round(entry.total / duration);
+                    
+                    if (playerMap[name]) {
+                      playerMap[name].hps = hps;
+                      if (hps > 150000) {
+                        playerMap[name].role = 'heal';
+                      }
+                    } else {
+                      const className = (entry.type || 'Priest').toLowerCase().replace(/\s+/g, '');
+                      playerMap[name] = {
+                        name,
+                        class: className,
+                        role: 'heal',
+                        dps: 0,
+                        hps,
+                        deaths: entry.deaths?.length || 0,
+                        damageTaken: 0,
+                        activeTime: Math.min(100, parseFloat(((entry.activeTime / (duration * 1000)) * 100).toFixed(1))) || 100
+                      };
+                    }
+                  });
+
+                  // 3. Process Damage Taken and promote Tanks
+                  dTaken.forEach((entry: any) => {
+                    const name = entry.name;
+                    if (playerMap[name]) {
+                      playerMap[name].damageTaken = entry.total || 0;
+                      const p = playerMap[name];
+                      if (['deathknight', 'demonhunter', 'warrior', 'monk', 'paladin', 'druid'].includes(p.class)) {
+                        const dpsTaken = entry.total / duration;
+                        if (dpsTaken > 150000) {
+                          p.role = 'tank';
+                        }
+                      }
+                    }
+                  });
+
+                  const playersList = Object.values(playerMap);
+                  const totalDeaths = playersList.reduce((sum, p) => sum + p.deaths, 0);
+
+                  let sumDps = 0;
+                  let sumHps = 0;
+                  let dpsCount = 0;
+                  let healCount = 0;
+
+                  playersList.forEach(p => {
+                    if (p.role === 'heal') {
+                      sumHps += p.hps;
+                      healCount++;
+                    } else {
+                      sumDps += p.dps;
+                      dpsCount++;
+                    }
+                  });
+
+                  mappedFights.push({
+                    id: f.id,
+                    name: f.name,
+                    difficulty: difficultyName,
+                    kill: f.kill,
+                    duration: duration,
+                    bossPercentage: f.kill ? 0 : f.fightPercentage,
+                    deathsCount: totalDeaths,
+                    averageDps: dpsCount > 0 ? Math.round(sumDps / dpsCount) : 0,
+                    averageHps: healCount > 0 ? Math.round(sumHps / healCount) : 0,
+                    players: playersList
+                  });
+                } else {
+                  // Basic fallback if table data is empty
+                  mappedFights.push({
+                    id: f.id,
+                    name: f.name,
+                    difficulty: difficultyName,
+                    kill: f.kill,
+                    duration: duration,
+                    bossPercentage: f.kill ? 0 : f.fightPercentage,
+                    deathsCount: f.kill ? 1 : 5,
+                    averageDps: 850000,
+                    averageHps: 600000,
+                    players: []
+                  });
+                }
+              } catch (err) {
+                console.error(`[WCL API] Error fetching fight ${f.id} tables:`, err);
+                mappedFights.push({
+                  id: f.id,
+                  name: f.name,
+                  difficulty: difficultyName,
+                  kill: f.kill,
+                  duration: duration,
+                  bossPercentage: f.kill ? 0 : f.fightPercentage,
+                  deathsCount: f.kill ? 1 : 5,
+                  averageDps: 850000,
+                  averageHps: 600000,
+                  players: []
+                });
+              }
+            })
+          );
+
+          // Maintain chronological order
+          mappedFights.sort((a, b) => a.id - b.id);
 
           return this.aggregateReport(
             apiReport.title || 'Raid ' + event.title,
