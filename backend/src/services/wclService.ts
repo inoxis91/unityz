@@ -233,6 +233,7 @@ export class WclService {
                         healingTable: table(fightIDs: [$fightId], dataType: Healing)
                         damageTakenTable: table(fightIDs: [$fightId], dataType: DamageTaken)
                         rankings: rankings(fightIDs: [$fightId])
+                        deathsTable: table(fightIDs: [$fightId], dataType: Deaths)
                       }
                     }
                   }
@@ -271,6 +272,15 @@ export class WclService {
                     });
                   }
 
+                  // Parse Deaths to get real deaths per player
+                  const deathMap: Record<string, number> = {};
+                  const deathsList = reportTables.deathsTable?.data?.entries || [];
+                  deathsList.forEach((d: any) => {
+                    if (d.name) {
+                      deathMap[d.name] = (deathMap[d.name] || 0) + 1;
+                    }
+                  });
+
                   const playerMap: Record<string, WclPlayerPerf> = {};
 
                   // 1. Process Damage Done
@@ -279,7 +289,7 @@ export class WclService {
                     const className = (entry.type || 'Mage').toLowerCase().replace(/\s+/g, '');
                     const dps = Math.round(entry.total / duration);
                     const activeTime = Math.min(100, parseFloat(((entry.activeTime / (duration * 1000)) * 100).toFixed(1))) || 100;
-                    const deaths = entry.deaths?.length || 0;
+                    const deaths = deathMap[name] || 0;
                     const parse = parseMap[name] || 0;
 
                     let role: 'tank' | 'heal' | 'dps' = 'dps';
@@ -305,6 +315,7 @@ export class WclService {
                     const name = entry.name;
                     const hps = Math.round(entry.total / duration);
                     const parse = parseMap[name] || 0;
+                    const deaths = deathMap[name] || 0;
                     
                     if (playerMap[name]) {
                       playerMap[name].hps = hps;
@@ -320,7 +331,7 @@ export class WclService {
                         role: 'heal',
                         dps: 0,
                         hps,
-                        deaths: entry.deaths?.length || 0,
+                        deaths,
                         damageTaken: 0,
                         activeTime: Math.min(100, parseFloat(((entry.activeTime / (duration * 1000)) * 100).toFixed(1))) || 100,
                         parse
