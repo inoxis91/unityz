@@ -1,13 +1,7 @@
-import { Component, OnInit, signal, computed, effect, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { 
-  CdkDragDrop, 
-  moveItemInArray, 
-  transferArrayItem, 
-  DragDropModule 
-} from '@angular/cdk/drag-drop';
 import { CalendarService, CalendarEvent, Signup } from '../../services/calendar';
 import { CharacterService, Character } from '../../services/character';
 import { RosterService, Roster } from '../../services/roster';
@@ -24,7 +18,8 @@ import { LogsDashboardComponent } from './logs-dashboard/logs-dashboard';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule, LogsDashboardComponent, ParticipantsComponent, CompositionComponent],
   templateUrl: './event-details.html',
-  styleUrl: './event-details.css'
+  styleUrl: './event-details.css',
+  encapsulation: ViewEncapsulation.None
 })
 export class EventDetailsComponent implements OnInit {
   private router = inject(Router);
