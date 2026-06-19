@@ -9,7 +9,7 @@ import { I18nService } from '../../../services/i18n';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './logs-dashboard.html',
-  styleUrls: ['./logs-dashboard.css']
+  styleUrl: './logs-dashboard.css'
 })
 export class LogsDashboardComponent implements OnInit {
   private calendarService = inject(CalendarService);

@@ -221,9 +221,11 @@
       <div class="fight-selector-row">
         <label>Sélectionner le combat :</label>
         <select [ngModel]="selectedFightId()" (ngModelChange)="selectedFightId.set(+$event)" class="modern-select mini">
-          <option *ngFor="let f of logsMetrics()!.fights" [value]="f.id">
-            {{ f.name }} ({{ f.kill ? 'K' : 'W' }}) — {{ f.difficulty }}
-          </option>
+          @for (f of logsMetrics()!.fights; track f.id) {
+            <option [value]="f.id">
+              {{ f.name }} ({{ f.kill ? 'K' : 'W' }}) — {{ f.difficulty }}
+            </option>
+          }
         </select>
       </div>
 
