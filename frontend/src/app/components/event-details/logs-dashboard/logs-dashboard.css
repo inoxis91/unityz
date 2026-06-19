@@ -639,12 +639,12 @@
 
 /* High contrast class colors for log player names and texts */
 .text-class-warrior, .text-class-paladin, .text-class-hunter, .text-class-rogue, .text-class-priest, .text-class-deathknight, .text-class-shaman, .text-class-mage, .text-class-warlock, .text-class-monk, .text-class-druid, .text-class-demonhunter, .text-class-evoker { background: transparent !important; }
-.text-class-warrior { color: var(--color-warrior) !important; } .text-class-paladin { color: var(--color-paladin) !important; } .text-class-hunter { color: var(--color-hunter) !important; } .text-class-rogue { color: var(--color-rogue) !important; } .text-class-priest { color: var(--color-priest) !important; } .text-class-deathknight { color: var(--color-dk) !important; } .text-class-shaman { color: var(--color-shaman) !important; } .text-class-mage { color: var(--color-mage) !important; } .text-class-warlock { color: var(--color-warlock) !important; } .text-class-monk { color: var(--color-monk) !important; } .text-class-druid { color: var(--color-druid) !important; } .text-class-demonhunter { color: var(--color-dh) !important; } .text-class-evoker { color: var(--color-evoker) !important; }
+.text-class-warrior { color: var(--color-warrior) !important; } .text-class-paladin { color: var(--color-paladin) !important; } .text-class-hunter { color: var(--color-hunter) !important; } .text-class-rogue { color: var(--color-rogue) !important; } .text-class-priest { color: var(--color-priest) !important; text-shadow: -1px -1px 0 #1e293b, 1px -1px 0 #1e293b, -1px 1px 0 #1e293b, 1px 1px 0 #1e293b !important; } .text-class-deathknight { color: var(--color-dk) !important; } .text-class-shaman { color: var(--color-shaman) !important; } .text-class-mage { color: var(--color-mage) !important; } .text-class-warlock { color: var(--color-warlock) !important; } .text-class-monk { color: var(--color-monk) !important; } .text-class-druid { color: var(--color-druid) !important; } .text-class-demonhunter { color: var(--color-dh) !important; } .text-class-evoker { color: var(--color-evoker) !important; }
 
 /* MVP Podium & Leaderboard Styling */
-.mvp-podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 1.5rem; margin: 2.5rem 0; flex-wrap: wrap; }
+.mvp-podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 3.5rem; margin: 2.5rem 0; flex-wrap: wrap; }
 .podium-item { display: flex; flex-direction: column; align-items: center; flex: 1; max-width: 200px; min-width: 140px; }
-.podium-item-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem 1rem; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.podium-item-box { background: #f8fafc; border: 4px solid #e2e8f0; border-radius: 16px; padding: 1.5rem 1rem; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); transition: transform 0.2s ease, box-shadow 0.2s ease; }
 .podium-item:hover .podium-item-box { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
 .place-1 .podium-item-box { height: 220px; border: 2px solid #fbbf24; background: linear-gradient(180deg, #fefbef 0%, #ffffff 100%); box-shadow: 0 10px 25px -5px rgba(251, 191, 36, 0.1); }
 .place-2 .podium-item-box { height: 180px; border: 1px solid #94a3b8; background: linear-gradient(180deg, #f1f5f9 0%, #ffffff 100%); }
@@ -680,18 +680,18 @@
   .split-layout {
     grid-template-columns: 1fr;
   }
-  
+
   .boss-sidebar {
     max-height: 200px;
     flex-direction: row;
     overflow-x: auto;
     overflow-y: hidden;
   }
-  
+
   .boss-select-btn {
     flex: 0 0 180px;
   }
-  
+
   .performance-brief-grid {
     grid-template-columns: 1fr;
   }
@@ -702,16 +702,16 @@
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .logs-subtabs-nav {
     width: 100%;
     justify-content: space-around;
   }
-  
+
   .logs-stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .stats-secondary-row {
     grid-template-columns: 1fr;
   }

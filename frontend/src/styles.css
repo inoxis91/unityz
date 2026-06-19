@@ -32,7 +32,7 @@ body {
 .class-mage { color: var(--color-mage) !important; }
 .class-monk { color: var(--color-monk) !important; }
 .class-paladin { color: var(--color-paladin) !important; }
-.class-priest { color: var(--color-priest) !important; text-shadow: 1px 1px 2px #000; }
+.class-priest { color: var(--color-priest) !important; text-shadow: -1px -1px 0 #1e293b, 1px -1px 0 #1e293b, -1px 1px 0 #1e293b, 1px 1px 0 #1e293b; }
 .class-rogue { color: var(--color-rogue) !important; text-shadow: 1px 1px 1px #000; }
 .class-shaman { color: var(--color-shaman) !important; }
 .class-warlock { color: var(--color-warlock) !important; }
