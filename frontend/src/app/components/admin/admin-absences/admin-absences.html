@@ -48,21 +48,23 @@
       </thead>
       <tbody>
         <tr *ngFor="let item of getFilteredList()" [class.active-absence-row]="isAbsenceActive(item.start_date, item.end_date)">
-          <td class="member-cell">
-            <span class="battletag">{{ item.battletag }}</span>
-            <span class="active-badge" *ngIf="isAbsenceActive(item.start_date, item.end_date)">
-              {{ i18n.t('admin.absences.status_active') }}
-            </span>
+          <td>
+            <div class="member-cell">
+              <span class="battletag">{{ item.battletag }}</span>
+              <span class="active-badge" *ngIf="isAbsenceActive(item.start_date, item.end_date)">
+                {{ i18n.t('admin.absences.status_active') }}
+              </span>
+            </div>
           </td>
-          <td class="character-cell">
-            <span 
-              *ngIf="item.main_character_name"
-              [style.color]="getWoWClassColor(item.main_character_class)" 
-              class="char-name"
-            >
-              {{ item.main_character_name }}
-            </span>
-            <span class="class-label" *ngIf="item.main_character_name">({{ item.main_character_class }})</span>
+          <td>
+            <div class="character-cell" *ngIf="item.main_character_name">
+              <span 
+                [style.color]="getWoWClassColor(item.main_character_class)" 
+                class="char-name"
+              >
+                {{ item.main_character_name }}
+              </span>
+            </div>
             <span class="no-char" *ngIf="!item.main_character_name">{{ i18n.t('admin.attendance.no_character') }}</span>
           </td>
           <td class="date-cell start-date">{{ item.start_date | date:'dd/MM/yyyy' }}</td>

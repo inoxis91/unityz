@@ -29,6 +29,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     // Admin Absences
     'admin.absences.title': 'Suivi des Absences des Membres',
     'admin.absences.subtitle': 'Suivi global et historique des absences déclarées par les membres de la guilde.',
+    'admin.absences.btn_refresh': 'Actualiser',
     'admin.absences.search_placeholder': 'Rechercher un membre ou un motif...',
     'admin.absences.th_member': 'Membre',
     'admin.absences.th_main_char': 'Perso Principal',
@@ -715,6 +716,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     // Admin Absences
     'admin.absences.title': 'Member Absences Tracker',
     'admin.absences.subtitle': 'Global overview and history of absences declared by guild members.',
+    'admin.absences.btn_refresh': 'Refresh',
     'admin.absences.search_placeholder': 'Search a member or a reason...',
     'admin.absences.th_member': 'Member',
     'admin.absences.th_main_char': 'Main Character',
