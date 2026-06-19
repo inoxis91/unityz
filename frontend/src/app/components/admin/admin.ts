@@ -8,6 +8,7 @@ import { AdminSettingsComponent } from './admin-settings/admin-settings';
 import { AdminAttendanceComponent } from './admin-attendance/admin-attendance';
 import { AdminAbsencesComponent } from './admin-absences/admin-absences';
 import { AuthService } from '../../services/auth';
+import { I18nService } from '../../services/i18n';
 
 @Component({
   selector: 'app-admin',
@@ -27,6 +28,7 @@ import { AuthService } from '../../services/auth';
 })
 export class AdminComponent implements OnInit {
   public authService = inject(AuthService);
+  public i18n = inject(I18nService);
   activeTab = signal<'users' | 'rosters' | 'fees' | 'attendance' | 'absences' | 'settings'>('users');
 
   constructor() {}

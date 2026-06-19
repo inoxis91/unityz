@@ -17,6 +17,15 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'nav.profile': 'Profil',
     'nav.absences': 'Absences',
 
+    // Admin Tabs
+    'admin.title': 'Espace Administrateur',
+    'admin.tab.members': 'Membres',
+    'admin.tab.rosters': 'Rosters',
+    'admin.tab.attendance': 'Assiduité',
+    'admin.tab.absences': 'Absences',
+    'admin.tab.fees': 'Cotisations',
+    'admin.tab.settings': 'Configuration Guilde',
+
     // Absences Section
     'absences.title': 'Déclarer une absence',
     'absences.subtitle': 'Planifiez vos absences pour que les officiers sachent quand vous ne serez pas disponible.',
@@ -678,6 +687,15 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'nav.options': 'Settings',
     'nav.profile': 'Profile',
     'nav.absences': 'Absences',
+
+    // Admin Tabs
+    'admin.title': 'Admin Control Panel',
+    'admin.tab.members': 'Members',
+    'admin.tab.rosters': 'Rosters',
+    'admin.tab.attendance': 'Attendance',
+    'admin.tab.absences': 'Absences',
+    'admin.tab.fees': 'Fees Ledger',
+    'admin.tab.settings': 'Guild Settings',
 
     // Absences Section
     'absences.title': 'Declare an Absence',
