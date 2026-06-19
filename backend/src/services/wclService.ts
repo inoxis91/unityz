@@ -43,18 +43,6 @@ export interface WclReportMetrics {
   wclKeysMissing?: boolean;
 }
 
-// Fallback boss list for procedural generator
-const EXPANSION_BOSSES = [
-  { name: 'Ulgrax the Devourer', difficulty: 'Heroic' },
-  { name: 'The Bloodbound Horror', difficulty: 'Heroic' },
-  { name: 'Sikran, Captain of the Sureki', difficulty: 'Heroic' },
-  { name: 'Rasha\'nan', difficulty: 'Heroic' },
-  { name: 'Broodtwister Ovi\'nax', difficulty: 'Heroic' },
-  { name: 'Nexus-Princess Ky\'veza', difficulty: 'Heroic' },
-  { name: 'The Silken Court', difficulty: 'Heroic' },
-  { name: 'Queen Ansurek', difficulty: 'Heroic' }
-];
-
 const CLASS_ROLES: Record<string, 'tank' | 'heal' | 'dps'> = {
   'deathknight': 'tank',
   'demonhunter': 'tank',
@@ -192,7 +180,7 @@ export class WclService {
                   name
                   difficulty
                   kill
-                  boss
+                  encounterID
                   fightPercentage
                   startTime
                   endTime
@@ -224,7 +212,7 @@ export class WclService {
         if (apiReport) {
           // Convert API fights and fetch combat metrics in parallel
           const apiFights = apiReport.fights || [];
-          const rawBossFights = apiFights.filter((f: any) => f.boss !== 0);
+          const rawBossFights = apiFights.filter((f: any) => f.encounterID !== 0);
 
           const mappedFights: WclFight[] = [];
 
@@ -405,117 +393,11 @@ export class WclService {
           );
         }
       } catch (err) {
-        console.warn('[WCL API] Failed to fetch real metrics, falling back to simulated data:', err instanceof Error ? err.message : err);
+        console.error('[WCL API] Failed to fetch real metrics:', err instanceof Error ? err.message : err);
       }
     }
 
-    // 4. Fallback: Procedural generator (if WCL fails or credentials missing)
-    const fallbackMetrics = this.generateSimulatedMetrics(event, participants);
-    fallbackMetrics.wclKeysMissing = true;
-    return fallbackMetrics;
-  }
-
-  /**
-   * Procedural generator for a complete, realistic raid log summary
-   */
-  private static generateSimulatedMetrics(event: Event, participants: Array<{ name: string; class: string; role: 'tank' | 'heal' | 'dps' }>): WclReportMetrics {
-    const fightsCount = Math.floor(Math.random() * 3) + 4; // 4 to 6 fights
-    const selectedBosses = [...EXPANSION_BOSSES].sort(() => 0.5 - Math.random()).slice(0, fightsCount);
-    
-    const fights: WclFight[] = selectedBosses.map((boss, index) => {
-      const isLastBoss = index === selectedBosses.length - 1;
-      // All earlier bosses are kills, last boss has 70% chance to be a wipe
-      const kill = isLastBoss ? Math.random() > 0.7 : true;
-      const duration = kill ? Math.floor(Math.random() * 120) + 240 : Math.floor(Math.random() * 180) + 90; // 4-6m for kills, 1.5-4.5m for wipes
-      const bossPercentage = kill ? 0 : Math.floor(Math.random() * 45) + 5; // Wipe at 5-50%
-      const deathsCount = kill ? Math.floor(Math.random() * 3) : Math.floor(Math.random() * 7) + 3;
-
-      const { players, avgDps, avgHps } = this.generatePlayersPerformance(participants, kill, duration);
-
-      return {
-        id: index + 1,
-        name: boss.name,
-        difficulty: boss.difficulty,
-        kill: kill,
-        duration: duration,
-        bossPercentage: bossPercentage,
-        deathsCount: deathsCount,
-        averageDps: avgDps,
-        averageHps: avgHps,
-        players: players
-      };
-    });
-
-    return this.aggregateReport(
-      'Raid ' + event.title,
-      'Palais des Libellules',
-      participants[Math.floor(Math.random() * participants.length)].name,
-      fights
-    );
-  }
-
-  /**
-   * Helper to generate performance statistics for players
-   */
-  private static generatePlayersPerformance(
-    playersList: Array<{ name: string; class: string; role: 'tank' | 'heal' | 'dps' }>,
-    kill: boolean,
-    duration: number
-  ): { players: WclPlayerPerf[]; avgDps: number; avgHps: number } {
-    let totalDps = 0;
-    let totalHps = 0;
-    let dpsCount = 0;
-    let healCount = 0;
-
-    const mappedPlayers: WclPlayerPerf[] = playersList.map(p => {
-      const isDead = !kill && Math.random() > 0.5; // More deaths on wipes
-      const activeTime = isDead ? Math.floor(Math.random() * 40) + 50 : Math.floor(Math.random() * 3) + 97; // Lower active time if dead
-      const deaths = isDead ? 1 : 0;
-
-      // Class power multipliers (pure flavor)
-      let classPower = 1.0;
-      if (['mage', 'hunter', 'evoker'].includes(p.class)) classPower = 1.15;
-      if (['warlock', 'rogue', 'deathknight'].includes(p.class)) classPower = 1.1;
-
-      let dps = 0;
-      let hps = 0;
-      let damageTaken = Math.floor(Math.random() * 4000000) + 1000000;
-
-      if (p.role === 'tank') {
-        dps = Math.round((Math.random() * 150000 + 400000) * classPower * (activeTime / 100));
-        hps = Math.round((Math.random() * 100000 + 150000) * (activeTime / 100));
-        damageTaken = Math.floor(Math.random() * 15000000) + 20000000; // Tanks take much more damage
-        totalDps += dps;
-        dpsCount++;
-      } else if (p.role === 'heal') {
-        dps = Math.round((Math.random() * 40000 + 80000) * (activeTime / 100));
-        hps = Math.round((Math.random() * 300000 + 750000) * classPower * (activeTime / 100));
-        totalHps += hps;
-        healCount++;
-      } else { // dps
-        dps = Math.round((Math.random() * 450000 + 850000) * classPower * (activeTime / 100));
-        hps = Math.round((Math.random() * 30000 + 40000) * (activeTime / 100));
-        totalDps += dps;
-        dpsCount++;
-      }
-
-      return {
-        name: p.name,
-        class: p.class,
-        role: p.role,
-        dps: dps,
-        hps: hps,
-        deaths: deaths,
-        damageTaken: damageTaken,
-        activeTime: parseFloat(activeTime.toFixed(1))
-      };
-    });
-
-    return {
-      players: mappedPlayers,
-      avgDps: dpsCount > 0 ? Math.round(totalDps / dpsCount) : 0,
-      avgHps: healCount > 0 ? Math.round(totalHps / healCount) : 0
-    };
+    return null;
   }
 
   /**

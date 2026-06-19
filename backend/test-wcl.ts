@@ -55,7 +55,7 @@ async function run() {
               name
               difficulty
               kill
-              boss
+              encounterID
               fightPercentage
               startTime
               endTime
@@ -93,8 +93,8 @@ async function run() {
     console.log('Owner:', report.owner?.name);
     console.log('Fights found:', report.fights?.length || 0);
 
-    const bossFights = (report.fights || []).filter((f: any) => f.boss !== 0);
-    console.log('Boss Fights found (f.boss !== 0):', bossFights.length);
+    const bossFights = (report.fights || []).filter((f: any) => f.encounterID !== 0);
+    console.log('Boss Fights found (f.encounterID !== 0):', bossFights.length);
     console.log('Fights list:', bossFights.map((f: any) => `${f.name} (${f.kill ? 'KILL' : 'WIPE'} - ${f.fightPercentage}%)`).join(', '));
 
     if (bossFights.length > 0) {
