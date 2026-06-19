@@ -240,4 +240,10 @@
   .btn-delete {
     padding: 0.5rem;
   }
+
+  .reason-cell {
+    max-width: 150px;
+    white-space: normal;
+    word-break: break-word;
+  }
 }
