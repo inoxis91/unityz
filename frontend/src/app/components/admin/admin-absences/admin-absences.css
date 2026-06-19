@@ -1,0 +1,243 @@
+.admin-absences-container {
+  color: white;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.absences-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.absences-header-row h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0;
+  color: #f1f5f9;
+  letter-spacing: -0.02em;
+}
+
+.absences-header-row .subtitle {
+  color: #94a3b8;
+  margin-top: 0.25rem;
+  font-size: 0.95rem;
+}
+
+.btn-refresh {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.btn-refresh:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.refresh-icon {
+  display: inline-block;
+  font-size: 0.9rem;
+}
+
+.refresh-icon.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.search-bar-row {
+  margin-bottom: 1.5rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.search-box {
+  flex: 1;
+  max-width: 450px;
+}
+
+.form-control {
+  background-color: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  color: white;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.loading-state, .empty-state {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: #94a3b8;
+  font-size: 1rem;
+  background-color: #1e293b;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.absences-table-wrapper {
+  background-color: #1e293b;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  overflow-x: auto;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+}
+
+.absences-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.absences-table th {
+  background-color: #0f172a;
+  padding: 1.1rem 1.5rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.absences-table td {
+  padding: 1.1rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.95rem;
+  color: #e2e8f0;
+}
+
+.absences-table tr:last-child td {
+  border-bottom: none;
+}
+
+.absences-table tr:hover td {
+  background-color: rgba(255, 255, 255, 0.01);
+}
+
+.member-cell .battletag {
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.character-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.char-name {
+  font-weight: 700;
+}
+
+.class-label {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.date-cell {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.date-cell.start-date {
+  color: #60a5fa;
+}
+
+.date-cell.end-date {
+  color: #f43f5e;
+}
+
+.reason-cell {
+  max-width: 350px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #94a3b8;
+}
+
+.actions-col, .actions-cell {
+  text-align: right;
+}
+
+.btn-delete {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-delete:hover {
+  background-color: #ef4444;
+  color: white;
+  border-color: #ef4444;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+.delete-icon {
+  width: 14px;
+  height: 14px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 1024px) {
+  .absences-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .btn-refresh {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .absences-table th, .absences-table td {
+    padding: 0.85rem 1rem;
+  }
+  
+  .btn-delete span {
+    display: none;
+  }
+  
+  .btn-delete {
+    padding: 0.5rem;
+  }
+}

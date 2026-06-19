@@ -14,6 +14,7 @@ import { FeesComponent } from './components/fees/fees';
 import { CraftsComponent } from './components/crafts/crafts';
 import { TermsOfServiceComponent } from './components/legal/terms';
 import { PrivacyPolicyComponent } from './components/legal/privacy';
+import { AbsencesComponent } from './components/absences/absences';
 
 export const routes: Routes = [
   { path: '', component: LandingComponent },
@@ -38,6 +39,11 @@ export const routes: Routes = [
   { 
     path: 'options', 
     component: OptionsComponent, 
+    canActivate: [authGuard] 
+  },
+  { 
+    path: 'absences', 
+    component: AbsencesComponent, 
     canActivate: [authGuard] 
   },
   { 

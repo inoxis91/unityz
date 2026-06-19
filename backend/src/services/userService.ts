@@ -498,6 +498,14 @@ export class UserService {
               AND rc.weight <= r.weight
           )
         )
+        AND NOT EXISTS (
+          SELECT 1 
+          FROM absences a 
+          WHERE a.user_id = $2 
+            AND a.guild_id = $1 
+            AND e.start_time::date >= a.start_date 
+            AND e.start_time::date <= a.end_date
+        )
       ORDER BY e.start_time DESC
     `;
     const result = await pool.query(query, [guildId, userId]);
@@ -524,7 +532,7 @@ export class UserService {
         WHERE c.guild_id = $1 OR u.active_guild_id = $1
       ),
       past_events AS (
-        SELECT e.id, e.title, e.roster_id, r.weight as roster_weight
+        SELECT e.id, e.title, e.roster_id, r.weight as roster_weight, e.start_time
         FROM events e
         LEFT JOIN rosters r ON e.roster_id = r.id
         WHERE e.guild_id = $1
@@ -538,7 +546,7 @@ export class UserService {
           pe.id as event_id
         FROM guild_users gu
         CROSS JOIN past_events pe
-        WHERE pe.roster_id IS NULL
+        WHERE (pe.roster_id IS NULL
            OR EXISTS (
              SELECT 1 
              FROM characters c2
@@ -546,6 +554,14 @@ export class UserService {
              WHERE c2.user_id = gu.id
                AND c2.guild_id = $1
                AND rc.weight <= pe.roster_weight
+           ))
+           AND NOT EXISTS (
+             SELECT 1
+             FROM absences a
+             WHERE a.user_id = gu.id
+               AND a.guild_id = $1
+               AND pe.start_time::date >= a.start_date
+               AND pe.start_time::date <= a.end_date
            )
       ),
       user_attendance AS (
@@ -583,5 +599,89 @@ export class UserService {
     `;
     const result = await pool.query(query, [guildId]);
     return result.rows;
+  }
+
+  static async declareAbsence(
+    userId: string,
+    guildId: string,
+    startDate: string,
+    endDate: string,
+    reason?: string | null
+  ): Promise<any> {
+    const query = `
+      INSERT INTO absences (user_id, guild_id, start_date, end_date, reason)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING id, user_id, guild_id, to_char(start_date, 'YYYY-MM-DD') as start_date, to_char(end_date, 'YYYY-MM-DD') as end_date, reason, created_at
+    `;
+    const result = await pool.query(query, [userId, guildId, startDate, endDate, reason || null]);
+    return result.rows[0];
+  }
+
+  static async getUserAbsences(userId: string, guildId: string): Promise<any[]> {
+    const query = `
+      SELECT 
+        id, 
+        user_id, 
+        guild_id, 
+        to_char(start_date, 'YYYY-MM-DD') as start_date, 
+        to_char(end_date, 'YYYY-MM-DD') as end_date, 
+        reason, 
+        created_at
+      FROM absences
+      WHERE user_id = $1 AND guild_id = $2
+      ORDER BY start_date DESC
+    `;
+    const result = await pool.query(query, [userId, guildId]);
+    return result.rows;
+  }
+
+  static async deleteUserAbsence(absenceId: string, userId: string): Promise<boolean> {
+    const query = `
+      DELETE FROM absences
+      WHERE id = $1 AND user_id = $2
+      RETURNING id
+    `;
+    const result = await pool.query(query, [absenceId, userId]);
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  static async getGuildAbsences(guildId: string): Promise<any[]> {
+    const query = `
+      SELECT 
+        a.id, 
+        a.user_id, 
+        a.guild_id, 
+        to_char(a.start_date, 'YYYY-MM-DD') as start_date, 
+        to_char(a.end_date, 'YYYY-MM-DD') as end_date, 
+        a.reason, 
+        a.created_at,
+        u.battletag,
+        COALESCE(
+          (SELECT name FROM characters WHERE user_id = u.id AND is_main = true AND guild_id = $1 LIMIT 1),
+          (SELECT name FROM characters WHERE user_id = u.id AND is_main = true LIMIT 1),
+          SPLIT_PART(u.battletag, '#', 1)
+        ) as main_character_name,
+        COALESCE(
+          (SELECT class FROM characters WHERE user_id = u.id AND is_main = true AND guild_id = $1 LIMIT 1),
+          (SELECT class FROM characters WHERE user_id = u.id AND is_main = true LIMIT 1),
+          'Unknown'
+        ) as main_character_class
+      FROM absences a
+      JOIN users u ON a.user_id = u.id
+      WHERE a.guild_id = $1
+      ORDER BY a.start_date DESC
+    `;
+    const result = await pool.query(query, [guildId]);
+    return result.rows;
+  }
+
+  static async deleteGuildAbsenceAdmin(absenceId: string, guildId: string): Promise<boolean> {
+    const query = `
+      DELETE FROM absences
+      WHERE id = $1 AND guild_id = $2
+      RETURNING id
+    `;
+    const result = await pool.query(query, [absenceId, guildId]);
+    return result.rowCount !== null && result.rowCount > 0;
   }
 }

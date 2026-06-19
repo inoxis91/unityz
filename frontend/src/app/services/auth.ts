@@ -186,4 +186,28 @@ export class AuthService {
       this.router.navigate(['/login']);
     });
   }
+
+  declareAbsence(startDate: string, endDate: string, reason?: string | null): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/users/me/absences`, {
+      start_date: startDate,
+      end_date: endDate,
+      reason
+    }, { withCredentials: true });
+  }
+
+  getUserAbsences(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/users/me/absences`, { withCredentials: true });
+  }
+
+  deleteUserAbsence(absenceId: string): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/users/me/absences/${absenceId}`, { withCredentials: true });
+  }
+
+  getGuildAbsences(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/users/active-guild/absences`, { withCredentials: true });
+  }
+
+  deleteGuildAbsenceAdmin(absenceId: string): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/users/active-guild/absences/${absenceId}`, { withCredentials: true });
+  }
 }

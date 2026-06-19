@@ -426,6 +426,20 @@ export const initDb = async () => {
       END $$;
     `);
 
+    // Absences table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS absences (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE,
+        guild_id UUID REFERENCES guilds(id) ON DELETE CASCADE,
+        start_date DATE NOT NULL,
+        end_date DATE NOT NULL,
+        reason TEXT,
+        created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     console.log('Database tables initialized successfully.');
   } catch (err) {
     console.error('Error initializing database:', err);

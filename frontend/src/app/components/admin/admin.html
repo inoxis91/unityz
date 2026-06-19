@@ -20,6 +20,10 @@
     <app-admin-attendance></app-admin-attendance>
   </div>
 
+  <div class="tab-content" *ngIf="activeTab() === 'absences' && authService.canManageEvents()">
+    <app-admin-absences></app-admin-absences>
+  </div>
+
   <div class="tab-content" *ngIf="activeTab() === 'fees' && authService.canManageFees()">
     <app-admin-fees></app-admin-fees>
   </div>

@@ -6,6 +6,7 @@ import { validate } from '../middlewares/validate';
 import { findMemberByName } from '../lib/discord';
 import { UserService } from '../services/userService';
 import { CharacterService } from '../services/characterService';
+import { declareAbsenceSchema, deleteAbsenceSchema } from '../schemas/absenceSchemas';
 
 const router = express.Router();
 
@@ -311,6 +312,83 @@ router.post('/import-characters', isAuthenticated, validate(importCharactersSche
 
     await UserService.importSelectedCharacters(req.user!.id, guildId, accessToken, characters);
     res.json({ status: 'success', message: 'Characters imported successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// --- ABSENCES ROUTES ---
+
+// POST /api/users/me/absences : Déclare une absence pour l'utilisateur
+router.post('/me/absences', isAuthenticated, validate(declareAbsenceSchema), async (req, res, next) => {
+  try {
+    const { start_date, end_date, reason } = req.body;
+    const guildId = req.user!.active_guild_id;
+    if (!guildId) {
+      return res.status(400).json({ status: 'error', message: 'No active guild selected' });
+    }
+    const absence = await UserService.declareAbsence(req.user!.id, guildId, start_date, end_date, reason);
+    res.json({ status: 'success', data: absence });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/users/me/absences : Récupère les absences de l'utilisateur
+router.get('/me/absences', isAuthenticated, async (req, res, next) => {
+  try {
+    const guildId = req.user!.active_guild_id;
+    if (!guildId) {
+      return res.status(400).json({ status: 'error', message: 'No active guild selected' });
+    }
+    const absences = await UserService.getUserAbsences(req.user!.id, guildId);
+    res.json(absences);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// DELETE /api/users/me/absences/:id : Supprime une absence de l'utilisateur
+router.delete('/me/absences/:id', isAuthenticated, validate(deleteAbsenceSchema), async (req, res, next) => {
+  try {
+    const id = req.params.id as string;
+    const success = await UserService.deleteUserAbsence(id, req.user!.id);
+    if (!success) {
+      return res.status(404).json({ status: 'error', message: 'Absence non trouvée ou non autorisée' });
+    }
+    res.json({ status: 'success', message: 'Absence supprimée avec succès' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/users/active-guild/absences : Récupère toutes les absences de la guilde active (Administrateurs/Officiers)
+router.get('/active-guild/absences', canManageEvents, async (req, res, next) => {
+  try {
+    const guildId = req.user!.active_guild_id;
+    if (!guildId) {
+      return res.status(400).json({ status: 'error', message: 'No active guild selected' });
+    }
+    const absences = await UserService.getGuildAbsences(guildId);
+    res.json(absences);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// DELETE /api/users/active-guild/absences/:id : Supprime une absence par un administrateur
+router.delete('/active-guild/absences/:id', canManageEvents, validate(deleteAbsenceSchema), async (req, res, next) => {
+  try {
+    const id = req.params.id as string;
+    const guildId = req.user!.active_guild_id;
+    if (!guildId) {
+      return res.status(400).json({ status: 'error', message: 'No active guild selected' });
+    }
+    const success = await UserService.deleteGuildAbsenceAdmin(id, guildId);
+    if (!success) {
+      return res.status(404).json({ status: 'error', message: 'Absence non trouvée' });
+    }
+    res.json({ status: 'success', message: 'Absence supprimée par un administrateur' });
   } catch (error) {
     next(error);
   }

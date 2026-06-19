@@ -6,6 +6,7 @@ import { AdminFeesComponent } from './admin-fees/admin-fees';
 import { AdminUsersComponent } from './admin-users/admin-users';
 import { AdminSettingsComponent } from './admin-settings/admin-settings';
 import { AdminAttendanceComponent } from './admin-attendance/admin-attendance';
+import { AdminAbsencesComponent } from './admin-absences/admin-absences';
 import { AuthService } from '../../services/auth';
 
 @Component({
@@ -18,14 +19,15 @@ import { AuthService } from '../../services/auth';
     AdminFeesComponent, 
     AdminUsersComponent, 
     AdminSettingsComponent,
-    AdminAttendanceComponent
+    AdminAttendanceComponent,
+    AdminAbsencesComponent
   ],
   templateUrl: './admin.html',
   styleUrl: './admin.css'
 })
 export class AdminComponent implements OnInit {
   public authService = inject(AuthService);
-  activeTab = signal<'users' | 'rosters' | 'fees' | 'attendance' | 'settings'>('users');
+  activeTab = signal<'users' | 'rosters' | 'fees' | 'attendance' | 'absences' | 'settings'>('users');
 
   constructor() {}
 

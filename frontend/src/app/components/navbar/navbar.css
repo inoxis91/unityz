@@ -101,18 +101,6 @@
   background-color: rgba(59, 130, 246, 0.1);
 }
 
-.nav-links a.active::after {
-  content: '';
-  position: absolute;
-  bottom: 6px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 4px;
-  height: 4px;
-  background-color: #3b82f6;
-  border-radius: 50%;
-}
-
 /* Profile Dropdown Styles */
 .profile-dropdown {
   position: relative;
@@ -311,10 +299,6 @@
 
   .nav-links.active {
     transform: translateX(0);
-  }
-
-  .nav-links a.active::after {
-    display: none;
   }
 
   .profile-dropdown {
