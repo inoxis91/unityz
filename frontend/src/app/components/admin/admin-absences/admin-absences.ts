@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../services/auth';
+import { CharacterService } from '../../../services/character';
 import { I18nService } from '../../../services/i18n';
 import { ToastService } from '../../../services/toast';
 import { ConfirmService } from '../../../services/confirm';
@@ -91,27 +92,7 @@ export class AdminAbsencesComponent implements OnInit {
     });
   }
 
-  getWoWClassColor(className: string): string {
-    if (!className) return '#ffffff';
-    const normalized = className.toLowerCase().replace(/\s+/g, '');
-    const colors: Record<string, string> = {
-      warrior: '#C79C6E',
-      paladin: '#F58CBA',
-      hunter: '#ABD473',
-      rogue: '#FFF569',
-      priest: '#FFFFFF',
-      deathknight: '#C41F3B',
-      dk: '#C41F3B',
-      shaman: '#0070DE',
-      mage: '#40C7EB',
-      warlock: '#8787ED',
-      monk: '#00FF96',
-      druid: '#FF7D0A',
-      drood: '#FF7D0A',
-      demonhunter: '#A330C9',
-      dh: '#A330C9',
-      evoker: '#33937F'
-    };
-    return colors[normalized] || '#ffffff';
+  getClassCategory(className: string | undefined): string {
+    return CharacterService.getClassId(className);
   }
 }

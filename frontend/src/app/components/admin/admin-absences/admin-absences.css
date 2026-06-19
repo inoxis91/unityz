@@ -221,6 +221,20 @@
   gap: 0.4rem;
 }
 
+.character-cell .class-warrior { color: #c79c6e !important; }
+.character-cell .class-paladin { color: #ec4899 !important; }
+.character-cell .class-hunter { color: #15803d !important; }
+.character-cell .class-rogue { color: #a16207 !important; }
+.character-cell .class-priest { color: #475569 !important; }
+.character-cell .class-death-knight { color: #c41f3b !important; }
+.character-cell .class-shaman { color: #0070de !important; }
+.character-cell .class-mage { color: #0284c7 !important; }
+.character-cell .class-warlock { color: #6d28d9 !important; }
+.character-cell .class-monk { color: #0f766e !important; }
+.character-cell .class-druid { color: #d97706 !important; }
+.character-cell .class-demon-hunter { color: #a21caf !important; }
+.character-cell .class-evoker { color: #115e59 !important; }
+
 .char-name {
   font-weight: 700;
 }

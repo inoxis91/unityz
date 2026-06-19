@@ -58,10 +58,7 @@
           </td>
           <td>
             <div class="character-cell" *ngIf="item.main_character_name">
-              <span 
-                [style.color]="getWoWClassColor(item.main_character_class)" 
-                class="char-name"
-              >
+              <span [class]="'char-name class-' + getClassCategory(item.main_character_class)">
                 {{ item.main_character_name }}
               </span>
             </div>
