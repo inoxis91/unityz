@@ -416,7 +416,10 @@
 
       </div>
     </ng-container>
-
+  </div>
+  <!-- TAB: Logs & Stats -->
+  <div class="tab-content" *ngIf="activeTab() === 'logs'">
+    <app-logs-dashboard [eventId]="event()!.id!"></app-logs-dashboard>
   </div>
 </div>
 
@@ -622,9 +625,4 @@
       <button class="btn-secondary" (click)="showCancelModal.set(false)">{{ i18n.t('event.details.btn_cancel_modal_close') }}</button>
       <button class="btn-primary" (click)="confirmCancelEvent()" style="background: #ef4444 !important; border-color: #ef4444 !important;">{{ i18n.t('event.details.btn_confirm_cancellation') }}</button>
     </div>
-  </div>
-
-  <!-- TAB: Logs & Stats -->
-  <div class="tab-content" *ngIf="activeTab() === 'logs'">
-    <app-logs-dashboard [eventId]="event()!.id!"></app-logs-dashboard>
   </div>
