@@ -191,7 +191,8 @@ export class WclService {
                   name
                   difficulty
                   kill
-                  bossPercentage
+                  boss
+                  fightPercentage
                   startTime
                   endTime
                 }
@@ -238,7 +239,7 @@ export class WclService {
           // Convert API fights
           const apiFights = apiReport.fights || [];
           const mappedFights: WclFight[] = apiFights
-            .filter((f: any) => f.bossPercentage !== undefined) // Only keep real bosses
+            .filter((f: any) => f.boss !== 0) // Only keep real bosses
             .map((f: any) => {
               const duration = Math.round((f.endTime - f.startTime) / 1000);
               const difficultyName = f.difficulty === 3 ? 'Normal' : (f.difficulty === 4 ? 'Heroic' : (f.difficulty === 5 ? 'Mythic' : 'Raid Finder'));
@@ -253,7 +254,7 @@ export class WclService {
                 difficulty: difficultyName,
                 kill: f.kill,
                 duration: duration,
-                bossPercentage: f.kill ? 0 : f.bossPercentage / 100,
+                bossPercentage: f.kill ? 0 : f.fightPercentage,
                 deathsCount: deathsCount,
                 averageDps: avgDps,
                 averageHps: avgHps,
