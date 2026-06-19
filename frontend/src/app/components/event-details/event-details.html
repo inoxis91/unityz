@@ -679,27 +679,30 @@
         <div class="logs-overview-panel animated-fade-in" *ngIf="logsSubTab() === 'overview'">
           <div class="logs-stats-grid">
             <div class="stat-card">
-              <span class="label">{{ i18n.t('event.details.logs_total_damage') }}</span>
-              <span class="value damage-text">{{ formatBigNumber(logsMetrics()!.totalDamage) }}</span>
-              <span class="sub-label">DPS: {{ formatBigNumber(logsMetrics()!.raidAvgDps) }}</span>
+              <span class="label">Survivabilité Raid</span>
+              <span class="value duration-text" style="color: #d97706 !important;">{{ logsMetrics()!.avgSurvivalRate }}%</span>
+              <span class="sub-label">Taux de Survie Moyen</span>
             </div>
             <div class="stat-card">
-              <span class="label">{{ i18n.t('event.details.logs_total_healing') }}</span>
-              <span class="value heal-text">{{ formatBigNumber(logsMetrics()!.totalHealing) }}</span>
-              <span class="sub-label">HPS: {{ formatBigNumber(logsMetrics()!.raidAvgHps) }}</span>
+              <span class="label">Activité Raid</span>
+              <span class="value heal-text" style="color: #4f46e5 !important;">{{ logsMetrics()!.avgActiveTime }}%</span>
+              <span class="sub-label">Temps actif moyen</span>
+            </div>
+            <div class="stat-card">
+              <span class="label">Raid DPS / HPS</span>
+              <span class="value flex-row" style="gap: 8px; font-size: 1.45rem;">
+                <span class="kill-tag" style="background: #fee2e2; color: #dc2626; font-size: 1.15rem; font-weight: 800;">{{ formatBigNumber(logsMetrics()!.raidAvgDps) }} DPS</span>
+                <span class="wipe-tag" style="background: #dcfce7; color: #16a34a; font-size: 1.15rem; font-weight: 800;">{{ formatBigNumber(logsMetrics()!.raidAvgHps) }} HPS</span>
+              </span>
+              <span class="sub-label">Puissance globale moyenne</span>
             </div>
             <div class="stat-card">
               <span class="label">Kills / Wipes</span>
-              <span class="value flex-row">
+              <span class="value flex-row" style="gap: 8px;">
                 <span class="kill-tag">{{ logsMetrics()!.totalKills }} K</span>
                 <span class="wipe-tag">{{ logsMetrics()!.totalWipes }} W</span>
               </span>
-              <span class="sub-label">Fights: {{ logsMetrics()!.fights.length }}</span>
-            </div>
-            <div class="stat-card">
-              <span class="label">Durée Active</span>
-              <span class="value duration-text">{{ formatHourDuration(logsMetrics()!.totalDuration) }}</span>
-              <span class="sub-label">Combat de boss</span>
+              <span class="sub-label">Fights: {{ logsMetrics()!.fights.length }} — {{ formatHourDuration(logsMetrics()!.totalDuration) }}</span>
             </div>
           </div>
 
@@ -845,6 +848,9 @@
                   <th (click)="setPlayerSort('dps')" [class.active-sort]="logsPlayerSortBy() === 'dps'">
                     {{ i18n.t('event.details.logs_th_player') }} ⇅
                   </th>
+                  <th (click)="setPlayerSort('parse')" [class.active-sort]="logsPlayerSortBy() === 'parse'">
+                    Parse ⇅
+                  </th>
                   <th (click)="setPlayerSort('dps')" [class.active-sort]="logsPlayerSortBy() === 'dps'">
                     {{ i18n.t('event.details.logs_th_dps') }} ⇅
                   </th>
@@ -864,12 +870,17 @@
               </thead>
               <tbody>
                 @for (player of getSortedPlayersForSelectedFight(); track player.name) {
-                  <tr [class]="'class-' + player.class">
+                  <tr>
                     <td>
                       <div class="player-cell">
                         <img [src]="'assets/icons/class/' + getClassIcon(player.class)" class="class-icon-img" alt="">
-                        <span class="player-name-bold">{{ player.name }}</span>
+                        <span class="player-name-bold" [class]="'class-' + player.class">{{ player.name }}</span>
                       </div>
+                    </td>
+                    <td>
+                      <span class="parse-pill" [class]="getParseClass(player.parse)">
+                        {{ player.parse }}
+                      </span>
                     </td>
                     <td class="damage-text font-bold">{{ formatNumberWithSpaces(player.dps) }}</td>
                     <td class="heal-text font-bold">{{ formatNumberWithSpaces(player.hps) }}</td>

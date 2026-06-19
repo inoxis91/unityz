@@ -53,6 +53,7 @@ export interface WclPlayerPerf {
   deaths: number;
   damageTaken: number;
   activeTime: number;
+  parse: number;
 }
 
 export interface WclFight {
@@ -79,6 +80,8 @@ export interface WclReportMetrics {
   totalHealing: number;
   raidAvgDps: number;
   raidAvgHps: number;
+  avgSurvivalRate: number;
+  avgActiveTime: number;
   mostDeadlyBoss: string;
   mvpPlayer: { name: string; class: string; score: number };
   fights: WclFight[];

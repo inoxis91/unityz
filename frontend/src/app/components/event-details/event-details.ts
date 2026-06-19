@@ -282,7 +282,7 @@ export class EventDetailsComponent implements OnInit {
     return metrics.fights.find(f => f.id === fightId) || null;
   }
 
-  logsPlayerSortBy = signal<'dps' | 'hps' | 'activeTime' | 'damageTaken' | 'deaths'>('dps');
+  logsPlayerSortBy = signal<'dps' | 'hps' | 'activeTime' | 'damageTaken' | 'deaths' | 'parse'>('dps');
   logsPlayerSortOrder = signal<'asc' | 'desc'>('desc');
 
   getSortedPlayersForSelectedFight(): WclPlayerPerf[] {
@@ -302,13 +302,22 @@ export class EventDetailsComponent implements OnInit {
     });
   }
 
-  setPlayerSort(field: 'dps' | 'hps' | 'activeTime' | 'damageTaken' | 'deaths') {
+  setPlayerSort(field: 'dps' | 'hps' | 'activeTime' | 'damageTaken' | 'deaths' | 'parse') {
     if (this.logsPlayerSortBy() === field) {
       this.logsPlayerSortOrder.update(o => o === 'desc' ? 'asc' : 'desc');
     } else {
       this.logsPlayerSortBy.set(field);
       this.logsPlayerSortOrder.set('desc');
     }
+  }
+
+  getParseClass(parse: number): string {
+    if (parse >= 99) return 'parse-legendary';
+    if (parse >= 95) return 'parse-epic';
+    if (parse >= 75) return 'parse-heroic';
+    if (parse >= 50) return 'parse-rare';
+    if (parse >= 25) return 'parse-uncommon';
+    return 'parse-common';
   }
 
   loadSignups(id: string) {
