@@ -346,6 +346,9 @@ export const initDb = async () => {
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='events' AND column_name='canceled_reason') THEN
           ALTER TABLE events ADD COLUMN canceled_reason TEXT;
         END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='events' AND column_name='logs') THEN
+          ALTER TABLE events ADD COLUMN logs TEXT;
+        END IF;
       END $$;
     `);
 

@@ -58,6 +58,15 @@
         <span class="icon">📝</span>
         <span class="text">{{ event()?.description }}</span>
       </div>
+      <div class="meta-item logs-item" *ngIf="event()?.type?.toLowerCase() === 'raid' && event()?.logs">
+        <span class="icon">📊</span>
+        <span class="text">
+          <a [href]="event()?.logs" target="_blank" rel="noopener noreferrer" class="logs-link">
+            <img src="assets/icons/warcraftlogs.png" class="wcl-icon" alt="WCL">
+            {{ i18n.t('event.details.view_logs') }}
+          </a>
+        </span>
+      </div>
     </div>
   </div>
 
@@ -478,6 +487,11 @@
         <div class="form-section" *ngIf="editEventData.type === 'custom'">
           <label>{{ i18n.t('calendar.form.custom_type') }}</label>
           <input type="text" [(ngModel)]="editEventData.customType" name="customType" [placeholder]="i18n.t('calendar.form.custom_type_placeholder')">
+        </div>
+
+        <div class="form-section animated-fade-in" *ngIf="editEventData.type === 'raid'">
+          <label>{{ i18n.t('calendar.form.logs') }}</label>
+          <input type="text" [(ngModel)]="editEventData.logs" name="logs" [placeholder]="i18n.t('calendar.form.logs_placeholder')">
         </div>
 
         <div class="form-grid">

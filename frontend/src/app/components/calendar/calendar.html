@@ -182,6 +182,11 @@
             <label>{{ i18n.t('calendar.form.custom_type') }}</label>
             <input type="text" [(ngModel)]="eventForm.customType" name="customType" required [placeholder]="i18n.t('calendar.form.custom_type_placeholder')">
           </div>
+
+          <div class="form-section animated-fade-in" *ngIf="eventForm.type === 'raid'">
+            <label>{{ i18n.t('calendar.form.logs') }}</label>
+            <input type="text" [(ngModel)]="eventForm.logs" name="logs" [placeholder]="i18n.t('calendar.form.logs_placeholder')">
+          </div>
         </div>
 
         <div class="modal-footer">

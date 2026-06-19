@@ -137,7 +137,8 @@ export class CalendarComponent implements OnInit {
     type: 'raid',
     customType: '',
     roster_id: '' as string | null,
-    invited_groups: [] as string[]
+    invited_groups: [] as string[],
+    logs: ''
   };
 
   canManageEvents = computed(() => {
@@ -340,7 +341,8 @@ export class CalendarComponent implements OnInit {
       end_time: `${finalEndDate}T${this.eventForm.end_time}:00`,
       type: finalType,
       roster_id: finalType === 'reunion' ? null : (this.eventForm.roster_id || null),
-      invited_groups: finalType === 'reunion' ? (this.eventForm.invited_groups || []) : []
+      invited_groups: finalType === 'reunion' ? (this.eventForm.invited_groups || []) : [],
+      logs: finalType === 'raid' ? (this.eventForm.logs || null) : null
     };
 
     if (this.isEditing() && this.selectedEventId()) {
@@ -413,7 +415,8 @@ export class CalendarComponent implements OnInit {
       type: 'raid',
       customType: '',
       roster_id: '',
-      invited_groups: []
+      invited_groups: [],
+      logs: ''
     };
   }
 
@@ -450,7 +453,8 @@ export class CalendarComponent implements OnInit {
       type: props.type,
       customType: ['raid', 'mm+', 'reunion'].includes(props.type) ? '' : props.type,
       roster_id: props.roster_id || '',
-      invited_groups: props.invited_groups || []
+      invited_groups: props.invited_groups || [],
+      logs: props.logs || ''
     };
     if (this.eventForm.customType) this.eventForm.type = 'custom';
 
@@ -490,7 +494,8 @@ export class CalendarComponent implements OnInit {
       roster_id: props.roster_id || null,
       invited_groups: props.invited_groups || [],
       start_time: `${startH}:${startM}:00`,
-      end_time: `${endH}:${endM}:00`
+      end_time: `${endH}:${endM}:00`,
+      logs: props.logs || null
     });
     this.toast.info(this.i18n.t('calendar.toast.copied'));
   }
@@ -526,7 +531,8 @@ export class CalendarComponent implements OnInit {
       roster_id: copied.roster_id,
       invited_groups: copied.invited_groups,
       start_time: `${dateStr}T${copied.start_time}`,
-      end_time: `${finalEndDate}T${copied.end_time}`
+      end_time: `${finalEndDate}T${copied.end_time}`,
+      logs: copied.logs || null
     };
 
     this.calendarService.createEvent(eventData).subscribe({

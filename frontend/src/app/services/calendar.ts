@@ -17,6 +17,7 @@ export interface CalendarEvent {
   invited_groups?: string[];
   is_canceled?: boolean;
   canceled_reason?: string | null;
+  logs?: string | null;
   created_by?: string;
   creator_name?: string;
 }

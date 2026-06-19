@@ -71,7 +71,8 @@ export class EventDetailsComponent implements OnInit {
     customType: '',
     roster_id: '' as string | null,
     invited_groups: [] as string[],
-    mm_groups_count: 0
+    mm_groups_count: 0,
+    logs: ''
   };
 
   // Computed views for Raid
@@ -253,7 +254,8 @@ export class EventDetailsComponent implements OnInit {
       customType: ['raid', 'mm+', 'reunion'].includes(evt.type) ? '' : evt.type,
       roster_id: evt.roster_id || '',
       invited_groups: evt.invited_groups || [],
-      mm_groups_count: evt.mm_groups_count || 0
+      mm_groups_count: evt.mm_groups_count || 0,
+      logs: evt.logs || ''
     };
     this.showEditModal.set(true);
   }
@@ -305,7 +307,8 @@ export class EventDetailsComponent implements OnInit {
       type: finalType,
       roster_id: finalType === 'reunion' ? null : (this.editEventData.roster_id || null),
       invited_groups: finalType === 'reunion' ? (this.editEventData.invited_groups || []) : [],
-      mm_groups_count: this.editEventData.mm_groups_count
+      mm_groups_count: this.editEventData.mm_groups_count,
+      logs: finalType === 'raid' ? (this.editEventData.logs || null) : null
     };
     this.calendarService.updateEvent(this.event()!.id!, updatedData).subscribe({
       next: () => {

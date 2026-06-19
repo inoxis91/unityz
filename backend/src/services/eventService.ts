@@ -18,6 +18,7 @@ export interface Event {
   invited_groups?: string[];
   is_canceled?: boolean;
   canceled_reason?: string | null;
+  logs?: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -55,7 +56,7 @@ export class EventService {
              to_char(e.start_time, 'YYYY-MM-DD"T"HH24:MI:SS') as start_time,
              to_char(e.end_time, 'YYYY-MM-DD"T"HH24:MI:SS') as end_time,
              e.type, e.roster_id, e.mm_groups_count, e.created_by, e.invited_groups,
-             e.is_canceled, e.canceled_reason,
+             e.is_canceled, e.canceled_reason, e.logs,
              r.name as roster_name, r.weight as roster_weight
       FROM events e
       LEFT JOIN rosters r ON e.roster_id = r.id
@@ -86,7 +87,7 @@ export class EventService {
              to_char(e.start_time, 'YYYY-MM-DD"T"HH24:MI:SS') as start_time,
              to_char(e.end_time, 'YYYY-MM-DD"T"HH24:MI:SS') as end_time,
              e.type, e.roster_id, e.mm_groups_count, e.created_by, e.guild_id, e.invited_groups,
-             e.is_canceled, e.canceled_reason,
+             e.is_canceled, e.canceled_reason, e.logs,
              r.name as roster_name, r.weight as roster_weight
       FROM events e
       LEFT JOIN rosters r ON e.roster_id = r.id
@@ -98,8 +99,8 @@ export class EventService {
 
   static async create(data: Partial<Event>, userId: string, guildId: string): Promise<Event> {
     const query = `
-      INSERT INTO events (title, description, start_time, end_time, type, roster_id, mm_groups_count, created_by, guild_id, invited_groups)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      INSERT INTO events (title, description, start_time, end_time, type, roster_id, mm_groups_count, created_by, guild_id, invited_groups, logs)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
     `;
     const result = await pool.query(query, [
@@ -112,7 +113,8 @@ export class EventService {
       data.mm_groups_count || 0,
       userId,
       guildId,
-      data.invited_groups || []
+      data.invited_groups || [],
+      data.logs || null
     ]);
     
     const createdEvent = result.rows[0];
@@ -228,8 +230,8 @@ export class EventService {
   static async update(id: string, data: Partial<Event>): Promise<Event | null> {
     const query = `
       UPDATE events 
-      SET title = $1, description = $2, start_time = $3, end_time = $4, type = $5, roster_id = $6, mm_groups_count = $7, invited_groups = $8, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $9
+      SET title = $1, description = $2, start_time = $3, end_time = $4, type = $5, roster_id = $6, mm_groups_count = $7, invited_groups = $8, logs = $9, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $10
       RETURNING *
     `;
     const result = await pool.query(query, [
@@ -241,6 +243,7 @@ export class EventService {
       data.roster_id || null, 
       data.mm_groups_count ?? 0,
       data.invited_groups || [],
+      data.logs || null,
       id
     ]);
     return result.rows[0] || null;
