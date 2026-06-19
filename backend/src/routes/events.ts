@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../lib/db';
 import { EventService } from '../services/eventService';
+import { WclService } from '../services/wclService';
 import { isAuthenticated, canManageEvents, requireActiveGuild, requirePaidGuild } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import { createEventSchema, updateEventSchema, signupSchema, updateSignupGroupSchema, updateGroupsCountSchema, updateSignupSchema } from '../schemas/eventSchemas';
@@ -48,6 +49,19 @@ router.get('/:id', isAuthenticated, async (req, res, next) => {
     }
     
     res.json(event);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/events/:id/logs-metrics : Récupère les métriques de logs de l'événement
+router.get('/:id/logs-metrics', isAuthenticated, async (req, res, next) => {
+  try {
+    const metrics = await WclService.getMetricsForEvent(req.params.id as string);
+    if (!metrics) {
+      return res.status(404).json({ status: 'error', message: 'Metrics not found or invalid event' });
+    }
+    res.json(metrics);
   } catch (error) {
     next(error);
   }

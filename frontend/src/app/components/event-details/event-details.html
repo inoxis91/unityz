@@ -73,6 +73,9 @@
   <div class="tabs">
     <button [class.active]="activeTab() === 'participants'" (click)="activeTab.set('participants')">{{ i18n.t('event.details.tab_participants') }}</button>
     <button [class.active]="activeTab() === 'composition'" (click)="activeTab.set('composition')">{{ i18n.t('event.details.tab_composition') }}</button>
+    <button *ngIf="event()?.type?.toLowerCase() === 'raid' && event()?.logs" [class.active]="activeTab() === 'logs'" (click)="activeTab.set('logs')">
+      {{ i18n.t('event.details.tab_logs') }}
+    </button>
   </div>
 
   <!-- TAB: Participants -->
@@ -82,22 +85,29 @@
       <div class="form-card" *ngIf="!event()?.is_canceled">
         <h3>{{ i18n.t('event.details.your_signup') }}</h3>
         
+        <!-- Past Event Warning -->
+        <div class="warning-box" *ngIf="isEventPast()" style="margin-bottom: 1rem;">
+          <p>
+            ⚠️ {{ i18n.t('event.details.event_past_warning') }}
+          </p>
+        </div>
+
         <div class="status-selector">
-          <button [class.active]="signupStatus === 'signed_up'" (click)="setStatus('signed_up')" class="status-btn present">
+          <button [class.active]="signupStatus() === 'signed_up'" (click)="setStatus('signed_up')" class="status-btn present" [disabled]="isEventPast()">
             <span class="dot"></span> {{ i18n.t('event.details.status_present') }}
           </button>
-          <button [class.active]="signupStatus === 'standby'" (click)="setStatus('standby')" class="status-btn standby">
+          <button [class.active]="signupStatus() === 'standby'" (click)="setStatus('standby')" class="status-btn standby" [disabled]="isEventPast()">
             <span class="dot"></span> {{ i18n.t('event.details.status_maybe') }}
           </button>
-          <button [class.active]="signupStatus === 'absent'" (click)="setStatus('absent')" class="status-btn absent">
+          <button [class.active]="signupStatus() === 'absent'" (click)="setStatus('absent')" class="status-btn absent" [disabled]="isEventPast()">
             <span class="dot"></span> {{ i18n.t('event.details.status_absent') }}
           </button>
         </div>
 
-        <div class="signup-fields animated-fade-in" *ngIf="signupStatus !== 'absent'">
+        <div class="signup-fields animated-fade-in" *ngIf="signupStatus() !== 'absent'">
           <div class="form-group" *ngIf="myCharacters().length > 0; else noChars">
             <label>{{ i18n.t('event.details.select_character') }}</label>
-            <select [(ngModel)]="selectedCharacterId" (change)="onCharacterChange()" class="modern-select">
+            <select [ngModel]="selectedCharacterId()" (ngModelChange)="selectedCharacterId.set($event)" (change)="onCharacterChange()" class="modern-select" [disabled]="isEventPast()">
               <option *ngFor="let char of myCharacters()" [value]="char.id" [disabled]="!isCharacterAllowed(char)">
                 {{ char.name }} ({{ i18n.t('class.' + getClassCategory(char.class)) }})
                 {{ !isCharacterAllowed(char) ? ' — [' + i18n.t('event.details.roster_not_allowed') + ']' : '' }}
@@ -122,13 +132,13 @@
           <div class="form-group" *ngIf="allowedCharacters().length > 0">
             <label>{{ i18n.t('event.details.your_role') }}</label>
             <div class="role-selector">
-              <button [class.active]="selectedRole === 'tank'" (click)="selectedRole = 'tank'">
+              <button [class.active]="selectedRole() === 'tank'" (click)="selectedRole.set('tank')" [disabled]="isEventPast()">
                 <img src="assets/icons/tank.png" class="role-icon-img" alt="Tank"> {{ i18n.t('event.details.role_tank') }}
               </button>
-              <button [class.active]="selectedRole === 'heal'" (click)="selectedRole = 'heal'">
+              <button [class.active]="selectedRole() === 'heal'" (click)="selectedRole.set('heal')" [disabled]="isEventPast()">
                 <img src="assets/icons/heal.png" class="role-icon-img" alt="Heal"> {{ i18n.t('event.details.role_heal') }}
               </button>
-              <button [class.active]="selectedRole === 'dps'" (click)="selectedRole = 'dps'">
+              <button [class.active]="selectedRole() === 'dps'" (click)="selectedRole.set('dps')" [disabled]="isEventPast()">
                 <img src="assets/icons/dps.png" class="role-icon-img" alt="DPS"> {{ i18n.t('event.details.role_dps') }}
               </button>
             </div>
@@ -137,7 +147,7 @@
 
         <div class="form-group">
           <label>{{ i18n.t('event.details.comment_label') }}</label>
-          <textarea [(ngModel)]="comment" [placeholder]="i18n.t('event.details.comment_placeholder')" rows="3"></textarea>
+          <textarea [ngModel]="comment()" (ngModelChange)="comment.set($event)" [placeholder]="i18n.t('event.details.comment_placeholder')" rows="3" [disabled]="isEventPast()"></textarea>
         </div>
 
         <div class="actions">
@@ -614,3 +624,256 @@
     </div>
   </div>
 </div>
+
+  <!-- TAB: Logs & Stats -->
+  <div class="tab-content" *ngIf="activeTab() === 'logs'">
+    <div class="logs-dashboard-container animated-fade-in">
+      <div class="logs-header-section">
+        <div class="header-left">
+          <h2>{{ i18n.t('event.details.logs_title') }}</h2>
+          <p>{{ i18n.t('event.details.logs_subtitle') }}</p>
+        </div>
+        <div class="logs-subtabs-nav">
+          <button [class.active]="logsSubTab() === 'overview'" (click)="logsSubTab.set('overview')">
+            <span>📊</span> {{ i18n.t('event.details.logs_overview') }}
+          </button>
+          <button [class.active]="logsSubTab() === 'bosses'" (click)="logsSubTab.set('bosses')">
+            <span>🐉</span> {{ i18n.t('event.details.logs_bosses') }}
+          </button>
+          <button [class.active]="logsSubTab() === 'players'" (click)="logsSubTab.set('players')">
+            <span>🏆</span> {{ i18n.t('event.details.logs_players') }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading / Error states -->
+      <div class="logs-loading-card" *ngIf="loadingLogs()">
+        <div class="spinner"></div>
+        <p>{{ i18n.t('event.details.logs_loading') }}</p>
+      </div>
+
+      <div class="logs-error-card" *ngIf="logsError() && !loadingLogs()">
+        <span class="icon">⚠️</span>
+        <p>{{ i18n.t('event.details.logs_error') }}</p>
+      </div>
+
+      <!-- Main Logs Panels (when metrics are loaded) -->
+      <ng-container *ngIf="logsMetrics() && !loadingLogs()">
+        
+        <!-- SUB-TAB 1: Overview -->
+        <div class="logs-overview-panel animated-fade-in" *ngIf="logsSubTab() === 'overview'">
+          <div class="logs-stats-grid">
+            <div class="stat-card">
+              <span class="label">{{ i18n.t('event.details.logs_total_damage') }}</span>
+              <span class="value damage-text">{{ formatBigNumber(logsMetrics()!.totalDamage) }}</span>
+              <span class="sub-label">DPS: {{ formatBigNumber(logsMetrics()!.raidAvgDps) }}</span>
+            </div>
+            <div class="stat-card">
+              <span class="label">{{ i18n.t('event.details.logs_total_healing') }}</span>
+              <span class="value heal-text">{{ formatBigNumber(logsMetrics()!.totalHealing) }}</span>
+              <span class="sub-label">HPS: {{ formatBigNumber(logsMetrics()!.raidAvgHps) }}</span>
+            </div>
+            <div class="stat-card">
+              <span class="label">Kills / Wipes</span>
+              <span class="value flex-row">
+                <span class="kill-tag">{{ logsMetrics()!.totalKills }} K</span>
+                <span class="wipe-tag">{{ logsMetrics()!.totalWipes }} W</span>
+              </span>
+              <span class="sub-label">Fights: {{ logsMetrics()!.fights.length }}</span>
+            </div>
+            <div class="stat-card">
+              <span class="label">Durée Active</span>
+              <span class="value duration-text">{{ formatHourDuration(logsMetrics()!.totalDuration) }}</span>
+              <span class="sub-label">Combat de boss</span>
+            </div>
+          </div>
+
+          <div class="stats-secondary-row">
+            <div class="highlight-card deadly-boss">
+              <div class="highlight-icon">💀</div>
+              <div class="highlight-info">
+                <h4>{{ i18n.t('event.details.logs_deadly_boss') }}</h4>
+                <p class="boss-name">{{ logsMetrics()!.mostDeadlyBoss }}</p>
+              </div>
+            </div>
+            <div class="highlight-card mvp-player" [class]="'class-' + logsMetrics()!.mvpPlayer.class">
+              <div class="highlight-icon">👑</div>
+              <div class="highlight-info">
+                <h4>{{ i18n.t('event.details.logs_mvp') }}</h4>
+                <p class="mvp-name" [class]="'class-' + logsMetrics()!.mvpPlayer.class">{{ logsMetrics()!.mvpPlayer.name }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mini Fights Timeline -->
+          <div class="fights-timeline-card">
+            <h3>Chronologie des combats</h3>
+            <div class="timeline-row">
+              @for (fight of logsMetrics()!.fights; track fight.id) {
+                <div class="timeline-item" [class.is-kill]="fight.kill" (click)="logsSubTab.set('bosses'); selectedFightId.set(fight.id)">
+                  <div class="item-header">
+                    <span class="boss-name">{{ fight.name }}</span>
+                    <span class="status-badge" [class.kill]="fight.kill" [class.wipe]="!fight.kill">
+                      {{ fight.kill ? i18n.t('event.details.logs_kill') : i18n.t('event.details.logs_wipe') }}
+                    </span>
+                  </div>
+                  <div class="item-body">
+                    <span class="duration">{{ formatDuration(fight.duration) }}</span>
+                    <span class="diff">{{ fight.difficulty }}</span>
+                    <span class="percent" *ngIf="!fight.kill">{{ fight.bossPercentage }}%</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 2: Boss Fights Details -->
+        <div class="logs-bosses-panel animated-fade-in" *ngIf="logsSubTab() === 'bosses'">
+          <div class="split-layout">
+            <!-- Left sidebar: Boss selector -->
+            <div class="boss-sidebar">
+              @for (fight of logsMetrics()!.fights; track fight.id) {
+                <button class="boss-select-btn" [class.active]="selectedFightId() === fight.id" (click)="selectedFightId.set(fight.id)">
+                  <div class="boss-btn-top">
+                    <span class="name">{{ fight.name }}</span>
+                    <span class="badge" [class.kill]="fight.kill" [class.wipe]="!fight.kill">
+                      {{ fight.kill ? i18n.t('event.details.logs_kill') : i18n.t('event.details.logs_wipe') }}
+                    </span>
+                  </div>
+                  <div class="boss-btn-bottom">
+                    <span>{{ fight.difficulty }}</span>
+                    <span>{{ formatDuration(fight.duration) }}</span>
+                  </div>
+                </button>
+              }
+            </div>
+
+            <!-- Right section: Fight details and stats -->
+            <div class="fight-details-content" *ngIf="getSelectedFight(); let fight">
+              <div class="fight-header">
+                <h3>{{ fight.name }} — {{ fight.difficulty }}</h3>
+                <div class="fight-meta-pills">
+                  <span class="pill-meta" [class.kill]="fight.kill">
+                    {{ fight.kill ? i18n.t('event.details.logs_kill') : i18n.t('event.details.logs_wipe') + ' (' + fight.bossPercentage + '%)' }}
+                  </span>
+                  <span class="pill-meta">🕒 {{ formatDuration(fight.duration) }}</span>
+                  <span class="pill-meta">☠️ {{ fight.deathsCount }} {{ i18n.t('event.details.logs_th_deaths').toLowerCase() }}</span>
+                  <span class="pill-meta damage-pill">⚔️ {{ formatBigNumber(fight.averageDps) }} DPS Raid</span>
+                  <span class="pill-meta heal-pill">💚 {{ formatBigNumber(fight.averageHps) }} HPS Raid</span>
+                </div>
+              </div>
+
+              <!-- Top DPS and HPS charts side by side -->
+              <div class="performance-brief-grid">
+                <div class="brief-card">
+                  <h4>⚔️ Top DPS</h4>
+                  <div class="brief-ranking-list">
+                    @for (p of getSortedPlayersForSelectedFight().slice(0, 5); track p.name) {
+                      <div class="ranking-row" [class]="'class-' + p.class">
+                        <div class="rank-name-col">
+                          <span class="rank-num">{{ $index + 1 }}</span>
+                          <span class="player-name">{{ p.name }}</span>
+                        </div>
+                        <div class="rank-bar-col">
+                          <div class="progress-bar-bg">
+                            <div class="progress-bar-fill dps-fill" [style.width.%]="(p.dps / getSortedPlayersForSelectedFight()[0].dps) * 100"></div>
+                          </div>
+                          <span class="value-label">{{ formatBigNumber(p.dps) }}</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <div class="brief-card">
+                  <h4>💚 Top HPS</h4>
+                  <div class="brief-ranking-list">
+                    @for (p of getSortedHealersForFight(fight.players).slice(0, 5); track p.name) {
+                      @if (p.hps > 0) {
+                        <div class="ranking-row" [class]="'class-' + p.class">
+                          <div class="rank-name-col">
+                            <span class="rank-num">{{ $index + 1 }}</span>
+                            <span class="player-name">{{ p.name }}</span>
+                          </div>
+                          <div class="rank-bar-col">
+                            <div class="progress-bar-bg">
+                              <div class="progress-bar-fill heal-fill" [style.width.%]="(p.hps / getSortedHealersForFight(fight.players)[0].hps) * 100"></div>
+                            </div>
+                            <span class="value-label">{{ formatBigNumber(p.hps) }}</span>
+                          </div>
+                        </div>
+                      }
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 3: Detailed Players Table -->
+        <div class="logs-players-panel animated-fade-in" *ngIf="logsSubTab() === 'players' && getSelectedFight(); let fight">
+          <div class="fight-selector-row">
+            <label>Sélectionner le combat :</label>
+            <select [ngModel]="selectedFightId()" (ngModelChange)="selectedFightId.set(+$event)" class="modern-select mini">
+              <option *ngFor="let f of logsMetrics()!.fights" [value]="f.id">
+                {{ f.name }} ({{ f.kill ? 'K' : 'W' }}) — {{ f.difficulty }}
+              </option>
+            </select>
+          </div>
+
+          <div class="table-card table-responsive">
+            <table class="modern-table logs-table">
+              <thead>
+                <tr>
+                  <th (click)="setPlayerSort('dps')" [class.active-sort]="logsPlayerSortBy() === 'dps'">
+                    {{ i18n.t('event.details.logs_th_player') }} ⇅
+                  </th>
+                  <th (click)="setPlayerSort('dps')" [class.active-sort]="logsPlayerSortBy() === 'dps'">
+                    {{ i18n.t('event.details.logs_th_dps') }} ⇅
+                  </th>
+                  <th (click)="setPlayerSort('hps')" [class.active-sort]="logsPlayerSortBy() === 'hps'">
+                    {{ i18n.t('event.details.logs_th_hps') }} ⇅
+                  </th>
+                  <th (click)="setPlayerSort('damageTaken')" [class.active-sort]="logsPlayerSortBy() === 'damageTaken'">
+                    {{ i18n.t('event.details.logs_th_damage_taken') }} ⇅
+                  </th>
+                  <th (click)="setPlayerSort('deaths')" [class.active-sort]="logsPlayerSortBy() === 'deaths'">
+                    {{ i18n.t('event.details.logs_th_deaths') }} ⇅
+                  </th>
+                  <th (click)="setPlayerSort('activeTime')" [class.active-sort]="logsPlayerSortBy() === 'activeTime'">
+                    {{ i18n.t('event.details.logs_th_active') }} ⇅
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (player of getSortedPlayersForSelectedFight(); track player.name) {
+                  <tr [class]="'class-' + player.class">
+                    <td>
+                      <div class="player-cell">
+                        <img [src]="'assets/icons/class/' + getClassIcon(player.class)" class="class-icon-img" alt="">
+                        <span class="player-name-bold">{{ player.name }}</span>
+                      </div>
+                    </td>
+                    <td class="damage-text font-bold">{{ formatNumberWithSpaces(player.dps) }}</td>
+                    <td class="heal-text font-bold">{{ formatNumberWithSpaces(player.hps) }}</td>
+                    <td class="text-slate-600">{{ formatNumberWithSpaces(player.damageTaken) }}</td>
+                    <td>
+                      <span class="death-pill" [class.dead]="player.deaths > 0">
+                        {{ player.deaths > 0 ? '☠️ ' + player.deaths : '✓' }}
+                      </span>
+                    </td>
+                    <td class="font-bold" [class.text-amber-600]="player.activeTime < 90" [class.text-emerald-600]="player.activeTime >= 95">
+                      {{ player.activeTime }}%
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </ng-container>
+    </div>
+  </div>

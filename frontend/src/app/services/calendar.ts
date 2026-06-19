@@ -44,6 +44,46 @@ export interface Signup {
   user_characters?: any[];
 }
 
+export interface WclPlayerPerf {
+  name: string;
+  class: string;
+  role: 'tank' | 'heal' | 'dps';
+  dps: number;
+  hps: number;
+  deaths: number;
+  damageTaken: number;
+  activeTime: number;
+}
+
+export interface WclFight {
+  id: number;
+  name: string;
+  difficulty: string;
+  kill: boolean;
+  duration: number;
+  bossPercentage: number;
+  deathsCount: number;
+  averageDps: number;
+  averageHps: number;
+  players: WclPlayerPerf[];
+}
+
+export interface WclReportMetrics {
+  title: string;
+  zone: string;
+  owner: string;
+  totalDuration: number;
+  totalKills: number;
+  totalWipes: number;
+  totalDamage: number;
+  totalHealing: number;
+  raidAvgDps: number;
+  raidAvgHps: number;
+  mostDeadlyBoss: string;
+  mvpPlayer: { name: string; class: string; score: number };
+  fights: WclFight[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -106,5 +146,9 @@ export class CalendarService {
 
   getMySignups(): Observable<Signup[]> {
     return this.http.get<Signup[]>(`${this.apiUrl}/my-signups`, { withCredentials: true });
+  }
+
+  getEventLogsMetrics(eventId: string): Observable<WclReportMetrics> {
+    return this.http.get<WclReportMetrics>(`${this.apiUrl}/${eventId}/logs-metrics`, { withCredentials: true });
   }
 }

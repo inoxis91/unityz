@@ -8,7 +8,7 @@ import {
   transferArrayItem, 
   DragDropModule 
 } from '@angular/cdk/drag-drop';
-import { CalendarService, CalendarEvent, Signup } from '../../services/calendar';
+import { CalendarService, CalendarEvent, Signup, WclReportMetrics, WclFight, WclPlayerPerf } from '../../services/calendar';
 import { CharacterService, Character } from '../../services/character';
 import { RosterService, Roster } from '../../services/roster';
 import { AuthService } from '../../services/auth';
@@ -39,7 +39,14 @@ export class EventDetailsComponent implements OnInit {
   rioScores = signal<Map<string, number>>(new Map());
   myCharacters = signal<Character[]>([]);
   rosters = signal<Roster[]>([]);
-  activeTab = signal<'participants' | 'composition'>('participants');
+  activeTab = signal<'participants' | 'composition' | 'logs'>('participants');
+  
+  // Warcraft Logs Metrics Signals
+  logsMetrics = signal<WclReportMetrics | null>(null);
+  logsSubTab = signal<'overview' | 'bosses' | 'players'>('overview');
+  selectedFightId = signal<number | null>(null);
+  loadingLogs = signal<boolean>(false);
+  logsError = signal<boolean>(false);
   
   // Sorting for participants tab
   sortMethod = signal<'date' | 'status'>('date');
@@ -53,10 +60,16 @@ export class EventDetailsComponent implements OnInit {
   cancelReason = '';
 
   // Signup Form
-  selectedCharacterId = '';
-  selectedRole = 'dps';
-  signupStatus: 'signed_up' | 'standby' | 'absent' = 'signed_up';
-  comment = '';
+  selectedCharacterId = signal<string>('');
+  selectedRole = signal<string>('dps');
+  signupStatus = signal<'signed_up' | 'standby' | 'absent'>('signed_up');
+  comment = signal<string>('');
+
+  isEventPast = computed(() => {
+    const evt = this.event();
+    if (!evt) return false;
+    return new Date().getTime() > new Date(evt.start_time).getTime();
+  });
 
   // Edit Event Modal
   showEditModal = signal(false);
@@ -151,9 +164,10 @@ export class EventDetailsComponent implements OnInit {
 
   isSignupDisabled = computed(() => {
     if (!this.event()) return true;
-    if (this.signupStatus === 'absent') return false;
-    if (!this.selectedCharacterId) return true;
-    const char = this.myCharacters().find(c => c.id === this.selectedCharacterId);
+    if (this.isEventPast()) return true;
+    if (this.signupStatus() === 'absent') return false;
+    if (!this.selectedCharacterId()) return true;
+    const char = this.myCharacters().find(c => c.id === this.selectedCharacterId());
     return !char || !this.isCharacterAllowed(char);
   });
 
@@ -176,16 +190,16 @@ export class EventDetailsComponent implements OnInit {
   ) {
     effect(() => {
       const allowed = this.allowedCharacters();
-      if (allowed.length > 0 && !this.selectedCharacterId && this.signupStatus !== 'absent') {
+      if (allowed.length > 0 && !this.selectedCharacterId() && this.signupStatus() !== 'absent') {
         const mainChar = allowed.find(c => c.is_main);
         if (mainChar) {
-          this.selectedCharacterId = mainChar.id || '';
+          this.selectedCharacterId.set(mainChar.id || '');
         } else {
-          this.selectedCharacterId = allowed[0].id || '';
+          this.selectedCharacterId.set(allowed[0].id || '');
         }
         this.onCharacterChange();
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   ngOnInit() {
@@ -204,7 +218,97 @@ export class EventDetailsComponent implements OnInit {
   loadEvent(id: string) {
     this.calendarService.getEvent(id).subscribe((event: CalendarEvent) => {
       this.event.set(event);
+      if (event.type.toLowerCase() === 'raid' && event.logs) {
+        this.loadLogsMetrics(id);
+      }
     });
+  }
+
+  loadLogsMetrics(id: string) {
+    this.loadingLogs.set(true);
+    this.logsError.set(false);
+    this.calendarService.getEventLogsMetrics(id).subscribe({
+      next: (metrics) => {
+        this.logsMetrics.set(metrics);
+        this.loadingLogs.set(false);
+        if (metrics && metrics.fights && metrics.fights.length > 0) {
+          this.selectedFightId.set(metrics.fights[0].id);
+        }
+      },
+      error: (err) => {
+        console.error('Error loading logs metrics:', err);
+        this.logsError.set(true);
+        this.loadingLogs.set(false);
+      }
+    });
+  }
+
+  formatDuration(seconds: number): string {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  formatHourDuration(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    }
+    return `${mins}m`;
+  }
+
+  formatBigNumber(num: number): string {
+    if (num >= 1000000000) {
+      return (num / 1000000000).toFixed(2) + 'B';
+    }
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(2) + 'M';
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'k';
+    }
+    return num.toString();
+  }
+
+  formatNumberWithSpaces(num: number): string {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  }
+
+  getSelectedFight(): WclFight | null {
+    const metrics = this.logsMetrics();
+    const fightId = this.selectedFightId();
+    if (!metrics || fightId === null) return null;
+    return metrics.fights.find(f => f.id === fightId) || null;
+  }
+
+  logsPlayerSortBy = signal<'dps' | 'hps' | 'activeTime' | 'damageTaken' | 'deaths'>('dps');
+  logsPlayerSortOrder = signal<'asc' | 'desc'>('desc');
+
+  getSortedPlayersForSelectedFight(): WclPlayerPerf[] {
+    const fight = this.getSelectedFight();
+    if (!fight) return [];
+    
+    const sortBy = this.logsPlayerSortBy();
+    const isDesc = this.logsPlayerSortOrder() === 'desc';
+    
+    return [...fight.players].sort((a, b) => {
+      let valA = a[sortBy];
+      let valB = b[sortBy];
+      
+      if (valA < valB) return isDesc ? 1 : -1;
+      if (valA > valB) return isDesc ? -1 : 1;
+      return 0;
+    });
+  }
+
+  setPlayerSort(field: 'dps' | 'hps' | 'activeTime' | 'damageTaken' | 'deaths') {
+    if (this.logsPlayerSortBy() === field) {
+      this.logsPlayerSortOrder.update(o => o === 'desc' ? 'asc' : 'desc');
+    } else {
+      this.logsPlayerSortBy.set(field);
+      this.logsPlayerSortOrder.set('desc');
+    }
   }
 
   loadSignups(id: string) {
@@ -228,10 +332,10 @@ export class EventDetailsComponent implements OnInit {
 
       const mySignup = signups.find(s => s.user_id === this.authService.currentUser()?.id);
       if (mySignup) {
-        this.selectedCharacterId = mySignup.character_id || '';
-        this.selectedRole = mySignup.role;
-        this.signupStatus = mySignup.status as any;
-        this.comment = mySignup.comment || '';
+        this.selectedCharacterId.set(mySignup.character_id || '');
+        this.selectedRole.set(mySignup.role);
+        this.signupStatus.set(mySignup.status as any);
+        this.comment.set(mySignup.comment || '');
       }
     });
   }
@@ -376,21 +480,21 @@ export class EventDetailsComponent implements OnInit {
   }
 
   onCharacterChange() {
-    const char = this.myCharacters().find(c => c.id === this.selectedCharacterId);
+    const char = this.myCharacters().find(c => c.id === this.selectedCharacterId());
     if (char) {
-      if (char.is_tank) this.selectedRole = 'tank';
-      else if (char.is_heal) this.selectedRole = 'heal';
-      else this.selectedRole = 'dps';
+      if (char.is_tank) this.selectedRole.set('tank');
+      else if (char.is_heal) this.selectedRole.set('heal');
+      else this.selectedRole.set('dps');
     }
   }
 
   setStatus(status: 'signed_up' | 'standby' | 'absent') {
-    this.signupStatus = status;
-    if (status !== 'absent' && (!this.selectedCharacterId || this.selectedCharacterId === '')) {
+    this.signupStatus.set(status);
+    if (status !== 'absent' && (!this.selectedCharacterId() || this.selectedCharacterId() === '')) {
       const allowed = this.allowedCharacters();
       const mainChar = allowed.find(c => c.is_main);
-      if (mainChar) this.selectedCharacterId = mainChar.id || '';
-      else if (allowed.length > 0) this.selectedCharacterId = allowed[0].id || '';
+      if (mainChar) this.selectedCharacterId.set(mainChar.id || '');
+      else if (allowed.length > 0) this.selectedCharacterId.set(allowed[0].id || '');
       this.onCharacterChange();
     }
   }
@@ -398,10 +502,10 @@ export class EventDetailsComponent implements OnInit {
   onSignup() {
     if (!this.event() || this.isSignupDisabled()) return;
     const signupData = {
-      character_id: this.signupStatus === 'absent' ? null : this.selectedCharacterId,
-      role: this.selectedRole,
-      status: this.signupStatus,
-      comment: this.comment
+      character_id: this.signupStatus() === 'absent' ? null : this.selectedCharacterId(),
+      role: this.selectedRole(),
+      status: this.signupStatus(),
+      comment: this.comment()
     };
     this.calendarService.signup(this.event()!.id!, signupData).subscribe({
       next: () => {
@@ -417,6 +521,29 @@ export class EventDetailsComponent implements OnInit {
 
   getClassCategory(className: string | undefined): string {
     return CharacterService.getClassId(className);
+  }
+
+  getClassIcon(className: string | undefined): string {
+    if (!className) return 'mage.webp';
+    const c = className.toLowerCase().trim();
+    if (c === 'deathknight' || c === 'death knight' || c === 'dk') return 'dk.webp';
+    if (c === 'demonhunter' || c === 'demon hunter' || c === 'dh') return 'dh.webp';
+    if (c === 'druid' || c === 'drood') return 'drood.webp';
+    if (c === 'hunter' || c === 'hunt') return 'hunt.webp';
+    if (c === 'evoker') return 'evoker.webp';
+    if (c === 'mage') return 'mage.webp';
+    if (c === 'monk') return 'monk.webp';
+    if (c === 'paladin') return 'paladin.webp';
+    if (c === 'priest') return 'priest.webp';
+    if (c === 'rogue') return 'rogue.webp';
+    if (c === 'shaman') return 'shaman.webp';
+    if (c === 'warlock') return 'warlock.webp';
+    if (c === 'warrior') return 'warrior.webp';
+    return 'mage.webp';
+  }
+
+  getSortedHealersForFight(players: WclPlayerPerf[]): WclPlayerPerf[] {
+    return [...players].sort((a, b) => b.hps - a.hps);
   }
 
   getRioScoreForKey(name: string | undefined, realm: string | undefined): number | null {
