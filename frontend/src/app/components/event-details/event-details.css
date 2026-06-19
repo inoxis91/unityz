@@ -4,6 +4,11 @@
   padding: 2rem;
 }
 
+app-participants, app-composition, app-logs-dashboard {
+  display: block;
+  width: 100%;
+}
+
 .back-link {
   margin-bottom: 1.5rem;
 }
