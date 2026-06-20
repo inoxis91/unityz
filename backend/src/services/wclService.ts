@@ -498,10 +498,10 @@ export class WclService {
         let scoreBonus = 0;
         if (p.role === 'dps') {
           scoreBonus = p.dps / 100;
-          scoreBonus -= (p.damageTaken || 0) / 5000;
+          scoreBonus -= (p.damageTaken || 0) / 500000;
         } else if (p.role === 'heal') {
-          scoreBonus = p.hps / 40;
-          scoreBonus -= (p.damageTaken || 0) / 5000;
+          scoreBonus = p.hps / 60;
+          scoreBonus -= (p.damageTaken || 0) / 500000;
         } else if (p.role === 'tank') {
           scoreBonus = (p.dps / 30) + (p.hps / 100);
           // Pas de malus de dégâts subis pour les tanks
