@@ -76,6 +76,7 @@ export interface WclMvpEntry {
   dpsAvg: number;
   hpsAvg: number;
   deathsCount: number;
+  damageTakenSum: number;
 }
 
 export interface WclReportMetrics {

@@ -34,6 +34,7 @@ export interface WclMvpEntry {
   dpsAvg: number;
   hpsAvg: number;
   deathsCount: number;
+  damageTakenSum: number;
 }
 
 export interface WclReportMetrics {
@@ -488,24 +489,34 @@ export class WclService {
     }
 
     // Find MVP Player (lowest death count, highest dps/hps relative to role) and construct Leaderboard
-    const playerScores: Record<string, { class: string; score: number; dpsSum: number; hpsSum: number; deathsSum: number; fightsCount: number }> = {};
+    const playerScores: Record<string, { class: string; score: number; dpsSum: number; hpsSum: number; deathsSum: number; damageTakenSum: number; fightsCount: number }> = {};
     fights.forEach(f => {
       f.players.forEach(p => {
         if (!playerScores[p.name]) {
-          playerScores[p.name] = { class: p.class, score: 0, dpsSum: 0, hpsSum: 0, deathsSum: 0, fightsCount: 0 };
+          playerScores[p.name] = { class: p.class, score: 0, dpsSum: 0, hpsSum: 0, deathsSum: 0, damageTakenSum: 0, fightsCount: 0 };
         }
         let scoreBonus = 0;
-        if (p.role === 'dps') scoreBonus = p.dps / 1000;
-        if (p.role === 'heal') scoreBonus = p.hps / 1000;
-        if (p.role === 'tank') scoreBonus = (p.dps + p.hps) / 800;
+        if (p.role === 'dps') {
+          scoreBonus = p.dps / 100;
+          scoreBonus -= (p.damageTaken || 0) / 5000;
+        } else if (p.role === 'heal') {
+          scoreBonus = p.hps / 40;
+          scoreBonus -= (p.damageTaken || 0) / 5000;
+        } else if (p.role === 'tank') {
+          scoreBonus = (p.dps / 30) + (p.hps / 100);
+          // Pas de malus de dégâts subis pour les tanks
+        }
 
         // Penalty for dying
-        if (p.deaths > 0) scoreBonus -= 50;
+        if (p.deaths > 0) {
+          scoreBonus -= p.deaths * 5000;
+        }
 
         playerScores[p.name].score += scoreBonus;
         playerScores[p.name].dpsSum += p.dps;
         playerScores[p.name].hpsSum += p.hps;
         playerScores[p.name].deathsSum += p.deaths;
+        playerScores[p.name].damageTakenSum += (p.damageTaken || 0);
         playerScores[p.name].fightsCount += 1;
       });
     });
@@ -528,7 +539,8 @@ export class WclService {
         score: Math.round(info.score),
         dpsAvg: Math.round(info.dpsSum / info.fightsCount),
         hpsAvg: Math.round(info.hpsSum / info.fightsCount),
-        deathsCount: info.deathsSum
+        deathsCount: info.deathsSum,
+        damageTakenSum: info.damageTakenSum
       };
     }).sort((a, b) => b.score - a.score);
 
