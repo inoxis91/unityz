@@ -488,59 +488,131 @@ export class WclService {
       }
     }
 
-    // Find MVP Player (lowest death count, highest dps/hps relative to role) and construct Leaderboard
-    const playerScores: Record<string, { class: string; score: number; dpsSum: number; hpsSum: number; deathsSum: number; damageTakenSum: number; fightsCount: number }> = {};
+    // Find MVP Player and construct Leaderboard using the relative scoring system
+    interface PlayerScoreStats {
+      name: string;
+      class: string;
+      role: 'tank' | 'heal' | 'dps';
+      dpsSum: number;
+      hpsSum: number;
+      damageTakenSum: number;
+      deathsSum: number;
+      fightsCount: number;
+      dpsAvg: number;
+      hpsAvg: number;
+      avoidableDeaths: number;
+      dpsPoints: number;
+      hpsPoints: number;
+      damageTakenMalus: number;
+      deathMalus: number;
+      totalScore: number;
+    }
+
+    const playerScoresMap: Record<string, PlayerScoreStats> = {};
+
     fights.forEach(f => {
       f.players.forEach(p => {
-        if (!playerScores[p.name]) {
-          playerScores[p.name] = { class: p.class, score: 0, dpsSum: 0, hpsSum: 0, deathsSum: 0, damageTakenSum: 0, fightsCount: 0 };
+        if (!playerScoresMap[p.name]) {
+          playerScoresMap[p.name] = {
+            name: p.name,
+            class: p.class,
+            role: p.role,
+            dpsSum: 0,
+            hpsSum: 0,
+            damageTakenSum: 0,
+            deathsSum: 0,
+            fightsCount: 0,
+            dpsAvg: 0,
+            hpsAvg: 0,
+            avoidableDeaths: 0,
+            dpsPoints: 0,
+            hpsPoints: 0,
+            damageTakenMalus: 0,
+            deathMalus: 0,
+            totalScore: 0
+          };
         }
-        let scoreBonus = 0;
-        if (p.role === 'dps') {
-          scoreBonus = p.dps / 100;
-          scoreBonus -= (p.damageTaken || 0) / 500000;
-        } else if (p.role === 'heal') {
-          scoreBonus = p.hps / 60;
-          scoreBonus -= (p.damageTaken || 0) / 500000;
-        } else if (p.role === 'tank') {
-          scoreBonus = (p.dps / 30) + (p.hps / 100);
-          // Pas de malus de dégâts subis pour les tanks
+        // Keep track of the role. If they ever play 'tank' or 'heal', prioritize those over 'dps'
+        if (p.role !== 'dps') {
+          playerScoresMap[p.name].role = p.role;
         }
-
-        // Penalty for dying
-        if (p.deaths > 0) {
-          scoreBonus -= p.deaths * 10;
-        }
-
-        playerScores[p.name].score += scoreBonus;
-        playerScores[p.name].dpsSum += p.dps;
-        playerScores[p.name].hpsSum += p.hps;
-        playerScores[p.name].deathsSum += p.deaths;
-        playerScores[p.name].damageTakenSum += (p.damageTaken || 0);
-        playerScores[p.name].fightsCount += 1;
+        playerScoresMap[p.name].dpsSum += p.dps;
+        playerScoresMap[p.name].hpsSum += p.hps;
+        playerScoresMap[p.name].damageTakenSum += (p.damageTaken || 0);
+        playerScoresMap[p.name].deathsSum += p.deaths;
+        playerScoresMap[p.name].fightsCount += 1;
       });
+    });
+
+    const playersList = Object.values(playerScoresMap);
+
+    // Calculate averages and avoidable deaths
+    playersList.forEach(p => {
+      const fc = p.fightsCount || 1;
+      p.dpsAvg = p.dpsSum / fc;
+      p.hpsAvg = p.hpsSum / fc;
+      p.avoidableDeaths = Math.max(0, p.deathsSum - totalWipes);
+    });
+
+    // 1. Dégâts infligés (DPS) - 200 pts for 1st, -10 pts per rank below, +20 pts for tanks
+    const sortedByDps = [...playersList].sort((a, b) => b.dpsAvg - a.dpsAvg);
+    sortedByDps.forEach((p, index) => {
+      let points = Math.max(0, 200 - index * 10);
+      if (p.role === 'tank') {
+        points += 20;
+      }
+      p.dpsPoints = points;
+    });
+
+    // 2. Soins (HPS) - 200 pts for 1st, -10 pts per rank below, +10 pts for tanks
+    const sortedByHps = [...playersList].sort((a, b) => b.hpsAvg - a.hpsAvg);
+    sortedByHps.forEach((p, index) => {
+      let points = Math.max(0, 200 - index * 10);
+      if (p.role === 'tank') {
+        points += 10;
+      }
+      p.hpsPoints = points;
+    });
+
+    // 3. Morts - Malus of 20 points per avoidable death
+    playersList.forEach(p => {
+      p.deathMalus = - (p.avoidableDeaths * 20);
+    });
+
+    // 4. Dégâts subis (Damage taken) - Malus for non-tanks.
+    // Highest damage taken gets -30 points, decreasing by 5 points per player (caps at 0)
+    const nonTanks = playersList.filter(p => p.role !== 'tank');
+    const sortedByDamage = [...nonTanks].sort((a, b) => b.damageTakenSum - a.damageTakenSum);
+    sortedByDamage.forEach((p, index) => {
+      const malus = Math.max(0, 30 - index * 5);
+      p.damageTakenMalus = -malus;
+    });
+
+    // Compute total score
+    playersList.forEach(p => {
+      p.totalScore = p.dpsPoints + p.hpsPoints + p.deathMalus + p.damageTakenMalus;
     });
 
     let mvpName = 'Thrall';
     let mvpClass = 'shaman';
     let maxScore = -999999;
-    for (const [name, info] of Object.entries(playerScores)) {
-      if (info.score > maxScore) {
-        maxScore = info.score;
-        mvpName = name;
-        mvpClass = info.class;
+    playersList.forEach(p => {
+      if (p.totalScore > maxScore) {
+        maxScore = p.totalScore;
+        mvpName = p.name;
+        mvpClass = p.class;
       }
-    }
+    });
 
-    const mvpLeaderboard: WclMvpEntry[] = Object.entries(playerScores).map(([name, info]) => {
+    const mvpLeaderboard: WclMvpEntry[] = playersList.map(p => {
       return {
-        name,
-        class: info.class,
-        score: Math.round(info.score),
-        dpsAvg: Math.round(info.dpsSum / info.fightsCount),
-        hpsAvg: Math.round(info.hpsSum / info.fightsCount),
-        deathsCount: info.deathsSum,
-        damageTakenSum: info.damageTakenSum
+        name: p.name,
+        class: p.class,
+        score: Math.round(p.totalScore),
+        dpsAvg: Math.round(p.dpsAvg),
+        hpsAvg: Math.round(p.hpsAvg),
+        deathsCount: p.avoidableDeaths,
+        damageTakenSum: p.damageTakenSum
       };
     }).sort((a, b) => b.score - a.score);
 
