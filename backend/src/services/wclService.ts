@@ -564,14 +564,18 @@ export class WclService {
       p.dpsPoints = points;
     });
 
-    // 2. Soins (HPS) - 200 pts for 1st, -10 pts per rank below, +10 pts for tanks
+    // 2. Soins (HPS) - 200 pts for 1st, -10 pts per rank below for healers/tanks, but only -2 pts per rank below for DPS players
     const sortedByHps = [...playersList].sort((a, b) => b.hpsAvg - a.hpsAvg);
+    let currentHpsPoints = 200;
     sortedByHps.forEach((p, index) => {
-      let points = Math.max(0, 200 - index * 10);
-      if (p.role === 'tank') {
-        points += 10;
+      if (index > 0) {
+        const reduction = p.role === 'dps' ? 2 : 10;
+        currentHpsPoints = Math.max(0, currentHpsPoints - reduction);
       }
-      p.hpsPoints = points;
+      p.hpsPoints = currentHpsPoints;
+      if (p.role === 'tank') {
+        p.hpsPoints += 10;
+      }
     });
 
     // 3. Morts - Malus of 20 points per avoidable death
@@ -580,11 +584,11 @@ export class WclService {
     });
 
     // 4. Dégâts subis (Damage taken) - Malus for non-tanks.
-    // Highest damage taken gets -30 points, decreasing by 5 points per player (caps at 0)
+    // Highest damage taken gets -30 points, decreasing by 3 points per player (caps at 0)
     const nonTanks = playersList.filter(p => p.role !== 'tank');
     const sortedByDamage = [...nonTanks].sort((a, b) => b.damageTakenSum - a.damageTakenSum);
     sortedByDamage.forEach((p, index) => {
-      const malus = Math.max(0, 30 - index * 5);
+      const malus = Math.max(0, 30 - index * 3);
       p.damageTakenMalus = -malus;
     });
 
