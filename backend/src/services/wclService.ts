@@ -541,17 +541,22 @@ export class WclService {
         playerScoresMap[p.name].damageTakenSum += (p.damageTaken || 0);
         playerScoresMap[p.name].deathsSum += p.deaths;
         playerScoresMap[p.name].fightsCount += 1;
+
+        // Calculate avoidable deaths fight by fight:
+        // - If it's a kill, all deaths in this fight are avoidable.
+        // - If it's a wipe, only deaths beyond the first one are avoidable.
+        const avoidableDeathsInFight = f.kill ? p.deaths : Math.max(0, p.deaths - 1);
+        playerScoresMap[p.name].avoidableDeaths += avoidableDeathsInFight;
       });
     });
 
     const playersList = Object.values(playerScoresMap);
 
-    // Calculate averages and avoidable deaths
+    // Calculate averages
     playersList.forEach(p => {
       const fc = p.fightsCount || 1;
       p.dpsAvg = p.dpsSum / fc;
       p.hpsAvg = p.hpsSum / fc;
-      p.avoidableDeaths = Math.max(0, p.deathsSum - totalWipes);
     });
 
     // 1. Dégâts infligés (DPS) - 200 pts for 1st, -10 pts per rank below, +20 pts for tanks
