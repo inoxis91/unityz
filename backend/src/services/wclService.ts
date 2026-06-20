@@ -495,9 +495,9 @@ export class WclService {
           playerScores[p.name] = { class: p.class, score: 0, dpsSum: 0, hpsSum: 0, deathsSum: 0, fightsCount: 0 };
         }
         let scoreBonus = 0;
-        if (p.role === 'dps') scoreBonus = p.dps / 100;
-        if (p.role === 'heal') scoreBonus = p.hps / 100;
-        if (p.role === 'tank') scoreBonus = (p.dps + p.hps) / 80;
+        if (p.role === 'dps') scoreBonus = p.dps / 1000;
+        if (p.role === 'heal') scoreBonus = p.hps / 1000;
+        if (p.role === 'tank') scoreBonus = (p.dps + p.hps) / 800;
 
         // Penalty for dying
         if (p.deaths > 0) scoreBonus -= 50;
