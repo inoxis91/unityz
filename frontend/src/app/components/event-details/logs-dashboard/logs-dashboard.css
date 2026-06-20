@@ -635,19 +635,19 @@
 .text-class-warrior { color: var(--color-warrior) !important; } .text-class-paladin { color: var(--color-paladin) !important; } .text-class-hunter { color: var(--color-hunter) !important; } .text-class-rogue { color: var(--color-rogue) !important; text-shadow: -1px -1px 0 #1e293b, 1px -1px 0 #1e293b, -1px 1px 0 #1e293b, 1px 1px 0 #1e293b !important; } .text-class-priest { color: var(--color-priest) !important; text-shadow: -1px -1px 0 #1e293b, 1px -1px 0 #1e293b, -1px 1px 0 #1e293b, 1px 1px 0 #1e293b !important; } .text-class-deathknight { color: var(--color-dk) !important; } .text-class-shaman { color: var(--color-shaman) !important; } .text-class-mage { color: var(--color-mage) !important; } .text-class-warlock { color: var(--color-warlock) !important; } .text-class-monk { color: var(--color-monk) !important; text-shadow: -1px -1px 0 #1e293b, 1px -1px 0 #1e293b, -1px 1px 0 #1e293b, 1px 1px 0 #1e293b !important; } .text-class-druid { color: var(--color-druid) !important; } .text-class-demonhunter { color: var(--color-dh) !important; } .text-class-evoker { color: var(--color-evoker) !important; }
 
 /* Card specific backgrounds (soft/low opacity class colors) */
-.card-class-warrior { background: rgba(198, 155, 109, 0.10) !important; border: 1px solid rgba(198, 155, 109, 0.2) !important; }
-.card-class-paladin { background: rgba(244, 140, 186, 0.10) !important; border: 1px solid rgba(244, 140, 186, 0.2) !important; }
-.card-class-hunter { background: rgba(170, 211, 114, 0.10) !important; border: 1px solid rgba(170, 211, 114, 0.2) !important; }
-.card-class-rogue { background: rgba(255, 244, 104, 0.10) !important; border: 1px solid rgba(255, 244, 104, 0.2) !important; }
-.card-class-priest { background: rgba(255, 255, 255, 0.10) !important; border: 1.5px solid #cbd5e1 !important; box-shadow: 0 4px 12px rgba(30, 41, 59, 0.08) !important; }
-.card-class-deathknight, .card-class-dk { background: rgba(196, 30, 58, 0.10) !important; border: 1px solid rgba(196, 30, 58, 0.2) !important; }
-.card-class-shaman { background: rgba(0, 112, 221, 0.10) !important; border: 1px solid rgba(0, 112, 221, 0.2) !important; }
-.card-class-mage { background: rgba(63, 199, 235, 0.10) !important; border: 1px solid rgba(63, 199, 235, 0.2) !important; }
-.card-class-warlock { background: rgba(135, 136, 238, 0.10) !important; border: 1px solid rgba(135, 136, 238, 0.2) !important; }
-.card-class-monk { background: rgba(0, 255, 152, 0.10) !important; border: 1px solid rgba(0, 255, 152, 0.2) !important; }
-.card-class-druid { background: rgba(255, 124, 10, 0.10) !important; border: 1px solid rgba(255, 124, 10, 0.2) !important; }
-.card-class-demonhunter, .card-class-dh { background: rgba(163, 48, 201, 0.10) !important; border: 1px solid rgba(163, 48, 201, 0.2) !important; }
-.card-class-evoker { background: rgba(51, 147, 127, 0.10) !important; border: 1px solid rgba(51, 147, 127, 0.2) !important; }
+.card-class-warrior { background: rgba(198, 155, 109, 0.42) !important; border: 1px solid rgba(198, 155, 109, 0.2) !important; }
+.card-class-paladin { background: rgba(244, 140, 186, 0.42) !important; border: 1px solid rgba(244, 140, 186, 0.2) !important; }
+.card-class-hunter { background: rgba(170, 211, 114, 0.42) !important; border: 1px solid rgba(170, 211, 114, 0.2) !important; }
+.card-class-rogue { background: rgba(255, 244, 104, 0.42) !important; border: 1px solid rgba(255, 244, 104, 0.2) !important; }
+.card-class-priest { background: rgba(255, 255, 255, 0.42) !important; border: 1.5px solid #cbd5e1 !important; box-shadow: 0 4px 12px rgba(30, 41, 59, 0.08) !important; }
+.card-class-deathknight, .card-class-dk { background: rgba(196, 30, 58, 0.42) !important; border: 1px solid rgba(196, 30, 58, 0.2) !important; }
+.card-class-shaman { background: rgba(0, 112, 221, 0.42) !important; border: 1px solid rgba(0, 112, 221, 0.2) !important; }
+.card-class-mage { background: rgba(63, 199, 235, 0.42) !important; border: 1px solid rgba(63, 199, 235, 0.2) !important; }
+.card-class-warlock { background: rgba(135, 136, 238, 0.42) !important; border: 1px solid rgba(135, 136, 238, 0.2) !important; }
+.card-class-monk { background: rgba(0, 255, 152, 0.42) !important; border: 1px solid rgba(0, 255, 152, 0.2) !important; }
+.card-class-druid { background: rgba(255, 124, 10, 0.42) !important; border: 1px solid rgba(255, 124, 10, 0.2) !important; }
+.card-class-demonhunter, .card-class-dh { background: rgba(163, 48, 201, 0.42) !important; border: 1px solid rgba(163, 48, 201, 0.2) !important; }
+.card-class-evoker { background: rgba(51, 147, 127, 0.42) !important; border: 1px solid rgba(51, 147, 127, 0.2) !important; }
 
 /* MVP Podium & Leaderboard Styling */
 .mvp-podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 3.5rem; margin: 3rem 0; flex-wrap: wrap; }
