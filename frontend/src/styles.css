@@ -9,7 +9,9 @@ body {
 /* WOW Class Colors Variables */
 :root {
   --color-death-knight: #C41E3A;
+  --color-dk: #C41E3A;
   --color-demon-hunter: #A330C9;
+  --color-dh: #A330C9;
   --color-druid: #FF7C0A;
   --color-evoker: #33937F;
   --color-hunter: #AAD372;

@@ -20,20 +20,7 @@
     </div>
   </div>
 
-  <!-- Warning: Missing API Credentials Banner -->
-  <div class="logs-warning-banner animated-fade-in" *ngIf="logsMetrics()?.wclKeysMissing">
-    <span class="banner-icon">💡</span>
-    <div class="banner-content">
-      <h4>Données de démonstration actives</h4>
-      <p>
-        Le backend utilise actuellement des données simulées réalistes pour cette démonstration car aucune clé d'API Warcraft Logs (WCL_CLIENT_ID / WCL_CLIENT_SECRET) n'est configurée dans votre fichier <code>backend/.env</code>.
-      </p>
-      <p class="small">
-        Pour afficher les véritables données de ce combat, créez un client gratuit sur
-        <a href="https://www.warcraftlogs.com/api/clients/" target="_blank" rel="noopener noreferrer">WCL Developer Portal</a>, renseignez les clés, et redémarrez votre serveur.
-      </p>
-    </div>
-  </div>
+
 
   <!-- Loading / Error states -->
   <div class="logs-loading-card" *ngIf="loadingLogs()">
@@ -100,11 +87,11 @@
             <p class="boss-name">{{ logsMetrics()!.mostDeadlyBoss }}</p>
           </div>
         </div>
-        <div class="highlight-card mvp-player" [class]="'text-class-' + logsMetrics()!.mvpPlayer.class">
+        <div class="highlight-card mvp-player" [class]="'card-class-' + logsMetrics()!.mvpPlayer.class">
           <div class="highlight-icon">👑</div>
           <div class="highlight-info">
             <h4>{{ i18n.t('event.details.logs_mvp') }}</h4>
-            <p class="mvp-name">{{ logsMetrics()!.mvpPlayer.name }}</p>
+            <p class="mvp-name" [class]="'text-class-' + logsMetrics()!.mvpPlayer.class">{{ logsMetrics()!.mvpPlayer.name }}</p>
           </div>
         </div>
       </div>
@@ -293,30 +280,30 @@
       <div class="mvp-podium-container" *ngIf="logsMetrics()!.mvpLeaderboard && logsMetrics()!.mvpLeaderboard.length > 0">
         <!-- 2nd Place (Silver) -->
         <div class="podium-item place-2" *ngIf="logsMetrics()!.mvpLeaderboard[1]; let p2">
-          <div class="podium-item-box" [class]="'text-class-' + p2.class">
+          <div class="podium-item-box" [class]="'card-class-' + p2.class">
             <span class="podium-rank-badge rank-2">🥈</span>
             <img [src]="'assets/icons/class/' + getClassIcon(p2.class)" class="podium-class-img" alt="">
-            <span class="podium-player-name">{{ p2.name }}</span>
+            <span class="podium-player-name" [class]="'text-class-' + p2.class">{{ p2.name }}</span>
             <span class="podium-score">{{ p2.score }} pts</span>
           </div>
         </div>
 
         <!-- 1st Place (Gold) -->
         <div class="podium-item place-1" *ngIf="logsMetrics()!.mvpLeaderboard[0]; let p1">
-          <div class="podium-item-box" [class]="'text-class-' + p1.class">
+          <div class="podium-item-box" [class]="'card-class-' + p1.class">
             <span class="podium-rank-badge rank-1">👑 🥇</span>
             <img [src]="'assets/icons/class/' + getClassIcon(p1.class)" class="podium-class-img" alt="">
-            <span class="podium-player-name">{{ p1.name }}</span>
+            <span class="podium-player-name" [class]="'text-class-' + p1.class">{{ p1.name }}</span>
             <span class="podium-score">{{ p1.score }} pts</span>
           </div>
         </div>
 
         <!-- 3rd Place (Bronze) -->
         <div class="podium-item place-3" *ngIf="logsMetrics()!.mvpLeaderboard[2]; let p3">
-          <div class="podium-item-box" [class]="'text-class-' + p3.class">
+          <div class="podium-item-box" [class]="'card-class-' + p3.class">
             <span class="podium-rank-badge rank-3">🥉</span>
             <img [src]="'assets/icons/class/' + getClassIcon(p3.class)" class="podium-class-img" alt="">
-            <span class="podium-player-name">{{ p3.name }}</span>
+            <span class="podium-player-name" [class]="'text-class-' + p3.class">{{ p3.name }}</span>
             <span class="podium-score">{{ p3.score }} pts</span>
           </div>
         </div>
