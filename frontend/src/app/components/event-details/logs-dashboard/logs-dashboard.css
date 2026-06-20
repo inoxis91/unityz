@@ -632,14 +632,14 @@
 
 /* High contrast class colors for log player names and texts */
 .text-class-warrior, .text-class-paladin, .text-class-hunter, .text-class-rogue, .text-class-priest, .text-class-deathknight, .text-class-shaman, .text-class-mage, .text-class-warlock, .text-class-monk, .text-class-druid, .text-class-demonhunter, .text-class-evoker { background: transparent !important; }
-.text-class-warrior { color: var(--color-warrior) !important; } .text-class-paladin { color: var(--color-paladin) !important; } .text-class-hunter { color: var(--color-hunter) !important; } .text-class-rogue { color: var(--color-rogue) !important; text-shadow: -1px -1px 0 #1e293b, 1px -1px 0 #1e293b, -1px 1px 0 #1e293b, 1px 1px 0 #1e293b !important; } .text-class-priest { color: var(--color-priest) !important; text-shadow: -1px -1px 0 #1e293b, 1px -1px 0 #1e293b, -1px 1px 0 #1e293b, 1px 1px 0 #1e293b !important; } .text-class-deathknight { color: var(--color-dk) !important; } .text-class-shaman { color: var(--color-shaman) !important; } .text-class-mage { color: var(--color-mage) !important; } .text-class-warlock { color: var(--color-warlock) !important; } .text-class-monk { color: var(--color-monk) !important; } .text-class-druid { color: var(--color-druid) !important; } .text-class-demonhunter { color: var(--color-dh) !important; } .text-class-evoker { color: var(--color-evoker) !important; }
+.text-class-warrior { color: var(--color-warrior) !important; } .text-class-paladin { color: var(--color-paladin) !important; } .text-class-hunter { color: var(--color-hunter) !important; } .text-class-rogue { color: var(--color-rogue) !important; text-shadow: -1px -1px 0 #1e293b, 1px -1px 0 #1e293b, -1px 1px 0 #1e293b, 1px 1px 0 #1e293b !important; } .text-class-priest { color: var(--color-priest) !important; text-shadow: -1px -1px 0 #1e293b, 1px -1px 0 #1e293b, -1px 1px 0 #1e293b, 1px 1px 0 #1e293b !important; } .text-class-deathknight { color: var(--color-dk) !important; } .text-class-shaman { color: var(--color-shaman) !important; } .text-class-mage { color: var(--color-mage) !important; } .text-class-warlock { color: var(--color-warlock) !important; } .text-class-monk { color: var(--color-monk) !important; text-shadow: -1px -1px 0 #1e293b, 1px -1px 0 #1e293b, -1px 1px 0 #1e293b, 1px 1px 0 #1e293b !important; } .text-class-druid { color: var(--color-druid) !important; } .text-class-demonhunter { color: var(--color-dh) !important; } .text-class-evoker { color: var(--color-evoker) !important; }
 
 /* Card specific backgrounds (soft/low opacity class colors) */
 .card-class-warrior { background: rgba(198, 155, 109, 0.04) !important; border: 1px solid rgba(198, 155, 109, 0.2) !important; }
 .card-class-paladin { background: rgba(244, 140, 186, 0.04) !important; border: 1px solid rgba(244, 140, 186, 0.2) !important; }
 .card-class-hunter { background: rgba(170, 211, 114, 0.04) !important; border: 1px solid rgba(170, 211, 114, 0.2) !important; }
 .card-class-rogue { background: rgba(255, 244, 104, 0.04) !important; border: 1px solid rgba(255, 244, 104, 0.2) !important; }
-.card-class-priest { background: rgba(255, 255, 255, 0.04) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; }
+.card-class-priest { background: rgba(255, 255, 255, 0.04) !important; border: 1.5px solid #cbd5e1 !important; box-shadow: 0 4px 12px rgba(30, 41, 59, 0.08) !important; }
 .card-class-deathknight, .card-class-dk { background: rgba(196, 30, 58, 0.04) !important; border: 1px solid rgba(196, 30, 58, 0.2) !important; }
 .card-class-shaman { background: rgba(0, 112, 221, 0.04) !important; border: 1px solid rgba(0, 112, 221, 0.2) !important; }
 .card-class-mage { background: rgba(63, 199, 235, 0.04) !important; border: 1px solid rgba(63, 199, 235, 0.2) !important; }
@@ -650,18 +650,35 @@
 .card-class-evoker { background: rgba(51, 147, 127, 0.04) !important; border: 1px solid rgba(51, 147, 127, 0.2) !important; }
 
 /* MVP Podium & Leaderboard Styling */
-.mvp-podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 3.5rem; margin: 2.5rem 0; flex-wrap: wrap; }
-.podium-item { display: flex; flex-direction: column; align-items: center; flex: 1; max-width: 200px; min-width: 140px; }
-.podium-item-box { background: #f8fafc; border: 4px solid #e2e8f0; border-radius: 16px; padding: 1.5rem 1rem; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); transition: transform 0.2s ease, box-shadow 0.2s ease; }
-.podium-item:hover .podium-item-box { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
-.place-1 .podium-item-box { height: 220px; border: 2px solid #fbbf24; background: linear-gradient(180deg, #fefbef 0%, #ffffff 100%); box-shadow: 0 10px 25px -5px rgba(251, 191, 36, 0.1); }
-.place-2 .podium-item-box { height: 180px; border: 1px solid #94a3b8; background: linear-gradient(180deg, #f1f5f9 0%, #ffffff 100%); }
-.place-3 .podium-item-box { height: 150px; border: 1px solid #d97706; background: linear-gradient(180deg, #fff7ed 0%, #ffffff 100%); }
-.podium-rank-badge { font-size: 1.5rem; font-weight: 900; }
-.place-1 .podium-rank-badge { font-size: 1.85rem; }
-.podium-class-img { width: 32px; height: 32px; border-radius: 6px; }
-.podium-player-name { font-weight: 850; font-size: 1.05rem; text-align: center; }
-.podium-score { font-size: 0.85rem; font-weight: 800; color: #0074e0; background: rgba(0, 116, 224, 0.08); padding: 2px 8px; border-radius: 6px; }
+.mvp-podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 3.5rem; margin: 3rem 0; flex-wrap: wrap; }
+.podium-item { display: flex; flex-direction: column; align-items: center; flex: 1; max-width: 210px; min-width: 140px; }
+.podium-item-box { background: #f8fafc; border: 4px solid #e2e8f0; border-radius: 20px; padding: 1.75rem 1rem 1.5rem 1rem; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); transition: transform 0.2s ease, box-shadow 0.2s ease; position: relative; overflow: hidden; }
+.podium-item:hover .podium-item-box { transform: translateY(-8px); }
+
+/* Giant numeric watermarks in background of cards */
+.podium-item-box::before { font-family: 'Impact', 'Arial Black', sans-serif; font-weight: 900; position: absolute; bottom: -20px; right: 8px; font-size: 7rem; line-height: 1; pointer-events: none; opacity: 0.15; z-index: 1; }
+.place-1 .podium-item-box::before { content: "1"; color: #d97706; }
+.place-2 .podium-item-box::before { content: "2"; color: #475569; }
+.place-3 .podium-item-box::before { content: "3"; color: #c2410c; }
+
+.place-1 .podium-item-box { height: 250px; border: 3px solid #fbbf24; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 50%, #ffffff 100%); box-shadow: 0 12px 30px -5px rgba(251, 191, 36, 0.25); }
+.place-1:hover .podium-item-box { box-shadow: 0 16px 35px -3px rgba(251, 191, 36, 0.35); }
+
+.place-2 .podium-item-box { height: 200px; border: 2.5px solid #cbd5e1; background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #ffffff 100%); box-shadow: 0 8px 20px -5px rgba(100, 116, 139, 0.15); }
+.place-2:hover .podium-item-box { box-shadow: 0 12px 25px -3px rgba(100, 116, 139, 0.25); }
+
+.place-3 .podium-item-box { height: 165px; border: 2.5px solid #fed7aa; background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 50%, #ffffff 100%); box-shadow: 0 6px 15px -5px rgba(217, 119, 6, 0.12); }
+.place-3:hover .podium-item-box { box-shadow: 0 10px 20px -3px rgba(217, 119, 6, 0.22); }
+
+.podium-rank-badge { font-size: 1.6rem; font-weight: 900; z-index: 2; position: relative; }
+.place-1 .podium-rank-badge { font-size: 2.1rem; filter: drop-shadow(0 2px 4px rgba(217,119,6,0.3)); }
+.podium-class-img { width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 2px 4px rgba(0,0,0,0.05); z-index: 2; }
+.podium-player-name { font-weight: 850; font-size: 1.1rem; text-align: center; z-index: 2; }
+.podium-score { font-size: 0.85rem; font-weight: 850; padding: 3px 10px; border-radius: 8px; z-index: 2; }
+
+.place-1 .podium-score { background: rgba(217, 119, 6, 0.12) !important; color: #b45309 !important; border: 1px solid rgba(217, 119, 6, 0.2) !important; }
+.place-2 .podium-score { background: rgba(71, 85, 105, 0.1) !important; color: #334155 !important; border: 1px solid rgba(71, 85, 105, 0.18) !important; }
+.place-3 .podium-score { background: rgba(154, 52, 18, 0.1) !important; color: #9a3412 !important; border: 1px solid rgba(154, 52, 18, 0.18) !important; }
 .highlight-top-3 { background-color: #fffdf0 !important; }
 .highlight-top-3:hover { background-color: #fef9c3 !important; }
 .rank-badge-row { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; font-size: 0.85rem; font-weight: 850; }

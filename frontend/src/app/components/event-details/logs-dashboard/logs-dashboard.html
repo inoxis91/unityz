@@ -280,7 +280,7 @@
       <div class="mvp-podium-container" *ngIf="logsMetrics()!.mvpLeaderboard && logsMetrics()!.mvpLeaderboard.length > 0">
         <!-- 2nd Place (Silver) -->
         <div class="podium-item place-2" *ngIf="logsMetrics()!.mvpLeaderboard[1]; let p2">
-          <div class="podium-item-box" [class]="'card-class-' + p2.class">
+          <div class="podium-item-box">
             <span class="podium-rank-badge rank-2">🥈</span>
             <img [src]="'assets/icons/class/' + getClassIcon(p2.class)" class="podium-class-img" alt="">
             <span class="podium-player-name" [class]="'text-class-' + p2.class">{{ p2.name }}</span>
@@ -290,7 +290,7 @@
 
         <!-- 1st Place (Gold) -->
         <div class="podium-item place-1" *ngIf="logsMetrics()!.mvpLeaderboard[0]; let p1">
-          <div class="podium-item-box" [class]="'card-class-' + p1.class">
+          <div class="podium-item-box">
             <span class="podium-rank-badge rank-1">👑 🥇</span>
             <img [src]="'assets/icons/class/' + getClassIcon(p1.class)" class="podium-class-img" alt="">
             <span class="podium-player-name" [class]="'text-class-' + p1.class">{{ p1.name }}</span>
@@ -300,7 +300,7 @@
 
         <!-- 3rd Place (Bronze) -->
         <div class="podium-item place-3" *ngIf="logsMetrics()!.mvpLeaderboard[2]; let p3">
-          <div class="podium-item-box" [class]="'card-class-' + p3.class">
+          <div class="podium-item-box">
             <span class="podium-rank-badge rank-3">🥉</span>
             <img [src]="'assets/icons/class/' + getClassIcon(p3.class)" class="podium-class-img" alt="">
             <span class="podium-player-name" [class]="'text-class-' + p3.class">{{ p3.name }}</span>
