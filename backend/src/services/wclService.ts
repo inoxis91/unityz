@@ -288,28 +288,10 @@ export class WclService {
 
                   // Parse Deaths to get real deaths per player
                   const deathMap: Record<string, number> = {};
-                  const avoidableDeathMap: Record<string, number> = {};
                   const deathsList = reportTables.deathsTable?.data?.entries || [];
                   deathsList.forEach((d: any) => {
                     if (d.name) {
                       deathMap[d.name] = (deathMap[d.name] || 0) + 1;
-
-                      // Déterminer si la mort est évitable ou non
-                      let isAvoidable = true;
-                      if (!f.kill) {
-                        // C'est un wipe. Si la mort survient dans les 15 dernières secondes du combat (f.endTime), elle n'est pas évitable.
-                        // Les timestamps d'événements de mort d'un rapport partagent la même référence d'origine que f.startTime/f.endTime.
-                        const deathTimestamp = d.timestamp || 0;
-                        const timeBeforeEnd = f.endTime - deathTimestamp;
-
-                        if (timeBeforeEnd <= 15000) {
-                          isAvoidable = false;
-                        }
-                      }
-                      
-                      if (isAvoidable) {
-                        avoidableDeathMap[d.name] = (avoidableDeathMap[d.name] || 0) + 1;
-                      }
                     }
                   });
 
@@ -322,7 +304,6 @@ export class WclService {
                     const dps = Math.round(entry.total / duration);
                     const activeTime = Math.min(100, parseFloat(((entry.activeTime / (duration * 1000)) * 100).toFixed(1))) || 100;
                     const deaths = deathMap[name] || 0;
-                    const avoidableDeaths = avoidableDeathMap[name] || 0;
                     const parse = parseMap[name] || 0;
 
                     let role: 'tank' | 'heal' | 'dps' = 'dps';
@@ -337,7 +318,7 @@ export class WclService {
                       dps,
                       hps: 0,
                       deaths,
-                      avoidableDeaths,
+                      avoidableDeaths: deaths,
                       damageTaken: 0,
                       activeTime,
                       parse
@@ -350,7 +331,6 @@ export class WclService {
                     const hps = Math.round(entry.total / duration);
                     const parse = parseMap[name] || 0;
                     const deaths = deathMap[name] || 0;
-                    const avoidableDeaths = avoidableDeathMap[name] || 0;
                     
                     if (playerMap[name]) {
                       playerMap[name].hps = hps;
@@ -367,7 +347,7 @@ export class WclService {
                         dps: 0,
                         hps,
                         deaths,
-                        avoidableDeaths,
+                        avoidableDeaths: deaths,
                         damageTaken: 0,
                         activeTime: Math.min(100, parseFloat(((entry.activeTime / (duration * 1000)) * 100).toFixed(1))) || 100,
                         parse
@@ -564,19 +544,17 @@ export class WclService {
         playerScoresMap[p.name].damageTakenSum += (p.damageTaken || 0);
         playerScoresMap[p.name].deathsSum += p.deaths;
         playerScoresMap[p.name].fightsCount += 1;
-
-        // Use the precise avoidableDeaths calculated fight by fight:
-        playerScoresMap[p.name].avoidableDeaths += (p.avoidableDeaths || 0);
       });
     });
 
     const playersList = Object.values(playerScoresMap);
 
-    // Calculate averages
+    // Calculate averages and avoidable deaths using the formula: max(0, totalDeaths - totalWipes)
     playersList.forEach(p => {
       const fc = p.fightsCount || 1;
       p.dpsAvg = p.dpsSum / fc;
       p.hpsAvg = p.hpsSum / fc;
+      p.avoidableDeaths = Math.max(0, p.deathsSum - totalWipes);
     });
 
     // 1. Dégâts infligés (DPS) - 200 pts for 1st, -10 pts per rank below, +20 pts for tanks
