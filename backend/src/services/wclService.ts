@@ -81,6 +81,18 @@ const WOW_CLASSES = [
   'priest', 'shaman', 'evoker', 'hunter', 'mage', 'rogue', 'warlock'
 ];
 
+export function getRoleFromIcon(icon: string): 'tank' | 'heal' | 'dps' {
+  if (!icon) return 'dps';
+  const spec = icon.split('-')[1] || '';
+  if (['Restoration', 'Holy', 'Mistweaver', 'Discipline', 'Preservation'].includes(spec)) {
+    return 'heal';
+  }
+  if (['Protection', 'Guardian', 'Brewmaster', 'Blood', 'Vengeance'].includes(spec)) {
+    return 'tank';
+  }
+  return 'dps';
+}
+
 export class WclService {
   /**
    * Extract report code from a Warcraft Logs report URL
@@ -322,7 +334,7 @@ export class WclService {
                     const activeTime = Math.min(100, parseFloat(((entry.activeTime / (duration * 1000)) * 100).toFixed(1))) || 100;
                     const deaths = deathMap[name] || 0;
                     const parse = parseMap[name] || 0;
-                    const role = roleMap[name] || 'dps';
+                    const role = roleMap[name] || getRoleFromIcon(entry.icon) || CLASS_ROLES[className] || 'dps';
 
                     playerMap[name] = {
                       name,
@@ -344,18 +356,19 @@ export class WclService {
                     const hps = Math.round(entry.total / duration);
                     const parse = parseMap[name] || 0;
                     const deaths = deathMap[name] || 0;
+                    const computedRole = roleMap[name] || getRoleFromIcon(entry.icon);
                     
                     if (playerMap[name]) {
                       playerMap[name].hps = hps;
-                      if (roleMap[name]) {
-                        playerMap[name].role = roleMap[name];
+                      if (computedRole) {
+                        playerMap[name].role = computedRole;
                       }
                     } else {
                       const className = (entry.type || 'Priest').toLowerCase().replace(/\s+/g, '');
                       playerMap[name] = {
                         name,
                         class: className,
-                        role: roleMap[name] || CLASS_ROLES[className] || 'dps',
+                        role: computedRole || CLASS_ROLES[className] || 'dps',
                         dps: 0,
                         hps,
                         deaths,
@@ -372,10 +385,11 @@ export class WclService {
                     if (!playerMap[name]) {
                       const deathEntry = deathsList.find((d: any) => d.name === name);
                       const className = (deathEntry?.type || 'Mage').toLowerCase().replace(/\s+/g, '');
+                      const computedRole = roleMap[name] || getRoleFromIcon(deathEntry?.icon);
                       playerMap[name] = {
                         name,
                         class: className,
-                        role: roleMap[name] || 'dps',
+                        role: computedRole || CLASS_ROLES[className] || 'dps',
                         dps: 0,
                         hps: 0,
                         deaths: deathMap[name],
@@ -392,8 +406,9 @@ export class WclService {
                     const name = entry.name;
                     if (playerMap[name]) {
                       playerMap[name].damageTaken = entry.total || 0;
-                      if (roleMap[name]) {
-                        playerMap[name].role = roleMap[name];
+                      const computedRole = roleMap[name] || getRoleFromIcon(entry.icon);
+                      if (computedRole) {
+                        playerMap[name].role = computedRole;
                       }
                     }
                   });
