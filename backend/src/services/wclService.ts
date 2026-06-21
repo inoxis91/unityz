@@ -355,6 +355,26 @@ export class WclService {
                     }
                   });
 
+                  // 2.5 Ensure players who died but made 0 DPS/HPS are not ignored
+                  Object.keys(deathMap).forEach(name => {
+                    if (!playerMap[name]) {
+                      const deathEntry = deathsList.find((d: any) => d.name === name);
+                      const className = (deathEntry?.type || 'Mage').toLowerCase().replace(/\s+/g, '');
+                      playerMap[name] = {
+                        name,
+                        class: className,
+                        role: 'dps',
+                        dps: 0,
+                        hps: 0,
+                        deaths: deathMap[name],
+                        avoidableDeaths: deathMap[name],
+                        damageTaken: 0,
+                        activeTime: 0,
+                        parse: 0
+                      };
+                    }
+                  });
+
                   // 3. Process Damage Taken and promote Tanks
                   dTaken.forEach((entry: any) => {
                     const name = entry.name;
