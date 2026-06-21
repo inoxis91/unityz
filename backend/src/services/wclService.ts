@@ -297,15 +297,10 @@ export class WclService {
                       // Déterminer si la mort est évitable ou non
                       let isAvoidable = true;
                       if (!f.kill) {
-                        // C'est un wipe. Si la mort survient dans les 15 dernières secondes du combat, elle n'est pas évitable.
+                        // C'est un wipe. Si la mort survient dans les 15 dernières secondes du combat (f.endTime), elle n'est pas évitable.
+                        // Les timestamps d'événements de mort d'un rapport partagent la même référence d'origine que f.startTime/f.endTime.
                         const deathTimestamp = d.timestamp || 0;
-                        const durationMs = duration * 1000;
-                        
-                        // Détection de si le timestamp est absolu ou relatif
-                        const isAbsolute = deathTimestamp > 1000000000;
-                        const timeBeforeEnd = isAbsolute 
-                          ? (f.endTime - deathTimestamp) 
-                          : (durationMs - deathTimestamp);
+                        const timeBeforeEnd = f.endTime - deathTimestamp;
 
                         if (timeBeforeEnd <= 15000) {
                           isAvoidable = false;
