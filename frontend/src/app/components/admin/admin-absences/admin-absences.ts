@@ -61,12 +61,15 @@ export class AdminAbsencesComponent implements OnInit {
     return [...list].sort((a, b) => b.start_date.localeCompare(a.start_date));
   });
 
-  isAbsenceActive(startDate: string, endDate: string): boolean {
+  isAbsenceActive(startDate: string, endDate: string | null | undefined): boolean {
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
     const todayStr = `${year}-${month}-${day}`;
+    if (!endDate) {
+      return todayStr >= startDate;
+    }
     return todayStr >= startDate && todayStr <= endDate;
   }
 

@@ -30,9 +30,22 @@
             [ngModel]="endDate()" 
             (ngModelChange)="endDate.set($event)" 
             name="endDate" 
-            required
+            [required]="!isIndefinite()"
+            [disabled]="isIndefinite()"
             class="form-control"
           >
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [ngModel]="isIndefinite()" 
+              (ngModelChange)="isIndefinite.set($event)" 
+              name="isIndefinite"
+            >
+            {{ i18n.t('absences.form.is_indefinite') }}
+          </label>
         </div>
 
         <div class="form-group">
@@ -79,7 +92,14 @@
           <tbody>
             <tr *ngFor="let abs of absences()">
               <td class="date-cell">{{ abs.start_date | date:'dd/MM/yyyy' }}</td>
-              <td class="date-cell">{{ abs.end_date | date:'dd/MM/yyyy' }}</td>
+              <td class="date-cell">
+                <ng-container *ngIf="abs.end_date; else indef">
+                  {{ abs.end_date | date:'dd/MM/yyyy' }}
+                </ng-container>
+                <ng-template #indef>
+                  <span class="indefinite-badge">{{ i18n.t('absences.indefinite') }}</span>
+                </ng-template>
+              </td>
               <td class="reason-cell" [title]="abs.reason || ''">{{ abs.reason || '-' }}</td>
               <td class="actions-cell">
                 <button class="btn-delete" (click)="onDelete(abs.id)">

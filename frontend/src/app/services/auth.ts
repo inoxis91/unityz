@@ -187,7 +187,7 @@ export class AuthService {
     });
   }
 
-  declareAbsence(startDate: string, endDate: string, reason?: string | null): Observable<any> {
+  declareAbsence(startDate: string, endDate: string | null, reason?: string | null): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/users/me/absences`, {
       start_date: startDate,
       end_date: endDate,

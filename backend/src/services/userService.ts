@@ -605,7 +605,7 @@ export class UserService {
     userId: string,
     guildId: string,
     startDate: string,
-    endDate: string,
+    endDate: string | null | undefined,
     reason?: string | null
   ): Promise<any> {
     const query = `
@@ -613,7 +613,7 @@ export class UserService {
       VALUES ($1, $2, $3, $4, $5)
       RETURNING id, user_id, guild_id, to_char(start_date, 'YYYY-MM-DD') as start_date, to_char(end_date, 'YYYY-MM-DD') as end_date, reason, created_at
     `;
-    const result = await pool.query(query, [userId, guildId, startDate, endDate, reason || null]);
+    const result = await pool.query(query, [userId, guildId, startDate, endDate || null, reason || null]);
     return result.rows[0];
   }
 

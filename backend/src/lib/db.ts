@@ -436,11 +436,16 @@ export const initDb = async () => {
         user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE,
         guild_id UUID REFERENCES guilds(id) ON DELETE CASCADE,
         start_date DATE NOT NULL,
-        end_date DATE NOT NULL,
+        end_date DATE,
         reason TEXT,
         created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+    `);
+
+    // Ensure end_date can be NULL in absences table (for indefinite absences)
+    await client.query(`
+      ALTER TABLE absences ALTER COLUMN end_date DROP NOT NULL;
     `);
 
     console.log('Database tables initialized successfully.');

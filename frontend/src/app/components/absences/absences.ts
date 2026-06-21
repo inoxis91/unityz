@@ -21,6 +21,7 @@ export class AbsencesComponent implements OnInit {
 
   startDate = signal<string>('');
   endDate = signal<string>('');
+  isIndefinite = signal(false);
   reason = signal<string>('');
 
   public i18n = inject(I18nService);
@@ -49,15 +50,21 @@ export class AbsencesComponent implements OnInit {
 
   onSubmit() {
     const start = this.startDate();
-    const end = this.endDate();
+    const isIndef = this.isIndefinite();
+    const end = isIndef ? null : this.endDate();
     const note = this.reason().trim();
 
-    if (!start || !end) {
+    if (!start) {
+      this.toast.error(this.i18n.t('absences.validation.start_required'));
+      return;
+    }
+
+    if (!isIndef && !end) {
       this.toast.error(this.i18n.t('absences.validation.required'));
       return;
     }
 
-    if (new Date(start) > new Date(end)) {
+    if (!isIndef && end && new Date(start) > new Date(end)) {
       this.toast.error(this.i18n.t('absences.validation.dates'));
       return;
     }
@@ -68,6 +75,7 @@ export class AbsencesComponent implements OnInit {
         this.toast.success(this.i18n.t('absences.toast.success'));
         this.startDate.set('');
         this.endDate.set('');
+        this.isIndefinite.set(false);
         this.reason.set('');
         this.isSubmitting.set(false);
         this.loadAbsences();
