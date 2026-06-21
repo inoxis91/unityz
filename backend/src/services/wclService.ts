@@ -271,18 +271,35 @@ export class WclService {
                   const hDone = reportTables.healingTable?.data?.entries || [];
                   const dTaken = reportTables.damageTakenTable?.data?.entries || [];
 
-                  // Parse Rankings to get real parses
+                  // Parse Rankings to get real parses and official roles
+                  const roleMap: Record<string, 'tank' | 'heal' | 'dps'> = {};
                   const parseMap: Record<string, number> = {};
                   const rankingsList = reportTables.rankings?.data || [];
                   if (rankingsList.length > 0) {
                     const roles = rankingsList[0].roles || {};
-                    ['tanks', 'healers', 'dps'].forEach((roleKey) => {
-                      const chars = roles[roleKey]?.characters || [];
-                      chars.forEach((c: any) => {
-                        if (c.name && c.rankPercent !== undefined) {
-                          parseMap[c.name] = Math.round(c.rankPercent);
-                        }
-                      });
+                    
+                    const tanks = roles.tanks?.characters || [];
+                    tanks.forEach((c: any) => {
+                      if (c.name) {
+                        roleMap[c.name] = 'tank';
+                        if (c.rankPercent !== undefined) parseMap[c.name] = Math.round(c.rankPercent);
+                      }
+                    });
+
+                    const healers = roles.healers?.characters || [];
+                    healers.forEach((c: any) => {
+                      if (c.name) {
+                        roleMap[c.name] = 'heal';
+                        if (c.rankPercent !== undefined) parseMap[c.name] = Math.round(c.rankPercent);
+                      }
+                    });
+
+                    const dpsList = roles.dps?.characters || [];
+                    dpsList.forEach((c: any) => {
+                      if (c.name) {
+                        roleMap[c.name] = 'dps';
+                        if (c.rankPercent !== undefined) parseMap[c.name] = Math.round(c.rankPercent);
+                      }
                     });
                   }
 
@@ -305,11 +322,7 @@ export class WclService {
                     const activeTime = Math.min(100, parseFloat(((entry.activeTime / (duration * 1000)) * 100).toFixed(1))) || 100;
                     const deaths = deathMap[name] || 0;
                     const parse = parseMap[name] || 0;
-
-                    let role: 'tank' | 'heal' | 'dps' = 'dps';
-                    if (['hunter', 'mage', 'rogue', 'warlock'].includes(className)) {
-                      role = 'dps';
-                    }
+                    const role = roleMap[name] || 'dps';
 
                     playerMap[name] = {
                       name,
@@ -334,16 +347,15 @@ export class WclService {
                     
                     if (playerMap[name]) {
                       playerMap[name].hps = hps;
-                      if (hps > 150000) {
-                        playerMap[name].role = 'heal';
-                        playerMap[name].parse = parse;
+                      if (roleMap[name]) {
+                        playerMap[name].role = roleMap[name];
                       }
                     } else {
                       const className = (entry.type || 'Priest').toLowerCase().replace(/\s+/g, '');
                       playerMap[name] = {
                         name,
                         class: className,
-                        role: 'heal',
+                        role: roleMap[name] || CLASS_ROLES[className] || 'dps',
                         dps: 0,
                         hps,
                         deaths,
@@ -363,7 +375,7 @@ export class WclService {
                       playerMap[name] = {
                         name,
                         class: className,
-                        role: 'dps',
+                        role: roleMap[name] || 'dps',
                         dps: 0,
                         hps: 0,
                         deaths: deathMap[name],
@@ -375,17 +387,13 @@ export class WclService {
                     }
                   });
 
-                  // 3. Process Damage Taken and promote Tanks
+                  // 3. Process Damage Taken
                   dTaken.forEach((entry: any) => {
                     const name = entry.name;
                     if (playerMap[name]) {
                       playerMap[name].damageTaken = entry.total || 0;
-                      const p = playerMap[name];
-                      if (['deathknight', 'demonhunter', 'warrior', 'monk', 'paladin', 'druid'].includes(p.class)) {
-                        const dpsTaken = entry.total / duration;
-                        if (dpsTaken > 150000) {
-                          p.role = 'tank';
-                        }
+                      if (roleMap[name]) {
+                        playerMap[name].role = roleMap[name];
                       }
                     }
                   });
@@ -587,18 +595,23 @@ export class WclService {
       p.dpsPoints = points;
     });
 
-    // 2. Soins (HPS) - 200 pts for 1st, -10 pts per rank below for healers/tanks, but only -2 pts per rank below for DPS players
-    const sortedByHps = [...playersList].sort((a, b) => b.hpsAvg - a.hpsAvg);
-    let currentHpsPoints = 200;
-    sortedByHps.forEach((p, index) => {
-      if (index > 0) {
-        const reduction = p.role === 'dps' ? 2 : 10;
-        currentHpsPoints = Math.max(0, currentHpsPoints - reduction);
-      }
-      p.hpsPoints = currentHpsPoints;
+    // 2. Soins (HPS) - Separate scales for Healers/Tanks and DPS players
+    // Healers & Tanks : start at 200 pts, decrease by 10 pts per rank
+    const healersAndTanks = playersList.filter(p => p.role !== 'dps');
+    const sortedHealersAndTanks = [...healersAndTanks].sort((a, b) => b.hpsAvg - a.hpsAvg);
+    sortedHealersAndTanks.forEach((p, index) => {
+      let points = Math.max(0, 200 - index * 10);
       if (p.role === 'tank') {
-        p.hpsPoints += 10;
+        points += 10;
       }
+      p.hpsPoints = points;
+    });
+
+    // DPS : start at 100 pts (malus of 100), decrease by 3 pts per rank
+    const dpsPlayers = playersList.filter(p => p.role === 'dps');
+    const sortedDps = [...dpsPlayers].sort((a, b) => b.hpsAvg - a.hpsAvg);
+    sortedDps.forEach((p, index) => {
+      p.hpsPoints = Math.max(0, 100 - index * 3);
     });
 
     // 3. Morts - Malus of 20 points per avoidable death
