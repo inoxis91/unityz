@@ -9,6 +9,7 @@ export interface WclPlayerPerf {
   dps: number;
   hps: number;
   deaths: number;
+  avoidableDeaths: number;
   damageTaken: number;
   activeTime: number; // percentage
   parse: number;
@@ -287,10 +288,33 @@ export class WclService {
 
                   // Parse Deaths to get real deaths per player
                   const deathMap: Record<string, number> = {};
+                  const avoidableDeathMap: Record<string, number> = {};
                   const deathsList = reportTables.deathsTable?.data?.entries || [];
                   deathsList.forEach((d: any) => {
                     if (d.name) {
                       deathMap[d.name] = (deathMap[d.name] || 0) + 1;
+
+                      // Déterminer si la mort est évitable ou non
+                      let isAvoidable = true;
+                      if (!f.kill) {
+                        // C'est un wipe. Si la mort survient dans les 15 dernières secondes du combat, elle n'est pas évitable.
+                        const deathTimestamp = d.timestamp || 0;
+                        const durationMs = duration * 1000;
+                        
+                        // Détection de si le timestamp est absolu ou relatif
+                        const isAbsolute = deathTimestamp > 1000000000;
+                        const timeBeforeEnd = isAbsolute 
+                          ? (f.endTime - deathTimestamp) 
+                          : (durationMs - deathTimestamp);
+
+                        if (timeBeforeEnd <= 15000) {
+                          isAvoidable = false;
+                        }
+                      }
+                      
+                      if (isAvoidable) {
+                        avoidableDeathMap[d.name] = (avoidableDeathMap[d.name] || 0) + 1;
+                      }
                     }
                   });
 
@@ -303,6 +327,7 @@ export class WclService {
                     const dps = Math.round(entry.total / duration);
                     const activeTime = Math.min(100, parseFloat(((entry.activeTime / (duration * 1000)) * 100).toFixed(1))) || 100;
                     const deaths = deathMap[name] || 0;
+                    const avoidableDeaths = avoidableDeathMap[name] || 0;
                     const parse = parseMap[name] || 0;
 
                     let role: 'tank' | 'heal' | 'dps' = 'dps';
@@ -317,6 +342,7 @@ export class WclService {
                       dps,
                       hps: 0,
                       deaths,
+                      avoidableDeaths,
                       damageTaken: 0,
                       activeTime,
                       parse
@@ -329,6 +355,7 @@ export class WclService {
                     const hps = Math.round(entry.total / duration);
                     const parse = parseMap[name] || 0;
                     const deaths = deathMap[name] || 0;
+                    const avoidableDeaths = avoidableDeathMap[name] || 0;
                     
                     if (playerMap[name]) {
                       playerMap[name].hps = hps;
@@ -345,6 +372,7 @@ export class WclService {
                         dps: 0,
                         hps,
                         deaths,
+                        avoidableDeaths,
                         damageTaken: 0,
                         activeTime: Math.min(100, parseFloat(((entry.activeTime / (duration * 1000)) * 100).toFixed(1))) || 100,
                         parse
@@ -542,11 +570,8 @@ export class WclService {
         playerScoresMap[p.name].deathsSum += p.deaths;
         playerScoresMap[p.name].fightsCount += 1;
 
-        // Calculate avoidable deaths fight by fight:
-        // - If it's a kill, all deaths in this fight are avoidable.
-        // - If it's a wipe, only deaths beyond the first one are avoidable.
-        const avoidableDeathsInFight = f.kill ? p.deaths : Math.max(0, p.deaths - 1);
-        playerScoresMap[p.name].avoidableDeaths += avoidableDeathsInFight;
+        // Use the precise avoidableDeaths calculated fight by fight:
+        playerScoresMap[p.name].avoidableDeaths += (p.avoidableDeaths || 0);
       });
     });
 

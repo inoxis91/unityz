@@ -51,6 +51,7 @@ export interface WclPlayerPerf {
   dps: number;
   hps: number;
   deaths: number;
+  avoidableDeaths: number;
   damageTaken: number;
   activeTime: number;
   parse: number;

@@ -15,7 +15,7 @@
         <span>🏆</span> {{ i18n.t('event.details.logs_players') }}
       </button>
       <button [class.active]="logsSubTab() === 'mvp'" (click)="logsSubTab.set('mvp')">
-        <span>👑</span> Classement MVP
+        <span>👑</span> {{ i18n.t('event.details.logs_subtabs_mvp') }}
       </button>
     </div>
   </div>
@@ -40,42 +40,42 @@
     <div class="logs-overview-panel animated-fade-in" *ngIf="logsSubTab() === 'overview'">
       <div class="logs-stats-grid">
         <div class="stat-card">
-          <span class="label">Total des Morts</span>
+          <span class="label">{{ i18n.t('event.details.logs_total_deaths') }}</span>
           <span class="value duration-text" style="color: #dc2626 !important;">☠️ {{ logsMetrics()!.totalDeaths }}</span>
-          <span class="sub-label">Sur l'ensemble du log</span>
+          <span class="sub-label">{{ i18n.t('event.details.logs_on_all_logs') }}</span>
         </div>
         <div class="stat-card" style="justify-content: space-between;">
-          <span class="label">Survie Individuelle</span>
+          <span class="label">{{ i18n.t('event.details.logs_individual_survival') }}</span>
           <div class="survival-info-content" style="width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
             <div class="survival-row flex-row" style="justify-content: space-between; width: 100%; font-size: 0.9rem; font-weight: 750;">
-              <span class="lbl-survival" style="color: #16a34a; font-weight: 800;">🛡️ Survivant :</span>
+              <span class="lbl-survival" style="color: #16a34a; font-weight: 800;">{{ i18n.t('event.details.logs_survivor') }}</span>
               <span class="val-player" style="font-weight: 850;">
-                {{ logsMetrics()!.leastDiedPlayer?.name || 'Aucun' }} ({{ logsMetrics()!.leastDiedPlayer?.deaths }} {{ logsMetrics()!.leastDiedPlayer?.deaths === 1 ? 'mort' : 'morts' }})
+                {{ logsMetrics()!.leastDiedPlayer?.name || i18n.t('event.details.logs_none') }} ({{ logsMetrics()!.leastDiedPlayer?.deaths }} {{ logsMetrics()!.leastDiedPlayer?.deaths === 1 ? i18n.t('event.details.logs_death') : i18n.t('event.details.logs_deaths') }})
               </span>
             </div>
             <div class="survival-row flex-row" style="justify-content: space-between; width: 100%; font-size: 0.9rem; font-weight: 750;">
-              <span class="lbl-survival" style="color: #dc2626; font-weight: 800;">☠️ Plus mort :</span>
+              <span class="lbl-survival" style="color: #dc2626; font-weight: 800;">{{ i18n.t('event.details.logs_died_most') }}</span>
               <span class="val-player" style="font-weight: 850;">
-                {{ logsMetrics()!.mostDiedPlayer?.name || 'Aucun' }} ({{ logsMetrics()!.mostDiedPlayer?.deaths }} {{ logsMetrics()!.mostDiedPlayer?.deaths === 1 ? 'mort' : 'morts' }})
+                {{ logsMetrics()!.mostDiedPlayer?.name || i18n.t('event.details.logs_none') }} ({{ logsMetrics()!.mostDiedPlayer?.deaths }} {{ logsMetrics()!.mostDiedPlayer?.deaths === 1 ? i18n.t('event.details.logs_death') : i18n.t('event.details.logs_deaths') }})
               </span>
             </div>
           </div>
         </div>
         <div class="stat-card">
-          <span class="label">Raid DPS / HPS</span>
+          <span class="label">{{ i18n.t('event.details.logs_raid_dps_hps') }}</span>
           <span class="value flex-row" style="gap: 8px; font-size: 1.45rem;">
             <span class="kill-tag" style="background: #fee2e2; color: #dc2626; font-size: 1.15rem; font-weight: 800;">{{ formatBigNumber(logsMetrics()!.raidAvgDps) }} DPS</span>
             <span class="wipe-tag" style="background: #dcfce7; color: #16a34a; font-size: 1.15rem; font-weight: 800;">{{ formatBigNumber(logsMetrics()!.raidAvgHps) }} HPS</span>
           </span>
-          <span class="sub-label">Puissance globale moyenne</span>
+          <span class="sub-label">{{ i18n.t('event.details.logs_global_avg_power') }}</span>
         </div>
         <div class="stat-card">
-          <span class="label">Kills / Wipes</span>
+          <span class="label">{{ i18n.t('event.details.logs_kills_wipes') }}</span>
           <span class="value flex-row" style="gap: 8px;">
             <span class="kill-tag">{{ logsMetrics()!.totalKills }} K</span>
             <span class="wipe-tag">{{ logsMetrics()!.totalWipes }} W</span>
           </span>
-          <span class="sub-label">Fights: {{ logsMetrics()!.fights.length }} — {{ formatHourDuration(logsMetrics()!.totalDuration) }}</span>
+          <span class="sub-label">{{ i18n.t('event.details.logs_fights') }}: {{ logsMetrics()!.fights.length }} — {{ formatHourDuration(logsMetrics()!.totalDuration) }}</span>
         </div>
       </div>
 
@@ -98,7 +98,7 @@
 
       <!-- Mini Fights Timeline -->
       <div class="fights-timeline-card">
-        <h3>Chronologie des combats</h3>
+        <h3>{{ i18n.t('event.details.logs_timeline_title') }}</h3>
         <div class="timeline-row">
           @for (fight of logsMetrics()!.fights; track fight.id) {
             <div class="timeline-item" [class.is-kill]="fight.kill" (click)="logsSubTab.set('bosses'); selectedFightId.set(fight.id)">
@@ -150,15 +150,15 @@
               </span>
               <span class="pill-meta">🕒 {{ formatDuration(fight.duration) }}</span>
               <span class="pill-meta">☠️ {{ fight.deathsCount }} {{ i18n.t('event.details.logs_th_deaths').toLowerCase() }}</span>
-              <span class="pill-meta damage-pill">⚔️ {{ formatBigNumber(fight.averageDps) }} DPS Raid</span>
-              <span class="pill-meta heal-pill">💚 {{ formatBigNumber(fight.averageHps) }} HPS Raid</span>
+              <span class="pill-meta damage-pill">⚔️ {{ formatBigNumber(fight.averageDps) }} {{ i18n.t('event.details.logs_raid_avg_dps') }}</span>
+              <span class="pill-meta heal-pill">💚 {{ formatBigNumber(fight.averageHps) }} {{ i18n.t('event.details.logs_raid_avg_hps') }}</span>
             </div>
           </div>
 
           <!-- Top DPS and HPS charts side by side -->
           <div class="performance-brief-grid">
             <div class="brief-card">
-              <h4>⚔️ Top DPS</h4>
+              <h4>⚔️ {{ i18n.t('event.details.logs_top_dps') }}</h4>
               <div class="brief-ranking-list">
                 @for (p of getSortedPlayersForSelectedFight().slice(0, 5); track p.name) {
                   <div class="ranking-row">
@@ -178,7 +178,7 @@
             </div>
 
             <div class="brief-card">
-              <h4>💚 Top HPS</h4>
+              <h4>💚 {{ i18n.t('event.details.logs_top_hps') }}</h4>
               <div class="brief-ranking-list">
                 @for (p of getSortedHealersForFight(fight.players).slice(0, 5); track p.name) {
                   @if (p.hps > 0) {
@@ -206,7 +206,7 @@
     <!-- SUB-TAB 3: Detailed Players Table -->
     <div class="logs-players-panel animated-fade-in" *ngIf="logsSubTab() === 'players' && getSelectedFight(); let fight">
       <div class="fight-selector-row">
-        <label>Sélectionner le combat :</label>
+        <label>{{ i18n.t('event.details.logs_select_fight') }}</label>
         <select [ngModel]="selectedFightId()" (ngModelChange)="selectedFightId.set(+$event)" class="modern-select mini">
           @for (f of logsMetrics()!.fights; track f.id) {
             <option [value]="f.id">
@@ -314,13 +314,13 @@
         <table class="modern-table logs-table">
           <thead>
             <tr>
-              <th>Rang</th>
-              <th>Joueur</th>
-              <th>Score MVP</th>
-              <th>DPS Moyen</th>
-              <th>HPS Moyen</th>
-              <th>Dégâts Subis</th>
-              <th>Morts Évitables</th>
+              <th>{{ i18n.t('event.details.logs_mvp_rank') }}</th>
+              <th>{{ i18n.t('event.details.logs_th_player') }}</th>
+              <th>{{ i18n.t('event.details.logs_mvp_score') }}</th>
+              <th>{{ i18n.t('event.details.logs_mvp_dps_avg') }}</th>
+              <th>{{ i18n.t('event.details.logs_mvp_hps_avg') }}</th>
+              <th>{{ i18n.t('event.details.logs_mvp_damage_taken') }}</th>
+              <th>{{ i18n.t('event.details.logs_mvp_avoidable_deaths') }}</th>
             </tr>
           </thead>
           <tbody>
