@@ -255,15 +255,18 @@ export class FeeService {
         FROM users u
         JOIN characters c ON u.id = c.user_id AND c.guild_id = $1
         LEFT JOIN fee_allocations fa ON u.id = fa.user_id AND fa.month_date = $2::DATE AND fa.guild_id = $1
-        WHERE u.discord_id IS NOT NULL
-        AND (fa.amount IS NULL OR fa.amount < $3)
+        WHERE (fa.amount IS NULL OR fa.amount < $3)
       `;
       const result = await pool.query(queryUsers, [guild.id, monthStr, guild.minimum_fee_amount]);
       const lateUsers = result.rows;
       lateCount = lateUsers.length;
 
       if (lateUsers.length > 0) {
-        const mentions = lateUsers.map(u => `<@${u.discord_id}>`).join(', ');
+        const mentions = lateUsers.map(u => 
+          u.discord_id && u.discord_id.trim() !== '' 
+            ? `<@${u.discord_id}>` 
+            : `**${u.battletag ? u.battletag.split('#')[0] : 'Membre'}**`
+        ).join(', ');
         const message = `**Rappel de Cotisation** ⏰\nLes membres suivants ne sont pas encore à jour pour ce mois (Minimum requis : ${guild.minimum_fee_amount} PO) : ${mentions}.\n\nVeuillez d'abord déposer vos pièces d'or en banque de guilde puis déclarer votre dépôt sur le site !`;
         const sent = await sendDiscordChannelMessage(guild.discord_reminder_channel_id, message);
         if (sent) {
