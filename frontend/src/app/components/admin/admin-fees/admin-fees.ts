@@ -40,10 +40,10 @@ export class AdminFeesComponent implements OnInit {
   modalUser: { battletag?: string; main_character?: string; characters?: any[] } | null = null;
 
   months = [
-    { name: 'Jan', index: 1 }, { name: 'Fév', index: 2 }, { name: 'Mar', index: 3 },
-    { name: 'Avr', index: 4 }, { name: 'Mai', index: 5 }, { name: 'Jui', index: 6 },
-    { name: 'Jul', index: 7 }, { name: 'Aoû', index: 8 }, { name: 'Sep', index: 9 },
-    { name: 'Oct', index: 10 }, { name: 'Nov', index: 11 }, { name: 'Déc', index: 12 }
+    { index: 1 }, { index: 2 }, { index: 3 },
+    { index: 4 }, { index: 5 }, { index: 6 },
+    { index: 7 }, { index: 8 }, { index: 9 },
+    { index: 10 }, { index: 11 }, { index: 12 }
   ];
 
   constructor(

@@ -62,7 +62,7 @@
           <tr>
             <th>{{ i18n.t('admin.fees.th_member') }}</th>
             @for (m of months; track m.index) {
-              <th>{{ m.name }}</th>
+              <th>{{ i18n.t('month.short.' + (m.index - 1)) }}</th>
             }
           </tr>
         </thead>
@@ -111,7 +111,7 @@
   <div class="modal">
     <h3>{{ i18n.t('admin.fees.modal_adjust_title') }}</h3>
     <p>{{ i18n.t('admin.fees.th_member') }} : <strong>{{ adjustingUser?.battletag }}</strong></p>
-    <p>{{ i18n.t('admin.fees.period') }} : <strong>{{ months[adjustingMonthIndex-1]?.name }} {{ displayYear() }}</strong></p>
+    <p>{{ i18n.t('admin.fees.period') }} : <strong>{{ i18n.t('month.' + (adjustingMonthIndex - 1)) }} {{ displayYear() }}</strong></p>
 
     <div class="form-group">
       <label>{{ i18n.t('admin.fees.modal_adjust_amount') }}</label>
