@@ -89,9 +89,8 @@ router.post('/remind', canManageFees, async (req, res, next) => {
     const result = await FeeService.sendPaymentReminders(guildId);
     res.json({
       status: 'success',
-      message: 'Rappels de cotisation envoyés avec succès.',
-      notifiedCount: result.notifiedCount,
-      messageSent: result.messageSent
+      message: 'Rappels de cotisation traités.',
+      ...result
     });
   } catch (error) {
     next(error);
