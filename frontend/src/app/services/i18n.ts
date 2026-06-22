@@ -17,6 +17,10 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'nav.profile': 'Profil',
     'nav.absences': 'Absences',
 
+    // Warning Banner
+    'banner.discord_warning': 'Attention : Vous n\'avez pas encore lié votre compte Discord. Cette liaison est indispensable pour recevoir les notifications et rappels importants de la guilde.',
+    'banner.discord_link_btn': 'Lier mon compte maintenant',
+
     // Admin Tabs
     'admin.title': 'Espace Administrateur',
     'admin.tab.members': 'Membres',
@@ -85,6 +89,29 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'admin.fees.toast_remind_no_channel': 'Le salon Discord de rappel des cotisations n\'est pas configuré dans les paramètres.',
     'admin.fees.toast_remind_send_failed': 'Le bot Discord n\'a pas pu envoyer le message. Assurez-vous qu\'il est connecté et qu\'il dispose des permissions nécessaires dans le salon.',
     'admin.fees.toast_remind_none_late': 'Tous les membres sont à jour de cotisation pour ce mois-ci ! Aucun rappel requis.',
+
+    // Admin Users
+    'admin.users.th_member': 'Membre',
+    'admin.users.th_battletag': 'BattleTag',
+    'admin.users.th_role': 'Rôle',
+    'admin.users.th_joined': 'Inscrit le',
+    'admin.users.th_discord': 'Compte Discord',
+    'admin.users.th_actions': 'Actions',
+    'admin.users.title': 'Gestion des Membres & Rôles',
+    'admin.users.subtitle': 'Attribuez des permissions spécifiques aux membres de la guilde.',
+    'admin.users.discord_linked': '✅ Lié',
+    'admin.users.discord_unlinked': '❌ Non lié',
+    'admin.users.tooltip_linked': 'Compte Discord lié',
+    'admin.users.tooltip_unlinked': 'Compte Discord non lié',
+    'admin.users.tooltip_self_delete': 'Vous ne pouvez pas vous supprimer vous-même',
+    'admin.users.btn_delete': 'Supprimer le membre',
+    'admin.users.confirm_delete_title': 'Supprimer le membre',
+    'admin.users.confirm_delete_msg': 'Voulez-vous vraiment supprimer {member} ? Cette action supprimera également tous ses personnages et inscriptions.',
+    'admin.users.toast_role_success': 'Rôle de {member} mis à jour.',
+    'admin.users.toast_role_error': 'Erreur lors de la mise à jour du rôle.',
+    'admin.users.toast_delete_success': 'Membre supprimé avec succès.',
+    'admin.users.toast_delete_error': 'Erreur lors de la suppression.',
+    'admin.users.toast_load_error': 'Erreur lors du chargement des membres.',
 
     // Absences Section
     'absences.title': 'Déclarer une absence',
@@ -802,6 +829,10 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'nav.profile': 'Profile',
     'nav.absences': 'Absences',
 
+    // Warning Banner
+    'banner.discord_warning': 'Warning: You have not linked your Discord account yet. This link is essential to receive important guild notifications and reminders.',
+    'banner.discord_link_btn': 'Link my account now',
+
     // Admin Tabs
     'admin.title': 'Admin Control Panel',
     'admin.tab.members': 'Members',
@@ -870,6 +901,29 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'admin.fees.toast_remind_no_channel': 'The Discord reminders channel is not configured in settings.',
     'admin.fees.toast_remind_send_failed': 'The Discord bot failed to send the message. Make sure it is connected and has write permissions in the configured channel.',
     'admin.fees.toast_remind_none_late': 'All guild members are up to date with their fees for this month! No reminder needed.',
+
+    // Admin Users
+    'admin.users.th_member': 'Member',
+    'admin.users.th_battletag': 'BattleTag',
+    'admin.users.th_role': 'Role',
+    'admin.users.th_joined': 'Joined on',
+    'admin.users.th_discord': 'Discord Account',
+    'admin.users.th_actions': 'Actions',
+    'admin.users.title': 'Members & Roles Management',
+    'admin.users.subtitle': 'Assign specific permissions to the guild members.',
+    'admin.users.discord_linked': '✅ Linked',
+    'admin.users.discord_unlinked': '❌ Unlinked',
+    'admin.users.tooltip_linked': 'Discord account linked',
+    'admin.users.tooltip_unlinked': 'Discord account not linked',
+    'admin.users.tooltip_self_delete': 'You cannot delete yourself',
+    'admin.users.btn_delete': 'Delete member',
+    'admin.users.confirm_delete_title': 'Delete Member',
+    'admin.users.confirm_delete_msg': 'Are you sure you want to delete {member}? This will also delete all of their characters and signups.',
+    'admin.users.toast_role_success': 'Role of {member} updated.',
+    'admin.users.toast_role_error': 'Error updating role.',
+    'admin.users.toast_delete_success': 'Member successfully deleted.',
+    'admin.users.toast_delete_error': 'Error deleting member.',
+    'admin.users.toast_load_error': 'Error loading members.',
 
     // Absences Section
     'absences.title': 'Declare an Absence',

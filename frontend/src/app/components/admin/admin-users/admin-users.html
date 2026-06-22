@@ -1,7 +1,7 @@
 <div class="users-admin">
   <div class="section-header">
-    <h3>Gestion des Membres & Rôles</h3>
-    <p>Attribuez des permissions spécifiques aux membres de la guilde.</p>
+    <h3>{{ i18n.t('admin.users.title') }}</h3>
+    <p>{{ i18n.t('admin.users.subtitle') }}</p>
   </div>
 
   <div class="users-list-card">
@@ -9,11 +9,12 @@
       <table class="users-table">
         <thead>
           <tr>
-            <th>Membre</th>
-            <th>BattleTag</th>
-            <th>Rôle</th>
-            <th>Inscrit le</th>
-            <th class="actions-header">Actions</th>
+            <th>{{ i18n.t('admin.users.th_member') }}</th>
+            <th>{{ i18n.t('admin.users.th_battletag') }}</th>
+            <th>{{ i18n.t('admin.users.th_role') }}</th>
+            <th>{{ i18n.t('admin.users.th_joined') }}</th>
+            <th>{{ i18n.t('admin.users.th_discord') }}</th>
+            <th class="actions-header">{{ i18n.t('admin.users.th_actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -34,12 +35,17 @@
                 </select>
               </td>
               <td class="date-cell">{{ user.created_at | date:'dd/MM/yyyy' }}</td>
+              <td class="discord-cell">
+                <span class="discord-badge" [class.linked]="user.discord_id" [title]="user.discord_id ? i18n.t('admin.users.tooltip_linked') : i18n.t('admin.users.tooltip_unlinked')">
+                  {{ user.discord_id ? i18n.t('admin.users.discord_linked') : i18n.t('admin.users.discord_unlinked') }}
+                </span>
+              </td>
               <td class="actions-cell">
                 <button 
                   class="btn-delete-user" 
                   (click)="onDeleteUser(user)" 
                   [disabled]="user.id === authService.currentUser()?.id"
-                  [title]="user.id === authService.currentUser()?.id ? 'Vous ne pouvez pas vous supprimer vous-même' : 'Supprimer le membre'"
+                  [title]="user.id === authService.currentUser()?.id ? i18n.t('admin.users.tooltip_self_delete') : i18n.t('admin.users.btn_delete')"
                 >
                   🗑️
                 </button>

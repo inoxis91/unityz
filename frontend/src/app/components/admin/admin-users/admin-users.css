@@ -283,3 +283,22 @@
   padding: 4px 8px;
   border-radius: 6px;
 }
+
+.discord-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
+.discord-badge.linked {
+  background: #dcfce7;
+  color: #15803d;
+  border-color: #86efac;
+}

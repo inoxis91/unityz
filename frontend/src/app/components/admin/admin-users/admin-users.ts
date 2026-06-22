@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService, User, UserRole } from '../../../services/auth';
 import { ToastService } from '../../../services/toast';
 import { ConfirmService } from '../../../services/confirm';
+import { I18nService } from '../../../services/i18n';
 
 @Component({
   selector: 'app-admin-users',
@@ -16,6 +17,7 @@ export class AdminUsersComponent implements OnInit {
   public authService = inject(AuthService);
   private toast = inject(ToastService);
   private confirm = inject(ConfirmService);
+  public i18n = inject(I18nService);
   
   users = signal<User[]>([]);
   roles: { value: UserRole, label: string }[] = [
@@ -46,15 +48,18 @@ export class AdminUsersComponent implements OnInit {
   loadUsers() {
     this.authService.getUsers().subscribe({
       next: (users) => this.users.set(users),
-      error: () => this.toast.error('Erreur lors du chargement des utilisateurs.')
+      error: () => this.toast.error(this.i18n.t('admin.users.toast_load_error'))
     });
   }
 
   onRoleChange(user: User, newRole: any) {
     this.authService.updateUserRole(user.id, newRole as UserRole).subscribe({
-      next: () => this.toast.success(`Rôle de ${user.battletag} mis à jour.`),
+      next: () => this.toast.success(
+        this.i18n.t('admin.users.toast_role_success')
+          .replace('{member}', user.battletag)
+      ),
       error: () => {
-        this.toast.error('Erreur lors de la mise à jour du rôle.');
+        this.toast.error(this.i18n.t('admin.users.toast_role_error'));
         this.loadUsers(); // Revert on UI
       }
     });
@@ -62,19 +67,20 @@ export class AdminUsersComponent implements OnInit {
 
   async onDeleteUser(user: User) {
     const ok = await this.confirm.ask(
-      'Supprimer le membre',
-      `Voulez-vous vraiment supprimer ${user.battletag} ? Cette action supprimera également tous ses personnages et inscriptions.`
+      this.i18n.t('admin.users.confirm_delete_title'),
+      this.i18n.t('admin.users.confirm_delete_msg')
+        .replace('{member}', user.battletag)
     );
 
     if (ok) {
       this.authService.deleteUser(user.id).subscribe({
         next: () => {
-          this.toast.success('Membre supprimé avec succès.');
+          this.toast.success(this.i18n.t('admin.users.toast_delete_success'));
           this.loadUsers();
         },
         error: (err) => {
           console.error('Delete error:', err);
-          this.toast.error('Erreur lors de la suppression.');
+          this.toast.error(this.i18n.t('admin.users.toast_delete_error'));
         }
       });
     }

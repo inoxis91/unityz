@@ -9,6 +9,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { NavigationEnd } from '@angular/router';
 import { I18nService } from './services/i18n';
+import { AuthService } from './services/auth';
 
 @Component({
   selector: 'app-root',
@@ -16,6 +17,15 @@ import { I18nService } from './services/i18n';
   imports: [CommonModule, RouterOutlet, RouterModule, NavbarComponent, ToastComponent, ConfirmComponent, SupportWidgetComponent],
   template: `
     <app-navbar *ngIf="!isPublicPage()"></app-navbar>
+    <div class="discord-warning-banner" *ngIf="showDiscordWarning()">
+      <div class="banner-content">
+        <span class="banner-icon">⚠️</span>
+        <span class="banner-text">
+          {{ i18n.t('banner.discord_warning') }}
+        </span>
+        <a routerLink="/options" class="banner-link">{{ i18n.t('banner.discord_link_btn') }}</a>
+      </div>
+    </div>
     <main [class.full-width]="isFullWidthPage()">
       <router-outlet></router-outlet>
     </main>
@@ -38,6 +48,47 @@ import { I18nService } from './services/i18n';
       display: flex;
       flex-direction: column;
       min-height: 100vh;
+    }
+
+    .discord-warning-banner {
+      background-color: #ef4444;
+      color: white;
+      padding: 12px 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      width: 100%;
+      box-sizing: border-box;
+      border-bottom: 1px solid #dc2626;
+      z-index: 10;
+    }
+
+    .banner-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .banner-icon {
+      font-size: 1.1rem;
+    }
+
+    .banner-text {
+      text-align: center;
+    }
+
+    .banner-link {
+      color: white;
+      text-decoration: underline;
+      font-weight: 700;
+      transition: opacity 0.2s;
+    }
+
+    .banner-link:hover {
+      opacity: 0.8;
     }
 
     main {
@@ -109,6 +160,13 @@ import { I18nService } from './services/i18n';
 export class AppComponent {
   private router = inject(Router);
   public i18n = inject(I18nService);
+  private authService = inject(AuthService);
+
+  showDiscordWarning = computed(() => {
+    const user = this.authService.currentUser();
+    if (this.isPublicPage()) return false;
+    return !!user && (!user.discord_id || user.discord_id.trim() === '');
+  });
   
   // Create a signal from the router events to track the current URL
   private url = toSignal(
