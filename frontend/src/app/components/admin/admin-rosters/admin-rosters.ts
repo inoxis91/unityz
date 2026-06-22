@@ -15,6 +15,7 @@ import { CharacterService, Character } from '../../../services/character';
 import { ConfirmService } from '../../../services/confirm';
 import { ToastService } from '../../../services/toast';
 import { AuthService } from '../../../services/auth';
+import { I18nService } from '../../../services/i18n';
 
 @Component({
   selector: 'app-admin-rosters',
@@ -32,6 +33,7 @@ export class AdminRostersComponent implements OnInit {
   editingRoster: Roster | null = null;
 
   public authService = inject(AuthService);
+  public i18n = inject(I18nService);
   isPro = computed(() => this.authService.currentUser()?.subscription_tier === 'pro');
   limitReached = computed(() => !this.isPro() && this.rosterService.rosters().length >= 2);
 
@@ -69,7 +71,7 @@ export class AdminRostersComponent implements OnInit {
       this.rosterService.assignCharacter(character.id || '', rosterId).subscribe({
         error: (err) => {
           console.error('Failed to assign character:', err);
-          this.toast.error('Erreur lors de l\'assignation.');
+          this.toast.error(this.i18n.t('admin.rosters.toast_assign_error'));
           this.loadAll(); // Rollback on error
         }
       });
@@ -80,10 +82,10 @@ export class AdminRostersComponent implements OnInit {
     if (!this.newRoster.name) return;
     this.rosterService.createRoster(this.newRoster).subscribe({
         next: () => {
-            this.toast.success('Roster créé avec succès.');
+            this.toast.success(this.i18n.t('admin.rosters.toast_create_success'));
             this.closeModal();
         },
-        error: () => this.toast.error('Erreur lors de la création.')
+        error: () => this.toast.error(this.i18n.t('admin.rosters.toast_create_error'))
     });
   }
 
@@ -95,23 +97,23 @@ export class AdminRostersComponent implements OnInit {
       weight: this.editingRoster.weight
     }).subscribe({
         next: () => {
-            this.toast.success('Roster mis à jour.');
+            this.toast.success(this.i18n.t('admin.rosters.toast_update_success'));
             this.closeEditModal();
         },
-        error: () => this.toast.error('Erreur lors de la mise à jour.')
+        error: () => this.toast.error(this.i18n.t('admin.rosters.toast_update_error'))
     });
   }
 
   async onDeleteRoster(id: string) {
     const ok = await this.confirm.ask(
-        'Supprimer le roster',
-        'Êtes-vous sûr de vouloir supprimer ce roster ? Les personnages seront désassignés.'
+        this.i18n.t('admin.rosters.confirm_delete_title'),
+        this.i18n.t('admin.rosters.confirm_delete_msg')
     );
 
     if (ok) {
       this.rosterService.deleteRoster(id).subscribe({
-        next: () => this.toast.success('Roster supprimé.'),
-        error: () => this.toast.error('Erreur lors de la suppression.')
+        next: () => this.toast.success(this.i18n.t('admin.rosters.toast_delete_success')),
+        error: () => this.toast.error(this.i18n.t('admin.rosters.toast_delete_error'))
       });
     }
   }
