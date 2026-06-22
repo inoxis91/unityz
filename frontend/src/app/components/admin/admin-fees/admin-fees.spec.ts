@@ -7,6 +7,7 @@ import { FeeService, GuildFeeOverview } from '../../../services/fee';
 import { AuthService } from '../../../services/auth';
 import { ConfirmService } from '../../../services/confirm';
 import { ToastService } from '../../../services/toast';
+import { I18nService } from '../../../services/i18n';
 
 describe('AdminFeesComponent', () => {
   let component: AdminFeesComponent;
@@ -35,6 +36,20 @@ describe('AdminFeesComponent', () => {
     info: () => {}
   };
 
+  const mockI18nService = {
+    currentLocale: signal('fr'),
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        'admin.fees.confirm_remind_title': 'Envoyer les rappels',
+        'admin.fees.confirm_remind_msg': 'Voulez-vous envoyer un rappel Discord de cotisation à tous les membres en retard pour le mois en cours ?',
+        'admin.fees.toast_remind_success': 'Rappels Discord envoyés avec succès ({count} membre(s) notifié(s)).',
+        'admin.fees.toast_remind_info': 'Aucun membre en retard trouvé, ou le salon Discord n\'est pas configuré.',
+        'admin.fees.toast_remind_error': 'Erreur lors de l\'envoi des rappels.',
+      };
+      return translations[key] || key;
+    }
+  };
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AdminFeesComponent],
@@ -43,6 +58,7 @@ describe('AdminFeesComponent', () => {
         { provide: AuthService, useValue: mockAuthService },
         { provide: ConfirmService, useValue: mockConfirmService },
         { provide: ToastService, useValue: mockToastService },
+        { provide: I18nService, useValue: mockI18nService },
         { provide: HttpClient, useValue: {} }
       ]
     }).compileComponents();

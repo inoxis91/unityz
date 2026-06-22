@@ -20,6 +20,7 @@
     - Database/Backend Entities: `snake_case`.
     - Components/Classes: `PascalCase`.
 - **DRY & Clean Code**: Refactor redundant logic into services or helper functions. Use descriptive variable names.
+- **Internationalisation (i18n)** : Tout nouveau développement sur le frontend doit obligatoirement être internationalisé en utilisant le service `I18nService` (les clés de traduction doivent être enregistrées pour `fr` et `en` dans `frontend/src/app/services/i18n.ts`). Les chaînes de caractères brutes (hardcoded) sont strictement interdites dans les templates HTML et fichiers TS utilisateur.
 
 ### Backend Architecture (Layered)
 - **Routes Layer**: Handles HTTP requests, basic response sending, and delegates to Services.

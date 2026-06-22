@@ -2,15 +2,15 @@
   <div class="sub-tabs">
     <div class="sub-tabs-buttons">
       <button [class.active]="activeSubTab() === 'pending'" (click)="activeSubTab.set('pending')">
-        À Valider ({{ feeService.pendingDeclarations().length }})
+        {{ i18n.t('admin.fees.tab_pending') }} ({{ feeService.pendingDeclarations().length }})
       </button>
       <button [class.active]="activeSubTab() === 'guild'" (click)="activeSubTab.set('guild')">
-        Vue d'ensemble Guilde
+        {{ i18n.t('admin.fees.tab_overview') }}
       </button>
     </div>
     <div class="sub-tabs-actions">
       <button class="btn-remind" (click)="onSendReminders()">
-        🔔 Rappeler les retards (Discord)
+        🔔 {{ i18n.t('admin.fees.btn_remind') }}
       </button>
     </div>
   </div>
@@ -22,22 +22,22 @@
         <div class="pending-card">
           <div class="user-info">
             <span class="btag clickable" (click)="openCharactersModal(decl)">{{ decl.main_character || decl.battletag }}</span>
-            <span class="date">Déposé le {{ decl.created_at | date:'short' }}</span>
+            <span class="date">{{ i18n.t('admin.fees.deposited_on') }} {{ decl.created_at | date:'short' }}</span>
           </div>
           <div class="decl-details">
             <div class="val">{{ decl.amount }} PO</div>
-            <p>Période : {{ decl.duration_months }} mois dès {{ decl.start_month | date:'MMMM yyyy' }}</p>
+            <p>{{ i18n.t('admin.fees.period') }} : {{ decl.duration_months }} {{ i18n.t('admin.fees.months_from') }} {{ decl.start_month | date:'MMMM yyyy' }}</p>
             <p class="comment" *ngIf="decl.comment">"{{ decl.comment }}"</p>
           </div>
           <div class="actions">
-            <button class="btn-approve" (click)="onAccept(decl)">✅ Accepter</button>
-            <button class="btn-reject" (click)="openRejectModal(decl)">❌ Refuser</button>
+            <button class="btn-approve" (click)="onAccept(decl)">✅ {{ i18n.t('admin.fees.btn_accept') }}</button>
+            <button class="btn-reject" (click)="openRejectModal(decl)">❌ {{ i18n.t('admin.fees.btn_reject') }}</button>
           </div>
         </div>
       }
       @if (feeService.pendingDeclarations().length === 0) {
         <div class="empty-state">
-          <p>Aucune déclaration en attente de validation.</p>
+          <p>{{ i18n.t('admin.fees.empty_pending') }}</p>
         </div>
       }
     </div>
@@ -52,7 +52,7 @@
         <button class="btn-year" (click)="changeYear(1)">▶</button>
       </div>
       <div class="overview-legend">
-        <span class="legend-item">Cliquez sur une case pour modifier manuellement</span>
+        <span class="legend-item">{{ i18n.t('admin.fees.click_to_edit') }}</span>
       </div>
     </div>
 
@@ -60,7 +60,7 @@
       <table class="guild-overview-table">
         <thead>
           <tr>
-            <th>Membre</th>
+            <th>{{ i18n.t('admin.fees.th_member') }}</th>
             @for (m of months; track m.index) {
               <th>{{ m.name }}</th>
             }
@@ -91,17 +91,17 @@
 <!-- Rejection Modal -->
 <div class="modal-backdrop" *ngIf="showRejectModal()">
   <div class="modal">
-    <h3>Refuser la déclaration</h3>
-    <p>Vous allez refuser le dépôt de <strong>{{ resolvingDecl?.amount }} PO</strong> de <strong>{{ resolvingDecl?.battletag }}</strong>.</p>
+    <h3>{{ i18n.t('admin.fees.modal_reject_title') }}</h3>
+    <p>{{ i18n.t('admin.fees.modal_reject_warning') }} <strong>{{ resolvingDecl?.amount }} PO</strong> {{ i18n.t('admin.fees.modal_reject_of') }} <strong>{{ resolvingDecl?.battletag }}</strong>.</p>
     
     <div class="form-group">
-      <label>Motif du refus (visible par le membre)</label>
-      <textarea [(ngModel)]="adminComment" placeholder="ex: Pas de trace en banque de guilde..."></textarea>
+      <label>{{ i18n.t('admin.fees.modal_reject_reason') }}</label>
+      <textarea [(ngModel)]="adminComment" [placeholder]="i18n.t('admin.fees.modal_reject_placeholder')"></textarea>
     </div>
 
     <div class="modal-footer">
-      <button class="btn-secondary" (click)="closeRejectModal()">Annuler</button>
-      <button class="btn-danger" (click)="onReject()">Confirmer le refus</button>
+      <button class="btn-secondary" (click)="closeRejectModal()">{{ i18n.t('admin.fees.btn_cancel') }}</button>
+      <button class="btn-danger" (click)="onReject()">{{ i18n.t('admin.fees.btn_confirm_reject') }}</button>
     </div>
   </div>
 </div>
@@ -109,12 +109,12 @@
 <!-- Adjustment Modal -->
 <div class="modal-backdrop" *ngIf="showAdjustModal()">
   <div class="modal">
-    <h3>Ajustement Manuel</h3>
-    <p>Membre : <strong>{{ adjustingUser?.battletag }}</strong></p>
-    <p>Période : <strong>{{ months[adjustingMonthIndex-1]?.name }} {{ displayYear() }}</strong></p>
+    <h3>{{ i18n.t('admin.fees.modal_adjust_title') }}</h3>
+    <p>{{ i18n.t('admin.fees.th_member') }} : <strong>{{ adjustingUser?.battletag }}</strong></p>
+    <p>{{ i18n.t('admin.fees.period') }} : <strong>{{ months[adjustingMonthIndex-1]?.name }} {{ displayYear() }}</strong></p>
 
     <div class="form-group">
-      <label>Montant total des PO pour ce mois</label>
+      <label>{{ i18n.t('admin.fees.modal_adjust_amount') }}</label>
       <div class="input-with-icon">
         <input type="number" [(ngModel)]="adjustingAmount" class="modern-input">
         <span class="unit">PO</span>
@@ -122,8 +122,8 @@
     </div>
 
     <div class="modal-footer">
-      <button class="btn-secondary" (click)="showAdjustModal.set(false)">Annuler</button>
-      <button class="btn-primary" (click)="onSaveAdjustment()">Enregistrer</button>
+      <button class="btn-secondary" (click)="showAdjustModal.set(false)">{{ i18n.t('admin.fees.btn_cancel') }}</button>
+      <button class="btn-primary" (click)="onSaveAdjustment()">{{ i18n.t('admin.fees.btn_save') }}</button>
     </div>
   </div>
 </div>
@@ -131,23 +131,23 @@
 <!-- Characters List Modal -->
 <div class="modal-backdrop" *ngIf="showCharactersModal()">
   <div class="modal">
-    <h3>Personnages de {{ modalUser?.battletag }}</h3>
+    <h3>{{ i18n.t('admin.fees.modal_chars_title') }} {{ modalUser?.battletag }}</h3>
     
     <div class="characters-list" *ngIf="modalUser?.characters?.length; else noChars">
       @for (char of modalUser?.characters; track char.name) {
         <div class="character-item">
           <span class="char-name" [class.is-main]="char.is_main">{{ char.name }}</span>
           <span class="char-details">{{ char.class }} - {{ char.realm }}</span>
-          <span class="main-badge" *ngIf="char.is_main">Main</span>
+          <span class="main-badge" *ngIf="char.is_main">{{ i18n.t('admin.fees.main_badge') }}</span>
         </div>
       }
     </div>
     <ng-template #noChars>
-      <p>Aucun personnage synchronisé pour ce joueur.</p>
+      <p>{{ i18n.t('admin.fees.no_chars') }}</p>
     </ng-template>
 
     <div class="modal-footer">
-      <button class="btn-primary" (click)="closeCharactersModal()">Fermer</button>
+      <button class="btn-primary" (click)="closeCharactersModal()">{{ i18n.t('admin.fees.btn_close') }}</button>
     </div>
   </div>
 </div>

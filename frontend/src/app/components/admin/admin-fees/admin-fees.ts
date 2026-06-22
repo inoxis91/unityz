@@ -5,6 +5,7 @@ import { FeeService, FeeDeclaration, GuildFeeOverview } from '../../../services/
 import { ToastService } from '../../../services/toast';
 import { ConfirmService } from '../../../services/confirm';
 import { AuthService } from '../../../services/auth';
+import { I18nService } from '../../../services/i18n';
 
 @Component({
   selector: 'app-admin-fees',
@@ -17,6 +18,8 @@ export class AdminFeesComponent implements OnInit {
   activeSubTab = signal<'pending' | 'guild'>('pending');
   displayYear = signal(new Date().getFullYear());
   guildOverview = signal<GuildFeeOverview[]>([]);
+  
+  public i18n = inject(I18nService);
   
   // Rejection Modal
   showRejectModal = signal(false);
@@ -69,8 +72,10 @@ export class AdminFeesComponent implements OnInit {
 
   async onAccept(decl: FeeDeclaration) {
     const ok = await this.confirm.ask(
-      'Confirmer le dépôt', 
-      `Voulez-vous accepter le dépôt de ${decl.amount} PO de ${decl.battletag} ?`
+      this.i18n.t('admin.fees.confirm_accept_title'), 
+      this.i18n.t('admin.fees.confirm_accept_msg')
+        .replace('{amount}', decl.amount.toString())
+        .replace('{member}', decl.battletag || '')
     );
 
     if (ok) {
@@ -78,9 +83,9 @@ export class AdminFeesComponent implements OnInit {
         next: () => {
           this.loadPending();
           this.loadOverview();
-          this.toast.success('Dépôt approuvé avec succès.');
+          this.toast.success(this.i18n.t('admin.fees.toast_accept_success'));
         },
-        error: () => this.toast.error('Erreur lors de l\'approbation.')
+        error: () => this.toast.error(this.i18n.t('admin.fees.toast_accept_error'))
       });
     }
   }
@@ -102,9 +107,9 @@ export class AdminFeesComponent implements OnInit {
       next: () => {
         this.loadPending();
         this.closeRejectModal();
-        this.toast.info('La déclaration a été rejetée.');
+        this.toast.info(this.i18n.t('admin.fees.toast_reject_success'));
       },
-      error: () => this.toast.error('Erreur lors du rejet.')
+      error: () => this.toast.error(this.i18n.t('admin.fees.toast_reject_error'))
     });
   }
 
@@ -124,9 +129,9 @@ export class AdminFeesComponent implements OnInit {
       next: () => {
         this.loadOverview();
         this.showAdjustModal.set(false);
-        this.toast.success('Ajustement enregistré.');
+        this.toast.success(this.i18n.t('admin.fees.toast_adjust_success'));
       },
-      error: () => this.toast.error('Erreur lors de l\'ajustement.')
+      error: () => this.toast.error(this.i18n.t('admin.fees.toast_adjust_error'))
     });
   }
 
@@ -155,22 +160,33 @@ export class AdminFeesComponent implements OnInit {
 
   async onSendReminders() {
     const ok = await this.confirm.ask(
-      'Envoyer les rappels',
-      'Voulez-vous envoyer un rappel Discord de cotisation à tous les membres en retard pour le mois en cours ?'
+      this.i18n.t('admin.fees.confirm_remind_title'),
+      this.i18n.t('admin.fees.confirm_remind_msg')
     );
 
     if (ok) {
       this.feeService.sendPaymentReminders().subscribe({
         next: (res) => {
           if (res.messageSent) {
-            this.toast.success(`Rappels Discord envoyés avec succès (${res.notifiedCount} membre(s) notifié(s)).`);
+            this.toast.success(
+              this.i18n.t('admin.fees.toast_remind_success')
+                .replace('{count}', res.notifiedCount.toString())
+            );
+          } else if (res.error === 'DISCORD_DISABLED') {
+            this.toast.error(this.i18n.t('admin.fees.toast_remind_disabled'));
+          } else if (res.error === 'CHANNEL_NOT_CONFIGURED') {
+            this.toast.error(this.i18n.t('admin.fees.toast_remind_no_channel'));
+          } else if (res.error === 'DISCORD_SEND_FAILED') {
+            this.toast.error(this.i18n.t('admin.fees.toast_remind_send_failed'));
+          } else if (res.lateCount === 0) {
+            this.toast.info(this.i18n.t('admin.fees.toast_remind_none_late'));
           } else {
-            this.toast.info('Aucun membre en retard trouvé, ou le salon Discord n\'est pas configuré.');
+            this.toast.info(this.i18n.t('admin.fees.toast_remind_info'));
           }
         },
         error: (err) => {
           console.error(err);
-          this.toast.error('Erreur lors de l\'envoi des rappels.');
+          this.toast.error(this.i18n.t('admin.fees.toast_remind_error'));
         }
       });
     }

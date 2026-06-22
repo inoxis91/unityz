@@ -194,9 +194,35 @@ export class FeeService {
     }
   }
 
-  static async sendPaymentReminders(guildId?: string): Promise<{ notifiedCount: number; messageSent: boolean }> {
+  static async sendPaymentReminders(guildId?: string): Promise<{ 
+    notifiedCount: number; 
+    messageSent: boolean; 
+    lateCount: number;
+    error?: string;
+    discordEnabled: boolean;
+    channelConfigured: boolean;
+  }> {
     let notifiedCount = 0;
     let messageSent = false;
+    let lateCount = 0;
+
+    // First, if guildId is provided, let's fetch its Discord settings directly to give highly descriptive errors
+    if (guildId) {
+      const checkRes = await pool.query(
+        'SELECT discord_enabled, discord_reminder_channel_id, minimum_fee_amount FROM guilds WHERE id = $1',
+        [guildId]
+      );
+      const guild = checkRes.rows[0];
+      if (!guild) {
+        return { notifiedCount: 0, messageSent: false, lateCount: 0, error: 'GUILD_NOT_FOUND', discordEnabled: false, channelConfigured: false };
+      }
+      if (!guild.discord_enabled) {
+        return { notifiedCount: 0, messageSent: false, lateCount: 0, error: 'DISCORD_DISABLED', discordEnabled: false, channelConfigured: !!guild.discord_reminder_channel_id };
+      }
+      if (!guild.discord_reminder_channel_id) {
+        return { notifiedCount: 0, messageSent: false, lateCount: 0, error: 'CHANNEL_NOT_CONFIGURED', discordEnabled: true, channelConfigured: false };
+      }
+    }
 
     // Fetch guilds to process
     let queryGuilds = `
@@ -228,12 +254,13 @@ export class FeeService {
         SELECT DISTINCT u.discord_id, u.battletag
         FROM users u
         JOIN characters c ON u.id = c.user_id AND c.guild_id = $1
-        LEFT JOIN fee_allocations fa ON u.id = fa.user_id AND fa.month_date = $2 AND fa.guild_id = $1
+        LEFT JOIN fee_allocations fa ON u.id = fa.user_id AND fa.month_date = $2::DATE AND fa.guild_id = $1
         WHERE u.discord_id IS NOT NULL
         AND (fa.amount IS NULL OR fa.amount < $3)
       `;
       const result = await pool.query(queryUsers, [guild.id, monthStr, guild.minimum_fee_amount]);
       const lateUsers = result.rows;
+      lateCount = lateUsers.length;
 
       if (lateUsers.length > 0) {
         const mentions = lateUsers.map(u => `<@${u.discord_id}>`).join(', ');
@@ -242,11 +269,13 @@ export class FeeService {
         if (sent) {
           messageSent = true;
           notifiedCount += lateUsers.length;
+        } else {
+          return { notifiedCount: 0, messageSent: false, lateCount, error: 'DISCORD_SEND_FAILED', discordEnabled: true, channelConfigured: true };
         }
       }
     }
 
-    return { notifiedCount, messageSent };
+    return { notifiedCount, messageSent, lateCount, discordEnabled: true, channelConfigured: true };
   }
 
   static async upsertAllocation(userId: string, monthDate: string, amount: number, guildId: string): Promise<void> {
