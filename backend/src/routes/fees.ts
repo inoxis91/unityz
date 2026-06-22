@@ -82,4 +82,20 @@ router.post('/adjust-allocation', canManageFees, validate(adjustAllocationSchema
   }
 });
 
+// POST /api/fees/remind : Envoi manuel du rappel de cotisation (Admin, Trésorier)
+router.post('/remind', canManageFees, async (req, res, next) => {
+  try {
+    const guildId = req.user!.active_guild_id!;
+    const result = await FeeService.sendPaymentReminders(guildId);
+    res.json({
+      status: 'success',
+      message: 'Rappels de cotisation envoyés avec succès.',
+      notifiedCount: result.notifiedCount,
+      messageSent: result.messageSent
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

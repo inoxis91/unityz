@@ -152,4 +152,27 @@ export class AdminFeesComponent implements OnInit {
     if (alloc.amount >= this.minimumFee()) return { class: alloc.amount > this.minimumFee() ? 'donation' : 'paid', icon: alloc.amount > this.minimumFee() ? '⭐' : '✅', amount: alloc.amount };
     return { class: 'partial', icon: '⚠️', amount: alloc.amount };
   }
+
+  async onSendReminders() {
+    const ok = await this.confirm.ask(
+      'Envoyer les rappels',
+      'Voulez-vous envoyer un rappel Discord de cotisation à tous les membres en retard pour le mois en cours ?'
+    );
+
+    if (ok) {
+      this.feeService.sendPaymentReminders().subscribe({
+        next: (res) => {
+          if (res.messageSent) {
+            this.toast.success(`Rappels Discord envoyés avec succès (${res.notifiedCount} membre(s) notifié(s)).`);
+          } else {
+            this.toast.info('Aucun membre en retard trouvé, ou le salon Discord n\'est pas configuré.');
+          }
+        },
+        error: (err) => {
+          console.error(err);
+          this.toast.error('Erreur lors de l\'envoi des rappels.');
+        }
+      });
+    }
+  }
 }

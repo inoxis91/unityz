@@ -1,5 +1,5 @@
 import pool from '../lib/db';
-import { sendDiscordDM, sendFeeDeclarationNotification } from '../lib/discord';
+import { sendDiscordDM, sendFeeDeclarationNotification, sendDiscordChannelMessage } from '../lib/discord';
 
 export interface FeeDeclaration {
   id: string;
@@ -192,6 +192,61 @@ export class FeeService {
     } finally {
       client.release();
     }
+  }
+
+  static async sendPaymentReminders(guildId?: string): Promise<{ notifiedCount: number; messageSent: boolean }> {
+    let notifiedCount = 0;
+    let messageSent = false;
+
+    // Fetch guilds to process
+    let queryGuilds = `
+      SELECT id, discord_reminder_channel_id, minimum_fee_amount, discord_enabled
+      FROM guilds 
+      WHERE discord_enabled = TRUE 
+        AND discord_reminder_channel_id IS NOT NULL
+    `;
+    const paramsGuilds: any[] = [];
+
+    if (guildId) {
+      queryGuilds += ` AND id = $1`;
+      paramsGuilds.push(guildId);
+    } else {
+      // For cron job (all active pro guilds)
+      queryGuilds += ` AND subscription_tier = 'pro' AND subscription_expires_at > CURRENT_TIMESTAMP`;
+    }
+
+    const guildsRes = await pool.query(queryGuilds, paramsGuilds);
+
+    for (const guild of guildsRes.rows) {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth() + 1;
+      const monthStr = `${year}-${String(month).padStart(2, '0')}-01`;
+
+      // Find users with allocations < minimum_fee_amount for the current month in this guild
+      const queryUsers = `
+        SELECT DISTINCT u.discord_id, u.battletag
+        FROM users u
+        JOIN characters c ON u.id = c.user_id AND c.guild_id = $1
+        LEFT JOIN fee_allocations fa ON u.id = fa.user_id AND fa.month_date = $2 AND fa.guild_id = $1
+        WHERE u.discord_id IS NOT NULL
+        AND (fa.amount IS NULL OR fa.amount < $3)
+      `;
+      const result = await pool.query(queryUsers, [guild.id, monthStr, guild.minimum_fee_amount]);
+      const lateUsers = result.rows;
+
+      if (lateUsers.length > 0) {
+        const mentions = lateUsers.map(u => `<@${u.discord_id}>`).join(', ');
+        const message = `**Rappel de Cotisation** ⏰\nLes membres suivants ne sont pas encore à jour pour ce mois (Minimum requis : ${guild.minimum_fee_amount} PO) : ${mentions}.\n\nVeuillez d'abord déposer vos pièces d'or en banque de guilde puis déclarer votre dépôt sur le site !`;
+        const sent = await sendDiscordChannelMessage(guild.discord_reminder_channel_id, message);
+        if (sent) {
+          messageSent = true;
+          notifiedCount += lateUsers.length;
+        }
+      }
+    }
+
+    return { notifiedCount, messageSent };
   }
 
   static async upsertAllocation(userId: string, monthDate: string, amount: number, guildId: string): Promise<void> {

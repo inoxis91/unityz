@@ -17,6 +17,7 @@ describe('AdminFeesComponent', () => {
     getGuildOverview: () => of([]),
     resolveDeclaration: () => of(null),
     adjustAllocation: () => of(null),
+    sendPaymentReminders: () => of({ notifiedCount: 1, messageSent: true }),
     pendingDeclarations: signal<any[]>([])
   };
 
@@ -78,5 +79,24 @@ describe('AdminFeesComponent', () => {
     }).not.toThrow();
     
     expect(component.adjustingAmount).toBe(0);
+  });
+
+  it('should send payment reminders when confirmed', async () => {
+    const remindSpy = vi.spyOn(mockFeeService, 'sendPaymentReminders');
+    const toastSpy = vi.spyOn(mockToastService, 'success');
+    
+    await component.onSendReminders();
+    
+    expect(remindSpy).toHaveBeenCalled();
+    expect(toastSpy).toHaveBeenCalledWith('Rappels Discord envoyés avec succès (1 membre(s) notifié(s)).');
+  });
+
+  it('should show info toast when no late members are found or Discord is unconfigured', async () => {
+    vi.spyOn(mockFeeService, 'sendPaymentReminders').mockReturnValue(of({ notifiedCount: 0, messageSent: false }));
+    const toastSpy = vi.spyOn(mockToastService, 'info');
+    
+    await component.onSendReminders();
+    
+    expect(toastSpy).toHaveBeenCalledWith("Aucun membre en retard trouvé, ou le salon Discord n'est pas configuré.");
   });
 });

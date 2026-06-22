@@ -85,4 +85,8 @@ export class FeeService {
   adjustAllocation(userId: string, monthDate: string, amount: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/adjust-allocation`, { userId, monthDate, amount }, { withCredentials: true });
   }
+
+  sendPaymentReminders(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/remind`, {}, { withCredentials: true });
+  }
 }

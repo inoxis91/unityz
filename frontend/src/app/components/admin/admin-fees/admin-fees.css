@@ -2,13 +2,19 @@
 
 .sub-tabs {
   display: flex;
-  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 2rem;
   border-bottom: 2px solid #eee;
   padding-bottom: 1rem;
 }
 
-.sub-tabs button {
+.sub-tabs-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.sub-tabs-buttons button {
   background: none;
   border: none;
   font-weight: 700;
@@ -19,9 +25,29 @@
   transition: all 0.2s;
 }
 
-.sub-tabs button.active {
+.sub-tabs-buttons button.active {
   background: #f1f5f9;
   color: #0074e0;
+}
+
+.btn-remind {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fcd34d;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.btn-remind:hover {
+  background: #f59e0b;
+  color: white;
+  border-color: #d97706;
 }
 
 /* Overview Header & Year Nav */

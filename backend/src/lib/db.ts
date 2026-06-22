@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -7,8 +7,23 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-export const initDb = async () => {
-  const client = await pool.connect();
+export const initDb = async (retries = 5, delay = 3000): Promise<void> => {
+  let client!: PoolClient;
+  for (let i = 0; i < retries; i++) {
+    try {
+      client = await pool.connect();
+      break;
+    } catch (err) {
+      console.error(`Database connection attempt ${i + 1}/${retries} failed:`, (err as Error).message);
+      if (i === retries - 1) {
+        console.error('All database connection attempts failed. Exiting...');
+        throw err;
+      }
+      console.log(`Waiting ${delay / 1000}s before retrying...`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+
   try {
     console.log('Initializing database tables...');
     

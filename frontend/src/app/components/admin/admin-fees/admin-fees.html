@@ -1,11 +1,18 @@
 <div class="admin-fees">
   <div class="sub-tabs">
-    <button [class.active]="activeSubTab() === 'pending'" (click)="activeSubTab.set('pending')">
-      À Valider ({{ feeService.pendingDeclarations().length }})
-    </button>
-    <button [class.active]="activeSubTab() === 'guild'" (click)="activeSubTab.set('guild')">
-      Vue d'ensemble Guilde
-    </button>
+    <div class="sub-tabs-buttons">
+      <button [class.active]="activeSubTab() === 'pending'" (click)="activeSubTab.set('pending')">
+        À Valider ({{ feeService.pendingDeclarations().length }})
+      </button>
+      <button [class.active]="activeSubTab() === 'guild'" (click)="activeSubTab.set('guild')">
+        Vue d'ensemble Guilde
+      </button>
+    </div>
+    <div class="sub-tabs-actions">
+      <button class="btn-remind" (click)="onSendReminders()">
+        🔔 Rappeler les retards (Discord)
+      </button>
+    </div>
   </div>
 
   <!-- TAB: Pending Approvals -->

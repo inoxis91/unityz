@@ -1,7 +1,6 @@
 import { Client, Events, GatewayIntentBits, EmbedBuilder, TextChannel } from 'discord.js';
 import dotenv from 'dotenv';
 import { t } from './i18n';
-import { FeeService } from '../services/feeService';
 
 dotenv.config();
 
