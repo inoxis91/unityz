@@ -26,7 +26,7 @@
         class="character-list"
         (cdkDropListDropped)="drop($event, null)">
         @for (char of rosterService.unassignedCharacters(); track char.id) {
-          <div class="character-card" [class]="'border-class-' + getClassCategory(char.class)" cdkDrag>
+          <div class="character-card" [class]="'border-class-' + getClassCategory(char.class)" cdkDrag (contextmenu)="onContextMenu($event, char, null)">
             <div class="char-main">
               <span class="char-name" [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</span>
             </div>
@@ -74,7 +74,7 @@
             class="roster-list"
             (cdkDropListDropped)="drop($event, roster.id)">
             @for (char of roster.characters; track char.id) {
-              <div class="character-card" [class]="'border-class-' + getClassCategory(char.class)" cdkDrag>
+              <div class="character-card" [class]="'border-class-' + getClassCategory(char.class)" cdkDrag (contextmenu)="onContextMenu($event, char, roster.id)">
                 <div class="char-main">
                   <span class="char-name" [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</span>
                 </div>
@@ -144,3 +144,36 @@
     </div>
   </div>
 </div>
+
+<!-- Context Menu for Players -->
+@if (contextMenuVisible() && contextMenuCharacter()) {
+  <div 
+    class="context-menu" 
+    [style.top.px]="contextMenuPosition().y" 
+    [style.left.px]="contextMenuPosition().x"
+    (click)="$event.stopPropagation()">
+    <div class="context-menu-header">
+      {{ contextMenuCharacter()?.name }}
+    </div>
+    
+    <div class="context-menu-section-title">
+      {{ i18n.t('admin.rosters.context_menu.assign_to') }}
+    </div>
+
+    <ul class="context-menu-list">
+      @if (contextMenuCurrentRosterId() !== null) {
+        <li (click)="moveToRoster(null)">
+          <span class="roster-option-name">{{ i18n.t('admin.rosters.context_menu.unassigned') }}</span>
+        </li>
+      }
+      
+      @for (roster of rosterService.rosters(); track roster.id) {
+        @if (contextMenuCurrentRosterId() !== roster.id) {
+          <li (click)="moveToRoster(roster.id)">
+            <span class="roster-option-name">{{ roster.name }}</span>
+          </li>
+        }
+      }
+    </ul>
+  </div>
+}

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, computed } from '@angular/core';
+import { Component, OnInit, signal, inject, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -31,6 +31,12 @@ export class AdminRostersComponent implements OnInit {
   // Modal for editing
   showEditModal = signal(false);
   editingRoster: Roster | null = null;
+
+  // Context Menu state
+  contextMenuVisible = signal(false);
+  contextMenuPosition = signal({ x: 0, y: 0 });
+  contextMenuCharacter = signal<Character | null>(null);
+  contextMenuCurrentRosterId = signal<string | null>(null);
 
   public authService = inject(AuthService);
   public i18n = inject(I18nService);
@@ -135,5 +141,39 @@ export class AdminRostersComponent implements OnInit {
 
   getClassCategory(className: string | undefined): string {
     return CharacterService.getClassId(className);
+  }
+
+  onContextMenu(event: MouseEvent, character: Character, currentRosterId: string | null) {
+    event.preventDefault();
+    this.contextMenuCharacter.set(character);
+    this.contextMenuCurrentRosterId.set(currentRosterId);
+    this.contextMenuPosition.set({ x: event.clientX, y: event.clientY });
+    this.contextMenuVisible.set(true);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    if (this.contextMenuVisible()) {
+      this.contextMenuVisible.set(false);
+    }
+  }
+
+  moveToRoster(targetRosterId: string | null) {
+    const char = this.contextMenuCharacter();
+    if (!char || !char.id) return;
+
+    this.contextMenuVisible.set(false);
+
+    this.rosterService.assignCharacter(char.id, targetRosterId).subscribe({
+      next: () => {
+        this.toast.success(this.i18n.t('admin.rosters.toast_assign_success'));
+        this.loadAll();
+      },
+      error: (err) => {
+        console.error('Failed to assign character:', err);
+        this.toast.error(this.i18n.t('admin.rosters.toast_assign_error'));
+        this.loadAll();
+      }
+    });
   }
 }

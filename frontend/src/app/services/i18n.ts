@@ -146,6 +146,8 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'admin.rosters.toast_delete_error': 'Erreur lors de la suppression.',
     'admin.rosters.confirm_delete_title': 'Supprimer le roster',
     'admin.rosters.confirm_delete_msg': 'Êtes-vous sûr de vouloir supprimer ce roster ? Les personnages seront désassignés.',
+    'admin.rosters.context_menu.assign_to': 'Assigner à...',
+    'admin.rosters.context_menu.unassigned': 'Pool des sans-roster',
 
     // Absences Section
     'absences.title': 'Déclarer une absence',
@@ -992,6 +994,8 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'admin.rosters.toast_delete_error': 'Error deleting roster.',
     'admin.rosters.confirm_delete_title': 'Delete Roster',
     'admin.rosters.confirm_delete_msg': 'Are you sure you want to delete this roster? Characters will be unassigned.',
+    'admin.rosters.context_menu.assign_to': 'Assign to...',
+    'admin.rosters.context_menu.unassigned': 'Unassigned pool',
 
     // Absences Section
     'absences.title': 'Declare an Absence',
