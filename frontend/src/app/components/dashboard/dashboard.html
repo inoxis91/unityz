@@ -267,9 +267,9 @@
             <!-- Character Dropdown -->
             <div class="control-group">
               <label>{{ i18n.t('dashboard.parses.character_label') }}</label>
-              <select class="styled-select" [value]="selectedCharacterId()" (change)="onCharacterChange($event)">
+              <select class="styled-select" (change)="onCharacterChange($event)">
                 @for (c of myCharacters(); track c.id) {
-                  <option [value]="c.id">{{ c.name }} ({{ c.realm }})</option>
+                  <option [value]="c.id" [selected]="c.id === selectedCharacterId()">{{ c.name }} ({{ c.realm }})</option>
                 }
               </select>
             </div>
@@ -277,10 +277,10 @@
             <!-- Difficulty Dropdown (only for Raid) -->
             <div class="control-group" *ngIf="parsesTab() === 'raid'">
               <label>{{ i18n.t('dashboard.parses.difficulty_label') }}</label>
-              <select class="styled-select" [value]="selectedDifficulty()" (change)="onDifficultyChange($event)">
-                <option [value]="3">{{ i18n.t('difficulty.3') }}</option>
-                <option [value]="4">{{ i18n.t('difficulty.4') }}</option>
-                <option [value]="5">{{ i18n.t('difficulty.5') }}</option>
+              <select class="styled-select" (change)="onDifficultyChange($event)">
+                <option [value]="3" [selected]="selectedDifficulty() === 3">{{ i18n.t('difficulty.3') }}</option>
+                <option [value]="4" [selected]="selectedDifficulty() === 4">{{ i18n.t('difficulty.4') }}</option>
+                <option [value]="5" [selected]="selectedDifficulty() === 5">{{ i18n.t('difficulty.5') }}</option>
               </select>
             </div>
           </div>
