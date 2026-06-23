@@ -770,7 +770,7 @@ export class WclService {
               id
               name
               classID
-              raidRankings: zoneRankings(zoneID: 35) {
+              raidRankings: zoneRankings(zoneID: 44) {
                 bestPerformanceAverage
                 medianPerformanceAverage
                 rankings {
@@ -782,7 +782,7 @@ export class WclService {
                   difficulty
                 }
               }
-              dungeonRankings: zoneRankings(zoneID: 39) {
+              dungeonRankings: zoneRankings(zoneID: 45) {
                 bestPerformanceAverage
                 medianPerformanceAverage
                 rankings {
@@ -801,7 +801,7 @@ export class WclService {
 
       const response = await axios.post(
         'https://www.warcraftlogs.com/api/v2/client',
-        { query, variables: { name, serverSlug: realmSlug, serverRegion: region } },
+        { query, variables: { name, serverSlug: realmSlug, serverRegion: region.toLowerCase() } },
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -921,25 +921,25 @@ function generateMockParses(name: string, characterClass: string) {
   };
 
   const raidEncounters = [
-    { id: 2902, name: "Ulgrax the Destroyer" },
-    { id: 2917, name: "The Bloodbound Horror" },
-    { id: 2898, name: "Sikran, Captain of the Sureki" },
-    { id: 2918, name: "Rasha'nan" },
-    { id: 2919, name: "Broodtwister Ovi'nax" },
-    { id: 2920, name: "Nexus-Princess Ky'veza" },
-    { id: 2921, name: "The Silken Court" },
-    { id: 2922, name: "Queen Ansurek" }
+    { id: 4011, name: "Plexus Sentinel" },
+    { id: 4012, name: "Loom'ithar" },
+    { id: 4013, name: "Soulbinder Naazindhri" },
+    { id: 4014, name: "Forgeweaver Araz" },
+    { id: 4015, name: "The Soul Hunters" },
+    { id: 4016, name: "Fractillus" },
+    { id: 4017, name: "Nexus-King Salhadaar" },
+    { id: 4018, name: "Dimensius, the All-Devouring" }
   ];
 
   const dungeonEncounters = [
-    { id: 12661, name: "Ara-Kara, City of Echoes" },
-    { id: 12662, name: "City of Threads" },
-    { id: 12652, name: "The Stonevault" },
-    { id: 12669, name: "The Dawnbreaker" },
-    { id: 12290, name: "Mists of Tirna Scithe" },
-    { id: 12286, name: "The Necrotic Wake" },
-    { id: 11822, name: "Siege of Boralus" },
-    { id: 10682, name: "Grim Batol" }
+    { id: 14021, name: "Harandar Fungal Caves" },
+    { id: 14022, name: "Void-Scarred Sanctum" },
+    { id: 14023, name: "Ruins of Solanar" },
+    { id: 14024, name: "Ethereal Bazaar" },
+    { id: 14025, name: "Manaforge Delta" },
+    { id: 14026, name: "Sunwell Outpost" },
+    { id: 14027, name: "Shadow-Veil Keep" },
+    { id: 14028, name: "K'aresh Rift" }
   ];
 
   const raidRankings = raidEncounters.map((enc, idx) => {
