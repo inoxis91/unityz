@@ -838,7 +838,7 @@ export class WclService {
       };
 
       const formattedRaid = formatRankings(raidData.rankings, raidData.difficulty || 5);
-      const formattedDungeons = formatRankings(dungeonData.rankings, dungeonData.difficulty || 10, dungeonData.throughputRankings);
+      const formattedDungeons = formatRankings(dungeonData.rankings, 10, dungeonData.throughputRankings);
 
       let bestRaidAvg = Math.round(raidData.bestPerformanceAverage || 0);
       let bestDungeonAvg = Math.round(dungeonData.bestPerformanceAverage || 0);
@@ -863,7 +863,7 @@ export class WclService {
         dungeonRankings: {
           bestPerformanceAverage: bestDungeonAvg,
           medianPerformanceAverage: Math.round(dungeonData.medianPerformanceAverage || 0),
-          difficulty: dungeonData.difficulty || 10,
+          difficulty: 10,
           rankings: formattedDungeons
         },
         isMock: false
