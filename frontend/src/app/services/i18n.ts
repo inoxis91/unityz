@@ -438,7 +438,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'encounter.10658': 'Fosse de Saron',
     'encounter.361753': 'Siège du Triumvirat',
     'encounter.61209': 'Orée du ciel',
-    'encounter.12805': 'Aiguille des Coursevent',
+    'encounter.12805': 'Flèche de Coursevent',
 
     // Difficulties
     'difficulty.3': 'Normal',
