@@ -1,5 +1,6 @@
 import pool from '../lib/db';
 import { sendDiscordDM, sendFeeDeclarationNotification, sendDiscordChannelMessage } from '../lib/discord';
+import { t, getDiscordLocale } from '../lib/i18n';
 
 export interface FeeDeclaration {
   id: string;
@@ -178,12 +179,26 @@ export class FeeService {
 
       // 3. Send Discord Notification (Outside transaction)
       if (discordId) {
-        const startMonthStr = new Date(decl.start_month).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-        const periodInfo = `Période : **${decl.duration_months} mois** (à partir de **${startMonthStr}**)`;
+        // Fetch guild locale
+        const guildQuery = 'SELECT discord_locale FROM guilds WHERE id = $1';
+        const guildResult = await pool.query(guildQuery, [decl.guild_id]);
+        const locale = getDiscordLocale(guildResult.rows[0]);
 
-        const msg = status === 'accepted' 
-          ? `✅ Votre paiement de **${decl.amount} PO** a été approuvé !\n${periodInfo}`
-          : `❌ Votre paiement de **${decl.amount} PO** a été rejeté.\n${periodInfo}\nMotif : ${adminComment || 'Non spécifié'}`;
+        const startMonthStr = new Date(decl.start_month).toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' });
+
+        const msg = status === 'accepted'
+          ? t(locale, 'discord.fees.dm.approved', {
+              amount: decl.amount.toString(),
+              duration: decl.duration_months.toString(),
+              date: startMonthStr
+            })
+          : t(locale, 'discord.fees.dm.rejected', {
+              amount: decl.amount.toString(),
+              duration: decl.duration_months.toString(),
+              date: startMonthStr,
+              reason: adminComment || t(locale, 'discord.fees.dm.unspecified_reason')
+            });
+
         await sendDiscordDM(discordId, msg);
       }
     } catch (e) {
@@ -226,7 +241,7 @@ export class FeeService {
 
     // Fetch guilds to process
     let queryGuilds = `
-      SELECT id, discord_reminder_channel_id, minimum_fee_amount, discord_enabled
+      SELECT id, discord_reminder_channel_id, minimum_fee_amount, discord_enabled, discord_locale
       FROM guilds 
       WHERE discord_enabled = TRUE 
         AND discord_reminder_channel_id IS NOT NULL
@@ -267,7 +282,13 @@ export class FeeService {
             ? `<@${u.discord_id}>` 
             : `**${u.battletag ? u.battletag.split('#')[0] : 'Membre'}**`
         ).join(', ');
-        const message = `**Rappel de Cotisation** ⏰\nLes membres suivants ne sont pas encore à jour pour ce mois (Minimum requis : ${guild.minimum_fee_amount} PO) : ${mentions}.\n\nVeuillez d'abord déposer vos pièces d'or en banque de guilde puis déclarer votre dépôt sur le site !`;
+
+        const locale = getDiscordLocale(guild);
+        const message = t(locale, 'discord.fees.reminder.message', {
+          minAmount: guild.minimum_fee_amount.toString(),
+          mentions: mentions
+        });
+
         const sent = await sendDiscordChannelMessage(guild.discord_reminder_channel_id, message);
         if (sent) {
           messageSent = true;

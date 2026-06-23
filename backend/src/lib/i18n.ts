@@ -72,7 +72,13 @@ const TRANSLATIONS: Record<SupportedDiscordLocale, Record<string, string>> = {
     'armor.wand': 'Baguette',
     'armor.staff': 'Bâton',
     'armor.onehanded': 'Arme 1 main',
-    'armor.twohanded': 'Arme 2 mains'
+    'armor.twohanded': 'Arme 2 mains',
+
+    // New keys for fee notification compliance
+    'discord.fees.dm.approved': '✅ Votre paiement de **{amount} PO** a été approuvé !\nPériode : **{duration} mois** (à partir de **{date}**)',
+    'discord.fees.dm.rejected': '❌ Votre paiement de **{amount} PO** a été rejeté.\nPériode : **{duration} mois** (à partir de **{date}**)\nMotif : {reason}',
+    'discord.fees.dm.unspecified_reason': 'Non spécifié',
+    'discord.fees.reminder.message': '**Rappel de Cotisation** ⏰\nLes membres suivants ne sont pas encore à jour pour ce mois (Minimum requis : {minAmount} PO) : {mentions}.\n\nVeuillez d\'abord déposer vos pièces d\'or en banque de guilde puis déclarer votre dépôt sur le site !'
   },
   en: {
     // Event Service
@@ -145,7 +151,13 @@ const TRANSLATIONS: Record<SupportedDiscordLocale, Record<string, string>> = {
     'armor.wand': 'Wand',
     'armor.staff': 'Staff',
     'armor.onehanded': 'One-Handed Weapon',
-    'armor.twohanded': 'Two-Handed Weapon'
+    'armor.twohanded': 'Two-Handed Weapon',
+
+    // New keys for fee notification compliance
+    'discord.fees.dm.approved': '✅ Your payment of **{amount} Gold** has been approved!\nPeriod: **{duration} months** (starting **{date}**)',
+    'discord.fees.dm.rejected': '❌ Your payment of **{amount} Gold** has been rejected.\nPeriod: **{duration} months** (starting **{date}**)\nReason: {reason}',
+    'discord.fees.dm.unspecified_reason': 'Unspecified',
+    'discord.fees.reminder.message': '**Membership Fee Reminder** ⏰\nThe following members are not up to date for this month (Minimum required: {minAmount} Gold): {mentions}.\n\nPlease deposit your gold in the guild bank first, then declare your deposit on the website!'
   }
 };
 

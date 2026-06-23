@@ -50,10 +50,10 @@
                 <!-- Status Badge -->
                 <span class="mobile-status-badge absent" *ngIf="event.is_canceled" style="background: #94a3b8 !important; color: #ffffff !important;">🚫 {{ i18n.t('event.details.canceled') }}</span>
                 <ng-container *ngIf="!event.is_canceled">
-                  <span class="mobile-status-badge present" *ngIf="getEventSignupStatus(event.id) === 'signed_up'" title="Présent">✅ Répondu</span>
-                  <span class="mobile-status-badge standby" *ngIf="getEventSignupStatus(event.id) === 'standby'" title="Peut-être">❓ En attente</span>
-                  <span class="mobile-status-badge absent" *ngIf="getEventSignupStatus(event.id) === 'absent'" title="Absent">❌ Absent</span>
-                  <span class="mobile-status-badge none" *ngIf="!getEventSignupStatus(event.id)" title="Non répondu">⚪ Non répondu</span>
+                  <span class="mobile-status-badge present" *ngIf="getEventSignupStatus(event.id) === 'signed_up'" [title]="i18n.t('calendar.tooltip.present')">{{ i18n.t('calendar.status.responded') }}</span>
+                  <span class="mobile-status-badge standby" *ngIf="getEventSignupStatus(event.id) === 'standby'" [title]="i18n.t('calendar.tooltip.maybe')">{{ i18n.t('calendar.status.pending') }}</span>
+                  <span class="mobile-status-badge absent" *ngIf="getEventSignupStatus(event.id) === 'absent'" [title]="i18n.t('calendar.tooltip.absent')">{{ i18n.t('calendar.status.absent') }}</span>
+                  <span class="mobile-status-badge none" *ngIf="!getEventSignupStatus(event.id)" [title]="i18n.t('calendar.tooltip.none')">{{ i18n.t('calendar.status.unanswered') }}</span>
                 </ng-container>
               </div>
             </div>

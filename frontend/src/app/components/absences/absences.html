@@ -72,7 +72,7 @@
       <h2>{{ i18n.t('absences.list.title') }}</h2>
 
       <div class="loading-state" *ngIf="isLoading()">
-        <p>Chargement des absences...</p>
+        <p>{{ i18n.t('admin.absences.loading') }}</p>
       </div>
 
       <div class="empty-state" *ngIf="!isLoading() && absences().length === 0">

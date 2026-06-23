@@ -158,13 +158,13 @@ export class SelectGuildComponent implements OnInit {
   confirmImport() {
     const selectedList = this.availableCharacters().filter(c => c.selected);
     if (selectedList.length === 0) {
-      alert('Veuillez sélectionner au moins un personnage à importer.');
+      alert(this.i18n.t('select.guild.alert.select_char'));
       return;
     }
 
     const hasMain = selectedList.some(c => c.is_main);
     if (!hasMain) {
-      alert('Veuillez désigner un personnage principal (Main).');
+      alert(this.i18n.t('select.guild.alert.set_main'));
       return;
     }
 
@@ -184,7 +184,7 @@ export class SelectGuildComponent implements OnInit {
       error: (err) => {
         console.error('Error importing characters', err);
         this.isImporting.set(false);
-        alert('Une erreur est survenue lors de l\'importation des personnages.');
+        alert(this.i18n.t('select.guild.alert.import_error'));
       }
     });
   }

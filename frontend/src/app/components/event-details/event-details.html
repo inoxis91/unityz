@@ -233,29 +233,29 @@
                       [class.active-role]="isSelectedCharacterAndRole(char.id, 'tank')"
                       class="role-select-btn"
                       (click)="onAdminUpdateSignup(char.id, 'tank')"
-                      title="Assigner en tant que Tank">
+                      [title]="i18n.t('event.details.assign_tank')">
                 <img src="assets/icons/tank.png" class="role-icon-img small" alt="Tank">
               </button>
               <button *ngIf="char.is_heal"
                       [class.active-role]="isSelectedCharacterAndRole(char.id, 'heal')"
                       class="role-select-btn"
                       (click)="onAdminUpdateSignup(char.id, 'heal')"
-                      title="Assigner en tant que Soigneur">
+                      [title]="i18n.t('event.details.assign_heal')">
                 <img src="assets/icons/heal.png" class="role-icon-img small" alt="Heal">
               </button>
               <button *ngIf="char.is_dps"
                       [class.active-role]="isSelectedCharacterAndRole(char.id, 'dps')"
                       class="role-select-btn"
                       (click)="onAdminUpdateSignup(char.id, 'dps')"
-                      title="Assigner en tant que DPS">
+                      [title]="i18n.t('event.details.assign_dps')">
                 <img src="assets/icons/dps.png" class="role-icon-img small" alt="DPS">
               </button>
             </ng-container>
 
             <ng-template #readOnlyRoles>
-              <img *ngIf="char.is_tank" src="assets/icons/tank.png" class="role-icon-img small" title="Tank" alt="Tank">
-              <img *ngIf="char.is_heal" src="assets/icons/heal.png" class="role-icon-img small" title="Heal" alt="Heal">
-              <img *ngIf="char.is_dps" src="assets/icons/dps.png" class="role-icon-img small" title="DPS" alt="DPS">
+              <img *ngIf="char.is_tank" src="assets/icons/tank.png" class="role-icon-img small" [title]="i18n.t('event.details.role_tank')" alt="Tank">
+              <img *ngIf="char.is_heal" src="assets/icons/heal.png" class="role-icon-img small" [title]="i18n.t('event.details.role_heal')" alt="Heal">
+              <img *ngIf="char.is_dps" src="assets/icons/dps.png" class="role-icon-img small" [title]="i18n.t('event.details.role_dps')" alt="DPS">
             </ng-template>
 
             <a [href]="characterService.getRaiderIoUrl(char.name, char.realm)" target="_blank" class="logs-link-mini" (click)="$event.stopPropagation()">

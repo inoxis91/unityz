@@ -40,7 +40,7 @@
       <div class="form-row">
         <div class="form-group flex-2">
           <label for="bugSubject">{{ i18n.t('support.bug.subject') }}</label>
-          <input type="text" id="bugSubject" [ngModel]="bugSubject()" (ngModelChange)="bugSubject.set($event)" name="bugSubject" required placeholder="ex: Erreur de chargement" />
+          <input type="text" id="bugSubject" [ngModel]="bugSubject()" (ngModelChange)="bugSubject.set($event)" name="bugSubject" required [placeholder]="i18n.t('support.placeholder.bug_subject')" />
         </div>
         <div class="form-group flex-1">
           <label for="bugSeverity">{{ i18n.t('support.bug.severity') }}</label>
@@ -55,7 +55,7 @@
 
       <div class="form-group">
         <label for="bugDesc">{{ i18n.t('support.bug.desc') }}</label>
-        <textarea id="bugDesc" [ngModel]="bugDesc()" (ngModelChange)="bugDesc.set($event)" name="bugDesc" required rows="4" placeholder="ex: Quand je clique sur..."></textarea>
+        <textarea id="bugDesc" [ngModel]="bugDesc()" (ngModelChange)="bugDesc.set($event)" name="bugDesc" required rows="4" [placeholder]="i18n.t('support.placeholder.bug_desc')"></textarea>
       </div>
 
       <div class="form-actions">
@@ -91,12 +91,12 @@
 
       <div class="form-group">
         <label for="contactSubject">{{ i18n.t('support.contact.subject') }}</label>
-        <input type="text" id="contactSubject" [ngModel]="contactSubject()" (ngModelChange)="contactSubject.set($event)" name="contactSubject" required placeholder="ex: Demande d'information" />
+        <input type="text" id="contactSubject" [ngModel]="contactSubject()" (ngModelChange)="contactSubject.set($event)" name="contactSubject" required [placeholder]="i18n.t('support.placeholder.contact_subject')" />
       </div>
 
       <div class="form-group">
         <label for="contactMessage">{{ i18n.t('support.contact.message') }}</label>
-        <textarea id="contactMessage" [ngModel]="contactMessage()" (ngModelChange)="contactMessage.set($event)" name="contactMessage" required rows="4" placeholder="ex: Bonjour, je souhaiterais..."></textarea>
+        <textarea id="contactMessage" [ngModel]="contactMessage()" (ngModelChange)="contactMessage.set($event)" name="contactMessage" required rows="4" [placeholder]="i18n.t('support.placeholder.contact_message')"></textarea>
       </div>
 
       <div class="form-actions">
