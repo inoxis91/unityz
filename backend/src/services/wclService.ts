@@ -770,7 +770,7 @@ export class WclService {
               id
               name
               classID
-              raidRankings: zoneRankings(zoneID: 44) {
+              raidRankings: zoneRankings(zoneID: 46) {
                 bestPerformanceAverage
                 medianPerformanceAverage
                 rankings {
@@ -782,7 +782,7 @@ export class WclService {
                   difficulty
                 }
               }
-              dungeonRankings: zoneRankings(zoneID: 45) {
+              dungeonRankings: zoneRankings(zoneID: 47) {
                 bestPerformanceAverage
                 medianPerformanceAverage
                 rankings {
@@ -921,14 +921,15 @@ function generateMockParses(name: string, characterClass: string) {
   };
 
   const raidEncounters = [
-    { id: 4011, name: "Plexus Sentinel" },
-    { id: 4012, name: "Loom'ithar" },
-    { id: 4013, name: "Soulbinder Naazindhri" },
-    { id: 4014, name: "Forgeweaver Araz" },
-    { id: 4015, name: "The Soul Hunters" },
-    { id: 4016, name: "Fractillus" },
-    { id: 4017, name: "Nexus-King Salhadaar" },
-    { id: 4018, name: "Dimensius, the All-Devouring" }
+    { id: 5011, name: "Imperator Averzian" },
+    { id: 5012, name: "Vorasius" },
+    { id: 5013, name: "Fallen-King Salhadaar" },
+    { id: 5014, name: "Vaelgor & Ezzorak" },
+    { id: 5015, name: "Lightblinded Vanguard" },
+    { id: 5016, name: "Crown of the Cosmos" },
+    { id: 5017, name: "Chimaerus, the Undreamt God" },
+    { id: 5018, name: "Belo'ren, Child of Al'ar" },
+    { id: 5019, name: "Midnight Falls" }
   ];
 
   const dungeonEncounters = [
