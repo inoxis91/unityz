@@ -87,7 +87,9 @@
         </div>
       </div>
       <div class="sort-controls">
-        <button [class.active]="sortMethod() === 'date'" (click)="sortMethod.set('date')" [title]="i18n.t('event.details.sort_by_date')">🕒</button>
+        <button [class.active]="sortMethod() === 'date'" (click)="toggleDateSort()" [title]="sortMethod() === 'date' ? (sortDirection() === 'asc' ? i18n.t('event.details.sort_by_date_desc') : i18n.t('event.details.sort_by_date_asc')) : i18n.t('event.details.sort_by_date')" style="width: auto; min-width: 32px; padding: 0 6px; display: flex; gap: 4px;">
+          🕒<span *ngIf="sortMethod() === 'date'" style="font-size: 0.75rem;">{{ sortDirection() === 'asc' ? '▲' : '▼' }}</span>
+        </button>
         <button [class.active]="sortMethod() === 'status'" (click)="sortMethod.set('status')" [title]="i18n.t('event.details.sort_by_status')">📊</button>
       </div>
     </div>
