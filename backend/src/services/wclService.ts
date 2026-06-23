@@ -749,4 +749,252 @@ export class WclService {
       fights
     };
   }
+
+  static async getCharacterParses(
+    name: string,
+    realmSlug: string,
+    region: string,
+    characterClass?: string
+  ): Promise<any> {
+    const token = await this.getAccessToken();
+    if (!token) {
+      console.warn('[WCL API] No access token or invalid credentials. Generating mock parses.');
+      return generateMockParses(name, characterClass || 'Unknown');
+    }
+
+    try {
+      const query = `
+        query ($name: String!, $serverSlug: String!, $serverRegion: String!) {
+          characterData {
+            character(name: $name, serverSlug: $serverSlug, serverRegion: $serverRegion) {
+              id
+              name
+              classID
+              raidRankings: zoneRankings(zoneID: 35) {
+                bestPerformanceAverage
+                medianPerformanceAverage
+                rankings {
+                  encounter { id name }
+                  rank
+                  percentile
+                  spec
+                  amount
+                  difficulty
+                }
+              }
+              dungeonRankings: zoneRankings(zoneID: 39) {
+                bestPerformanceAverage
+                medianPerformanceAverage
+                rankings {
+                  encounter { id name }
+                  rank
+                  percentile
+                  spec
+                  amount
+                  difficulty
+                }
+              }
+            }
+          }
+        }
+      `;
+
+      const response = await axios.post(
+        'https://www.warcraftlogs.com/api/v2/client',
+        { query, variables: { name, serverSlug: realmSlug, serverRegion: region } },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 10000
+        }
+      );
+
+      const character = response.data?.data?.characterData?.character;
+      if (!character) {
+        console.warn(`[WCL API] Character not found: ${name}-${realmSlug} in ${region}. Generating mock parses.`);
+        return generateMockParses(name, characterClass || 'Unknown');
+      }
+
+      const raidRankings = character.raidRankings || { bestPerformanceAverage: 0, medianPerformanceAverage: 0, rankings: [] };
+      const dungeonRankings = character.dungeonRankings || { bestPerformanceAverage: 0, medianPerformanceAverage: 0, rankings: [] };
+
+      const formatRankings = (wclRankings: any[]) => {
+        return (wclRankings || []).map((r: any) => ({
+          encounterId: r.encounter?.id || 0,
+          encounterName: r.encounter?.name || 'Unknown',
+          percentile: Math.round(r.percentile || 0),
+          rank: r.rank || 0,
+          spec: r.spec || 'Unknown',
+          amount: Math.round(r.amount || 0),
+          difficulty: r.difficulty || 4
+        }));
+      };
+
+      return {
+        characterName: character.name,
+        characterClass: characterClass || 'Unknown',
+        raidRankings: {
+          bestPerformanceAverage: Math.round(raidRankings.bestPerformanceAverage || 0),
+          medianPerformanceAverage: Math.round(raidRankings.medianPerformanceAverage || 0),
+          rankings: formatRankings(raidRankings.rankings)
+        },
+        dungeonRankings: {
+          bestPerformanceAverage: Math.round(dungeonRankings.bestPerformanceAverage || 0),
+          medianPerformanceAverage: Math.round(dungeonRankings.medianPerformanceAverage || 0),
+          rankings: formatRankings(dungeonRankings.rankings)
+        },
+        isMock: false
+      };
+    } catch (err) {
+      console.error('[WCL API] Error fetching character parses, generating mock parses instead:', err instanceof Error ? err.message : err);
+      return generateMockParses(name, characterClass || 'Unknown');
+    }
+  }
+}
+
+function normalizeClass(cls: string): string {
+  if (!cls) return 'mage';
+  const name = cls.toLowerCase().trim();
+  const mapping: Record<string, string> = {
+    'guerrier': 'warrior',
+    'warrior': 'warrior',
+    'paladin': 'paladin',
+    'chasseur': 'hunter',
+    'hunter': 'hunter',
+    'voleur': 'rogue',
+    'rogue': 'rogue',
+    'prêtre': 'priest',
+    'priest': 'priest',
+    'chevalier de la mort': 'deathknight',
+    'death knight': 'deathknight',
+    'deathknight': 'deathknight',
+    'dk': 'deathknight',
+    'chaman': 'shaman',
+    'shaman': 'shaman',
+    'mage': 'mage',
+    'démoniste': 'warlock',
+    'warlock': 'warlock',
+    'moine': 'monk',
+    'monk': 'monk',
+    'druide': 'druid',
+    'druid': 'druid',
+    'drood': 'druid',
+    'chasseur de démons': 'demonhunter',
+    'demon hunter': 'demonhunter',
+    'demonhunter': 'demonhunter',
+    'dh': 'demonhunter',
+    'évocateur': 'evoker',
+    'evoker': 'evoker'
+  };
+  return mapping[name] || name.replace(/\s+/g, '');
+}
+
+const CLASS_SPECS: Record<string, string[]> = {
+  'warrior': ['Arms', 'Fury', 'Protection'],
+  'paladin': ['Holy', 'Protection', 'Retribution'],
+  'hunter': ['Beast Mastery', 'Marksmanship', 'Survival'],
+  'rogue': ['Assassination', 'Outlaw', 'Subtlety'],
+  'priest': ['Discipline', 'Holy', 'Shadow'],
+  'deathknight': ['Blood', 'Frost', 'Unholy'],
+  'shaman': ['Elemental', 'Enhancement', 'Restoration'],
+  'mage': ['Arcane', 'Fire', 'Frost'],
+  'warlock': ['Affliction', 'Demonology', 'Destruction'],
+  'monk': ['Brewmaster', 'Mistweaver', 'Windwalker'],
+  'druid': ['Balance', 'Feral', 'Guardian', 'Restoration'],
+  'demonhunter': ['Havoc', 'Vengeance'],
+  'evoker': ['Devastation', 'Preservation', 'Augmentation']
+};
+
+function generateMockParses(name: string, characterClass: string) {
+  const normClass = normalizeClass(characterClass);
+  const specs = CLASS_SPECS[normClass] || ['Damage'];
+  const spec = specs[Math.floor(Math.random() * specs.length)] || 'Damage';
+
+  const getHashValue = (str: string, seed: number) => {
+    let hash = seed;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return Math.abs(hash);
+  };
+
+  const raidEncounters = [
+    { id: 2902, name: "Ulgrax the Destroyer" },
+    { id: 2917, name: "The Bloodbound Horror" },
+    { id: 2898, name: "Sikran, Captain of the Sureki" },
+    { id: 2918, name: "Rasha'nan" },
+    { id: 2919, name: "Broodtwister Ovi'nax" },
+    { id: 2920, name: "Nexus-Princess Ky'veza" },
+    { id: 2921, name: "The Silken Court" },
+    { id: 2922, name: "Queen Ansurek" }
+  ];
+
+  const dungeonEncounters = [
+    { id: 12661, name: "Ara-Kara, City of Echoes" },
+    { id: 12662, name: "City of Threads" },
+    { id: 12652, name: "The Stonevault" },
+    { id: 12669, name: "The Dawnbreaker" },
+    { id: 12290, name: "Mists of Tirna Scithe" },
+    { id: 12286, name: "The Necrotic Wake" },
+    { id: 11822, name: "Siege of Boralus" },
+    { id: 10682, name: "Grim Batol" }
+  ];
+
+  const raidRankings = raidEncounters.map((enc, idx) => {
+    const seed = idx + 10;
+    const hash = getHashValue(name, seed);
+    const percentile = Math.floor((hash % 70) + 30); // 30 - 99
+    const rank = Math.floor((hash % 1000) + 1);
+    const amount = Math.floor((hash % 50000) + 750000);
+    return {
+      encounterId: enc.id,
+      encounterName: enc.name,
+      percentile,
+      rank,
+      spec,
+      amount,
+      difficulty: 4
+    };
+  });
+
+  const dungeonRankings = dungeonEncounters.map((enc, idx) => {
+    const seed = idx + 50;
+    const hash = getHashValue(name, seed);
+    const percentile = Math.floor((hash % 65) + 35); // 35 - 99
+    const rank = Math.floor((hash % 1500) + 1);
+    const amount = Math.floor((hash % 60000) + 850000);
+    return {
+      encounterId: enc.id,
+      encounterName: enc.name,
+      percentile,
+      rank,
+      spec,
+      amount,
+      difficulty: 10
+    };
+  });
+
+  const sumRaid = raidRankings.reduce((sum, r) => sum + r.percentile, 0);
+  const bestRaidAvg = Math.round(sumRaid / raidRankings.length);
+
+  const sumDung = dungeonRankings.reduce((sum, r) => sum + r.percentile, 0);
+  const bestDungAvg = Math.round(sumDung / dungeonRankings.length);
+
+  return {
+    characterName: name,
+    characterClass,
+    raidRankings: {
+      bestPerformanceAverage: bestRaidAvg,
+      medianPerformanceAverage: Math.round(bestRaidAvg * 0.9),
+      rankings: raidRankings
+    },
+    dungeonRankings: {
+      bestPerformanceAverage: bestDungAvg,
+      medianPerformanceAverage: Math.round(bestDungAvg * 0.9),
+      rankings: dungeonRankings
+    },
+    isMock: true
+  };
 }

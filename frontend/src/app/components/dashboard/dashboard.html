@@ -91,10 +91,10 @@
           </div>
           <div class="footer-links">
             <a [href]="characterService.getRaiderIoUrl(char.name, char.realm)" target="_blank" class="logs-link" (click)="$event.stopPropagation()">
-              <img src="assets/icons/raiderio.webp" alt="Raider.IO" title="Voir Raider.IO">
+              <img src="assets/icons/raiderio.webp" alt="Raider.IO" [title]="i18n.t('dashboard.tooltip.rio')">
             </a>
             <a [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="logs-link" (click)="$event.stopPropagation()">
-              <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" title="Voir les logs">
+              <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" [title]="i18n.t('dashboard.tooltip.logs')">
             </a>
           </div>
         </div>
@@ -207,10 +207,10 @@
               <span class="rio-mini" *ngIf="getRioScoreForKey(char.name, char.realm)">{{ getRioScoreForKey(char.name, char.realm) }}</span>
               <span class="main-star" *ngIf="char.is_main">⭐</span>
               <a [href]="characterService.getRaiderIoUrl(char.name, char.realm)" target="_blank" class="logs-link-mini" (click)="$event.stopPropagation()">
-                <img src="assets/icons/raiderio.webp" alt="Raider.IO" title="Voir Raider.IO">
+                <img src="assets/icons/raiderio.webp" alt="Raider.IO" [title]="i18n.t('dashboard.tooltip.rio')">
               </a>
               <a [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="logs-link-mini" (click)="$event.stopPropagation()">
-                <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" title="Voir les logs">
+                <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" [title]="i18n.t('dashboard.tooltip.logs')">
               </a>
             </div>
           </div>
@@ -225,6 +225,106 @@
     </section>
 
   </div>
+
+  <!-- Warcraft Logs Parses Section -->
+  <section class="parses-section animated-fade-in" style="margin-top: 2.5rem; margin-bottom: 2.5rem;">
+    <div class="section-header flex-header">
+      <div class="header-titles">
+        <h2>{{ i18n.t('dashboard.parses.title') }}</h2>
+        <p class="subtitle" *ngIf="mainCharacter()">
+          {{ i18n.t('dashboard.parses.subtitle') }} — <strong class="char-highlight" [class]="'class-' + getClassCategory(mainCharacter()?.class)">{{ mainCharacter()?.name }}</strong>
+        </p>
+      </div>
+      <div class="header-actions" *ngIf="myParses()">
+        <a [href]="characterService.getWarcraftLogsUrl(mainCharacter()?.name, mainCharacter()?.realm)" target="_blank" class="wcl-btn">
+          <img src="assets/icons/warcraftlogs.png" alt="WCL" class="wcl-mini-icon">
+          {{ i18n.t('dashboard.parses.view_wcl') }}
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Character Parse Card -->
+    <div class="parses-card" *ngIf="mainCharacter(); else noMainChar">
+      <!-- Loading State -->
+      <div class="parses-loading" *ngIf="loadingParses()">
+        <div class="spinner"></div>
+        <p>{{ i18n.t('dashboard.parses.loading') }}</p>
+      </div>
+
+      <!-- Content State -->
+      <ng-container *ngIf="!loadingParses() && myParses() as parses">
+        <div class="parses-tabs">
+          <button class="tab-btn" [class.active]="parsesTab() === 'raid'" (click)="parsesTab.set('raid')">
+            🛡️ {{ i18n.t('dashboard.parses.raid') }}
+          </button>
+          <button class="tab-btn" [class.active]="parsesTab() === 'dungeon'" (click)="parsesTab.set('dungeon')">
+            🌀 {{ i18n.t('dashboard.parses.dungeons') }}
+          </button>
+        </div>
+
+        <div class="parses-content-container">
+          <!-- Left side: Summary -->
+          <div class="parses-summary-col">
+            <div class="summary-metric-box">
+              <span class="box-label">{{ i18n.t('dashboard.parses.best_average') }}</span>
+              <div class="box-value-container">
+                <span class="box-value" [class]="getParseColorClass(parsesTab() === 'raid' ? parses.raidRankings.bestPerformanceAverage : parses.dungeonRankings.bestPerformanceAverage)">
+                  {{ parsesTab() === 'raid' ? parses.raidRankings.bestPerformanceAverage : parses.dungeonRankings.bestPerformanceAverage }}
+                </span>
+                <span class="percent-sign">%</span>
+              </div>
+              <div class="parse-rank-indicator" [class]="getParseColorClass(parsesTab() === 'raid' ? parses.raidRankings.bestPerformanceAverage : parses.dungeonRankings.bestPerformanceAverage)">
+                <span class="bullet">●</span>
+                <span class="text">
+                  {{ i18n.t('dashboard.attendance.current_month') }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right side: Grid of specific encounters -->
+          <div class="parses-grid-col">
+            <div class="encounters-grid">
+              @for (p of (parsesTab() === 'raid' ? parses.raidRankings.rankings : parses.dungeonRankings.rankings); track p.encounterId) {
+                <div class="encounter-row">
+                  <div class="encounter-info">
+                    <span class="enc-name">{{ i18n.t('encounter.' + p.encounterId) }}</span>
+                    <span class="enc-spec">{{ p.spec }}</span>
+                  </div>
+                  <div class="encounter-percentile-container">
+                    <div class="percentile-badge" [class]="getParseColorClass(p.percentile)">
+                      {{ p.percentile }}
+                    </div>
+                    <div class="encounter-progress-bg">
+                      <div class="encounter-progress-bar" [style.width]="p.percentile + '%'" [class]="getParseColorClass(p.percentile)"></div>
+                    </div>
+                    <div class="encounter-rank">
+                      <span class="rank-label">{{ i18n.t('dashboard.parses.rank') }}</span>
+                      <span class="rank-val">#{{ p.rank | number }}</span>
+                    </div>
+                  </div>
+                </div>
+              }
+              @if ((parsesTab() === 'raid' ? parses.raidRankings.rankings : parses.dungeonRankings.rankings).length === 0) {
+                <div class="no-parses-empty">
+                  <p>{{ i18n.t('dashboard.parses.no_parses') }}</p>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+    <ng-template #noMainChar>
+      <div class="parses-card empty-parses-card">
+        <div class="empty-state">
+          <p>{{ i18n.t('dashboard.parses.no_char') }}</p>
+          <button class="btn-import" [routerLink]="['/options']" [queryParams]="{tab: 'characters'}">{{ i18n.t('dashboard.import') }}</button>
+        </div>
+      </div>
+    </ng-template>
+  </section>
 
   <!-- Attendance Details Modal -->
   <div class="modal-overlay" *ngIf="showAttendanceModal() && myAttendance() as att" (click)="showAttendanceModal.set(false)">

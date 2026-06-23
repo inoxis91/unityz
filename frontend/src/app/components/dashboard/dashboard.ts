@@ -34,6 +34,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   birthdays = signal<any[]>([]);
 
+  myParses = signal<any | null>(null);
+  loadingParses = signal<boolean>(false);
+  parsesTab = signal<'raid' | 'dungeon'>('raid');
+
   private timerInterval: any;
 
   mainCharacter = computed(() => this.myCharacters().find(c => c.is_main));
@@ -117,6 +121,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.fetchCharacterDetails(main);
         this.characterService.getRioScore(main.name, main.realm).subscribe(score => {
           this.mainCharacterRioScore.set(score);
+        });
+
+        // Load Warcraft Logs parses
+        this.loadingParses.set(true);
+        this.characterService.getCharacterParses('main').subscribe({
+          next: (parses) => {
+            this.myParses.set(parses);
+            this.loadingParses.set(false);
+          },
+          error: (err) => {
+            console.error('Error fetching parses:', err);
+            this.loadingParses.set(false);
+          }
         });
       }
     });
@@ -238,5 +255,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   getRioScoreForKey(name: string, realm: string): number | null {
     return this.rioScores().get(`${name}-${realm}`.toLowerCase()) || null;
+  }
+
+  getParseColorClass(percentile: number | undefined): string {
+    if (!percentile) return 'poor';
+    if (percentile >= 99) return 'legendary';
+    if (percentile >= 95) return 'epic';
+    if (percentile >= 75) return 'rare';
+    if (percentile >= 50) return 'uncommon';
+    if (percentile >= 25) return 'common';
+    return 'poor';
   }
 }

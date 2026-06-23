@@ -126,4 +126,9 @@ export class CharacterService {
   getCharacterDetails(realm: string, name: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/details/${realm}/${name}`, { withCredentials: true });
   }
+
+  // Récupère les parses Warcraft Logs d'un personnage
+  getCharacterParses(charId: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/${charId}/parses`, { withCredentials: true });
+  }
 }

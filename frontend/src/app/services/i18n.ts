@@ -388,6 +388,36 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'dashboard.in_progress': 'En cours',
     'dashboard.days_short': 'j',
 
+    // Parses
+    'dashboard.parses.title': 'Performances Warcraft Logs',
+    'dashboard.parses.subtitle': 'Vos meilleurs parses de la saison',
+    'dashboard.parses.raid': 'Raid (Palais de Néru\'bar)',
+    'dashboard.parses.dungeons': 'Donjons (Saison 1 M+)',
+    'dashboard.parses.no_parses': 'Aucune donnée de logs trouvée pour ce personnage.',
+    'dashboard.parses.best_average': 'Moyenne meilleures perf.',
+    'dashboard.parses.rank': 'Rang',
+    'dashboard.parses.loading': 'Chargement des performances...',
+    'dashboard.parses.view_wcl': 'Voir sur Warcraft Logs',
+    'dashboard.parses.no_char': 'Sélectionnez ou liez un personnage principal pour voir ses performances.',
+
+    // Encounters / Dungeons
+    'encounter.2902': 'Ulgrax le Dévoreur',
+    'encounter.2917': 'Horreur de sang',
+    'encounter.2898': 'Sikran, capitaine des Surekis',
+    'encounter.2918': 'Rasha\'nan',
+    'encounter.2919': 'Tisse-couvée Ovi\'nax',
+    'encounter.2920': 'Princesse du Nexus Ky\'veza',
+    'encounter.2921': 'La Cour de Soie',
+    'encounter.2922': 'Reine Ansurek',
+    'encounter.12661': 'Ara-Kara, la cité des échos',
+    'encounter.12662': 'Cité des Fils',
+    'encounter.12652': 'La Voûte de pierre',
+    'encounter.12669': 'Le Brise-Aube',
+    'encounter.12290': 'Brumes de Tirna Scithe',
+    'encounter.12286': 'Sillage nécrotique',
+    'encounter.11822': 'Siège de Boralus',
+    'encounter.10682': 'Grim Batol',
+
     // Month translations
     'month.0': 'Janvier',
     'month.1': 'Février',
@@ -861,7 +891,32 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'class.druid': 'Druide',
     'class.demon-hunter': 'Chasseur de démons',
     'class.evoker': 'Évocateur',
-    'class.unknown': 'Inconnu'
+    'class.unknown': 'Inconnu',
+
+    // New keys for audit compliance
+    'select.guild.alert.select_char': 'Veuillez sélectionner au moins un personnage à importer.',
+    'select.guild.alert.set_main': 'Veuillez désigner un personnage principal (Main).',
+    'select.guild.alert.import_error': 'Une erreur est survenue lors de l\'importation des personnages.',
+    'calendar.status.responded': '✅ Répondu',
+    'calendar.status.pending': '❓ En attente',
+    'calendar.status.absent': '❌ Absent',
+    'calendar.status.unanswered': '⚪ Non répondu',
+    'calendar.tooltip.present': 'Présent',
+    'calendar.tooltip.maybe': 'Peut-être',
+    'calendar.tooltip.absent': 'Absent',
+    'calendar.tooltip.none': 'Non répondu',
+    'char.role.tooltip.tank': 'Définir comme Tank',
+    'char.role.tooltip.healer': 'Définir comme Soigneur',
+    'char.role.tooltip.dps': 'Définir comme DPS',
+    'dashboard.tooltip.rio': 'Voir Raider.IO',
+    'dashboard.tooltip.logs': 'Voir les logs',
+    'event.details.assign_tank': 'Assigner en tant que Tank',
+    'event.details.assign_heal': 'Assigner en tant que Soigneur',
+    'event.details.assign_dps': 'Assigner en tant que DPS',
+    'support.placeholder.bug_subject': 'ex: Erreur de chargement',
+    'support.placeholder.bug_desc': 'ex: Quand je clique sur...',
+    'support.placeholder.contact_subject': 'ex: Demande d\'information',
+    'support.placeholder.contact_message': 'ex: Bonjour, je souhaiterais...'
   },
   en: {
     // Navbar
@@ -1247,6 +1302,36 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'dashboard.import': 'Import',
     'dashboard.in_progress': 'In progress',
     'dashboard.days_short': 'd',
+
+    // Parses
+    'dashboard.parses.title': 'Warcraft Logs Performance',
+    'dashboard.parses.subtitle': 'Your best parses of the season',
+    'dashboard.parses.raid': 'Raid (Nerub\'ar Palace)',
+    'dashboard.parses.dungeons': 'Dungeons (Season 1 M+)',
+    'dashboard.parses.no_parses': 'No log data found for this character.',
+    'dashboard.parses.best_average': 'Best perf. average',
+    'dashboard.parses.rank': 'Rank',
+    'dashboard.parses.loading': 'Loading performances...',
+    'dashboard.parses.view_wcl': 'View on Warcraft Logs',
+    'dashboard.parses.no_char': 'Select or link a main character to see their performance.',
+
+    // Encounters / Dungeons
+    'encounter.2902': 'Ulgrax the Destroyer',
+    'encounter.2917': 'The Bloodbound Horror',
+    'encounter.2898': 'Sikran, Captain of the Sureki',
+    'encounter.2918': 'Rasha\'nan',
+    'encounter.2919': 'Broodtwister Ovi\'nax',
+    'encounter.2920': 'Nexus-Princess Ky\'veza',
+    'encounter.2921': 'The Silken Court',
+    'encounter.2922': 'Queen Ansurek',
+    'encounter.12661': 'Ara-Kara, City of Echoes',
+    'encounter.12662': 'City of Threads',
+    'encounter.12652': 'The Stonevault',
+    'encounter.12669': 'The Dawnbreaker',
+    'encounter.12290': 'Mists of Tirna Scithe',
+    'encounter.12286': 'The Necrotic Wake',
+    'encounter.11822': 'Siege of Boralus',
+    'encounter.10682': 'Grim Batol',
 
     // Month translations
     'month.0': 'January',
@@ -1721,7 +1806,32 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'class.druid': 'Druid',
     'class.demon-hunter': 'Demon Hunter',
     'class.evoker': 'Evoker',
-    'class.unknown': 'Unknown'
+    'class.unknown': 'Unknown',
+
+    // New keys for audit compliance
+    'select.guild.alert.select_char': 'Please select at least one character to import.',
+    'select.guild.alert.set_main': 'Please designate a main character.',
+    'select.guild.alert.import_error': 'An error occurred during character import.',
+    'calendar.status.responded': '✅ Responded',
+    'calendar.status.pending': '❓ Standby',
+    'calendar.status.absent': '❌ Absent',
+    'calendar.status.unanswered': '⚪ Unanswered',
+    'calendar.tooltip.present': 'Present',
+    'calendar.tooltip.maybe': 'Maybe',
+    'calendar.tooltip.absent': 'Absent',
+    'calendar.tooltip.none': 'Unanswered',
+    'char.role.tooltip.tank': 'Set as Tank',
+    'char.role.tooltip.healer': 'Set as Healer',
+    'char.role.tooltip.dps': 'Set as DPS',
+    'dashboard.tooltip.rio': 'View Raider.IO',
+    'dashboard.tooltip.logs': 'View Warcraft Logs',
+    'event.details.assign_tank': 'Assign as Tank',
+    'event.details.assign_heal': 'Assign as Healer',
+    'event.details.assign_dps': 'Assign as DPS',
+    'support.placeholder.bug_subject': 'e.g. Loading issue',
+    'support.placeholder.bug_desc': 'e.g. When I click on...',
+    'support.placeholder.contact_subject': 'e.g. Information request',
+    'support.placeholder.contact_message': 'e.g. Hello, I would like to...'
   }
 };
 

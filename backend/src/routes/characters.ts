@@ -6,6 +6,7 @@ import { BlizzardService } from '../services/blizzardService';
 import { isAuthenticated, requireActiveGuild, requirePaidGuild } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import { importCharactersSchema, updateRolesSchema, setMainSchema } from '../schemas/characterSchemas';
+import { WclService } from '../services/wclService';
 
 const router = express.Router();
 
@@ -166,6 +167,41 @@ router.delete('/:id', isAuthenticated, requireActiveGuild, requirePaidGuild, asy
   try {
     await CharacterService.remove(req.params.id as string, req.user!.id);
     res.json({ status: 'success', message: 'Character removed successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/characters/:id/parses : Récupère les parses Warcraft Logs d'un personnage
+router.get('/:id/parses', isAuthenticated, requireActiveGuild, requirePaidGuild, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    let character;
+
+    if (id === 'main') {
+      const chars = await CharacterService.getByUserId(req.user!.id, req.user!.active_guild_id || undefined);
+      character = chars.find(c => c.is_main) || chars[0];
+    } else {
+      const chars = await CharacterService.getByUserId(req.user!.id, req.user!.active_guild_id || undefined);
+      character = chars.find(c => c.id === id);
+    }
+
+    if (!character) {
+      return res.status(404).json({ status: 'error', message: 'Character not found' });
+    }
+
+    const guildId = req.user!.active_guild_id;
+    let region = 'eu';
+    if (guildId) {
+      const guildRes = await pool.query('SELECT region FROM guilds WHERE id = $1', [guildId]);
+      if (guildRes.rowCount! > 0 && guildRes.rows[0].region) {
+        region = guildRes.rows[0].region;
+      }
+    }
+
+    const realmSlug = character.realm.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
+    const parses = await WclService.getCharacterParses(character.name, realmSlug, region, character.class);
+    res.json(parses);
   } catch (error) {
     next(error);
   }

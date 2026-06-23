@@ -32,7 +32,10 @@ describe('DashboardComponent', () => {
   };
 
   const mockCharacterService = {
-    getMyCharacters: () => of([])
+    getMyCharacters: () => of([]),
+    getRioScore: () => of(0),
+    getCharacterDetails: () => of(null),
+    getCharacterParses: () => of(null)
   };
 
   const mockCalendarService = {
