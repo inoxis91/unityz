@@ -54,7 +54,11 @@ export class ParticipantsComponent {
     const list = [...this.signupsSig()];
     const method = this.sortMethod();
     if (method === 'date') {
-      return list.sort((a, b) => new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime());
+      return list.sort((a, b) => {
+        const dateA = new Date(a.updated_at || a.signup_date || a.created_at || 0).getTime() || 0;
+        const dateB = new Date(b.updated_at || b.signup_date || b.created_at || 0).getTime() || 0;
+        return dateA - dateB;
+      });
     } else {
       const order = { 'signed_up': 1, 'standby': 2, 'absent': 3 } as any;
       return list.sort((a, b) => (order[a.status] || 9) - (order[b.status] || 9));

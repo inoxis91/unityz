@@ -121,7 +121,7 @@
               {{ s.status === 'absent' ? (s.main_character_name || (s.battletag?.split('#')?.[0]) || i18n.t('event.details.unknown_user')) : (s.character_name || s.main_character_name || (s.battletag?.split('#')?.[0]) || i18n.t('event.details.unknown_user')) }}
             </span>
             <span *ngIf="s.status === 'absent'" class="absent-label">{{ i18n.t('event.details.label_absent') }}</span>
-            <span class="signup-time">{{ (s.signup_date || s.created_at) | date:'dd/MM HH:mm' }}</span>
+            <span class="signup-time">{{ (s.updated_at || s.signup_date || s.created_at) | date:'dd/MM HH:mm' }}</span>
           </div>
         </div>
 
