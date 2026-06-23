@@ -5,24 +5,27 @@
   </div>
 
   <!-- Discord Warning (Only if ID is missing AND the guild has a Pro subscription) -->
-  <section class="discord-warning-section animated-fade-in" *ngIf="isPro() && !authService.currentUser()?.discord_id">
-    <div class="card warning-card">
-      <div class="warning-header">
-        <span class="warning-icon">📱</span>
-        <h3>{{ i18n.t('fees.discord.warning_title') }}</h3>
+  @if (isPro() && !authService.currentUser()?.discord_id) {
+    <section class="discord-warning-section animated-fade-in">
+      <div class="card warning-card">
+        <div class="warning-header">
+          <span class="warning-icon">📱</span>
+          <h3>{{ i18n.t('fees.discord.warning_title') }}</h3>
+        </div>
+        <p>{{ i18n.t('fees.discord.warning_desc') }}</p>
+        <div class="warning-form">
+          <button class="btn-discord-login" (click)="linkDiscord()">
+            <span class="icon">💬</span> {{ i18n.t('fees.discord.link_btn') }}
+          </button>
+        </div>
+        <p class="help-text">
+          {{ i18n.t('fees.discord.options_hint') }}
+          <a routerLink="/options">{{ i18n.t('fees.discord.options_link') }}</a
+          >.
+        </p>
       </div>
-      <p>{{ i18n.t('fees.discord.warning_desc') }}</p>
-      <div class="warning-form">
-        <button class="btn-discord-login" (click)="linkDiscord()">
-          <span class="icon">💬</span> {{ i18n.t('fees.discord.link_btn') }}
-        </button>
-      </div>
-      <p class="help-text">
-        {{ i18n.t('fees.discord.options_hint') }} 
-        <a routerLink="/options">{{ i18n.t('fees.discord.options_link') }}</a>.
-      </p>
-    </div>
-  </section>
+    </section>
+  }
 
   <!-- Visual Grid Section -->
   <section class="overview-section">
@@ -34,16 +37,24 @@
           <button class="btn-year" (click)="changeYear(1)">▶</button>
         </div>
         <div class="legend">
-          <span class="legend-item"><span class="dot paid"></span> {{ i18n.t('fees.legend.paid') }}</span>
-          <span class="legend-item"><span class="dot donation"></span> {{ i18n.t('fees.legend.donation') }}</span>
-          <span class="legend-item"><span class="dot partial"></span> {{ i18n.t('fees.legend.partial') }}</span>
+          <span class="legend-item"
+            ><span class="dot paid"></span> {{ i18n.t('fees.legend.paid') }}</span
+          >
+          <span class="legend-item"
+            ><span class="dot donation"></span> {{ i18n.t('fees.legend.donation') }}</span
+          >
+          <span class="legend-item"
+            ><span class="dot partial"></span> {{ i18n.t('fees.legend.partial') }}</span
+          >
         </div>
       </div>
       <div class="months-grid">
         @for (month of months(); track month.index) {
-          <div class="month-box clickable" 
-               [class]="getMonthStatus(month.index).class"
-               (click)="selectMonth(month.index)">
+          <div
+            class="month-box clickable"
+            [class]="getMonthStatus(month.index).class"
+            (click)="selectMonth(month.index)"
+          >
             <span class="month-name">{{ month.name }}</span>
             <div class="month-status">
               <span class="icon">{{ getMonthStatus(month.index).icon }}</span>
@@ -59,55 +70,66 @@
   <div class="main-layout">
     <!-- Declaration Form (Visible only after clicking a month) -->
     <section class="form-column">
-      <div class="card form-card animated-fade-in" *ngIf="showForm()">
-        <div class="form-header">
-          <h3>{{ i18n.t('fees.form.title') }}</h3>
-          <button class="btn-close" (click)="showForm.set(false)">×</button>
-        </div>
-        
-        <div class="selected-period">
-          <span class="label">{{ i18n.t('fees.form.selected_period') }}</span>
-          <div class="period-badge">
-            <span class="icon">📅</span>
-            <strong>{{ selectedMonthName }}</strong>
+      @if (showForm()) {
+        <div class="card form-card animated-fade-in">
+          <div class="form-header">
+            <h3>{{ i18n.t('fees.form.title') }}</h3>
+            <button class="btn-close" (click)="showForm.set(false)">×</button>
           </div>
-        </div>
-
-        <form (ngSubmit)="onSubmit()" class="declaration-form">
-          <div class="form-group">
-            <label>{{ i18n.t('fees.form.amount_label') }}</label>
-            <div class="input-with-icon gold-input">
-              <input type="number" [(ngModel)]="newDeclaration.amount" name="amount" required min="1">
-              <span class="unit">PO</span>
-            </div>
-            <p class="form-hint">{{ i18n.t('fees.form.min_fee_hint').replace('{minFee}', minimumFee().toString()) }}</p>
-          </div>
-
-          <div class="form-group">
-            <label>{{ i18n.t('fees.form.months_covered') }}</label>
-            <div class="duration-selector">
-              <select [(ngModel)]="newDeclaration.duration_months" name="duration">
-                <option [ngValue]="1">{{ i18n.t('fees.form.duration.1') }}</option>
-                <option [ngValue]="3">{{ i18n.t('fees.form.duration.3') }}</option>
-                <option [ngValue]="6">{{ i18n.t('fees.form.duration.6') }}</option>
-                <option [ngValue]="12">{{ i18n.t('fees.form.duration.12') }}</option>
-              </select>
+          <div class="selected-period">
+            <span class="label">{{ i18n.t('fees.form.selected_period') }}</span>
+            <div class="period-badge">
+              <span class="icon">📅</span>
+              <strong>{{ selectedMonthName }}</strong>
             </div>
           </div>
+          <form (ngSubmit)="onSubmit()" class="declaration-form">
+            <div class="form-group">
+              <label>{{ i18n.t('fees.form.amount_label') }}</label>
+              <div class="input-with-icon gold-input">
+                <input
+                  type="number"
+                  [(ngModel)]="newDeclaration.amount"
+                  name="amount"
+                  required
+                  min="1"
+                />
+                <span class="unit">PO</span>
+              </div>
+              <p class="form-hint">
+                {{ i18n.t('fees.form.min_fee_hint').replace('{minFee}', minimumFee().toString()) }}
+              </p>
+            </div>
+            <div class="form-group">
+              <label>{{ i18n.t('fees.form.months_covered') }}</label>
+              <div class="duration-selector">
+                <select [(ngModel)]="newDeclaration.duration_months" name="duration">
+                  <option [ngValue]="1">{{ i18n.t('fees.form.duration.1') }}</option>
+                  <option [ngValue]="3">{{ i18n.t('fees.form.duration.3') }}</option>
+                  <option [ngValue]="6">{{ i18n.t('fees.form.duration.6') }}</option>
+                  <option [ngValue]="12">{{ i18n.t('fees.form.duration.12') }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>{{ i18n.t('fees.form.comment_label') }}</label>
+              <textarea
+                [(ngModel)]="newDeclaration.comment"
+                name="comment"
+                [placeholder]="i18n.t('fees.form.comment_placeholder')"
+              ></textarea>
+            </div>
+            <button type="submit" class="btn-submit">{{ i18n.t('fees.form.btn_submit') }}</button>
+          </form>
+        </div>
+      }
 
-          <div class="form-group">
-            <label>{{ i18n.t('fees.form.comment_label') }}</label>
-            <textarea [(ngModel)]="newDeclaration.comment" name="comment" [placeholder]="i18n.t('fees.form.comment_placeholder')"></textarea>
-          </div>
-
-          <button type="submit" class="btn-submit">{{ i18n.t('fees.form.btn_submit') }}</button>
-        </form>
-      </div>
-
-      <div class="card empty-form-card" *ngIf="!showForm()">
-        <div class="empty-icon">☝️</div>
-        <p>{{ i18n.t('fees.empty_hint') }}</p>
-      </div>
+      @if (!showForm()) {
+        <div class="card empty-form-card">
+          <div class="empty-icon">☝️</div>
+          <p>{{ i18n.t('fees.empty_hint') }}</p>
+        </div>
+      }
     </section>
 
     <!-- History Column -->
@@ -119,18 +141,36 @@
             <div class="decl-card" [class]="decl.status">
               <div class="decl-header">
                 <span class="status-badge" [class]="decl.status">
-                  {{ decl.status === 'pending' ? i18n.t('fees.status.pending') : (decl.status === 'rejected' ? i18n.t('fees.status.rejected') : i18n.t('fees.status.approved')) }}
+                  {{
+                    decl.status === 'pending'
+                      ? i18n.t('fees.status.pending')
+                      : decl.status === 'rejected'
+                        ? i18n.t('fees.status.rejected')
+                        : i18n.t('fees.status.approved')
+                  }}
                 </span>
-                <span class="date">{{ decl.created_at | date:'dd/MM/yyyy' }}</span>
+                <span class="date">{{ decl.created_at | date: 'dd/MM/yyyy' }}</span>
               </div>
               <div class="decl-body">
                 <div class="main-val">{{ decl.amount }} PO</div>
-                <p class="details">{{ i18n.t('fees.history.starting_from') }} {{ decl.start_month | date:'MMMM yyyy' : '' : i18n.currentLocale() }} ({{ decl.duration_months }} {{ decl.duration_months > 1 ? i18n.t('fees.history.months') : i18n.t('fees.history.month') }})</p>
-                
-                <div class="admin-feedback" *ngIf="decl.status === 'rejected' && decl.admin_comment">
-                  <strong>{{ i18n.t('fees.history.motif') }}</strong>
-                  <p>{{ decl.admin_comment }}</p>
-                </div>
+                <p class="details">
+                  {{ i18n.t('fees.history.starting_from') }}
+                  {{ decl.start_month | date: 'MMMM yyyy' : '' : i18n.currentLocale() }} ({{
+                    decl.duration_months
+                  }}
+                  {{
+                    decl.duration_months > 1
+                      ? i18n.t('fees.history.months')
+                      : i18n.t('fees.history.month')
+                  }})
+                </p>
+
+                @if (decl.status === 'rejected' && decl.admin_comment) {
+                  <div class="admin-feedback">
+                    <strong>{{ i18n.t('fees.history.motif') }}</strong>
+                    <p>{{ decl.admin_comment }}</p>
+                  </div>
+                }
               </div>
             </div>
           }

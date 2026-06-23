@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -11,9 +11,9 @@ import { environment } from '../../../../environments/environment';
 @Component({
   selector: 'app-admin-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [FormsModule, RouterModule],
   templateUrl: './admin-settings.html',
-  styleUrl: './admin-settings.css'
+  styleUrl: './admin-settings.css',
 })
 export class AdminSettingsComponent implements OnInit {
   private http = inject(HttpClient);
@@ -33,10 +33,10 @@ export class AdminSettingsComponent implements OnInit {
   discordReminderChannelId = signal('');
   discordLocale = signal<'en' | 'fr'>('en');
   discordClientId = signal('');
-  
+
   feesEnabled = signal(true);
   minimumFeeAmount = signal(2000);
-  
+
   isLoading = signal(true);
   isSaving = signal(false);
 
@@ -65,7 +65,7 @@ export class AdminSettingsComponent implements OnInit {
         console.error('Error fetching guild settings', err);
         this.toast.error(this.i18n.t('admin.settings.toast.load_error'));
         this.isLoading.set(false);
-      }
+      },
     });
   }
 
@@ -81,21 +81,23 @@ export class AdminSettingsComponent implements OnInit {
       discordReminderChannelId: this.discordReminderChannelId() || null,
       feesEnabled: this.feesEnabled(),
       minimumFeeAmount: this.minimumFeeAmount(),
-      discordLocale: this.discordLocale()
+      discordLocale: this.discordLocale(),
     };
 
-    this.http.put<any>(`${this.apiUrl}/guilds/my-settings`, body, { withCredentials: true }).subscribe({
-      next: () => {
-        this.toast.success(this.i18n.t('admin.settings.toast.save_success'));
-        // Refresh auth state to update currentUser fees details
-        this.authService.checkAuth().subscribe();
-        this.isSaving.set(false);
-      },
-      error: (err) => {
-        console.error('Error saving guild settings', err);
-        this.toast.error(this.i18n.t('admin.settings.toast.save_error'));
-        this.isSaving.set(false);
-      }
-    });
+    this.http
+      .put<any>(`${this.apiUrl}/guilds/my-settings`, body, { withCredentials: true })
+      .subscribe({
+        next: () => {
+          this.toast.success(this.i18n.t('admin.settings.toast.save_success'));
+          // Refresh auth state to update currentUser fees details
+          this.authService.checkAuth().subscribe();
+          this.isSaving.set(false);
+        },
+        error: (err) => {
+          console.error('Error saving guild settings', err);
+          this.toast.error(this.i18n.t('admin.settings.toast.save_error'));
+          this.isSaving.set(false);
+        },
+      });
   }
 }

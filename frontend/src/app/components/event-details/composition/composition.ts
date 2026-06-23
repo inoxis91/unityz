@@ -1,11 +1,11 @@
 import { Component, Input, Output, EventEmitter, signal, computed, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
-import { 
-  CdkDragDrop, 
-  moveItemInArray, 
-  transferArrayItem, 
-  DragDropModule 
+import {
+  CdkDragDrop,
+  moveItemInArray,
+  transferArrayItem,
+  DragDropModule,
 } from '@angular/cdk/drag-drop';
 import { CalendarService, Signup } from '../../../services/calendar';
 import { ToastService } from '../../../services/toast';
@@ -21,9 +21,9 @@ export interface Buff extends BuffInfo {
 @Component({
   selector: 'app-composition',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule],
+  imports: [FormsModule, DragDropModule],
   templateUrl: './composition.html',
-  styleUrl: './composition.css'
+  styleUrl: './composition.css',
 })
 export class CompositionComponent {
   private calendarService = inject(CalendarService);
@@ -34,49 +34,63 @@ export class CompositionComponent {
   @Input() canManageEvents!: boolean;
   @Input() rioScores!: Map<string, number>;
 
-  @Input() set signups(val: any[]) { this.signupsSig.set(val || []); }
+  @Input() set signups(val: any[]) {
+    this.signupsSig.set(val || []);
+  }
   @Output() openAlts = new EventEmitter<any>();
   @Output() compositionChanged = new EventEmitter<void>();
 
   signupsSig = signal<any[]>([]);
 
   // Computed views for Raid
-  tanks = computed(() => this.signupsSig().filter(s => s.role === 'tank' && s.status === 'signed_up'));
-  heals = computed(() => this.signupsSig().filter(s => s.role === 'heal' && s.status === 'signed_up'));
-  dps = computed(() => this.signupsSig().filter(s => s.role === 'dps' && s.status === 'signed_up'));
+  tanks = computed(() =>
+    this.signupsSig().filter((s) => s.role === 'tank' && s.status === 'signed_up'),
+  );
+  heals = computed(() =>
+    this.signupsSig().filter((s) => s.role === 'heal' && s.status === 'signed_up'),
+  );
+  dps = computed(() =>
+    this.signupsSig().filter((s) => s.role === 'dps' && s.status === 'signed_up'),
+  );
 
   // Computed views for MM+
-  unassignedMembers = computed(() => this.signupsSig().filter(s => s.status === 'signed_up' && (s.group_index === 0 || !s.group_index)));
-  
+  unassignedMembers = computed(() =>
+    this.signupsSig().filter(
+      (s) => s.status === 'signed_up' && (s.group_index === 0 || !s.group_index),
+    ),
+  );
+
   mmGroups = computed(() => {
     const count = this.event?.mm_groups_count || 0;
     const groups = [];
     for (let i = 1; i <= count; i++) {
-      const members = this.signupsSig().filter(s => s.group_index === i);
+      const members = this.signupsSig().filter((s) => s.group_index === i);
       groups.push({
         index: i,
         members: members,
-        tanks: members.filter(m => m.role === 'tank'),
-        heals: members.filter(m => m.role === 'heal'),
-        dps: members.filter(m => m.role === 'dps'),
-        buffs: this.calculateBuffs(members)
+        tanks: members.filter((m) => m.role === 'tank'),
+        heals: members.filter((m) => m.role === 'heal'),
+        dps: members.filter((m) => m.role === 'dps'),
+        buffs: this.calculateBuffs(members),
       });
     }
     return groups;
   });
 
   buffs = computed(() => {
-    const activeSignups = this.signupsSig().filter(s => s.status === 'signed_up');
+    const activeSignups = this.signupsSig().filter((s) => s.status === 'signed_up');
     return this.calculateBuffs(activeSignups);
   });
 
   calculateBuffs(members: Signup[]): Buff[] {
-    return CLASS_BUFFS.map(baseBuff => {
-      const count = members.filter(s => baseBuff.classes.includes(s.character_class || '')).length;
+    return CLASS_BUFFS.map((baseBuff) => {
+      const count = members.filter((s) =>
+        baseBuff.classes.includes(s.character_class || ''),
+      ).length;
       return {
         ...baseBuff,
         present: count > 0,
-        count: count
+        count: count,
       } as Buff;
     });
   }
@@ -92,11 +106,11 @@ export class CompositionComponent {
 
   onRemoveGroup(index: number) {
     if (!this.event || !this.event.id) return;
-    
+
     // 1. Move all members of this group back to unassigned (index 0)
-    const membersInGroup = this.signupsSig().filter(s => s.group_index === index);
-    const movePromises = membersInGroup.map(m => 
-      this.calendarService.updateSignupGroup(this.event.id!, m.user_id, 0).toPromise()
+    const membersInGroup = this.signupsSig().filter((s) => s.group_index === index);
+    const movePromises = membersInGroup.map((m) =>
+      this.calendarService.updateSignupGroup(this.event.id!, m.user_id, 0).toPromise(),
     );
 
     Promise.all(movePromises).then(() => {
@@ -115,8 +129,8 @@ export class CompositionComponent {
 
     // Optimistic UI update
     const currentSignups = this.signupsSig();
-    const updatedSignups = currentSignups.map(s => 
-      s.user_id === member.user_id ? { ...s, group_index: groupIndex } : s
+    const updatedSignups = currentSignups.map((s) =>
+      s.user_id === member.user_id ? { ...s, group_index: groupIndex } : s,
     );
     this.signupsSig.set(updatedSignups);
 
@@ -128,7 +142,7 @@ export class CompositionComponent {
       error: () => {
         this.toast.error(this.i18n.t('event.details.toast_move_error'));
         this.compositionChanged.emit();
-      }
+      },
     });
   }
 

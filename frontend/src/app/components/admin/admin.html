@@ -1,35 +1,71 @@
 <div class="admin-container">
   <h1>{{ i18n.t('admin.title') }}</h1>
-<div class="admin-tabs">
-  <button *ngIf="authService.isAdmin()" [class.active]="activeTab() === 'users'" (click)="activeTab.set('users')">{{ i18n.t('admin.tab.members') }}</button>
-  <button *ngIf="authService.canManageRosters()" [class.active]="activeTab() === 'rosters'" (click)="activeTab.set('rosters')">{{ i18n.t('admin.tab.rosters') }}</button>
-  <button *ngIf="authService.canManageEvents()" [class.active]="activeTab() === 'attendance'" (click)="activeTab.set('attendance')">{{ i18n.t('admin.tab.attendance') }}</button>
-  <button *ngIf="authService.canManageEvents()" [class.active]="activeTab() === 'absences'" (click)="activeTab.set('absences')">{{ i18n.t('admin.tab.absences') }}</button>
-  <button *ngIf="authService.canManageFees()" [class.active]="activeTab() === 'fees'" (click)="activeTab.set('fees')">{{ i18n.t('admin.tab.fees') }}</button>
-  <button *ngIf="authService.isAdmin()" [class.active]="activeTab() === 'settings'" (click)="activeTab.set('settings')">{{ i18n.t('admin.tab.settings') }}</button>
-</div>
-
-<div class="tab-content" *ngIf="activeTab() === 'users' && authService.isAdmin()">
-  <app-admin-users></app-admin-users>
-</div>
-
-<div class="tab-content" *ngIf="activeTab() === 'rosters' && authService.canManageRosters()">
-    <app-admin-rosters></app-admin-rosters>
+  <div class="admin-tabs">
+    @if (authService.isAdmin()) {
+      <button [class.active]="activeTab() === 'users'" (click)="activeTab.set('users')">
+        {{ i18n.t('admin.tab.members') }}
+      </button>
+    }
+    @if (authService.canManageRosters()) {
+      <button [class.active]="activeTab() === 'rosters'" (click)="activeTab.set('rosters')">
+        {{ i18n.t('admin.tab.rosters') }}
+      </button>
+    }
+    @if (authService.canManageEvents()) {
+      <button [class.active]="activeTab() === 'attendance'" (click)="activeTab.set('attendance')">
+        {{ i18n.t('admin.tab.attendance') }}
+      </button>
+    }
+    @if (authService.canManageEvents()) {
+      <button [class.active]="activeTab() === 'absences'" (click)="activeTab.set('absences')">
+        {{ i18n.t('admin.tab.absences') }}
+      </button>
+    }
+    @if (authService.canManageFees()) {
+      <button [class.active]="activeTab() === 'fees'" (click)="activeTab.set('fees')">
+        {{ i18n.t('admin.tab.fees') }}
+      </button>
+    }
+    @if (authService.isAdmin()) {
+      <button [class.active]="activeTab() === 'settings'" (click)="activeTab.set('settings')">
+        {{ i18n.t('admin.tab.settings') }}
+      </button>
+    }
   </div>
 
-  <div class="tab-content" *ngIf="activeTab() === 'attendance' && authService.canManageEvents()">
-    <app-admin-attendance></app-admin-attendance>
-  </div>
+  @if (activeTab() === 'users' && authService.isAdmin()) {
+    <div class="tab-content">
+      <app-admin-users></app-admin-users>
+    </div>
+  }
 
-  <div class="tab-content" *ngIf="activeTab() === 'absences' && authService.canManageEvents()">
-    <app-admin-absences></app-admin-absences>
-  </div>
+  @if (activeTab() === 'rosters' && authService.canManageRosters()) {
+    <div class="tab-content">
+      <app-admin-rosters></app-admin-rosters>
+    </div>
+  }
 
-  <div class="tab-content" *ngIf="activeTab() === 'fees' && authService.canManageFees()">
-    <app-admin-fees></app-admin-fees>
-  </div>
+  @if (activeTab() === 'attendance' && authService.canManageEvents()) {
+    <div class="tab-content">
+      <app-admin-attendance></app-admin-attendance>
+    </div>
+  }
 
-  <div class="tab-content" *ngIf="activeTab() === 'settings' && authService.isAdmin()">
-    <app-admin-settings></app-admin-settings>
-  </div>
+  @if (activeTab() === 'absences' && authService.canManageEvents()) {
+    <div class="tab-content">
+      <app-admin-absences></app-admin-absences>
+    </div>
+  }
+
+  @if (activeTab() === 'fees' && authService.canManageFees()) {
+    <div class="tab-content">
+      <app-admin-fees></app-admin-fees>
+    </div>
+  }
+
+  @if (activeTab() === 'settings' && authService.isAdmin()) {
+    <div class="tab-content">
+      <app-admin-settings></app-admin-settings>
+    </div>
+  }
 </div>

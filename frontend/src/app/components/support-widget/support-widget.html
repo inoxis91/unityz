@@ -6,108 +6,202 @@
   </button>
 
   <!-- Options Dropdown Menu -->
-  <div class="support-dropdown" *ngIf="isOpen()">
-    <button class="dropdown-item" (click)="openForm('bug')">
-      <span class="item-icon">🐛</span>
-      <span class="item-text">{{ i18n.t('support.widget.option.bug') }}</span>
-    </button>
-    <button class="dropdown-item" (click)="openForm('contact')">
-      <span class="item-icon">✉️</span>
-      <span class="item-text">{{ i18n.t('support.widget.option.contact') }}</span>
-    </button>
-  </div>
+  @if (isOpen()) {
+    <div class="support-dropdown">
+      <button class="dropdown-item" (click)="openForm('bug')">
+        <span class="item-icon">🐛</span>
+        <span class="item-text">{{ i18n.t('support.widget.option.bug') }}</span>
+      </button>
+      <button class="dropdown-item" (click)="openForm('contact')">
+        <span class="item-icon">✉️</span>
+        <span class="item-text">{{ i18n.t('support.widget.option.contact') }}</span>
+      </button>
+    </div>
+  }
 </div>
 
 <!-- Form Modals -->
 <!-- Bug Report Modal -->
-<div class="support-modal-backdrop" *ngIf="activeForm() === 'bug'" (click)="closeForm()">
-  <div class="support-modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>{{ i18n.t('support.bug.title') }}</h2>
-      <button class="btn-close" (click)="closeForm()">×</button>
+@if (activeForm() === 'bug') {
+  <div class="support-modal-backdrop" (click)="closeForm()">
+    <div class="support-modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ i18n.t('support.bug.title') }}</h2>
+        <button class="btn-close" (click)="closeForm()">×</button>
+      </div>
+      <form (ngSubmit)="submitBug()" #bugForm="ngForm" class="support-form">
+        <div class="form-group">
+          <label for="bugName">{{ i18n.t('support.bug.name') }}</label>
+          <input
+            type="text"
+            id="bugName"
+            [ngModel]="bugName()"
+            (ngModelChange)="bugName.set($event)"
+            name="bugName"
+            required
+            placeholder="ex: Thrall"
+          />
+        </div>
+        <div class="form-group">
+          <label for="bugEmail">{{ i18n.t('support.bug.email') }}</label>
+          <input
+            type="email"
+            id="bugEmail"
+            [ngModel]="bugEmail()"
+            (ngModelChange)="bugEmail.set($event)"
+            name="bugEmail"
+            required
+            placeholder="ex: mail@example.com"
+          />
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label for="bugSubject">{{ i18n.t('support.bug.subject') }}</label>
+            <input
+              type="text"
+              id="bugSubject"
+              [ngModel]="bugSubject()"
+              (ngModelChange)="bugSubject.set($event)"
+              name="bugSubject"
+              required
+              [placeholder]="i18n.t('support.placeholder.bug_subject')"
+            />
+          </div>
+          <div class="form-group flex-1">
+            <label for="bugSeverity">{{ i18n.t('support.bug.severity') }}</label>
+            <select
+              id="bugSeverity"
+              [ngModel]="bugSeverity()"
+              (ngModelChange)="bugSeverity.set($event)"
+              name="bugSeverity"
+              required
+            >
+              <option value="low">{{ i18n.t('support.bug.severity.low') }}</option>
+              <option value="medium">{{ i18n.t('support.bug.severity.medium') }}</option>
+              <option value="high">{{ i18n.t('support.bug.severity.high') }}</option>
+              <option value="critical">{{ i18n.t('support.bug.severity.critical') }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="bugDesc">{{ i18n.t('support.bug.desc') }}</label>
+          <textarea
+            id="bugDesc"
+            [ngModel]="bugDesc()"
+            (ngModelChange)="bugDesc.set($event)"
+            name="bugDesc"
+            required
+            rows="4"
+            [placeholder]="i18n.t('support.placeholder.bug_desc')"
+          ></textarea>
+        </div>
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn-cancel"
+            (click)="closeForm()"
+            [disabled]="isSubmitting()"
+          >
+            {{ i18n.t('support.btn.cancel') }}
+          </button>
+          <button
+            type="submit"
+            class="btn-submit btn-submit-bug"
+            [disabled]="!bugForm.valid || isSubmitting()"
+          >
+            @if (!isSubmitting()) {
+              <span>{{ i18n.t('support.btn.send') }}</span>
+            }
+            @if (isSubmitting()) {
+              <span class="spinner"></span>
+            }
+          </button>
+        </div>
+      </form>
     </div>
-    <form (ngSubmit)="submitBug()" #bugForm="ngForm" class="support-form">
-      <div class="form-group">
-        <label for="bugName">{{ i18n.t('support.bug.name') }}</label>
-        <input type="text" id="bugName" [ngModel]="bugName()" (ngModelChange)="bugName.set($event)" name="bugName" required placeholder="ex: Thrall" />
-      </div>
-
-      <div class="form-group">
-        <label for="bugEmail">{{ i18n.t('support.bug.email') }}</label>
-        <input type="email" id="bugEmail" [ngModel]="bugEmail()" (ngModelChange)="bugEmail.set($event)" name="bugEmail" required placeholder="ex: mail@example.com" />
-      </div>
-
-      <div class="form-row">
-        <div class="form-group flex-2">
-          <label for="bugSubject">{{ i18n.t('support.bug.subject') }}</label>
-          <input type="text" id="bugSubject" [ngModel]="bugSubject()" (ngModelChange)="bugSubject.set($event)" name="bugSubject" required [placeholder]="i18n.t('support.placeholder.bug_subject')" />
-        </div>
-        <div class="form-group flex-1">
-          <label for="bugSeverity">{{ i18n.t('support.bug.severity') }}</label>
-          <select id="bugSeverity" [ngModel]="bugSeverity()" (ngModelChange)="bugSeverity.set($event)" name="bugSeverity" required>
-            <option value="low">{{ i18n.t('support.bug.severity.low') }}</option>
-            <option value="medium">{{ i18n.t('support.bug.severity.medium') }}</option>
-            <option value="high">{{ i18n.t('support.bug.severity.high') }}</option>
-            <option value="critical">{{ i18n.t('support.bug.severity.critical') }}</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="bugDesc">{{ i18n.t('support.bug.desc') }}</label>
-        <textarea id="bugDesc" [ngModel]="bugDesc()" (ngModelChange)="bugDesc.set($event)" name="bugDesc" required rows="4" [placeholder]="i18n.t('support.placeholder.bug_desc')"></textarea>
-      </div>
-
-      <div class="form-actions">
-        <button type="button" class="btn-cancel" (click)="closeForm()" [disabled]="isSubmitting()">
-          {{ i18n.t('support.btn.cancel') }}
-        </button>
-        <button type="submit" class="btn-submit btn-submit-bug" [disabled]="!bugForm.valid || isSubmitting()">
-          <span *ngIf="!isSubmitting()">{{ i18n.t('support.btn.send') }}</span>
-          <span *ngIf="isSubmitting()" class="spinner"></span>
-        </button>
-      </div>
-    </form>
   </div>
-</div>
+}
 
 <!-- Contact Modal -->
-<div class="support-modal-backdrop" *ngIf="activeForm() === 'contact'" (click)="closeForm()">
-  <div class="support-modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>{{ i18n.t('support.contact.title') }}</h2>
-      <button class="btn-close" (click)="closeForm()">×</button>
+@if (activeForm() === 'contact') {
+  <div class="support-modal-backdrop" (click)="closeForm()">
+    <div class="support-modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ i18n.t('support.contact.title') }}</h2>
+        <button class="btn-close" (click)="closeForm()">×</button>
+      </div>
+      <form (ngSubmit)="submitContact()" #contactForm="ngForm" class="support-form">
+        <div class="form-group">
+          <label for="contactName">{{ i18n.t('support.bug.name') }}</label>
+          <input
+            type="text"
+            id="contactName"
+            [ngModel]="contactName()"
+            (ngModelChange)="contactName.set($event)"
+            name="contactName"
+            required
+            placeholder="ex: Jaina"
+          />
+        </div>
+        <div class="form-group">
+          <label for="contactEmail">{{ i18n.t('support.bug.email') }}</label>
+          <input
+            type="email"
+            id="contactEmail"
+            [ngModel]="contactEmail()"
+            (ngModelChange)="contactEmail.set($event)"
+            name="contactEmail"
+            required
+            placeholder="ex: mail@example.com"
+          />
+        </div>
+        <div class="form-group">
+          <label for="contactSubject">{{ i18n.t('support.contact.subject') }}</label>
+          <input
+            type="text"
+            id="contactSubject"
+            [ngModel]="contactSubject()"
+            (ngModelChange)="contactSubject.set($event)"
+            name="contactSubject"
+            required
+            [placeholder]="i18n.t('support.placeholder.contact_subject')"
+          />
+        </div>
+        <div class="form-group">
+          <label for="contactMessage">{{ i18n.t('support.contact.message') }}</label>
+          <textarea
+            id="contactMessage"
+            [ngModel]="contactMessage()"
+            (ngModelChange)="contactMessage.set($event)"
+            name="contactMessage"
+            required
+            rows="4"
+            [placeholder]="i18n.t('support.placeholder.contact_message')"
+          ></textarea>
+        </div>
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn-cancel"
+            (click)="closeForm()"
+            [disabled]="isSubmitting()"
+          >
+            {{ i18n.t('support.btn.cancel') }}
+          </button>
+          <button
+            type="submit"
+            class="btn-submit btn-submit-contact"
+            [disabled]="!contactForm.valid || isSubmitting()"
+          >
+            @if (!isSubmitting()) {
+              <span>{{ i18n.t('support.btn.send') }}</span>
+            }
+            @if (isSubmitting()) {
+              <span class="spinner"></span>
+            }
+          </button>
+        </div>
+      </form>
     </div>
-    <form (ngSubmit)="submitContact()" #contactForm="ngForm" class="support-form">
-      <div class="form-group">
-        <label for="contactName">{{ i18n.t('support.bug.name') }}</label>
-        <input type="text" id="contactName" [ngModel]="contactName()" (ngModelChange)="contactName.set($event)" name="contactName" required placeholder="ex: Jaina" />
-      </div>
-
-      <div class="form-group">
-        <label for="contactEmail">{{ i18n.t('support.bug.email') }}</label>
-        <input type="email" id="contactEmail" [ngModel]="contactEmail()" (ngModelChange)="contactEmail.set($event)" name="contactEmail" required placeholder="ex: mail@example.com" />
-      </div>
-
-      <div class="form-group">
-        <label for="contactSubject">{{ i18n.t('support.contact.subject') }}</label>
-        <input type="text" id="contactSubject" [ngModel]="contactSubject()" (ngModelChange)="contactSubject.set($event)" name="contactSubject" required [placeholder]="i18n.t('support.placeholder.contact_subject')" />
-      </div>
-
-      <div class="form-group">
-        <label for="contactMessage">{{ i18n.t('support.contact.message') }}</label>
-        <textarea id="contactMessage" [ngModel]="contactMessage()" (ngModelChange)="contactMessage.set($event)" name="contactMessage" required rows="4" [placeholder]="i18n.t('support.placeholder.contact_message')"></textarea>
-      </div>
-
-      <div class="form-actions">
-        <button type="button" class="btn-cancel" (click)="closeForm()" [disabled]="isSubmitting()">
-          {{ i18n.t('support.btn.cancel') }}
-        </button>
-        <button type="submit" class="btn-submit btn-submit-contact" [disabled]="!contactForm.valid || isSubmitting()">
-          <span *ngIf="!isSubmitting()">{{ i18n.t('support.btn.send') }}</span>
-          <span *ngIf="isSubmitting()" class="spinner"></span>
-        </button>
-      </div>
-    </form>
   </div>
-</div>
+}

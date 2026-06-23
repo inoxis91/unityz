@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { I18nService } from '../../services/i18n';
@@ -9,9 +9,9 @@ import { environment } from '../../../environments/environment';
 @Component({
   selector: 'app-support-widget',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './support-widget.html',
-  styleUrls: ['./support-widget.css']
+  styleUrls: ['./support-widget.css'],
 })
 export class SupportWidgetComponent {
   public i18n = inject(I18nService);
@@ -37,7 +37,7 @@ export class SupportWidgetComponent {
   contactMessage = signal<string>('');
 
   toggleWidget() {
-    this.isOpen.update(val => !val);
+    this.isOpen.update((val) => !val);
   }
 
   openForm(type: 'bug' | 'contact') {
@@ -75,7 +75,7 @@ export class SupportWidgetComponent {
       email: this.bugEmail(),
       subject: this.bugSubject(),
       description: this.bugDesc(),
-      severity: this.bugSeverity()
+      severity: this.bugSeverity(),
     };
 
     this.http.post(`${environment.apiUrl}/support/bug`, payload).subscribe({
@@ -87,12 +87,17 @@ export class SupportWidgetComponent {
       error: () => {
         this.toast.error(this.i18n.t('support.msg.error'));
         this.isSubmitting.set(false);
-      }
+      },
     });
   }
 
   submitContact() {
-    if (!this.contactName() || !this.contactEmail() || !this.contactSubject() || !this.contactMessage()) {
+    if (
+      !this.contactName() ||
+      !this.contactEmail() ||
+      !this.contactSubject() ||
+      !this.contactMessage()
+    ) {
       return;
     }
 
@@ -102,7 +107,7 @@ export class SupportWidgetComponent {
       name: this.contactName(),
       email: this.contactEmail(),
       subject: this.contactSubject(),
-      message: this.contactMessage()
+      message: this.contactMessage(),
     };
 
     this.http.post(`${environment.apiUrl}/support/contact`, payload).subscribe({
@@ -114,7 +119,7 @@ export class SupportWidgetComponent {
       error: () => {
         this.toast.error(this.i18n.t('support.msg.error'));
         this.isSubmitting.set(false);
-      }
+      },
     });
   }
 }

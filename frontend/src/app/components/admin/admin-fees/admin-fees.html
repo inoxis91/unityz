@@ -16,138 +16,192 @@
   </div>
 
   <!-- TAB: Pending Approvals -->
-  <div class="tab-content" *ngIf="activeSubTab() === 'pending'">
-    <div class="pending-list">
-      @for (decl of feeService.pendingDeclarations(); track decl.id) {
-        <div class="pending-card">
-          <div class="user-info">
-            <span class="btag clickable" (click)="openCharactersModal(decl)">{{ decl.main_character || decl.battletag }}</span>
-            <span class="date">{{ i18n.t('admin.fees.deposited_on') }} {{ decl.created_at | date:'short' }}</span>
+  @if (activeSubTab() === 'pending') {
+    <div class="tab-content">
+      <div class="pending-list">
+        @for (decl of feeService.pendingDeclarations(); track decl.id) {
+          <div class="pending-card">
+            <div class="user-info">
+              <span class="btag clickable" (click)="openCharactersModal(decl)">{{
+                decl.main_character || decl.battletag
+              }}</span>
+              <span class="date"
+                >{{ i18n.t('admin.fees.deposited_on') }} {{ decl.created_at | date: 'short' }}</span
+              >
+            </div>
+            <div class="decl-details">
+              <div class="val">{{ decl.amount }} PO</div>
+              <p>
+                {{ i18n.t('admin.fees.period') }} : {{ decl.duration_months }}
+                {{ i18n.t('admin.fees.months_from') }} {{ decl.start_month | date: 'MMMM yyyy' }}
+              </p>
+              @if (decl.comment) {
+                <p class="comment">"{{ decl.comment }}"</p>
+              }
+            </div>
+            <div class="actions">
+              <button class="btn-approve" (click)="onAccept(decl)">
+                ✅ {{ i18n.t('admin.fees.btn_accept') }}
+              </button>
+              <button class="btn-reject" (click)="openRejectModal(decl)">
+                ❌ {{ i18n.t('admin.fees.btn_reject') }}
+              </button>
+            </div>
           </div>
-          <div class="decl-details">
-            <div class="val">{{ decl.amount }} PO</div>
-            <p>{{ i18n.t('admin.fees.period') }} : {{ decl.duration_months }} {{ i18n.t('admin.fees.months_from') }} {{ decl.start_month | date:'MMMM yyyy' }}</p>
-            <p class="comment" *ngIf="decl.comment">"{{ decl.comment }}"</p>
+        }
+        @if (feeService.pendingDeclarations().length === 0) {
+          <div class="empty-state">
+            <p>{{ i18n.t('admin.fees.empty_pending') }}</p>
           </div>
-          <div class="actions">
-            <button class="btn-approve" (click)="onAccept(decl)">✅ {{ i18n.t('admin.fees.btn_accept') }}</button>
-            <button class="btn-reject" (click)="openRejectModal(decl)">❌ {{ i18n.t('admin.fees.btn_reject') }}</button>
-          </div>
-        </div>
-      }
-      @if (feeService.pendingDeclarations().length === 0) {
-        <div class="empty-state">
-          <p>{{ i18n.t('admin.fees.empty_pending') }}</p>
-        </div>
-      }
+        }
+      </div>
     </div>
-  </div>
+  }
 
   <!-- TAB: Guild Overview -->
-  <div class="tab-content" *ngIf="activeSubTab() === 'guild'">
-    <div class="overview-header">
-      <div class="year-nav">
-        <button class="btn-year" (click)="changeYear(-1)">◀</button>
-        <h2>{{ displayYear() }}</h2>
-        <button class="btn-year" (click)="changeYear(1)">▶</button>
+  @if (activeSubTab() === 'guild') {
+    <div class="tab-content">
+      <div class="overview-header">
+        <div class="year-nav">
+          <button class="btn-year" (click)="changeYear(-1)">◀</button>
+          <h2>{{ displayYear() }}</h2>
+          <button class="btn-year" (click)="changeYear(1)">▶</button>
+        </div>
+        <div class="overview-legend">
+          <span class="legend-item">{{ i18n.t('admin.fees.click_to_edit') }}</span>
+        </div>
       </div>
-      <div class="overview-legend">
-        <span class="legend-item">{{ i18n.t('admin.fees.click_to_edit') }}</span>
-      </div>
-    </div>
-
-    <div class="overview-table-wrapper">
-      <table class="guild-overview-table">
-        <thead>
-          <tr>
-            <th>{{ i18n.t('admin.fees.th_member') }}</th>
-            @for (m of months; track m.index) {
-              <th>{{ i18n.t('month.short.' + (m.index - 1)) }}</th>
-            }
-          </tr>
-        </thead>
-        <tbody>
-          @for (user of guildOverview(); track user.user_id) {
+      <div class="overview-table-wrapper">
+        <table class="guild-overview-table">
+          <thead>
             <tr>
-              <td class="user-cell clickable" (click)="openCharactersModal(user)">{{ user.main_character || user.battletag }}</td>
+              <th>{{ i18n.t('admin.fees.th_member') }}</th>
               @for (m of months; track m.index) {
-                <td class="status-cell" (click)="openAdjustModal(user, m.index)">
-                  <div class="status-box" [class]="getUserMonthStatus(user, m.index).class" [title]="getUserMonthStatus(user, m.index).amount + ' PO'">
-                    <span class="status-icon">{{ getUserMonthStatus(user, m.index).icon }}</span>
-                    <span class="status-amount" *ngIf="getUserMonthStatus(user, m.index).amount > 0">
-                      {{ getUserMonthStatus(user, m.index).amount >= 1000 ? (getUserMonthStatus(user, m.index).amount / 1000).toFixed(1) + 'k' : getUserMonthStatus(user, m.index).amount }}
-                    </span>
-                  </div>
-                </td>
+                <th>{{ i18n.t('month.short.' + (m.index - 1)) }}</th>
               }
             </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (user of guildOverview(); track user.user_id) {
+              <tr>
+                <td class="user-cell clickable" (click)="openCharactersModal(user)">
+                  {{ user.main_character || user.battletag }}
+                </td>
+                @for (m of months; track m.index) {
+                  <td class="status-cell" (click)="openAdjustModal(user, m.index)">
+                    <div
+                      class="status-box"
+                      [class]="getUserMonthStatus(user, m.index).class"
+                      [title]="getUserMonthStatus(user, m.index).amount + ' PO'"
+                    >
+                      <span class="status-icon">{{ getUserMonthStatus(user, m.index).icon }}</span>
+                      @if (getUserMonthStatus(user, m.index).amount > 0) {
+                        <span class="status-amount">
+                          {{
+                            getUserMonthStatus(user, m.index).amount >= 1000
+                              ? (getUserMonthStatus(user, m.index).amount / 1000).toFixed(1) + 'k'
+                              : getUserMonthStatus(user, m.index).amount
+                          }}
+                        </span>
+                      }
+                    </div>
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
+  }
 </div>
 
 <!-- Rejection Modal -->
-<div class="modal-backdrop" *ngIf="showRejectModal()">
-  <div class="modal">
-    <h3>{{ i18n.t('admin.fees.modal_reject_title') }}</h3>
-    <p>{{ i18n.t('admin.fees.modal_reject_warning') }} <strong>{{ resolvingDecl?.amount }} PO</strong> {{ i18n.t('admin.fees.modal_reject_of') }} <strong>{{ resolvingDecl?.battletag }}</strong>.</p>
-    
-    <div class="form-group">
-      <label>{{ i18n.t('admin.fees.modal_reject_reason') }}</label>
-      <textarea [(ngModel)]="adminComment" [placeholder]="i18n.t('admin.fees.modal_reject_placeholder')"></textarea>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn-secondary" (click)="closeRejectModal()">{{ i18n.t('admin.fees.btn_cancel') }}</button>
-      <button class="btn-danger" (click)="onReject()">{{ i18n.t('admin.fees.btn_confirm_reject') }}</button>
-    </div>
-  </div>
-</div>
-
-<!-- Adjustment Modal -->
-<div class="modal-backdrop" *ngIf="showAdjustModal()">
-  <div class="modal">
-    <h3>{{ i18n.t('admin.fees.modal_adjust_title') }}</h3>
-    <p>{{ i18n.t('admin.fees.th_member') }} : <strong>{{ adjustingUser?.battletag }}</strong></p>
-    <p>{{ i18n.t('admin.fees.period') }} : <strong>{{ i18n.t('month.' + (adjustingMonthIndex - 1)) }} {{ displayYear() }}</strong></p>
-
-    <div class="form-group">
-      <label>{{ i18n.t('admin.fees.modal_adjust_amount') }}</label>
-      <div class="input-with-icon">
-        <input type="number" [(ngModel)]="adjustingAmount" class="modern-input">
-        <span class="unit">PO</span>
+@if (showRejectModal()) {
+  <div class="modal-backdrop">
+    <div class="modal">
+      <h3>{{ i18n.t('admin.fees.modal_reject_title') }}</h3>
+      <p>
+        {{ i18n.t('admin.fees.modal_reject_warning') }}
+        <strong>{{ resolvingDecl?.amount }} PO</strong> {{ i18n.t('admin.fees.modal_reject_of') }}
+        <strong>{{ resolvingDecl?.battletag }}</strong
+        >.
+      </p>
+      <div class="form-group">
+        <label>{{ i18n.t('admin.fees.modal_reject_reason') }}</label>
+        <textarea
+          [(ngModel)]="adminComment"
+          [placeholder]="i18n.t('admin.fees.modal_reject_placeholder')"
+        ></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeRejectModal()">
+          {{ i18n.t('admin.fees.btn_cancel') }}
+        </button>
+        <button class="btn-danger" (click)="onReject()">
+          {{ i18n.t('admin.fees.btn_confirm_reject') }}
+        </button>
       </div>
     </div>
+  </div>
+}
 
-    <div class="modal-footer">
-      <button class="btn-secondary" (click)="showAdjustModal.set(false)">{{ i18n.t('admin.fees.btn_cancel') }}</button>
-      <button class="btn-primary" (click)="onSaveAdjustment()">{{ i18n.t('admin.fees.btn_save') }}</button>
+<!-- Adjustment Modal -->
+@if (showAdjustModal()) {
+  <div class="modal-backdrop">
+    <div class="modal">
+      <h3>{{ i18n.t('admin.fees.modal_adjust_title') }}</h3>
+      <p>
+        {{ i18n.t('admin.fees.th_member') }} : <strong>{{ adjustingUser?.battletag }}</strong>
+      </p>
+      <p>
+        {{ i18n.t('admin.fees.period') }} :
+        <strong>{{ i18n.t('month.' + (adjustingMonthIndex - 1)) }} {{ displayYear() }}</strong>
+      </p>
+      <div class="form-group">
+        <label>{{ i18n.t('admin.fees.modal_adjust_amount') }}</label>
+        <div class="input-with-icon">
+          <input type="number" [(ngModel)]="adjustingAmount" class="modern-input" />
+          <span class="unit">PO</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="showAdjustModal.set(false)">
+          {{ i18n.t('admin.fees.btn_cancel') }}
+        </button>
+        <button class="btn-primary" (click)="onSaveAdjustment()">
+          {{ i18n.t('admin.fees.btn_save') }}
+        </button>
+      </div>
     </div>
   </div>
-</div>
+}
 
 <!-- Characters List Modal -->
-<div class="modal-backdrop" *ngIf="showCharactersModal()">
-  <div class="modal">
-    <h3>{{ i18n.t('admin.fees.modal_chars_title') }} {{ modalUser?.battletag }}</h3>
-    
-    <div class="characters-list" *ngIf="modalUser?.characters?.length; else noChars">
-      @for (char of modalUser?.characters; track char.name) {
-        <div class="character-item">
-          <span class="char-name" [class.is-main]="char.is_main">{{ char.name }}</span>
-          <span class="char-details">{{ char.class }} - {{ char.realm }}</span>
-          <span class="main-badge" *ngIf="char.is_main">{{ i18n.t('admin.fees.main_badge') }}</span>
+@if (showCharactersModal()) {
+  <div class="modal-backdrop">
+    <div class="modal">
+      <h3>{{ i18n.t('admin.fees.modal_chars_title') }} {{ modalUser?.battletag }}</h3>
+      @if (modalUser?.characters?.length) {
+        <div class="characters-list">
+          @for (char of modalUser?.characters; track char.name) {
+            <div class="character-item">
+              <span class="char-name" [class.is-main]="char.is_main">{{ char.name }}</span>
+              <span class="char-details">{{ char.class }} - {{ char.realm }}</span>
+              @if (char.is_main) {
+                <span class="main-badge">{{ i18n.t('admin.fees.main_badge') }}</span>
+              }
+            </div>
+          }
         </div>
+      } @else {
+        <p>{{ i18n.t('admin.fees.no_chars') }}</p>
       }
-    </div>
-    <ng-template #noChars>
-      <p>{{ i18n.t('admin.fees.no_chars') }}</p>
-    </ng-template>
-
-    <div class="modal-footer">
-      <button class="btn-primary" (click)="closeCharactersModal()">{{ i18n.t('admin.fees.btn_close') }}</button>
+      <div class="modal-footer">
+        <button class="btn-primary" (click)="closeCharactersModal()">
+          {{ i18n.t('admin.fees.btn_close') }}
+        </button>
+      </div>
     </div>
   </div>
-</div>
+}

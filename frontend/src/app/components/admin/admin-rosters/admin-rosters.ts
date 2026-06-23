@@ -1,14 +1,14 @@
 import { Component, OnInit, signal, inject, computed, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { 
-  CdkDragDrop, 
-  moveItemInArray, 
-  transferArrayItem, 
-  CdkDrag, 
+import {
+  CdkDragDrop,
+  moveItemInArray,
+  transferArrayItem,
+  CdkDrag,
   CdkDropList,
-  DragDropModule 
+  DragDropModule,
 } from '@angular/cdk/drag-drop';
 import { RosterService, Roster } from '../../../services/roster';
 import { CharacterService, Character } from '../../../services/character';
@@ -20,14 +20,14 @@ import { I18nService } from '../../../services/i18n';
 @Component({
   selector: 'app-admin-rosters',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule, RouterModule],
+  imports: [FormsModule, DragDropModule, RouterModule],
   templateUrl: './admin-rosters.html',
-  styleUrl: './admin-rosters.css'
+  styleUrl: './admin-rosters.css',
 })
 export class AdminRostersComponent implements OnInit {
   showCreateModal = signal(false);
   newRoster = { name: '', description: '', weight: 1 };
-  
+
   // Modal for editing
   showEditModal = signal(false);
   editingRoster: Roster | null = null;
@@ -47,7 +47,7 @@ export class AdminRostersComponent implements OnInit {
     public rosterService: RosterService,
     public characterService: CharacterService,
     private confirm: ConfirmService,
-    private toast: ToastService
+    private toast: ToastService,
   ) {}
 
   ngOnInit() {
@@ -64,13 +64,13 @@ export class AdminRostersComponent implements OnInit {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
     } else {
       const character = event.previousContainer.data[event.previousIndex];
-      
+
       // Optimistic UI update
       transferArrayItem(
         event.previousContainer.data,
         event.container.data,
         event.previousIndex,
-        event.currentIndex
+        event.currentIndex,
       );
 
       // Backend call
@@ -79,7 +79,7 @@ export class AdminRostersComponent implements OnInit {
           console.error('Failed to assign character:', err);
           this.toast.error(this.i18n.t('admin.rosters.toast_assign_error'));
           this.loadAll(); // Rollback on error
-        }
+        },
       });
     }
   }
@@ -87,39 +87,41 @@ export class AdminRostersComponent implements OnInit {
   onCreateRoster() {
     if (!this.newRoster.name) return;
     this.rosterService.createRoster(this.newRoster).subscribe({
-        next: () => {
-            this.toast.success(this.i18n.t('admin.rosters.toast_create_success'));
-            this.closeModal();
-        },
-        error: () => this.toast.error(this.i18n.t('admin.rosters.toast_create_error'))
+      next: () => {
+        this.toast.success(this.i18n.t('admin.rosters.toast_create_success'));
+        this.closeModal();
+      },
+      error: () => this.toast.error(this.i18n.t('admin.rosters.toast_create_error')),
     });
   }
 
   onUpdateRoster() {
     if (!this.editingRoster || !this.editingRoster.name) return;
-    this.rosterService.updateRoster(this.editingRoster.id, {
-      name: this.editingRoster.name,
-      description: this.editingRoster.description,
-      weight: this.editingRoster.weight
-    }).subscribe({
+    this.rosterService
+      .updateRoster(this.editingRoster.id, {
+        name: this.editingRoster.name,
+        description: this.editingRoster.description,
+        weight: this.editingRoster.weight,
+      })
+      .subscribe({
         next: () => {
-            this.toast.success(this.i18n.t('admin.rosters.toast_update_success'));
-            this.closeEditModal();
+          this.toast.success(this.i18n.t('admin.rosters.toast_update_success'));
+          this.closeEditModal();
         },
-        error: () => this.toast.error(this.i18n.t('admin.rosters.toast_update_error'))
-    });
+        error: () => this.toast.error(this.i18n.t('admin.rosters.toast_update_error')),
+      });
   }
 
   async onDeleteRoster(id: string) {
     const ok = await this.confirm.ask(
-        this.i18n.t('admin.rosters.confirm_delete_title'),
-        this.i18n.t('admin.rosters.confirm_delete_msg')
+      this.i18n.t('admin.rosters.confirm_delete_title'),
+      this.i18n.t('admin.rosters.confirm_delete_msg'),
     );
 
     if (ok) {
       this.rosterService.deleteRoster(id).subscribe({
         next: () => this.toast.success(this.i18n.t('admin.rosters.toast_delete_success')),
-        error: () => this.toast.error(this.i18n.t('admin.rosters.toast_delete_error'))
+        error: () => this.toast.error(this.i18n.t('admin.rosters.toast_delete_error')),
       });
     }
   }
@@ -173,7 +175,7 @@ export class AdminRostersComponent implements OnInit {
         console.error('Failed to assign character:', err);
         this.toast.error(this.i18n.t('admin.rosters.toast_assign_error'));
         this.loadAll();
-      }
+      },
     });
   }
 }

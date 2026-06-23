@@ -3,73 +3,130 @@
 
   <!-- Liste des personnages importés -->
   <section class="my-characters">
-    <h3>{{ i18n.t('char.manager.list_title').replace('{guildName}', authService.currentGuild()?.name || '') }} ({{ myCharacters().length }})</h3>
-    <div *ngIf="myCharacters().length === 0" class="empty-state">
-      {{ i18n.t('char.manager.empty') }}
-    </div>
-    
-    <table *ngIf="myCharacters().length > 0" class="char-table">
-      <thead>
-        <tr>
-          <th>{{ i18n.t('char.manager.th_main') }}</th>
-          <th>{{ i18n.t('char.manager.th_name') }}</th>
-          <th>{{ i18n.t('char.manager.th_realm') }}</th>
-          <th>{{ i18n.t('char.manager.th_level') }}</th>
-          <th>{{ i18n.t('char.manager.th_roles') }}</th>
-          <th>{{ i18n.t('char.manager.th_actions') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let char of myCharacters()" [class.is-main]="char.is_main" [class]="'border-class-' + getClassCategory(char.class)">
-          <td class="main-cell">
-            <span class="main-star" (click)="setMain(char)" [title]="char.is_main ? i18n.t('char.manager.star_main') : i18n.t('char.manager.star_set_main')">
-              {{ char.is_main ? '⭐' : '☆' }}
-            </span>
-          </td>
-          <td class="char-name-cell" [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</td>
-          <td>{{ char.realm }}</td>
-          <td>{{ char.level }}</td>
-          <td class="roles-cell">
-            <div class="role-toggles">
-              <button class="role-toggle tank" [class.active]="char.is_tank" (click)="char.is_tank = !char.is_tank; updateRoles(char)" [title]="i18n.t('char.role.tooltip.tank')">
-                <img src="assets/icons/tank.png" class="role-icon-img" alt="Tank">
-              </button>
-              <button class="role-toggle heal" [class.active]="char.is_heal" (click)="char.is_heal = !char.is_heal; updateRoles(char)" [title]="i18n.t('char.role.tooltip.healer')">
-                <img src="assets/icons/heal.png" class="role-icon-img" alt="Heal">
-              </button>
-              <button class="role-toggle dps" [class.active]="char.is_dps" (click)="char.is_dps = !char.is_dps; updateRoles(char)" [title]="i18n.t('char.role.tooltip.dps')">
-                <img src="assets/icons/dps.png" class="role-icon-img" alt="DPS">
-              </button>
-            </div>
-          </td>
-          <td class="actions-cell">
-            <button (click)="removeCharacter(char)" class="btn-remove-icon" [title]="i18n.t('char.manager.delete_btn')">🗑️</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <h3>
+      {{
+        i18n
+          .t('char.manager.list_title')
+          .replace('{guildName}', authService.currentGuild()?.name || '')
+      }}
+      ({{ myCharacters().length }})
+    </h3>
+    @if (myCharacters().length === 0) {
+      <div class="empty-state">
+        {{ i18n.t('char.manager.empty') }}
+      </div>
+    }
+
+    @if (myCharacters().length > 0) {
+      <table class="char-table">
+        <thead>
+          <tr>
+            <th>{{ i18n.t('char.manager.th_main') }}</th>
+            <th>{{ i18n.t('char.manager.th_name') }}</th>
+            <th>{{ i18n.t('char.manager.th_realm') }}</th>
+            <th>{{ i18n.t('char.manager.th_level') }}</th>
+            <th>{{ i18n.t('char.manager.th_roles') }}</th>
+            <th>{{ i18n.t('char.manager.th_actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (char of myCharacters(); track char) {
+            <tr
+              [class.is-main]="char.is_main"
+              [class]="'border-class-' + getClassCategory(char.class)"
+            >
+              <td class="main-cell">
+                <span
+                  class="main-star"
+                  (click)="setMain(char)"
+                  [title]="
+                    char.is_main
+                      ? i18n.t('char.manager.star_main')
+                      : i18n.t('char.manager.star_set_main')
+                  "
+                >
+                  {{ char.is_main ? '⭐' : '☆' }}
+                </span>
+              </td>
+              <td class="char-name-cell" [class]="'class-' + getClassCategory(char.class)">
+                {{ char.name }}
+              </td>
+              <td>{{ char.realm }}</td>
+              <td>{{ char.level }}</td>
+              <td class="roles-cell">
+                <div class="role-toggles">
+                  <button
+                    class="role-toggle tank"
+                    [class.active]="char.is_tank"
+                    (click)="char.is_tank = !char.is_tank; updateRoles(char)"
+                    [title]="i18n.t('char.role.tooltip.tank')"
+                  >
+                    <img src="assets/icons/tank.png" class="role-icon-img" alt="Tank" />
+                  </button>
+                  <button
+                    class="role-toggle heal"
+                    [class.active]="char.is_heal"
+                    (click)="char.is_heal = !char.is_heal; updateRoles(char)"
+                    [title]="i18n.t('char.role.tooltip.healer')"
+                  >
+                    <img src="assets/icons/heal.png" class="role-icon-img" alt="Heal" />
+                  </button>
+                  <button
+                    class="role-toggle dps"
+                    [class.active]="char.is_dps"
+                    (click)="char.is_dps = !char.is_dps; updateRoles(char)"
+                    [title]="i18n.t('char.role.tooltip.dps')"
+                  >
+                    <img src="assets/icons/dps.png" class="role-icon-img" alt="DPS" />
+                  </button>
+                </div>
+              </td>
+              <td class="actions-cell">
+                <button
+                  (click)="removeCharacter(char)"
+                  class="btn-remove-icon"
+                  [title]="i18n.t('char.manager.delete_btn')"
+                >
+                  🗑️
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
   </section>
 
-  <hr>
+  <hr />
 
   <!-- Section Import depuis Battle.net -->
   <section class="bnet-import">
     <div class="header-row">
       <h3>{{ i18n.t('char.manager.import_title') }} ({{ bnetCharacters().length }} disponibles)</h3>
       <button (click)="fetchBnetCharacters()" [disabled]="loadingBnet()" class="btn-fetch">
-        {{ loadingBnet() ? i18n.t('char.manager.fetch_loading') : i18n.t('char.manager.fetch_btn') }}
+        {{
+          loadingBnet() ? i18n.t('char.manager.fetch_loading') : i18n.t('char.manager.fetch_btn')
+        }}
       </button>
     </div>
 
-    <div *ngIf="bnetCharacters().length > 0" class="bnet-list">
-      <div *ngFor="let char of bnetCharacters()" class="bnet-char-card" [class]="'border-class-' + getClassCategory(char.class)">
-        <div class="char-info">
-          <strong [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</strong>
-          <span class="char-details">{{ char.realm }} (Niv. {{ char.level }})</span>
-          <span *ngIf="char.guild" class="guild-tag">🏰 {{ char.guild.name }}</span>
-        </div>
-        <button (click)="importCharacter(char)" class="btn-import">{{ i18n.t('char.manager.add_btn') }}</button>
+    @if (bnetCharacters().length > 0) {
+      <div class="bnet-list">
+        @for (char of bnetCharacters(); track char) {
+          <div class="bnet-char-card" [class]="'border-class-' + getClassCategory(char.class)">
+            <div class="char-info">
+              <strong [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</strong>
+              <span class="char-details">{{ char.realm }} (Niv. {{ char.level }})</span>
+              @if (char.guild) {
+                <span class="guild-tag">🏰 {{ char.guild.name }}</span>
+              }
+            </div>
+            <button (click)="importCharacter(char)" class="btn-import">
+              {{ i18n.t('char.manager.add_btn') }}
+            </button>
+          </div>
+        }
       </div>
-    </div>
+    }
   </section>
 </div>

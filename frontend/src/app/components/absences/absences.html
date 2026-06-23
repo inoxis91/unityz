@@ -11,50 +11,50 @@
       <form (submit)="onSubmit()" class="absence-form">
         <div class="form-group">
           <label for="startDate">{{ i18n.t('absences.form.start_date') }}</label>
-          <input 
-            type="date" 
-            id="startDate" 
-            [ngModel]="startDate()" 
-            (ngModelChange)="startDate.set($event)" 
-            name="startDate" 
+          <input
+            type="date"
+            id="startDate"
+            [ngModel]="startDate()"
+            (ngModelChange)="startDate.set($event)"
+            name="startDate"
             required
             class="form-control"
-          >
+          />
         </div>
 
         <div class="form-group">
           <label for="endDate">{{ i18n.t('absences.form.end_date') }}</label>
-          <input 
-            type="date" 
-            id="endDate" 
-            [ngModel]="endDate()" 
-            (ngModelChange)="endDate.set($event)" 
-            name="endDate" 
+          <input
+            type="date"
+            id="endDate"
+            [ngModel]="endDate()"
+            (ngModelChange)="endDate.set($event)"
+            name="endDate"
             [required]="!isIndefinite()"
             [disabled]="isIndefinite()"
             class="form-control"
-          >
+          />
         </div>
 
         <div class="form-group checkbox-group">
           <label class="checkbox-label">
-            <input 
-              type="checkbox" 
-              [ngModel]="isIndefinite()" 
-              (ngModelChange)="isIndefinite.set($event)" 
+            <input
+              type="checkbox"
+              [ngModel]="isIndefinite()"
+              (ngModelChange)="isIndefinite.set($event)"
               name="isIndefinite"
-            >
+            />
             {{ i18n.t('absences.form.is_indefinite') }}
           </label>
         </div>
 
         <div class="form-group">
           <label for="reason">{{ i18n.t('absences.form.reason') }}</label>
-          <textarea 
-            id="reason" 
-            [ngModel]="reason()" 
-            (ngModelChange)="reason.set($event)" 
-            name="reason" 
+          <textarea
+            id="reason"
+            [ngModel]="reason()"
+            (ngModelChange)="reason.set($event)"
+            name="reason"
             rows="3"
             class="form-control"
             placeholder="..."
@@ -71,48 +71,66 @@
     <div class="card absence-list-card">
       <h2>{{ i18n.t('absences.list.title') }}</h2>
 
-      <div class="loading-state" *ngIf="isLoading()">
-        <p>{{ i18n.t('admin.absences.loading') }}</p>
-      </div>
+      @if (isLoading()) {
+        <div class="loading-state">
+          <p>{{ i18n.t('admin.absences.loading') }}</p>
+        </div>
+      }
 
-      <div class="empty-state" *ngIf="!isLoading() && absences().length === 0">
-        <p>{{ i18n.t('absences.list.empty') }}</p>
-      </div>
+      @if (!isLoading() && absences().length === 0) {
+        <div class="empty-state">
+          <p>{{ i18n.t('absences.list.empty') }}</p>
+        </div>
+      }
 
-      <div class="table-wrapper" *ngIf="!isLoading() && absences().length > 0">
-        <table class="absences-table">
-          <thead>
-            <tr>
-              <th>{{ i18n.t('absences.list.th_start') }}</th>
-              <th>{{ i18n.t('absences.list.th_end') }}</th>
-              <th>{{ i18n.t('absences.list.th_reason') }}</th>
-              <th class="actions-col">{{ i18n.t('absences.list.th_actions') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let abs of absences()">
-              <td class="date-cell">{{ abs.start_date | date:'dd/MM/yyyy' }}</td>
-              <td class="date-cell">
-                <ng-container *ngIf="abs.end_date; else indef">
-                  {{ abs.end_date | date:'dd/MM/yyyy' }}
-                </ng-container>
-                <ng-template #indef>
-                  <span class="indefinite-badge">{{ i18n.t('absences.indefinite') }}</span>
-                </ng-template>
-              </td>
-              <td class="reason-cell" [title]="abs.reason || ''">{{ abs.reason || '-' }}</td>
-              <td class="actions-cell">
-                <button class="btn-delete" (click)="onDelete(abs.id)">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="delete-icon">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.34 9m-4.78 0L9 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.106 0 0 0-7.5 0" />
-                  </svg>
-                  <span>{{ i18n.t('absences.list.btn_delete') }}</span>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      @if (!isLoading() && absences().length > 0) {
+        <div class="table-wrapper">
+          <table class="absences-table">
+            <thead>
+              <tr>
+                <th>{{ i18n.t('absences.list.th_start') }}</th>
+                <th>{{ i18n.t('absences.list.th_end') }}</th>
+                <th>{{ i18n.t('absences.list.th_reason') }}</th>
+                <th class="actions-col">{{ i18n.t('absences.list.th_actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (abs of absences(); track abs) {
+                <tr>
+                  <td class="date-cell">{{ abs.start_date | date: 'dd/MM/yyyy' }}</td>
+                  <td class="date-cell">
+                    @if (abs.end_date) {
+                      {{ abs.end_date | date: 'dd/MM/yyyy' }}
+                    } @else {
+                      <span class="indefinite-badge">{{ i18n.t('absences.indefinite') }}</span>
+                    }
+                  </td>
+                  <td class="reason-cell" [title]="abs.reason || ''">{{ abs.reason || '-' }}</td>
+                  <td class="actions-cell">
+                    <button class="btn-delete" (click)="onDelete(abs.id)">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="2"
+                        stroke="currentColor"
+                        class="delete-icon"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="m14.74 9-.34 9m-4.78 0L9 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.106 0 0 0-7.5 0"
+                        />
+                      </svg>
+                      <span>{{ i18n.t('absences.list.btn_delete') }}</span>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
     </div>
   </div>
 </div>

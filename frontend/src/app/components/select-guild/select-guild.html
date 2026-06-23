@@ -1,91 +1,127 @@
 <div class="select-guild-container">
   <div class="card-box animated-fade-in">
     <!-- STEP 1: GUILD SELECTION -->
-    <ng-container *ngIf="step() === 1">
+    @if (step() === 1) {
       <h2>{{ i18n.t('select.guild.title') }}</h2>
       <p class="subtitle">{{ i18n.t('select.guild.subtitle') }}</p>
-
       <!-- Loading -->
-      <div *ngIf="isLoading()" class="loading">
-        <span class="spinner"></span>
-      </div>
-
-      <!-- Guilds list -->
-      <div *ngIf="!isLoading() && guilds().length > 0" class="guilds-list">
-        <div *ngFor="let guild of guilds()" class="guild-card" (click)="selectGuild(guild)">
-          <div class="guild-info">
-            <span class="guild-icon">🏰</span>
-            <div>
-              <h4 class="guild-name">{{ guild.name }}</h4>
-              <p class="guild-realm">{{ guild.realm }} ({{ guild.region | uppercase }})</p>
-            </div>
-          </div>
-          <div class="guild-status">
-            <span *ngIf="guild.is_paid" class="badge paid">{{ i18n.t('select.guild.paid_badge') }}</span>
-            <span *ngIf="!guild.is_paid" class="badge unpaid">{{ i18n.t('select.guild.unpaid_badge') }}</span>
-            <button class="btn-connect">{{ i18n.t('select.guild.btn_connect') }}</button>
-          </div>
+      @if (isLoading()) {
+        <div class="loading">
+          <span class="spinner"></span>
         </div>
-      </div>
-
+      }
+      <!-- Guilds list -->
+      @if (!isLoading() && guilds().length > 0) {
+        <div class="guilds-list">
+          @for (guild of guilds(); track guild) {
+            <div class="guild-card" (click)="selectGuild(guild)">
+              <div class="guild-info">
+                <span class="guild-icon">🏰</span>
+                <div>
+                  <h4 class="guild-name">{{ guild.name }}</h4>
+                  <p class="guild-realm">{{ guild.realm }} ({{ guild.region | uppercase }})</p>
+                </div>
+              </div>
+              <div class="guild-status">
+                @if (guild.is_paid) {
+                  <span class="badge paid">{{ i18n.t('select.guild.paid_badge') }}</span>
+                }
+                @if (!guild.is_paid) {
+                  <span class="badge unpaid">{{ i18n.t('select.guild.unpaid_badge') }}</span>
+                }
+                <button class="btn-connect">{{ i18n.t('select.guild.btn_connect') }}</button>
+              </div>
+            </div>
+          }
+        </div>
+      }
       <!-- No Guilds state -->
-      <div *ngIf="!isLoading() && guilds().length === 0" class="no-guilds">
-        <div class="no-guilds-icon">🛡️</div>
-        <h3>{{ i18n.t('select.guild.no_guilds') }}</h3>
-        <p>{{ i18n.t('select.guild.no_guilds_sub') }}</p>
-      </div>
-    </ng-container>
+      @if (!isLoading() && guilds().length === 0) {
+        <div class="no-guilds">
+          <div class="no-guilds-icon">🛡️</div>
+          <h3>{{ i18n.t('select.guild.no_guilds') }}</h3>
+          <p>{{ i18n.t('select.guild.no_guilds_sub') }}</p>
+        </div>
+      }
+    }
 
     <!-- STEP 2: CHARACTER & MAIN SELECTION -->
-    <ng-container *ngIf="step() === 2">
+    @if (step() === 2) {
       <div class="step-header">
         <button class="btn-back" (click)="goBackToStep1()">← Retour</button>
         <h2>Vos Personnages chez {{ selectedGuild()?.name }}</h2>
-        <p class="subtitle">Sélectionnez les personnages à synchroniser et désignez votre personnage principal (Main).</p>
+        <p class="subtitle">
+          Sélectionnez les personnages à synchroniser et désignez votre personnage principal (Main).
+        </p>
       </div>
-
-      <div *ngIf="isLoading()" class="loading">
-        <span class="spinner"></span>
-      </div>
-
-      <!-- Characters List -->
-      <div *ngIf="!isLoading() && availableCharacters().length > 0" class="characters-import-list">
-        <div *ngFor="let char of availableCharacters()" class="char-import-card" [class.selected]="char.selected" [class.main-highlight]="char.is_main">
-          <!-- Selection Checkbox -->
-          <label class="char-checkbox-label">
-            <input type="checkbox" [checked]="char.selected" (change)="toggleCharacterSelection(char)" />
-            <span class="custom-checkbox"></span>
-          </label>
-
-          <!-- Character Details -->
-          <div class="char-details">
-            <h4 class="char-name">{{ char.name }}</h4>
-            <p class="char-meta">{{ char.class }} • Niv. {{ char.level }}</p>
-          </div>
-
-          <!-- Main Designation Radio -->
-          <div class="main-designation">
-            <label class="main-radio-label">
-              <input type="radio" name="mainCharRadio" [checked]="char.is_main" (change)="setMainCharacter(char)" />
-              <span class="radio-text">Personnage Main</span>
-            </label>
-          </div>
+      @if (isLoading()) {
+        <div class="loading">
+          <span class="spinner"></span>
         </div>
-
-        <!-- Confirm Button -->
-        <button class="btn-confirm-import" [disabled]="isImporting()" (click)="confirmImport()">
-          <span *ngIf="!isImporting()">Importer & Finaliser la connexion 🚀</span>
-          <span *ngIf="isImporting()" class="spinner-small"></span>
-        </button>
-      </div>
-
+      }
+      <!-- Characters List -->
+      @if (!isLoading() && availableCharacters().length > 0) {
+        <div class="characters-import-list">
+          @for (char of availableCharacters(); track char) {
+            <div
+              class="char-import-card"
+              [class.selected]="char.selected"
+              [class.main-highlight]="char.is_main"
+            >
+              <!-- Selection Checkbox -->
+              <label class="char-checkbox-label">
+                <input
+                  type="checkbox"
+                  [checked]="char.selected"
+                  (change)="toggleCharacterSelection(char)"
+                />
+                <span class="custom-checkbox"></span>
+              </label>
+              <!-- Character Details -->
+              <div class="char-details">
+                <h4 class="char-name">{{ char.name }}</h4>
+                <p class="char-meta">{{ char.class }} • Niv. {{ char.level }}</p>
+              </div>
+              <!-- Main Designation Radio -->
+              <div class="main-designation">
+                <label class="main-radio-label">
+                  <input
+                    type="radio"
+                    name="mainCharRadio"
+                    [checked]="char.is_main"
+                    (change)="setMainCharacter(char)"
+                  />
+                  <span class="radio-text">Personnage Main</span>
+                </label>
+              </div>
+            </div>
+          }
+          <!-- Confirm Button -->
+          <button class="btn-confirm-import" [disabled]="isImporting()" (click)="confirmImport()">
+            @if (!isImporting()) {
+              <span>Importer & Finaliser la connexion 🚀</span>
+            }
+            @if (isImporting()) {
+              <span class="spinner-small"></span>
+            }
+          </button>
+        </div>
+      }
       <!-- Empty Characters state -->
-      <div *ngIf="!isLoading() && availableCharacters().length === 0" class="no-characters">
-        <div class="no-chars-icon">🔍</div>
-        <h3>Aucun personnage trouvé</h3>
-        <p>Aucun personnage WoW appartenant à la guilde <strong>{{ selectedGuild()?.name }}</strong> n'a été trouvé sur votre compte Battle.net (niveau 10 minimum).</p>
-        <button class="btn-back-center" (click)="goBackToStep1()">Choisir une autre guilde 🏰</button>
-      </div>
-    </ng-container>
+      @if (!isLoading() && availableCharacters().length === 0) {
+        <div class="no-characters">
+          <div class="no-chars-icon">🔍</div>
+          <h3>Aucun personnage trouvé</h3>
+          <p>
+            Aucun personnage WoW appartenant à la guilde
+            <strong>{{ selectedGuild()?.name }}</strong> n'a été trouvé sur votre compte Battle.net
+            (niveau 10 minimum).
+          </p>
+          <button class="btn-back-center" (click)="goBackToStep1()">
+            Choisir une autre guilde 🏰
+          </button>
+        </div>
+      }
+    }
   </div>
 </div>

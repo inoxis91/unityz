@@ -1,183 +1,298 @@
 <div class="payment-container animated-fade-in">
   <!-- Guild summary top -->
-  <div class="payment-header-box" *ngIf="authService.currentGuild()">
-    <span class="guild-icon">🏰</span>
-    <div class="guild-details">
-      <h2>{{ i18n.t('payment.guild_sub') }} {{ authService.currentGuild().name }}</h2>
-      <p>{{ authService.currentGuild().realm }} ({{ authService.currentGuild().region | uppercase }})</p>
+  @if (authService.currentGuild()) {
+    <div class="payment-header-box">
+      <span class="guild-icon">🏰</span>
+      <div class="guild-details">
+        <h2>{{ i18n.t('payment.guild_sub') }} {{ authService.currentGuild().name }}</h2>
+        <p>
+          {{ authService.currentGuild().realm }} ({{
+            authService.currentGuild().region | uppercase
+          }})
+        </p>
+      </div>
     </div>
-  </div>
+  }
 
   <!-- IF USER IS GM OR OFFICER: Full Billing Page -->
-  <div class="payment-split-layout" *ngIf="authService.isGMOrOfficer() && !verifyingSession()">
-    <!-- Left side: Pricing plans selection -->
-    <div class="pricing-plans-section">
-      <h3>{{ i18n.t('payment.choose_plan') }}</h3>
-      <p class="subtitle">{{ i18n.t('payment.select_plan') }}</p>
-
-      <div class="plans-grid">
-        <!-- Gratuit Card (Trial) -->
-        <div class="plan-card" [class.selected]="selectedTier() === 'free'" (click)="selectTier('free')">
-          <div class="card-radio">
-            <span class="radio-dot"></span>
-          </div>
-          <div class="plan-info">
-            <div class="plan-title-row">
-              <span class="plan-name">{{ i18n.t('pricing.plan.free') }}</span>
-              <span class="plan-price">0 €<span class="price-period">{{ i18n.t('pricing.period.days') }}</span></span>
+  @if (authService.isGMOrOfficer() && !verifyingSession()) {
+    <div class="payment-split-layout">
+      <!-- Left side: Pricing plans selection -->
+      <div class="pricing-plans-section">
+        <h3>{{ i18n.t('payment.choose_plan') }}</h3>
+        <p class="subtitle">{{ i18n.t('payment.select_plan') }}</p>
+        <div class="plans-grid">
+          <!-- Gratuit Card (Trial) -->
+          <div
+            class="plan-card"
+            [class.selected]="selectedTier() === 'free'"
+            (click)="selectTier('free')"
+          >
+            <div class="card-radio">
+              <span class="radio-dot"></span>
             </div>
-            <ul class="plan-features">
-              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.sync') }}</li>
-              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.dashboard') }}</li>
-              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.charspec') }}</li>
-              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roles') }}</li>
-              <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.free_roster_limit') }}</li>
-              <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.free_event_limit') }}</li>
-              <li class="excluded"><span class="cross">❌</span> {{ i18n.t('pricing.feat.discord_no') }}</li>
-              <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.fees_basic') }}</li>
-            </ul>
+            <div class="plan-info">
+              <div class="plan-title-row">
+                <span class="plan-name">{{ i18n.t('pricing.plan.free') }}</span>
+                <span class="plan-price"
+                  >0 €<span class="price-period">{{ i18n.t('pricing.period.days') }}</span></span
+                >
+              </div>
+              <ul class="plan-features">
+                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.sync') }}</li>
+                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.dashboard') }}</li>
+                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.charspec') }}</li>
+                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roles') }}</li>
+                <li>
+                  <span class="check-partial">⚠</span>
+                  {{ i18n.t('pricing.feat.free_roster_limit') }}
+                </li>
+                <li>
+                  <span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.free_event_limit') }}
+                </li>
+                <li class="excluded">
+                  <span class="cross">❌</span> {{ i18n.t('pricing.feat.discord_no') }}
+                </li>
+                <li>
+                  <span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.fees_basic') }}
+                </li>
+              </ul>
+            </div>
+          </div>
+          <!-- Standard Card -->
+          <div
+            class="plan-card"
+            [class.selected]="selectedTier() === 'medium'"
+            (click)="selectTier('medium')"
+          >
+            <div class="card-radio">
+              <span class="radio-dot"></span>
+            </div>
+            <div class="plan-info">
+              <div class="plan-title-row">
+                <span class="plan-name">{{ i18n.t('pricing.plan.medium') }}</span>
+                <span class="plan-price"
+                  >2.99 €<span class="price-period">{{
+                    i18n.t('pricing.period.months')
+                  }}</span></span
+                >
+              </div>
+              <div class="commitment-badge-small">{{ i18n.t('pricing.commitment_free') }}</div>
+              <ul class="plan-features">
+                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.sync') }}</li>
+                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.dashboard') }}</li>
+                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.charspec') }}</li>
+                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roles') }}</li>
+                <li>
+                  <span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.roster_limit') }}
+                </li>
+                <li>
+                  <span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.event_limit') }}
+                </li>
+                <li class="excluded">
+                  <span class="cross">❌</span> {{ i18n.t('pricing.feat.discord_no') }}
+                </li>
+                <li>
+                  <span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.fees_basic') }}
+                </li>
+              </ul>
+            </div>
+          </div>
+          <!-- Pro Card -->
+          <div
+            class="plan-card pro-card"
+            [class.selected]="selectedTier() === 'pro'"
+            (click)="selectTier('pro')"
+          >
+            <div class="pro-badge">{{ i18n.t('pricing.popular') }}</div>
+            <div class="card-radio">
+              <span class="radio-dot"></span>
+            </div>
+            <div class="plan-info">
+              <div class="plan-title-row">
+                <span class="plan-name">{{ i18n.t('pricing.plan.pro') }}</span>
+                <span class="plan-price"
+                  >4.99 €<span class="price-period">{{
+                    i18n.t('pricing.period.months')
+                  }}</span></span
+                >
+              </div>
+              <div class="commitment-badge-small">{{ i18n.t('pricing.commitment_free') }}</div>
+              <ul class="plan-features">
+                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.sync') }}</li>
+                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.dashboard') }}</li>
+                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.charspec') }}</li>
+                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roles') }}</li>
+                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roster_unlimited') }}</li>
+                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.event_unlimited') }}</li>
+                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.discord_yes') }}</li>
+                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.fees_pro') }}</li>
+              </ul>
+            </div>
           </div>
         </div>
-
-        <!-- Standard Card -->
-        <div class="plan-card" [class.selected]="selectedTier() === 'medium'" (click)="selectTier('medium')">
-          <div class="card-radio">
-            <span class="radio-dot"></span>
-          </div>
-          <div class="plan-info">
-            <div class="plan-title-row">
-              <span class="plan-name">{{ i18n.t('pricing.plan.medium') }}</span>
-              <span class="plan-price">2.99 €<span class="price-period">{{ i18n.t('pricing.period.months') }}</span></span>
-            </div>
-            <div class="commitment-badge-small">{{ i18n.t('pricing.commitment_free') }}</div>
-            <ul class="plan-features">
-              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.sync') }}</li>
-              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.dashboard') }}</li>
-              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.charspec') }}</li>
-              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roles') }}</li>
-              <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.roster_limit') }}</li>
-              <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.event_limit') }}</li>
-              <li class="excluded"><span class="cross">❌</span> {{ i18n.t('pricing.feat.discord_no') }}</li>
-              <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.fees_basic') }}</li>
-            </ul>
-          </div>
+      </div>
+      <!-- Right side: Stripe simulation Form or Free Activation -->
+      <div class="stripe-payment-form">
+        @if (selectedTier() !== 'free') {
+          <div class="stripe-badge">{{ i18n.t('payment.stripe_simulation') }}</div>
+        }
+        @if (selectedTier() === 'free') {
+          <div class="stripe-badge free-badge">{{ i18n.t('payment.activation_direct') }}</div>
+        }
+        <h2>
+          {{
+            selectedTier() === 'free'
+              ? i18n.t('payment.activation_direct')
+              : i18n.t('payment.secure_payment')
+          }}
+        </h2>
+        <p class="subtitle">
+          Confirmez votre abonnement
+          <strong>{{
+            selectedTier() === 'pro'
+              ? i18n.t('pricing.plan.pro')
+              : selectedTier() === 'medium'
+                ? i18n.t('pricing.plan.medium')
+                : i18n.t('pricing.plan.free')
+          }}</strong>
+          pour la guilde.
+        </p>
+        <div class="payment-amount-box">
+          <span>{{ i18n.t('payment.amount') }}</span>
+          @if (selectedTier() === 'pro') {
+            <strong>4.99 €</strong>
+          }
+          @if (selectedTier() === 'medium') {
+            <strong>2.99 €</strong>
+          }
+          @if (selectedTier() === 'free') {
+            <strong style="color: #10b981">0.00 €</strong>
+          }
         </div>
-
-        <!-- Pro Card -->
-        <div class="plan-card pro-card" [class.selected]="selectedTier() === 'pro'" (click)="selectTier('pro')">
-          <div class="pro-badge">{{ i18n.t('pricing.popular') }}</div>
-          <div class="card-radio">
-            <span class="radio-dot"></span>
-          </div>
-          <div class="plan-info">
-            <div class="plan-title-row">
-              <span class="plan-name">{{ i18n.t('pricing.plan.pro') }}</span>
-              <span class="plan-price">4.99 €<span class="price-period">{{ i18n.t('pricing.period.months') }}</span></span>
+        <!-- Stripe redirect info - only for paid plans -->
+        @if (selectedTier() !== 'free') {
+          <div class="stripe-redirect-info-box">
+            <div class="secure-checkout-badge">
+              <span class="secure-icon">🔒</span>
+              <span>Paiement 100% Sécurisé via Stripe</span>
             </div>
-            <div class="commitment-badge-small">{{ i18n.t('pricing.commitment_free') }}</div>
-            <ul class="plan-features">
-              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.sync') }}</li>
-              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.dashboard') }}</li>
-              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.charspec') }}</li>
-              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roles') }}</li>
-              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roster_unlimited') }}</li>
-              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.event_unlimited') }}</li>
-              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.discord_yes') }}</li>
-              <li><span class="check">✓</span> {{ i18n.t('pricing.feat.fees_pro') }}</li>
-            </ul>
+            <div class="plan-summary-list">
+              <div class="summary-item">
+                <span class="label">Abonnement choisi :</span>
+                <span class="value highlighting">{{
+                  selectedTier() === 'pro' ? 'Pro' : 'Standard'
+                }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="label">Facturation :</span>
+                <span class="value">Mensuelle (sans engagement)</span>
+              </div>
+              <div class="summary-item">
+                <span class="label">Prochain prélèvement :</span>
+                <span class="value">Dans 1 mois</span>
+              </div>
+            </div>
+            <div class="redirect-hint">
+              <span class="info-bubble">ℹ️</span>
+              <p>
+                Vous allez être redirigé vers la plateforme sécurisée de
+                <strong>Stripe</strong> pour finaliser votre transaction. Aucun numéro de carte
+                n'est saisi sur notre site.
+              </p>
+            </div>
           </div>
-        </div>
+        }
+        <!-- Free Trial message -->
+        @if (selectedTier() === 'free') {
+          <div class="free-trial-info-box">
+            <span class="info-icon">🎁</span>
+            <p>{{ i18n.t('payment.free_trial_info') }}</p>
+          </div>
+        }
+        <button class="btn-pay" [disabled]="isProcessing()" (click)="processPayment()">
+          @if (!isProcessing() && selectedTier() === 'free') {
+            <span>{{ i18n.t('payment.btn_trial') }}</span>
+          }
+          @if (!isProcessing() && selectedTier() !== 'free') {
+            <span
+              >{{ i18n.t('payment.btn_activate') }}
+              {{
+                selectedTier() === 'pro'
+                  ? i18n.t('pricing.plan.pro')
+                  : i18n.t('pricing.plan.medium')
+              }}</span
+            >
+          }
+          @if (isProcessing()) {
+            <span class="spinner-small"></span>
+          }
+        </button>
       </div>
     </div>
-
-    <!-- Right side: Stripe simulation Form or Free Activation -->
-    <div class="stripe-payment-form">
-      <div class="stripe-badge" *ngIf="selectedTier() !== 'free'">{{ i18n.t('payment.stripe_simulation') }}</div>
-      <div class="stripe-badge free-badge" *ngIf="selectedTier() === 'free'">{{ i18n.t('payment.activation_direct') }}</div>
-      
-      <h2>{{ selectedTier() === 'free' ? i18n.t('payment.activation_direct') : i18n.t('payment.secure_payment') }}</h2>
-      <p class="subtitle">Confirmez votre abonnement <strong>{{ selectedTier() === 'pro' ? i18n.t('pricing.plan.pro') : (selectedTier() === 'medium' ? i18n.t('pricing.plan.medium') : i18n.t('pricing.plan.free')) }}</strong> pour la guilde.</p>
-
-      <div class="payment-amount-box">
-        <span>{{ i18n.t('payment.amount') }}</span>
-        <strong *ngIf="selectedTier() === 'pro'">4.99 €</strong>
-        <strong *ngIf="selectedTier() === 'medium'">2.99 €</strong>
-        <strong *ngIf="selectedTier() === 'free'" style="color: #10b981;">0.00 €</strong>
-      </div>
-
-      <!-- Stripe redirect info - only for paid plans -->
-      <div class="stripe-redirect-info-box" *ngIf="selectedTier() !== 'free'">
-        <div class="secure-checkout-badge">
-          <span class="secure-icon">🔒</span>
-          <span>Paiement 100% Sécurisé via Stripe</span>
-        </div>
-        
-        <div class="plan-summary-list">
-          <div class="summary-item">
-            <span class="label">Abonnement choisi :</span>
-            <span class="value highlighting">{{ selectedTier() === 'pro' ? 'Pro' : 'Standard' }}</span>
-          </div>
-          <div class="summary-item">
-            <span class="label">Facturation :</span>
-            <span class="value">Mensuelle (sans engagement)</span>
-          </div>
-          <div class="summary-item">
-            <span class="label">Prochain prélèvement :</span>
-            <span class="value">Dans 1 mois</span>
-          </div>
-        </div>
-
-        <div class="redirect-hint">
-          <span class="info-bubble">ℹ️</span>
-          <p>Vous allez être redirigé vers la plateforme sécurisée de <strong>Stripe</strong> pour finaliser votre transaction. Aucun numéro de carte n'est saisi sur notre site.</p>
-        </div>
-      </div>
-
-      <!-- Free Trial message -->
-      <div class="free-trial-info-box" *ngIf="selectedTier() === 'free'">
-        <span class="info-icon">🎁</span>
-        <p>{{ i18n.t('payment.free_trial_info') }}</p>
-      </div>
-
-      <button class="btn-pay" [disabled]="isProcessing()" (click)="processPayment()">
-        <span *ngIf="!isProcessing() && selectedTier() === 'free'">{{ i18n.t('payment.btn_trial') }}</span>
-        <span *ngIf="!isProcessing() && selectedTier() !== 'free'">{{ i18n.t('payment.btn_activate') }} {{ selectedTier() === 'pro' ? i18n.t('pricing.plan.pro') : i18n.t('pricing.plan.medium') }}</span>
-        <span *ngIf="isProcessing()" class="spinner-small"></span>
-      </button>
-    </div>
-  </div>
+  }
 
   <!-- IF USER IS STANDARD MEMBER: Restricted Locking Screen -->
-  <div class="restricted-member-box animated-fade-in" *ngIf="!authService.isGMOrOfficer() && !verifyingSession()">
-    <span class="warning-large-icon">⚠️</span>
-    <h3>{{ i18n.t('payment.restricted_title') }}</h3>
-    <p class="lock-desc">{{ i18n.t('payment.restricted_desc') }}</p>
-    
-    <div class="action-box">
-      <p class="action-desc">{{ i18n.t('payment.restricted_action') }}</p>
-      <div class="btn-row">
-        <button class="btn-change-guild" routerLink="/select-guild">{{ i18n.t('payment.btn_change_guild') }}</button>
-        <button class="btn-logout-payment" (click)="authService.logout()">{{ i18n.t('payment.btn_logout') }}</button>
+  @if (!authService.isGMOrOfficer() && !verifyingSession()) {
+    <div class="restricted-member-box animated-fade-in">
+      <span class="warning-large-icon">⚠️</span>
+      <h3>{{ i18n.t('payment.restricted_title') }}</h3>
+      <p class="lock-desc">{{ i18n.t('payment.restricted_desc') }}</p>
+      <div class="action-box">
+        <p class="action-desc">{{ i18n.t('payment.restricted_action') }}</p>
+        <div class="btn-row">
+          <button class="btn-change-guild" routerLink="/select-guild">
+            {{ i18n.t('payment.btn_change_guild') }}
+          </button>
+          <button class="btn-logout-payment" (click)="authService.logout()">
+            {{ i18n.t('payment.btn_logout') }}
+          </button>
+        </div>
       </div>
     </div>
-  </div>
+  }
 
   <!-- Verification Screen -->
-  <div class="verifying-payment-box animated-fade-in" *ngIf="verifyingSession()">
-    <div class="verification-card">
-      <div class="spinner-large-container" *ngIf="verificationSuccess() === null">
-        <span class="spinner-large"></span>
+  @if (verifyingSession()) {
+    <div class="verifying-payment-box animated-fade-in">
+      <div class="verification-card">
+        @if (verificationSuccess() === null) {
+          <div class="spinner-large-container">
+            <span class="spinner-large"></span>
+          </div>
+        }
+        @if (verificationSuccess() === true) {
+          <span class="status-icon success">✅</span>
+        }
+        @if (verificationSuccess() === false) {
+          <span class="status-icon error">❌</span>
+        }
+        @if (verificationSuccess() === null) {
+          <h3>Vérification de votre paiement...</h3>
+        }
+        @if (verificationSuccess() === true) {
+          <h3>Paiement validé avec succès !</h3>
+        }
+        @if (verificationSuccess() === false) {
+          <h3>Échec de la validation du paiement</h3>
+        }
+        @if (verificationSuccess() === null) {
+          <p class="verification-desc">
+            Veuillez patienter pendant que nous validons votre transaction avec Stripe...
+          </p>
+        }
+        @if (verificationSuccess() === true) {
+          <p class="verification-desc">
+            Votre guilde a bien été mise à niveau. Redirection vers le tableau de bord...
+          </p>
+        }
+        @if (verificationSuccess() === false) {
+          <p class="verification-desc">
+            Une erreur est survenue lors de la vérification de votre paiement. Veuillez réessayer ou
+            contacter le support.
+          </p>
+        }
       </div>
-      <span class="status-icon success" *ngIf="verificationSuccess() === true">✅</span>
-      <span class="status-icon error" *ngIf="verificationSuccess() === false">❌</span>
-      
-      <h3 *ngIf="verificationSuccess() === null">Vérification de votre paiement...</h3>
-      <h3 *ngIf="verificationSuccess() === true">Paiement validé avec succès !</h3>
-      <h3 *ngIf="verificationSuccess() === false">Échec de la validation du paiement</h3>
-      
-      <p class="verification-desc" *ngIf="verificationSuccess() === null">Veuillez patienter pendant que nous validons votre transaction avec Stripe...</p>
-      <p class="verification-desc" *ngIf="verificationSuccess() === true">Votre guilde a bien été mise à niveau. Redirection vers le tableau de bord...</p>
-      <p class="verification-desc" *ngIf="verificationSuccess() === false">Une erreur est survenue lors de la vérification de votre paiement. Veuillez réessayer ou contacter le support.</p>
     </div>
-  </div>
+  }
 </div>

@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { AdminRostersComponent } from './admin-rosters/admin-rosters';
 import { AdminFeesComponent } from './admin-fees/admin-fees';
@@ -14,22 +14,23 @@ import { I18nService } from '../../services/i18n';
   selector: 'app-admin',
   standalone: true,
   imports: [
-    CommonModule, 
-    FormsModule, 
-    AdminRostersComponent, 
-    AdminFeesComponent, 
-    AdminUsersComponent, 
+    FormsModule,
+    AdminRostersComponent,
+    AdminFeesComponent,
+    AdminUsersComponent,
     AdminSettingsComponent,
     AdminAttendanceComponent,
-    AdminAbsencesComponent
+    AdminAbsencesComponent,
   ],
   templateUrl: './admin.html',
-  styleUrl: './admin.css'
+  styleUrl: './admin.css',
 })
 export class AdminComponent implements OnInit {
   public authService = inject(AuthService);
   public i18n = inject(I18nService);
-  activeTab = signal<'users' | 'rosters' | 'fees' | 'attendance' | 'absences' | 'settings'>('users');
+  activeTab = signal<'users' | 'rosters' | 'fees' | 'attendance' | 'absences' | 'settings'>(
+    'users',
+  );
 
   constructor() {}
 

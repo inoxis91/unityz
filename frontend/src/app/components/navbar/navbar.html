@@ -1,8 +1,14 @@
 <nav class="navbar" [class.menu-open]="isMenuOpen()">
   <div class="navbar-container">
-    <div class="navbar-brand" [routerLink]="authService.currentUser() ? '/dashboard' : '/'" (click)="closeMenu()">
-      <img src="favicon.ico" class="navbar-logo" alt="Logo">
-      <span>{{ authService.currentGuild() ? authService.currentGuild().name : 'Guild Manager' }}</span>
+    <div
+      class="navbar-brand"
+      [routerLink]="authService.currentUser() ? '/dashboard' : '/'"
+      (click)="closeMenu()"
+    >
+      <img src="favicon.ico" class="navbar-logo" alt="Logo" />
+      <span>{{
+        authService.currentGuild() ? authService.currentGuild().name : 'Guild Manager'
+      }}</span>
     </div>
 
     <!-- Burger Menu Button -->
@@ -15,58 +21,204 @@
     <div class="nav-links" [class.active]="isMenuOpen()">
       <!-- Lang Selector -->
       <div class="nav-lang-selector">
-        <button [class.active]="i18n.currentLocale() === 'fr'" (click)="i18n.setLocale('fr')">FR</button>
-        <button [class.active]="i18n.currentLocale() === 'en'" (click)="i18n.setLocale('en')">EN</button>
+        <button [class.active]="i18n.currentLocale() === 'fr'" (click)="i18n.setLocale('fr')">
+          FR
+        </button>
+        <button [class.active]="i18n.currentLocale() === 'en'" (click)="i18n.setLocale('en')">
+          EN
+        </button>
       </div>
 
       @if (authService.currentUser(); as user) {
-        <a *ngIf="user.has_characters && user.active_guild_id && user.active_guild_is_paid" routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMenu()">{{ i18n.t('nav.dashboard') }}</a>
-        <a *ngIf="user.has_characters && user.active_guild_id && user.active_guild_is_paid" routerLink="/calendar" routerLinkActive="active" (click)="closeMenu()">{{ i18n.t('nav.calendar') }}</a>
-        <a *ngIf="user.has_characters && user.active_guild_id && user.active_guild_is_paid && user.active_guild_fees_enabled" routerLink="/fees" routerLinkActive="active" (click)="closeMenu()">{{ i18n.t('nav.fees') }}</a>
-        <a *ngIf="user.has_characters && user.active_guild_id && user.active_guild_is_paid" routerLink="/crafts" routerLinkActive="active" (click)="closeMenu()" class="nav-crafts-link">
-          {{ i18n.t('nav.crafts') }}
-          <span class="badge-count-navbar" *ngIf="pendingCraftsCount() > 0">{{ pendingCraftsCount() }}</span>
-        </a>
+        @if (user.has_characters && user.active_guild_id && user.active_guild_is_paid) {
+          <a
+            routerLink="/dashboard"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+            (click)="closeMenu()"
+            >{{ i18n.t('nav.dashboard') }}</a
+          >
+        }
+        @if (user.has_characters && user.active_guild_id && user.active_guild_is_paid) {
+          <a routerLink="/calendar" routerLinkActive="active" (click)="closeMenu()">{{
+            i18n.t('nav.calendar')
+          }}</a>
+        }
+        @if (
+          user.has_characters &&
+          user.active_guild_id &&
+          user.active_guild_is_paid &&
+          user.active_guild_fees_enabled
+        ) {
+          <a routerLink="/fees" routerLinkActive="active" (click)="closeMenu()">{{
+            i18n.t('nav.fees')
+          }}</a>
+        }
+        @if (user.has_characters && user.active_guild_id && user.active_guild_is_paid) {
+          <a
+            routerLink="/crafts"
+            routerLinkActive="active"
+            (click)="closeMenu()"
+            class="nav-crafts-link"
+          >
+            {{ i18n.t('nav.crafts') }}
+            @if (pendingCraftsCount() > 0) {
+              <span class="badge-count-navbar">{{ pendingCraftsCount() }}</span>
+            }
+          </a>
+        }
         <div class="profile-dropdown" [class.open]="isProfileOpen()">
           <button class="profile-toggle" (click)="toggleProfile()">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="profile-user-icon">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="2"
+              stroke="currentColor"
+              class="profile-user-icon"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+              />
             </svg>
             <span class="profile-name">{{ user.battletag }}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="dropdown-arrow">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="2.5"
+              stroke="currentColor"
+              class="dropdown-arrow"
+            >
               <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
             </svg>
           </button>
           <div class="profile-menu">
-            <a *ngIf="user.has_characters && user.active_guild_id && user.active_guild_is_paid" routerLink="/options" [queryParams]="{tab: 'characters'}" routerLinkActive="active" [routerLinkActiveOptions]="{matrixParams: 'ignored', queryParams: 'exact', paths: 'exact', fragment: 'ignored'}" (click)="closeAllMenus()">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="menu-icon">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-              </svg>
-              {{ i18n.t('options.tabs.characters') }}
-            </a>
-            <a *ngIf="user.has_characters && user.active_guild_id && user.active_guild_is_paid" routerLink="/options" [queryParams]="{tab: 'settings'}" routerLinkActive="active" [routerLinkActiveOptions]="{matrixParams: 'ignored', queryParams: 'exact', paths: 'exact', fragment: 'ignored'}" (click)="closeAllMenus()">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="menu-icon">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
-              </svg>
-              {{ i18n.t('options.tabs.settings') }}
-            </a>
-            <a *ngIf="user.has_characters && user.active_guild_id && user.active_guild_is_paid" routerLink="/absences" routerLinkActive="active" (click)="closeAllMenus()">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="menu-icon">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
-              </svg>
-              {{ i18n.t('nav.absences') }}
-            </a>
-            <a routerLink="/admin" routerLinkActive="active" *ngIf="user.has_characters && user.active_guild_id && user.active_guild_is_paid && authService.canAccessAdmin()" (click)="closeAllMenus()">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="menu-icon">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
-              </svg>
-              {{ i18n.t('nav.admin') }}
-            </a>
+            @if (user.has_characters && user.active_guild_id && user.active_guild_is_paid) {
+              <a
+                routerLink="/options"
+                [queryParams]="{ tab: 'characters' }"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{
+                  matrixParams: 'ignored',
+                  queryParams: 'exact',
+                  paths: 'exact',
+                  fragment: 'ignored',
+                }"
+                (click)="closeAllMenus()"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2"
+                  stroke="currentColor"
+                  class="menu-icon"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+                  />
+                </svg>
+                {{ i18n.t('options.tabs.characters') }}
+              </a>
+            }
+            @if (user.has_characters && user.active_guild_id && user.active_guild_is_paid) {
+              <a
+                routerLink="/options"
+                [queryParams]="{ tab: 'settings' }"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{
+                  matrixParams: 'ignored',
+                  queryParams: 'exact',
+                  paths: 'exact',
+                  fragment: 'ignored',
+                }"
+                (click)="closeAllMenus()"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2"
+                  stroke="currentColor"
+                  class="menu-icon"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"
+                  />
+                </svg>
+                {{ i18n.t('options.tabs.settings') }}
+              </a>
+            }
+            @if (user.has_characters && user.active_guild_id && user.active_guild_is_paid) {
+              <a routerLink="/absences" routerLinkActive="active" (click)="closeAllMenus()">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2"
+                  stroke="currentColor"
+                  class="menu-icon"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"
+                  />
+                </svg>
+                {{ i18n.t('nav.absences') }}
+              </a>
+            }
+            @if (
+              user.has_characters &&
+              user.active_guild_id &&
+              user.active_guild_is_paid &&
+              authService.canAccessAdmin()
+            ) {
+              <a routerLink="/admin" routerLinkActive="active" (click)="closeAllMenus()">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2"
+                  stroke="currentColor"
+                  class="menu-icon"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"
+                  />
+                </svg>
+                {{ i18n.t('nav.admin') }}
+              </a>
+            }
             <div class="dropdown-divider"></div>
             <button (click)="logout()" class="btn-logout-dropdown">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="logout-icon-dropdown">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="2.5"
+                stroke="currentColor"
+                class="logout-icon-dropdown"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9"
+                />
               </svg>
               {{ i18n.t('nav.logout') }}
             </button>
@@ -78,4 +230,6 @@
 </nav>
 
 <!-- Backdrop for mobile menu -->
-<div class="menu-backdrop" *ngIf="isMenuOpen()" (click)="closeMenu()"></div>
+@if (isMenuOpen()) {
+  <div class="menu-backdrop" (click)="closeMenu()"></div>
+}

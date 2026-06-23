@@ -26,26 +26,48 @@
                 </div>
                 <span class="user-name">{{ user.battletag.split('#')[0] }}</span>
               </td>
-              <td class="btag-cell clickable" (click)="openCharactersModal(user)">{{ user.battletag }}</td>
+              <td class="btag-cell clickable" (click)="openCharactersModal(user)">
+                {{ user.battletag }}
+              </td>
               <td class="role-cell">
-                <select [ngModel]="user.role" (ngModelChange)="onRoleChange(user, $event)" class="role-select">
+                <select
+                  [ngModel]="user.role"
+                  (ngModelChange)="onRoleChange(user, $event)"
+                  class="role-select"
+                >
                   @for (role of roles; track role.value) {
                     <option [value]="role.value">{{ role.label }}</option>
                   }
                 </select>
               </td>
-              <td class="date-cell">{{ user.created_at | date:'dd/MM/yyyy' }}</td>
+              <td class="date-cell">{{ user.created_at | date: 'dd/MM/yyyy' }}</td>
               <td class="discord-cell">
-                <span class="discord-badge" [class.linked]="user.discord_id" [title]="user.discord_id ? i18n.t('admin.users.tooltip_linked') : i18n.t('admin.users.tooltip_unlinked')">
-                  {{ user.discord_id ? i18n.t('admin.users.discord_linked') : i18n.t('admin.users.discord_unlinked') }}
+                <span
+                  class="discord-badge"
+                  [class.linked]="user.discord_id"
+                  [title]="
+                    user.discord_id
+                      ? i18n.t('admin.users.tooltip_linked')
+                      : i18n.t('admin.users.tooltip_unlinked')
+                  "
+                >
+                  {{
+                    user.discord_id
+                      ? i18n.t('admin.users.discord_linked')
+                      : i18n.t('admin.users.discord_unlinked')
+                  }}
                 </span>
               </td>
               <td class="actions-cell">
-                <button 
-                  class="btn-delete-user" 
-                  (click)="onDeleteUser(user)" 
+                <button
+                  class="btn-delete-user"
+                  (click)="onDeleteUser(user)"
                   [disabled]="user.id === authService.currentUser()?.id"
-                  [title]="user.id === authService.currentUser()?.id ? i18n.t('admin.users.tooltip_self_delete') : i18n.t('admin.users.btn_delete')"
+                  [title]="
+                    user.id === authService.currentUser()?.id
+                      ? i18n.t('admin.users.tooltip_self_delete')
+                      : i18n.t('admin.users.btn_delete')
+                  "
                 >
                   🗑️
                 </button>
@@ -59,25 +81,28 @@
 </div>
 
 <!-- Characters List Modal -->
-<div class="modal-backdrop" *ngIf="showCharactersModal()">
-  <div class="modal">
-    <h3>Personnages de {{ modalUser()?.battletag }}</h3>
-    
-    <div class="characters-list" *ngIf="modalUser()?.characters?.length; else noChars">
-      @for (char of modalUser()?.characters; track char.name) {
-        <div class="character-item">
-          <span class="char-name" [class.is-main]="char.is_main">{{ char.name }}</span>
-          <span class="char-details">{{ char.class }} - {{ char.realm }}</span>
-          <span class="main-badge" *ngIf="char.is_main">Main</span>
+@if (showCharactersModal()) {
+  <div class="modal-backdrop">
+    <div class="modal">
+      <h3>Personnages de {{ modalUser()?.battletag }}</h3>
+      @if (modalUser()?.characters?.length) {
+        <div class="characters-list">
+          @for (char of modalUser()?.characters; track char.name) {
+            <div class="character-item">
+              <span class="char-name" [class.is-main]="char.is_main">{{ char.name }}</span>
+              <span class="char-details">{{ char.class }} - {{ char.realm }}</span>
+              @if (char.is_main) {
+                <span class="main-badge">Main</span>
+              }
+            </div>
+          }
         </div>
+      } @else {
+        <p>Aucun personnage synchronisé pour ce joueur.</p>
       }
-    </div>
-    <ng-template #noChars>
-      <p>Aucun personnage synchronisé pour ce joueur.</p>
-    </ng-template>
-
-    <div class="modal-footer">
-      <button class="btn-primary" (click)="closeCharactersModal()">Fermer</button>
+      <div class="modal-footer">
+        <button class="btn-primary" (click)="closeCharactersModal()">Fermer</button>
+      </div>
     </div>
   </div>
-</div>
+}

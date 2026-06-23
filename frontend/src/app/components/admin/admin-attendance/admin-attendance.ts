@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth';
 import { CharacterService } from '../../../services/character';
@@ -9,9 +9,9 @@ import { I18nService } from '../../../services/i18n';
 @Component({
   selector: 'app-admin-attendance',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './admin-attendance.html',
-  styleUrl: './admin-attendance.css'
+  styleUrl: './admin-attendance.css',
 })
 export class AdminAttendanceComponent implements OnInit {
   public authService = inject(AuthService);
@@ -38,7 +38,7 @@ export class AdminAttendanceComponent implements OnInit {
         console.error('Error loading guild attendance:', err);
         this.toast.error(this.i18n.t('admin.attendance.toast_load_error'));
         this.isLoading.set(false);
-      }
+      },
     });
   }
 
@@ -49,10 +49,11 @@ export class AdminAttendanceComponent implements OnInit {
   getFilteredList(): any[] {
     const term = this.searchTerm().trim().toLowerCase();
     if (!term) return this.attendanceList();
-    
-    return this.attendanceList().filter(item => 
-      item.battletag.toLowerCase().includes(term) ||
-      (item.main_character_name && item.main_character_name.toLowerCase().includes(term))
+
+    return this.attendanceList().filter(
+      (item) =>
+        item.battletag.toLowerCase().includes(term) ||
+        (item.main_character_name && item.main_character_name.toLowerCase().includes(term)),
     );
   }
 

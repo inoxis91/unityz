@@ -1,299 +1,538 @@
-<div class="details-container" *ngIf="event()">
-  <div class="back-link">
-    <a routerLink="/calendar">{{ i18n.t('event.details.back_to_calendar') }}</a>
-  </div>
-
-  <!-- Cancellation Banner -->
-  <div class="canceled-banner animated-fade-in" *ngIf="event()?.is_canceled">
-    <div class="banner-title-row">
-      <span class="icon">🚨</span>
-      <h2>{{ i18n.t('event.details.canceled_banner_title') }}</h2>
+@if (event()) {
+  <div class="details-container">
+    <div class="back-link">
+      <a routerLink="/calendar">{{ i18n.t('event.details.back_to_calendar') }}</a>
     </div>
-    <p class="reason" *ngIf="event()?.canceled_reason">{{ i18n.t('event.details.canceled_banner_reason').split('{reason}').join(event()?.canceled_reason || '') }}</p>
-  </div>
-
-  <div class="event-header-card">
-    <div class="event-header-top">
-      <div class="event-title-row">
-        <div class="type-badge" [ngClass]="event()?.type?.toLowerCase() === 'mm+' ? 'mm-plus' : event()?.type?.toLowerCase()">
-          {{ event()?.type === 'reunion' ? i18n.t('calendar.form.type_reunion') : event()?.type }}
+    <!-- Cancellation Banner -->
+    @if (event()?.is_canceled) {
+      <div class="canceled-banner animated-fade-in">
+        <div class="banner-title-row">
+          <span class="icon">🚨</span>
+          <h2>{{ i18n.t('event.details.canceled_banner_title') }}</h2>
         </div>
-        <div class="roster-badge" *ngIf="event()?.roster_name && event()?.type !== 'reunion'" [title]="'Poids: ' + event()?.roster_weight">{{ event()?.roster_name }}</div>
-        <div class="roster-badge all" *ngIf="!event()?.roster_name && event()?.type !== 'reunion'">{{ i18n.t('calendar.tag_all') }}</div>
-        <div class="roster-badge all" *ngIf="event()?.type === 'reunion' && event()?.invited_groups?.includes('all')">{{ i18n.t('calendar.form.all_members') }}</div>
-        <div class="roster-badge" *ngIf="event()?.type === 'reunion' && !event()?.invited_groups?.includes('all')">
-          {{ getInvitedGroupsLabel(event()?.invited_groups) }}
+        @if (event()?.canceled_reason) {
+          <p class="reason">
+            {{
+              i18n
+                .t('event.details.canceled_banner_reason')
+                .split('{reason}')
+                .join(event()?.canceled_reason || '')
+            }}
+          </p>
+        }
+      </div>
+    }
+    <div class="event-header-card">
+      <div class="event-header-top">
+        <div class="event-title-row">
+          <div
+            class="type-badge"
+            [ngClass]="
+              event()?.type?.toLowerCase() === 'mm+' ? 'mm-plus' : event()?.type?.toLowerCase()
+            "
+          >
+            {{ event()?.type === 'reunion' ? i18n.t('calendar.form.type_reunion') : event()?.type }}
+          </div>
+          @if (event()?.roster_name && event()?.type !== 'reunion') {
+            <div class="roster-badge" [title]="'Poids: ' + event()?.roster_weight">
+              {{ event()?.roster_name }}
+            </div>
+          }
+          @if (!event()?.roster_name && event()?.type !== 'reunion') {
+            <div class="roster-badge all">{{ i18n.t('calendar.tag_all') }}</div>
+          }
+          @if (event()?.type === 'reunion' && event()?.invited_groups?.includes('all')) {
+            <div class="roster-badge all">{{ i18n.t('calendar.form.all_members') }}</div>
+          }
+          @if (event()?.type === 'reunion' && !event()?.invited_groups?.includes('all')) {
+            <div class="roster-badge">
+              {{ getInvitedGroupsLabel(event()?.invited_groups) }}
+            </div>
+          }
+          <h1>
+            {{ event()?.is_canceled ? '[' + i18n.t('event.details.canceled') + '] ' : ''
+            }}{{ event()?.title }}
+          </h1>
         </div>
-        <h1>
-          {{ event()?.is_canceled ? '[' + i18n.t('event.details.canceled') + '] ' : '' }}{{ event()?.title }}
-        </h1>
+        @if (canManageEvents()) {
+          <div class="admin-actions">
+            @if (!event()?.is_canceled) {
+              <button
+                class="btn-admin remind"
+                (click)="onRemindEvent()"
+                [title]="i18n.t('event.details.btn_remind')"
+              >
+                <span class="icon">🔔</span> {{ i18n.t('event.details.btn_remind') }}
+              </button>
+            }
+            @if (!event()?.is_canceled) {
+              <button
+                class="btn-admin edit"
+                (click)="openEditModal()"
+                [title]="i18n.t('event.details.btn_edit')"
+              >
+                <span class="icon">✏️</span> {{ i18n.t('event.details.btn_edit') }}
+              </button>
+            }
+            @if (!event()?.is_canceled) {
+              <button
+                class="btn-admin edit"
+                (click)="onCancelEvent()"
+                [title]="i18n.t('event.details.btn_cancel_activity')"
+                style="background-color: #f59e0b !important; color: #ffffff !important"
+              >
+                <span class="icon">🚫</span> {{ i18n.t('event.details.btn_cancel_activity') }}
+              </button>
+            }
+            <button
+              class="btn-admin delete"
+              (click)="onDeleteEvent()"
+              [title]="i18n.t('event.details.btn_delete')"
+            >
+              <span class="icon">🗑️</span> {{ i18n.t('event.details.btn_delete') }}
+            </button>
+          </div>
+        }
       </div>
-
-      <div class="admin-actions" *ngIf="canManageEvents()">
-        <button class="btn-admin remind" (click)="onRemindEvent()" [title]="i18n.t('event.details.btn_remind')" *ngIf="!event()?.is_canceled">
-          <span class="icon">🔔</span> {{ i18n.t('event.details.btn_remind') }}
-        </button>
-        <button class="btn-admin edit" (click)="openEditModal()" [title]="i18n.t('event.details.btn_edit')" *ngIf="!event()?.is_canceled">
-          <span class="icon">✏️</span> {{ i18n.t('event.details.btn_edit') }}
-        </button>
-        <button class="btn-admin edit" (click)="onCancelEvent()" [title]="i18n.t('event.details.btn_cancel_activity')" *ngIf="!event()?.is_canceled" style="background-color: #f59e0b !important; color: #ffffff !important;">
-          <span class="icon">🚫</span> {{ i18n.t('event.details.btn_cancel_activity') }}
-        </button>
-        <button class="btn-admin delete" (click)="onDeleteEvent()" [title]="i18n.t('event.details.btn_delete')">
-          <span class="icon">🗑️</span> {{ i18n.t('event.details.btn_delete') }}
-        </button>
+      <div class="event-meta">
+        <div class="meta-item">
+          <span class="icon">📅</span>
+          <span class="text">{{
+            event()?.start_time | date: 'EEEE d MMMM yyyy' : '' : i18n.currentLocale()
+          }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="icon">🕒</span>
+          <span class="text"
+            >{{ event()?.start_time | date: 'HH:mm' }} -
+            {{ event()?.end_time | date: 'HH:mm' }}</span
+          >
+        </div>
+        @if (event()?.description) {
+          <div class="meta-item">
+            <span class="icon">📝</span>
+            <span class="text">{{ event()?.description }}</span>
+          </div>
+        }
+        @if (event()?.type?.toLowerCase() === 'raid' && event()?.logs) {
+          <div class="meta-item logs-item">
+            <span class="icon">📊</span>
+            <span class="text">
+              <a [href]="event()?.logs" target="_blank" rel="noopener noreferrer" class="logs-link">
+                <img src="assets/icons/warcraftlogs.png" class="wcl-icon" alt="WCL" />
+                {{ i18n.t('event.details.view_logs') }}
+              </a>
+            </span>
+          </div>
+        }
       </div>
     </div>
-
-    <div class="event-meta">
-      <div class="meta-item">
-        <span class="icon">📅</span>
-        <span class="text">{{ event()?.start_time | date:'EEEE d MMMM yyyy' : '' : i18n.currentLocale() }}</span>
-      </div>
-      <div class="meta-item">
-        <span class="icon">🕒</span>
-        <span class="text">{{ event()?.start_time | date:'HH:mm' }} - {{ event()?.end_time | date:'HH:mm' }}</span>
-      </div>
-      <div class="meta-item" *ngIf="event()?.description">
-        <span class="icon">📝</span>
-        <span class="text">{{ event()?.description }}</span>
-      </div>
-      <div class="meta-item logs-item" *ngIf="event()?.type?.toLowerCase() === 'raid' && event()?.logs">
-        <span class="icon">📊</span>
-        <span class="text">
-          <a [href]="event()?.logs" target="_blank" rel="noopener noreferrer" class="logs-link">
-            <img src="assets/icons/warcraftlogs.png" class="wcl-icon" alt="WCL">
-            {{ i18n.t('event.details.view_logs') }}
-          </a>
-        </span>
-      </div>
+    <div class="tabs">
+      <button
+        [class.active]="activeTab() === 'participants'"
+        (click)="activeTab.set('participants')"
+      >
+        {{ i18n.t('event.details.tab_participants') }}
+      </button>
+      <button [class.active]="activeTab() === 'composition'" (click)="activeTab.set('composition')">
+        {{ i18n.t('event.details.tab_composition') }}
+      </button>
+      @if (event()?.type?.toLowerCase() === 'raid' && event()?.logs) {
+        <button [class.active]="activeTab() === 'logs'" (click)="activeTab.set('logs')">
+          {{ i18n.t('event.details.tab_logs') }}
+        </button>
+      }
     </div>
+    <!-- TAB: Participants -->
+    @if (activeTab() === 'participants') {
+      <div class="tab-content">
+        <app-participants
+          [event]="event()"
+          [signups]="signups()"
+          [myCharacters]="myCharacters()"
+          [rosters]="rosters()"
+          [canManageEvents]="canManageEvents()"
+          [rioScores]="rioScores()"
+          (signupChanged)="onReloadSignups()"
+          (openAlts)="onOpenAltsModal($event)"
+        ></app-participants>
+      </div>
+    }
+    <!-- TAB: Composition -->
+    @if (activeTab() === 'composition') {
+      <div class="tab-content">
+        <app-composition
+          [event]="event()"
+          [signups]="signups()"
+          [canManageEvents]="canManageEvents()"
+          [rioScores]="rioScores()"
+          (openAlts)="onOpenAltsModal($event)"
+          (compositionChanged)="onReloadSignups()"
+        ></app-composition>
+      </div>
+    }
+    <!-- TAB: Logs & Stats -->
+    @if (activeTab() === 'logs') {
+      <div class="tab-content">
+        <app-logs-dashboard [eventId]="event()!.id!"></app-logs-dashboard>
+      </div>
+    }
   </div>
-
-  <div class="tabs">
-    <button [class.active]="activeTab() === 'participants'" (click)="activeTab.set('participants')">{{ i18n.t('event.details.tab_participants') }}</button>
-    <button [class.active]="activeTab() === 'composition'" (click)="activeTab.set('composition')">{{ i18n.t('event.details.tab_composition') }}</button>
-    <button *ngIf="event()?.type?.toLowerCase() === 'raid' && event()?.logs" [class.active]="activeTab() === 'logs'" (click)="activeTab.set('logs')">
-      {{ i18n.t('event.details.tab_logs') }}
-    </button>
-  </div>
-
-  <!-- TAB: Participants -->
-  <div class="tab-content" *ngIf="activeTab() === 'participants'">
-    <app-participants [event]="event()" [signups]="signups()" [myCharacters]="myCharacters()" [rosters]="rosters()" [canManageEvents]="canManageEvents()" [rioScores]="rioScores()" (signupChanged)="onReloadSignups()" (openAlts)="onOpenAltsModal($event)"></app-participants>
-  </div>
-
-  <!-- TAB: Composition -->
-  <div class="tab-content" *ngIf="activeTab() === 'composition'">
-    <app-composition [event]="event()" [signups]="signups()" [canManageEvents]="canManageEvents()" [rioScores]="rioScores()" (openAlts)="onOpenAltsModal($event)" (compositionChanged)="onReloadSignups()"></app-composition>
-  </div>
-
-  <!-- TAB: Logs & Stats -->
-  <div class="tab-content" *ngIf="activeTab() === 'logs'">
-    <app-logs-dashboard [eventId]="event()!.id!"></app-logs-dashboard>
-  </div>
-</div>
+}
 
 <!-- Modal de Modification (Admin Only) -->
-<div class="modal-overlay" *ngIf="showEditModal() && canManageEvents()" (click)="showEditModal.set(false)">
-  <div class="modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <div class="header-title">
-        <span class="icon">📝</span>
-        <h2>{{ i18n.t('calendar.modal.edit_title') }}</h2>
+@if (showEditModal() && canManageEvents()) {
+  <div class="modal-overlay" (click)="showEditModal.set(false)">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="header-title">
+          <span class="icon">📝</span>
+          <h2>{{ i18n.t('calendar.modal.edit_title') }}</h2>
+        </div>
+        <button class="close-btn" (click)="showEditModal.set(false)">&times;</button>
       </div>
-      <button class="close-btn" (click)="showEditModal.set(false)">&times;</button>
-    </div>
-
-    <form (ngSubmit)="onUpdateEvent()" class="modern-form">
-      <div class="modal-body">
-        <div class="form-section">
-          <label>{{ i18n.t('calendar.form.title') }}</label>
-          <input type="text" [(ngModel)]="editEventData.title" name="title" required [placeholder]="i18n.t('calendar.form.title_placeholder')">
-        </div>
-
-        <div class="form-section">
-          <label>{{ i18n.t('calendar.form.desc') }}</label>
-          <textarea [(ngModel)]="editEventData.description" name="description" rows="3"></textarea>
-        </div>
-
-        <div class="form-grid">
+      <form (ngSubmit)="onUpdateEvent()" class="modern-form">
+        <div class="modal-body">
           <div class="form-section">
-            <label>{{ i18n.t('calendar.form.type') }}</label>
-            <select [(ngModel)]="editEventData.type" name="type" class="custom-select">
-              <option value="raid">{{ i18n.t('calendar.form.type_raid') }}</option>
-              <option value="mm+">{{ i18n.t('calendar.form.type_mm') }}</option>
-              <option value="reunion">{{ i18n.t('calendar.form.type_reunion') }}</option>
-              <option value="custom">{{ i18n.t('calendar.form.type_custom') }}</option>
-            </select>
+            <label>{{ i18n.t('calendar.form.title') }}</label>
+            <input
+              type="text"
+              [(ngModel)]="editEventData.title"
+              name="title"
+              required
+              [placeholder]="i18n.t('calendar.form.title_placeholder')"
+            />
           </div>
-          <div class="form-section" *ngIf="editEventData.type !== 'reunion'">
-            <label>{{ i18n.t('calendar.form.roster') }}</label>
-            <select [(ngModel)]="editEventData.roster_id" name="roster_id" class="custom-select">
-              <option value="">{{ i18n.t('calendar.form.roster_all') }}</option>
-              @for (roster of rosterService.rosters(); track roster.id) {
-                <option [value]="roster.id">{{ roster.name }} (Poids: {{ roster.weight }})</option>
-              }
-            </select>
+          <div class="form-section">
+            <label>{{ i18n.t('calendar.form.desc') }}</label>
+            <textarea
+              [(ngModel)]="editEventData.description"
+              name="description"
+              rows="3"
+            ></textarea>
           </div>
-          <div class="form-section" *ngIf="editEventData.type === 'reunion'">
-            <label>{{ i18n.t('calendar.form.invited_group') }}</label>
-            <div class="invited-groups-checkboxes">
-              <label class="checkbox-label">
-                <input type="checkbox" [checked]="isGroupChecked('all')" (change)="toggleGroup('all')" />
-                {{ i18n.t('calendar.form.all_members') }}
-              </label>
-              <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
-                <input type="checkbox" [checked]="isGroupChecked('admin')" (change)="toggleGroup('admin')" [disabled]="isGroupChecked('all')" />
-                {{ i18n.t('calendar.form.role_admin') }}
-              </label>
-              <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
-                <input type="checkbox" [checked]="isGroupChecked('raid_leader')" (change)="toggleGroup('raid_leader')" [disabled]="isGroupChecked('all')" />
-                {{ i18n.t('calendar.form.role_raid_leader') }}
-              </label>
-              <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
-                <input type="checkbox" [checked]="isGroupChecked('treasurer')" (change)="toggleGroup('treasurer')" [disabled]="isGroupChecked('all')" />
-                {{ i18n.t('calendar.form.role_treasurer') }}
-              </label>
-              <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
-                <input type="checkbox" [checked]="isGroupChecked('event_manager')" (change)="toggleGroup('event_manager')" [disabled]="isGroupChecked('all')" />
-                {{ i18n.t('calendar.form.role_event_manager') }}
-              </label>
+          <div class="form-grid">
+            <div class="form-section">
+              <label>{{ i18n.t('calendar.form.type') }}</label>
+              <select [(ngModel)]="editEventData.type" name="type" class="custom-select">
+                <option value="raid">{{ i18n.t('calendar.form.type_raid') }}</option>
+                <option value="mm+">{{ i18n.t('calendar.form.type_mm') }}</option>
+                <option value="reunion">{{ i18n.t('calendar.form.type_reunion') }}</option>
+                <option value="custom">{{ i18n.t('calendar.form.type_custom') }}</option>
+              </select>
+            </div>
+            @if (editEventData.type !== 'reunion') {
+              <div class="form-section">
+                <label>{{ i18n.t('calendar.form.roster') }}</label>
+                <select
+                  [(ngModel)]="editEventData.roster_id"
+                  name="roster_id"
+                  class="custom-select"
+                >
+                  <option value="">{{ i18n.t('calendar.form.roster_all') }}</option>
+                  @for (roster of rosterService.rosters(); track roster.id) {
+                    <option [value]="roster.id">
+                      {{ roster.name }} (Poids: {{ roster.weight }})
+                    </option>
+                  }
+                </select>
+              </div>
+            }
+            @if (editEventData.type === 'reunion') {
+              <div class="form-section">
+                <label>{{ i18n.t('calendar.form.invited_group') }}</label>
+                <div class="invited-groups-checkboxes">
+                  <label class="checkbox-label">
+                    <input
+                      type="checkbox"
+                      [checked]="isGroupChecked('all')"
+                      (change)="toggleGroup('all')"
+                    />
+                    {{ i18n.t('calendar.form.all_members') }}
+                  </label>
+                  <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
+                    <input
+                      type="checkbox"
+                      [checked]="isGroupChecked('admin')"
+                      (change)="toggleGroup('admin')"
+                      [disabled]="isGroupChecked('all')"
+                    />
+                    {{ i18n.t('calendar.form.role_admin') }}
+                  </label>
+                  <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
+                    <input
+                      type="checkbox"
+                      [checked]="isGroupChecked('raid_leader')"
+                      (change)="toggleGroup('raid_leader')"
+                      [disabled]="isGroupChecked('all')"
+                    />
+                    {{ i18n.t('calendar.form.role_raid_leader') }}
+                  </label>
+                  <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
+                    <input
+                      type="checkbox"
+                      [checked]="isGroupChecked('treasurer')"
+                      (change)="toggleGroup('treasurer')"
+                      [disabled]="isGroupChecked('all')"
+                    />
+                    {{ i18n.t('calendar.form.role_treasurer') }}
+                  </label>
+                  <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
+                    <input
+                      type="checkbox"
+                      [checked]="isGroupChecked('event_manager')"
+                      (change)="toggleGroup('event_manager')"
+                      [disabled]="isGroupChecked('all')"
+                    />
+                    {{ i18n.t('calendar.form.role_event_manager') }}
+                  </label>
+                </div>
+              </div>
+            }
+          </div>
+          @if (editEventData.type === 'mm+') {
+            <div class="form-section">
+              <label>{{ i18n.t('event.details.mm_groups_count') }}</label>
+              <input
+                type="number"
+                [(ngModel)]="editEventData.mm_groups_count"
+                name="mm_groups_count"
+                min="0"
+              />
+            </div>
+          }
+          @if (editEventData.type === 'custom') {
+            <div class="form-section">
+              <label>{{ i18n.t('calendar.form.custom_type') }}</label>
+              <input
+                type="text"
+                [(ngModel)]="editEventData.customType"
+                name="customType"
+                [placeholder]="i18n.t('calendar.form.custom_type_placeholder')"
+              />
+            </div>
+          }
+          @if (editEventData.type === 'raid') {
+            <div class="form-section animated-fade-in">
+              <label>{{ i18n.t('calendar.form.logs') }}</label>
+              <input
+                type="text"
+                [(ngModel)]="editEventData.logs"
+                name="logs"
+                [placeholder]="i18n.t('calendar.form.logs_placeholder')"
+              />
+            </div>
+          }
+          <div class="form-grid">
+            <div class="form-section">
+              <label>{{ i18n.t('event.details.start_date') }}</label>
+              <input
+                type="date"
+                [(ngModel)]="editEventData.start_date"
+                name="start_date"
+                required
+              />
+            </div>
+            <div class="form-section">
+              <label>{{ i18n.t('calendar.form.start_time') }}</label>
+              <input
+                type="time"
+                [(ngModel)]="editEventData.start_time"
+                name="start_time"
+                required
+              />
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-section">
+              <label>{{ i18n.t('event.details.end_date') }}</label>
+              <input type="date" [(ngModel)]="editEventData.end_date" name="end_date" required />
+            </div>
+            <div class="form-section">
+              <label>{{ i18n.t('calendar.form.end_time') }}</label>
+              <input type="time" [(ngModel)]="editEventData.end_time" name="end_time" required />
             </div>
           </div>
         </div>
-
-        <div class="form-section" *ngIf="editEventData.type === 'mm+'">
-          <label>{{ i18n.t('event.details.mm_groups_count') }}</label>
-          <input type="number" [(ngModel)]="editEventData.mm_groups_count" name="mm_groups_count" min="0">
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="showEditModal.set(false)">
+            {{ i18n.t('calendar.form.btn_cancel') }}
+          </button>
+          <button type="submit" class="btn-primary">
+            {{ i18n.t('event.details.btn_save_changes') }}
+          </button>
         </div>
-
-        <div class="form-section" *ngIf="editEventData.type === 'custom'">
-          <label>{{ i18n.t('calendar.form.custom_type') }}</label>
-          <input type="text" [(ngModel)]="editEventData.customType" name="customType" [placeholder]="i18n.t('calendar.form.custom_type_placeholder')">
-        </div>
-
-        <div class="form-section animated-fade-in" *ngIf="editEventData.type === 'raid'">
-          <label>{{ i18n.t('calendar.form.logs') }}</label>
-          <input type="text" [(ngModel)]="editEventData.logs" name="logs" [placeholder]="i18n.t('calendar.form.logs_placeholder')">
-        </div>
-
-        <div class="form-grid">
-          <div class="form-section">
-            <label>{{ i18n.t('event.details.start_date') }}</label>
-            <input type="date" [(ngModel)]="editEventData.start_date" name="start_date" required>
-          </div>
-          <div class="form-section">
-            <label>{{ i18n.t('calendar.form.start_time') }}</label>
-            <input type="time" [(ngModel)]="editEventData.start_time" name="start_time" required>
-          </div>
-        </div>
-
-        <div class="form-grid">
-          <div class="form-section">
-            <label>{{ i18n.t('event.details.end_date') }}</label>
-            <input type="date" [(ngModel)]="editEventData.end_date" name="end_date" required>
-          </div>
-          <div class="form-section">
-            <label>{{ i18n.t('calendar.form.end_time') }}</label>
-            <input type="time" [(ngModel)]="editEventData.end_time" name="end_time" required>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn-secondary" (click)="showEditModal.set(false)">{{ i18n.t('calendar.form.btn_cancel') }}</button>
-        <button type="submit" class="btn-primary">{{ i18n.t('event.details.btn_save_changes') }}</button>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
-</div>
+}
 
 <!-- Modal de visualisation des Alts -->
-<div class="modal-overlay" *ngIf="showAltsModal() && selectedSignup()" (click)="showAltsModal.set(false)">
-  <div class="modal-card alts-modal" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <div class="header-title">
-        <span class="icon">👥</span>
-        <h2>{{ i18n.t('event.details.characters_of').replace('{name}', selectedSignup()?.battletag?.split('#')?.[0] || '') }}</h2>
+@if (showAltsModal() && selectedSignup()) {
+  <div class="modal-overlay" (click)="showAltsModal.set(false)">
+    <div class="modal-card alts-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="header-title">
+          <span class="icon">👥</span>
+          <h2>
+            {{
+              i18n
+                .t('event.details.characters_of')
+                .replace('{name}', selectedSignup()?.battletag?.split('#')?.[0] || '')
+            }}
+          </h2>
+        </div>
+        <button class="close-btn" (click)="showAltsModal.set(false)">&times;</button>
       </div>
-      <button class="close-btn" (click)="showAltsModal.set(false)">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="alts-list">
-        <div *ngFor="let char of selectedSignup()?.user_characters" class="alt-row" [class]="'class-' + getClassCategory(char.class)">
-          <div class="alt-info-vertical">
-            <span class="alt-name">{{ char.name }}</span>
-            <span class="alt-roster-text">{{ char.roster_name || i18n.t('event.details.no_roster') }}</span>
-          </div>
-          <div class="alt-roles">
-            <span class="rio-mini" *ngIf="getRioScoreForKey(char.name, char.realm)">{{ getRioScoreForKey(char.name, char.realm) }}</span>
-
-            <ng-container *ngIf="canManageEvents(); else readOnlyRoles">
-              <button *ngIf="char.is_tank"
+      <div class="modal-body">
+        <div class="alts-list">
+          @for (char of selectedSignup()?.user_characters; track char) {
+            <div class="alt-row" [class]="'class-' + getClassCategory(char.class)">
+              <div class="alt-info-vertical">
+                <span class="alt-name">{{ char.name }}</span>
+                <span class="alt-roster-text">{{
+                  char.roster_name || i18n.t('event.details.no_roster')
+                }}</span>
+              </div>
+              <div class="alt-roles">
+                @if (getRioScoreForKey(char.name, char.realm)) {
+                  <span class="rio-mini">{{ getRioScoreForKey(char.name, char.realm) }}</span>
+                }
+                @if (canManageEvents()) {
+                  @if (char.is_tank) {
+                    <button
                       [class.active-role]="isSelectedCharacterAndRole(char.id, 'tank')"
                       class="role-select-btn"
                       (click)="onAdminUpdateSignup(char.id, 'tank')"
-                      [title]="i18n.t('event.details.assign_tank')">
-                <img src="assets/icons/tank.png" class="role-icon-img small" alt="Tank">
-              </button>
-              <button *ngIf="char.is_heal"
+                      [title]="i18n.t('event.details.assign_tank')"
+                    >
+                      <img src="assets/icons/tank.png" class="role-icon-img small" alt="Tank" />
+                    </button>
+                  }
+                  @if (char.is_heal) {
+                    <button
                       [class.active-role]="isSelectedCharacterAndRole(char.id, 'heal')"
                       class="role-select-btn"
                       (click)="onAdminUpdateSignup(char.id, 'heal')"
-                      [title]="i18n.t('event.details.assign_heal')">
-                <img src="assets/icons/heal.png" class="role-icon-img small" alt="Heal">
-              </button>
-              <button *ngIf="char.is_dps"
+                      [title]="i18n.t('event.details.assign_heal')"
+                    >
+                      <img src="assets/icons/heal.png" class="role-icon-img small" alt="Heal" />
+                    </button>
+                  }
+                  @if (char.is_dps) {
+                    <button
                       [class.active-role]="isSelectedCharacterAndRole(char.id, 'dps')"
                       class="role-select-btn"
                       (click)="onAdminUpdateSignup(char.id, 'dps')"
-                      [title]="i18n.t('event.details.assign_dps')">
-                <img src="assets/icons/dps.png" class="role-icon-img small" alt="DPS">
-              </button>
-            </ng-container>
-
-            <ng-template #readOnlyRoles>
-              <img *ngIf="char.is_tank" src="assets/icons/tank.png" class="role-icon-img small" [title]="i18n.t('event.details.role_tank')" alt="Tank">
-              <img *ngIf="char.is_heal" src="assets/icons/heal.png" class="role-icon-img small" [title]="i18n.t('event.details.role_heal')" alt="Heal">
-              <img *ngIf="char.is_dps" src="assets/icons/dps.png" class="role-icon-img small" [title]="i18n.t('event.details.role_dps')" alt="DPS">
-            </ng-template>
-
-            <a [href]="characterService.getRaiderIoUrl(char.name, char.realm)" target="_blank" class="logs-link-mini" (click)="$event.stopPropagation()">
-              <img src="assets/icons/raiderio.webp" alt="Raider.IO">
-            </a>
-            <a [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="logs-link-mini" (click)="$event.stopPropagation()">
-              <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs">
-            </a>
-          </div>
+                      [title]="i18n.t('event.details.assign_dps')"
+                    >
+                      <img src="assets/icons/dps.png" class="role-icon-img small" alt="DPS" />
+                    </button>
+                  }
+                } @else {
+                  @if (char.is_tank) {
+                    <img
+                      src="assets/icons/tank.png"
+                      class="role-icon-img small"
+                      [title]="i18n.t('event.details.role_tank')"
+                      alt="Tank"
+                    />
+                  }
+                  @if (char.is_heal) {
+                    <img
+                      src="assets/icons/heal.png"
+                      class="role-icon-img small"
+                      [title]="i18n.t('event.details.role_heal')"
+                      alt="Heal"
+                    />
+                  }
+                  @if (char.is_dps) {
+                    <img
+                      src="assets/icons/dps.png"
+                      class="role-icon-img small"
+                      [title]="i18n.t('event.details.role_dps')"
+                      alt="DPS"
+                    />
+                  }
+                }
+                <a
+                  [href]="characterService.getRaiderIoUrl(char.name, char.realm)"
+                  target="_blank"
+                  class="logs-link-mini"
+                  (click)="$event.stopPropagation()"
+                >
+                  <img src="assets/icons/raiderio.webp" alt="Raider.IO" />
+                </a>
+                <a
+                  [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)"
+                  target="_blank"
+                  class="logs-link-mini"
+                  (click)="$event.stopPropagation()"
+                >
+                  <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" />
+                </a>
+              </div>
+            </div>
+          }
         </div>
       </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" (click)="showAltsModal.set(false)">{{ i18n.t('event.details.btn_close') }}</button>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="showAltsModal.set(false)">
+          {{ i18n.t('event.details.btn_close') }}
+        </button>
+      </div>
     </div>
   </div>
-</div>
+}
 
 <!-- Modal d'Annulation (Admin Only) -->
-<div class="modal-overlay" *ngIf="showCancelModal()" (click)="showCancelModal.set(false)">
-  <div class="modal-card cancel-modal" (click)="$event.stopPropagation()" style="max-width: 480px; width: 100%;">
-    <div class="modal-header">
-      <div class="header-title">
-        <span class="icon">🚫</span>
-        <h2>{{ i18n.t('event.details.prompt_cancel_title') }}</h2>
+@if (showCancelModal()) {
+  <div class="modal-overlay" (click)="showCancelModal.set(false)">
+    <div
+      class="modal-card cancel-modal"
+      (click)="$event.stopPropagation()"
+      style="max-width: 480px; width: 100%"
+    >
+      <div class="modal-header">
+        <div class="header-title">
+          <span class="icon">🚫</span>
+          <h2>{{ i18n.t('event.details.prompt_cancel_title') }}</h2>
+        </div>
+        <button class="close-btn" (click)="showCancelModal.set(false)">&times;</button>
       </div>
-      <button class="close-btn" (click)="showCancelModal.set(false)">&times;</button>
-    </div>
-    <div class="modal-body">
-      <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1rem; line-height: 1.5; text-align: left;">
-        {{ i18n.t('event.details.prompt_cancel_desc') }}
-      </p>
-      <div class="form-group" style="margin: 0;">
-        <textarea [(ngModel)]="cancelReason" rows="3" [placeholder]="i18n.t('event.details.comment_placeholder')" style="width: 100%; box-sizing: border-box;"></textarea>
+      <div class="modal-body">
+        <p
+          style="
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+            text-align: left;
+          "
+        >
+          {{ i18n.t('event.details.prompt_cancel_desc') }}
+        </p>
+        <div class="form-group" style="margin: 0">
+          <textarea
+            [(ngModel)]="cancelReason"
+            rows="3"
+            [placeholder]="i18n.t('event.details.comment_placeholder')"
+            style="width: 100%; box-sizing: border-box"
+          ></textarea>
+        </div>
       </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" (click)="showCancelModal.set(false)">{{ i18n.t('event.details.btn_cancel_modal_close') }}</button>
-      <button class="btn-primary" (click)="confirmCancelEvent()" style="background: #ef4444 !important; border-color: #ef4444 !important;">{{ i18n.t('event.details.btn_confirm_cancellation') }}</button>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="showCancelModal.set(false)">
+          {{ i18n.t('event.details.btn_cancel_modal_close') }}
+        </button>
+        <button
+          class="btn-primary"
+          (click)="confirmCancelEvent()"
+          style="background: #ef4444 !important; border-color: #ef4444 !important"
+        >
+          {{ i18n.t('event.details.btn_confirm_cancellation') }}
+        </button>
+      </div>
     </div>
   </div>
+}

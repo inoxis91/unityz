@@ -20,338 +20,512 @@
     </div>
   </div>
 
-
-
   <!-- Loading / Error states -->
-  <div class="logs-loading-card" *ngIf="loadingLogs()">
-    <div class="spinner"></div>
-    <p>{{ i18n.t('event.details.logs_loading') }}</p>
-  </div>
+  @if (loadingLogs()) {
+    <div class="logs-loading-card">
+      <div class="spinner"></div>
+      <p>{{ i18n.t('event.details.logs_loading') }}</p>
+    </div>
+  }
 
-  <div class="logs-error-card" *ngIf="logsError() && !loadingLogs()">
-    <span class="icon">⚠️</span>
-    <p>{{ i18n.t('event.details.logs_error') }}</p>
-  </div>
+  @if (logsError() && !loadingLogs()) {
+    <div class="logs-error-card">
+      <span class="icon">⚠️</span>
+      <p>{{ i18n.t('event.details.logs_error') }}</p>
+    </div>
+  }
 
   <!-- Main Logs Panels (when metrics are loaded) -->
-  <ng-container *ngIf="logsMetrics() && !loadingLogs()">
-
+  @if (logsMetrics() && !loadingLogs()) {
     <!-- SUB-TAB 1: Overview -->
-    <div class="logs-overview-panel animated-fade-in" *ngIf="logsSubTab() === 'overview'">
-      <div class="logs-stats-grid">
-        <div class="stat-card">
-          <span class="label">{{ i18n.t('event.details.logs_total_deaths') }}</span>
-          <span class="value duration-text" style="color: #dc2626 !important;">☠️ {{ logsMetrics()!.totalDeaths }}</span>
-          <span class="sub-label">{{ i18n.t('event.details.logs_on_all_logs') }}</span>
-        </div>
-        <div class="stat-card" style="justify-content: space-between;">
-          <span class="label">{{ i18n.t('event.details.logs_individual_survival') }}</span>
-          <div class="survival-info-content" style="width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
-            <div class="survival-row flex-row" style="justify-content: space-between; width: 100%; font-size: 0.9rem; font-weight: 750;">
-              <span class="lbl-survival" style="color: #16a34a; font-weight: 800;">{{ i18n.t('event.details.logs_survivor') }}</span>
-              <span class="val-player" style="font-weight: 850;">
-                {{ logsMetrics()!.leastDiedPlayer?.name || i18n.t('event.details.logs_none') }} ({{ logsMetrics()!.leastDiedPlayer?.deaths }} {{ logsMetrics()!.leastDiedPlayer?.deaths === 1 ? i18n.t('event.details.logs_death') : i18n.t('event.details.logs_deaths') }})
-              </span>
-            </div>
-            <div class="survival-row flex-row" style="justify-content: space-between; width: 100%; font-size: 0.9rem; font-weight: 750;">
-              <span class="lbl-survival" style="color: #dc2626; font-weight: 800;">{{ i18n.t('event.details.logs_died_most') }}</span>
-              <span class="val-player" style="font-weight: 850;">
-                {{ logsMetrics()!.mostDiedPlayer?.name || i18n.t('event.details.logs_none') }} ({{ logsMetrics()!.mostDiedPlayer?.deaths }} {{ logsMetrics()!.mostDiedPlayer?.deaths === 1 ? i18n.t('event.details.logs_death') : i18n.t('event.details.logs_deaths') }})
-              </span>
-            </div>
+    @if (logsSubTab() === 'overview') {
+      <div class="logs-overview-panel animated-fade-in">
+        <div class="logs-stats-grid">
+          <div class="stat-card">
+            <span class="label">{{ i18n.t('event.details.logs_total_deaths') }}</span>
+            <span class="value duration-text" style="color: #dc2626 !important"
+              >☠️ {{ logsMetrics()!.totalDeaths }}</span
+            >
+            <span class="sub-label">{{ i18n.t('event.details.logs_on_all_logs') }}</span>
           </div>
-        </div>
-        <div class="stat-card">
-          <span class="label">{{ i18n.t('event.details.logs_raid_dps_hps') }}</span>
-          <span class="value flex-row" style="gap: 8px; font-size: 1.45rem;">
-            <span class="kill-tag" style="background: #fee2e2; color: #dc2626; font-size: 1.15rem; font-weight: 800;">{{ formatBigNumber(logsMetrics()!.raidAvgDps) }} DPS</span>
-            <span class="wipe-tag" style="background: #dcfce7; color: #16a34a; font-size: 1.15rem; font-weight: 800;">{{ formatBigNumber(logsMetrics()!.raidAvgHps) }} HPS</span>
-          </span>
-          <span class="sub-label">{{ i18n.t('event.details.logs_global_avg_power') }}</span>
-        </div>
-        <div class="stat-card">
-          <span class="label">{{ i18n.t('event.details.logs_kills_wipes') }}</span>
-          <span class="value flex-row" style="gap: 8px;">
-            <span class="kill-tag">{{ logsMetrics()!.totalKills }} K</span>
-            <span class="wipe-tag">{{ logsMetrics()!.totalWipes }} W</span>
-          </span>
-          <span class="sub-label">{{ i18n.t('event.details.logs_fights') }}: {{ logsMetrics()!.fights.length }} — {{ formatHourDuration(logsMetrics()!.totalDuration) }}</span>
-        </div>
-      </div>
-
-      <div class="stats-secondary-row">
-        <div class="highlight-card deadly-boss">
-          <div class="highlight-icon">💀</div>
-          <div class="highlight-info">
-            <h4>{{ i18n.t('event.details.logs_deadly_boss') }}</h4>
-            <p class="boss-name">{{ logsMetrics()!.mostDeadlyBoss }}</p>
-          </div>
-        </div>
-        <div class="highlight-card mvp-player" [class]="'card-class-' + logsMetrics()!.mvpPlayer.class">
-          <div class="highlight-icon">👑</div>
-          <div class="highlight-info">
-            <h4>{{ i18n.t('event.details.logs_mvp') }}</h4>
-            <p class="mvp-name" [class]="'text-class-' + logsMetrics()!.mvpPlayer.class">{{ logsMetrics()!.mvpPlayer.name }}</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Mini Fights Timeline -->
-      <div class="fights-timeline-card">
-        <h3>{{ i18n.t('event.details.logs_timeline_title') }}</h3>
-        <div class="timeline-row">
-          @for (fight of logsMetrics()!.fights; track fight.id) {
-            <div class="timeline-item" [class.is-kill]="fight.kill" (click)="logsSubTab.set('bosses'); selectedFightId.set(fight.id)">
-              <div class="item-header">
-                <span class="boss-name">{{ fight.name }}</span>
-                <span class="status-badge" [class.kill]="fight.kill" [class.wipe]="!fight.kill">
-                  {{ fight.kill ? i18n.t('event.details.logs_kill') : i18n.t('event.details.logs_wipe') }}
+          <div class="stat-card" style="justify-content: space-between">
+            <span class="label">{{ i18n.t('event.details.logs_individual_survival') }}</span>
+            <div
+              class="survival-info-content"
+              style="width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: 10px"
+            >
+              <div
+                class="survival-row flex-row"
+                style="
+                  justify-content: space-between;
+                  width: 100%;
+                  font-size: 0.9rem;
+                  font-weight: 750;
+                "
+              >
+                <span class="lbl-survival" style="color: #16a34a; font-weight: 800">{{
+                  i18n.t('event.details.logs_survivor')
+                }}</span>
+                <span class="val-player" style="font-weight: 850">
+                  {{
+                    logsMetrics()!.leastDiedPlayer?.name || i18n.t('event.details.logs_none')
+                  }}
+                  ({{ logsMetrics()!.leastDiedPlayer?.deaths }}
+                  {{
+                    logsMetrics()!.leastDiedPlayer?.deaths === 1
+                      ? i18n.t('event.details.logs_death')
+                      : i18n.t('event.details.logs_deaths')
+                  }})
                 </span>
               </div>
-              <div class="item-body">
-                <span class="duration">{{ formatDuration(fight.duration) }}</span>
-                <span class="diff">{{ fight.difficulty }}</span>
-                <span class="percent" *ngIf="!fight.kill">{{ fight.bossPercentage }}%</span>
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-    </div>
-
-    <!-- SUB-TAB 2: Boss Fights Details -->
-    <div class="logs-bosses-panel animated-fade-in" *ngIf="logsSubTab() === 'bosses'">
-      <div class="split-layout">
-        <!-- Left sidebar: Boss selector -->
-        <div class="boss-sidebar">
-          @for (fight of logsMetrics()!.fights; track fight.id) {
-            <button class="boss-select-btn" [class.active]="selectedFightId() === fight.id" (click)="selectedFightId.set(fight.id)">
-              <div class="boss-btn-top">
-                <span class="name">{{ fight.name }}</span>
-                <span class="badge" [class.kill]="fight.kill" [class.wipe]="!fight.kill">
-                  {{ fight.kill ? i18n.t('event.details.logs_kill') : i18n.t('event.details.logs_wipe') }}
+              <div
+                class="survival-row flex-row"
+                style="
+                  justify-content: space-between;
+                  width: 100%;
+                  font-size: 0.9rem;
+                  font-weight: 750;
+                "
+              >
+                <span class="lbl-survival" style="color: #dc2626; font-weight: 800">{{
+                  i18n.t('event.details.logs_died_most')
+                }}</span>
+                <span class="val-player" style="font-weight: 850">
+                  {{ logsMetrics()!.mostDiedPlayer?.name || i18n.t('event.details.logs_none') }} ({{
+                    logsMetrics()!.mostDiedPlayer?.deaths
+                  }}
+                  {{
+                    logsMetrics()!.mostDiedPlayer?.deaths === 1
+                      ? i18n.t('event.details.logs_death')
+                      : i18n.t('event.details.logs_deaths')
+                  }})
                 </span>
               </div>
-              <div class="boss-btn-bottom">
-                <span>{{ fight.difficulty }}</span>
-                <span>{{ formatDuration(fight.duration) }}</span>
-              </div>
-            </button>
-          }
-        </div>
-
-        <!-- Right section: Fight details and stats -->
-        <div class="fight-details-content" *ngIf="getSelectedFight(); let fight">
-          <div class="fight-header">
-            <h3>{{ fight.name }} — {{ fight.difficulty }}</h3>
-            <div class="fight-meta-pills">
-              <span class="pill-meta" [class.kill]="fight.kill">
-                {{ fight.kill ? i18n.t('event.details.logs_kill') : i18n.t('event.details.logs_wipe') + ' (' + fight.bossPercentage + '%)' }}
-              </span>
-              <span class="pill-meta">🕒 {{ formatDuration(fight.duration) }}</span>
-              <span class="pill-meta">☠️ {{ fight.deathsCount }} {{ i18n.t('event.details.logs_th_deaths').toLowerCase() }}</span>
-              <span class="pill-meta damage-pill">⚔️ {{ formatBigNumber(fight.averageDps) }} {{ i18n.t('event.details.logs_raid_avg_dps') }}</span>
-              <span class="pill-meta heal-pill">💚 {{ formatBigNumber(fight.averageHps) }} {{ i18n.t('event.details.logs_raid_avg_hps') }}</span>
             </div>
           </div>
-
-          <!-- Top DPS and HPS charts side by side -->
-          <div class="performance-brief-grid">
-            <div class="brief-card">
-              <h4>⚔️ {{ i18n.t('event.details.logs_top_dps') }}</h4>
-              <div class="brief-ranking-list">
-                @for (p of getSortedPlayersForSelectedFight().slice(0, 5); track p.name) {
-                  <div class="ranking-row">
-                    <div class="rank-name-col">
-                      <span class="rank-num">{{ $index + 1 }}</span>
-                      <span class="player-name" [class]="'text-class-' + p.class">{{ p.name }}</span>
-                    </div>
-                    <div class="rank-bar-col">
-                      <div class="progress-bar-bg">
-                        <div class="progress-bar-fill dps-fill" [style.width.%]="(p.dps / (getSortedPlayersForSelectedFight()[0]?.dps || 1)) * 100"></div>
-                      </div>
-                      <span class="value-label">{{ formatBigNumber(p.dps) }}</span>
-                    </div>
-                  </div>
-                }
-              </div>
+          <div class="stat-card">
+            <span class="label">{{ i18n.t('event.details.logs_raid_dps_hps') }}</span>
+            <span class="value flex-row" style="gap: 8px; font-size: 1.45rem">
+              <span
+                class="kill-tag"
+                style="background: #fee2e2; color: #dc2626; font-size: 1.15rem; font-weight: 800"
+                >{{ formatBigNumber(logsMetrics()!.raidAvgDps) }} DPS</span
+              >
+              <span
+                class="wipe-tag"
+                style="background: #dcfce7; color: #16a34a; font-size: 1.15rem; font-weight: 800"
+                >{{ formatBigNumber(logsMetrics()!.raidAvgHps) }} HPS</span
+              >
+            </span>
+            <span class="sub-label">{{ i18n.t('event.details.logs_global_avg_power') }}</span>
+          </div>
+          <div class="stat-card">
+            <span class="label">{{ i18n.t('event.details.logs_kills_wipes') }}</span>
+            <span class="value flex-row" style="gap: 8px">
+              <span class="kill-tag">{{ logsMetrics()!.totalKills }} K</span>
+              <span class="wipe-tag">{{ logsMetrics()!.totalWipes }} W</span>
+            </span>
+            <span class="sub-label"
+              >{{ i18n.t('event.details.logs_fights') }}: {{ logsMetrics()!.fights.length }} —
+              {{ formatHourDuration(logsMetrics()!.totalDuration) }}</span
+            >
+          </div>
+        </div>
+        <div class="stats-secondary-row">
+          <div class="highlight-card deadly-boss">
+            <div class="highlight-icon">💀</div>
+            <div class="highlight-info">
+              <h4>{{ i18n.t('event.details.logs_deadly_boss') }}</h4>
+              <p class="boss-name">{{ logsMetrics()!.mostDeadlyBoss }}</p>
             </div>
-
-            <div class="brief-card">
-              <h4>💚 {{ i18n.t('event.details.logs_top_hps') }}</h4>
-              <div class="brief-ranking-list">
-                @for (p of getSortedHealersForFight(fight.players).slice(0, 5); track p.name) {
-                  @if (p.hps > 0) {
-                    <div class="ranking-row">
-                      <div class="rank-name-col">
-                        <span class="rank-num">{{ $index + 1 }}</span>
-                        <span class="player-name" [class]="'text-class-' + p.class">{{ p.name }}</span>
-                      </div>
-                      <div class="rank-bar-col">
-                        <div class="progress-bar-bg">
-                          <div class="progress-bar-fill heal-fill" [style.width.%]="(p.hps / (getSortedHealersForFight(fight.players)[0]?.hps || 1)) * 100"></div>
-                        </div>
-                        <span class="value-label">{{ formatBigNumber(p.hps) }}</span>
-                      </div>
-                    </div>
+          </div>
+          <div
+            class="highlight-card mvp-player"
+            [class]="'card-class-' + logsMetrics()!.mvpPlayer.class"
+          >
+            <div class="highlight-icon">👑</div>
+            <div class="highlight-info">
+              <h4>{{ i18n.t('event.details.logs_mvp') }}</h4>
+              <p class="mvp-name" [class]="'text-class-' + logsMetrics()!.mvpPlayer.class">
+                {{ logsMetrics()!.mvpPlayer.name }}
+              </p>
+            </div>
+          </div>
+        </div>
+        <!-- Mini Fights Timeline -->
+        <div class="fights-timeline-card">
+          <h3>{{ i18n.t('event.details.logs_timeline_title') }}</h3>
+          <div class="timeline-row">
+            @for (fight of logsMetrics()!.fights; track fight.id) {
+              <div
+                class="timeline-item"
+                [class.is-kill]="fight.kill"
+                (click)="logsSubTab.set('bosses'); selectedFightId.set(fight.id)"
+              >
+                <div class="item-header">
+                  <span class="boss-name">{{ fight.name }}</span>
+                  <span class="status-badge" [class.kill]="fight.kill" [class.wipe]="!fight.kill">
+                    {{
+                      fight.kill
+                        ? i18n.t('event.details.logs_kill')
+                        : i18n.t('event.details.logs_wipe')
+                    }}
+                  </span>
+                </div>
+                <div class="item-body">
+                  <span class="duration">{{ formatDuration(fight.duration) }}</span>
+                  <span class="diff">{{ fight.difficulty }}</span>
+                  @if (!fight.kill) {
+                    <span class="percent">{{ fight.bossPercentage }}%</span>
                   }
-                }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+    <!-- SUB-TAB 2: Boss Fights Details -->
+    @if (logsSubTab() === 'bosses') {
+      <div class="logs-bosses-panel animated-fade-in">
+        <div class="split-layout">
+          <!-- Left sidebar: Boss selector -->
+          <div class="boss-sidebar">
+            @for (fight of logsMetrics()!.fights; track fight.id) {
+              <button
+                class="boss-select-btn"
+                [class.active]="selectedFightId() === fight.id"
+                (click)="selectedFightId.set(fight.id)"
+              >
+                <div class="boss-btn-top">
+                  <span class="name">{{ fight.name }}</span>
+                  <span class="badge" [class.kill]="fight.kill" [class.wipe]="!fight.kill">
+                    {{
+                      fight.kill
+                        ? i18n.t('event.details.logs_kill')
+                        : i18n.t('event.details.logs_wipe')
+                    }}
+                  </span>
+                </div>
+                <div class="boss-btn-bottom">
+                  <span>{{ fight.difficulty }}</span>
+                  <span>{{ formatDuration(fight.duration) }}</span>
+                </div>
+              </button>
+            }
+          </div>
+          <!-- Right section: Fight details and stats -->
+          @if (getSelectedFight(); as fight) {
+            <div class="fight-details-content">
+              <div class="fight-header">
+                <h3>{{ fight.name }} — {{ fight.difficulty }}</h3>
+                <div class="fight-meta-pills">
+                  <span class="pill-meta" [class.kill]="fight.kill">
+                    {{
+                      fight.kill
+                        ? i18n.t('event.details.logs_kill')
+                        : i18n.t('event.details.logs_wipe') + ' (' + fight.bossPercentage + '%)'
+                    }}
+                  </span>
+                  <span class="pill-meta">🕒 {{ formatDuration(fight.duration) }}</span>
+                  <span class="pill-meta"
+                    >☠️ {{ fight.deathsCount }}
+                    {{ i18n.t('event.details.logs_th_deaths').toLowerCase() }}</span
+                  >
+                  <span class="pill-meta damage-pill"
+                    >⚔️ {{ formatBigNumber(fight.averageDps) }}
+                    {{ i18n.t('event.details.logs_raid_avg_dps') }}</span
+                  >
+                  <span class="pill-meta heal-pill"
+                    >💚 {{ formatBigNumber(fight.averageHps) }}
+                    {{ i18n.t('event.details.logs_raid_avg_hps') }}</span
+                  >
+                </div>
+              </div>
+              <!-- Top DPS and HPS charts side by side -->
+              <div class="performance-brief-grid">
+                <div class="brief-card">
+                  <h4>⚔️ {{ i18n.t('event.details.logs_top_dps') }}</h4>
+                  <div class="brief-ranking-list">
+                    @for (p of getSortedPlayersForSelectedFight().slice(0, 5); track p.name) {
+                      <div class="ranking-row">
+                        <div class="rank-name-col">
+                          <span class="rank-num">{{ $index + 1 }}</span>
+                          <span class="player-name" [class]="'text-class-' + p.class">{{
+                            p.name
+                          }}</span>
+                        </div>
+                        <div class="rank-bar-col">
+                          <div class="progress-bar-bg">
+                            <div
+                              class="progress-bar-fill dps-fill"
+                              [style.width.%]="
+                                (p.dps / (getSortedPlayersForSelectedFight()[0]?.dps || 1)) * 100
+                              "
+                            ></div>
+                          </div>
+                          <span class="value-label">{{ formatBigNumber(p.dps) }}</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+                <div class="brief-card">
+                  <h4>💚 {{ i18n.t('event.details.logs_top_hps') }}</h4>
+                  <div class="brief-ranking-list">
+                    @for (p of getSortedHealersForFight(fight.players).slice(0, 5); track p.name) {
+                      @if (p.hps > 0) {
+                        <div class="ranking-row">
+                          <div class="rank-name-col">
+                            <span class="rank-num">{{ $index + 1 }}</span>
+                            <span class="player-name" [class]="'text-class-' + p.class">{{
+                              p.name
+                            }}</span>
+                          </div>
+                          <div class="rank-bar-col">
+                            <div class="progress-bar-bg">
+                              <div
+                                class="progress-bar-fill heal-fill"
+                                [style.width.%]="
+                                  (p.hps / (getSortedHealersForFight(fight.players)[0]?.hps || 1)) *
+                                  100
+                                "
+                              ></div>
+                            </div>
+                            <span class="value-label">{{ formatBigNumber(p.hps) }}</span>
+                          </div>
+                        </div>
+                      }
+                    }
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- SUB-TAB 3: Detailed Players Table -->
-    <div class="logs-players-panel animated-fade-in" *ngIf="logsSubTab() === 'players' && getSelectedFight(); let fight">
-      <div class="fight-selector-row">
-        <label>{{ i18n.t('event.details.logs_select_fight') }}</label>
-        <select [ngModel]="selectedFightId()" (ngModelChange)="selectedFightId.set(+$event)" class="modern-select mini">
-          @for (f of logsMetrics()!.fights; track f.id) {
-            <option [value]="f.id">
-              {{ f.name }} ({{ f.kill ? 'K' : 'W' }}) — {{ f.difficulty }}
-            </option>
           }
-        </select>
+        </div>
       </div>
-
-      <div class="table-card table-responsive">
-        <table class="modern-table logs-table">
-          <thead>
-            <tr>
-              <th (click)="setPlayerSort('dps')" [class.active-sort]="logsPlayerSortBy() === 'dps'">
-                {{ i18n.t('event.details.logs_th_player') }} ⇅
-              </th>
-              <th (click)="setPlayerSort('parse')" [class.active-sort]="logsPlayerSortBy() === 'parse'">
-                Parse ⇅
-              </th>
-              <th (click)="setPlayerSort('dps')" [class.active-sort]="logsPlayerSortBy() === 'dps'">
-                {{ i18n.t('event.details.logs_th_dps') }} ⇅
-              </th>
-              <th (click)="setPlayerSort('hps')" [class.active-sort]="logsPlayerSortBy() === 'hps'">
-                {{ i18n.t('event.details.logs_th_hps') }} ⇅
-              </th>
-              <th (click)="setPlayerSort('damageTaken')" [class.active-sort]="logsPlayerSortBy() === 'damageTaken'">
-                {{ i18n.t('event.details.logs_th_damage_taken') }} ⇅
-              </th>
-              <th (click)="setPlayerSort('deaths')" [class.active-sort]="logsPlayerSortBy() === 'deaths'">
-                {{ i18n.t('event.details.logs_th_deaths') }} ⇅
-              </th>
-              <th (click)="setPlayerSort('activeTime')" [class.active-sort]="logsPlayerSortBy() === 'activeTime'">
-                {{ i18n.t('event.details.logs_th_active') }} ⇅
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (player of getSortedPlayersForSelectedFight(); track player.name) {
+    }
+    <!-- SUB-TAB 3: Detailed Players Table -->
+    @if (logsSubTab() === 'players' && getSelectedFight(); as fight) {
+      <div class="logs-players-panel animated-fade-in">
+        <div class="fight-selector-row">
+          <label>{{ i18n.t('event.details.logs_select_fight') }}</label>
+          <select
+            [ngModel]="selectedFightId()"
+            (ngModelChange)="selectedFightId.set(+$event)"
+            class="modern-select mini"
+          >
+            @for (f of logsMetrics()!.fights; track f.id) {
+              <option [value]="f.id">
+                {{ f.name }} ({{ f.kill ? 'K' : 'W' }}) — {{ f.difficulty }}
+              </option>
+            }
+          </select>
+        </div>
+        <div class="table-card table-responsive">
+          <table class="modern-table logs-table">
+            <thead>
               <tr>
-                <td>
-                  <div class="player-cell">
-                    <img [src]="'assets/icons/class/' + getClassIcon(player.class)" class="class-icon-img" alt="">
-                    <span class="player-name-bold" [class]="'text-class-' + player.class">{{ player.name }}</span>
-                  </div>
-                </td>
-                <td>
-                  <span class="parse-pill" [class]="getParseClass(player.parse)">
-                    {{ player.parse }}
-                  </span>
-                </td>
-                <td class="damage-text font-bold">{{ formatNumberWithSpaces(player.dps) }}</td>
-                <td class="heal-text font-bold">{{ formatNumberWithSpaces(player.hps) }}</td>
-                <td class="text-slate-600">{{ formatNumberWithSpaces(player.damageTaken) }}</td>
-                <td>
-                  <span class="death-pill" [class.dead]="player.deaths > 0">
-                    {{ player.deaths > 0 ? '☠️ ' + player.deaths : '0' }}
-                  </span>
-                </td>
-                <td class="font-bold" [class.text-amber-600]="player.activeTime < 90" [class.text-emerald-600]="player.activeTime >= 95">
-                  {{ player.activeTime }}%
-                </td>
+                <th
+                  (click)="setPlayerSort('dps')"
+                  [class.active-sort]="logsPlayerSortBy() === 'dps'"
+                >
+                  {{ i18n.t('event.details.logs_th_player') }} ⇅
+                </th>
+                <th
+                  (click)="setPlayerSort('parse')"
+                  [class.active-sort]="logsPlayerSortBy() === 'parse'"
+                >
+                  Parse ⇅
+                </th>
+                <th
+                  (click)="setPlayerSort('dps')"
+                  [class.active-sort]="logsPlayerSortBy() === 'dps'"
+                >
+                  {{ i18n.t('event.details.logs_th_dps') }} ⇅
+                </th>
+                <th
+                  (click)="setPlayerSort('hps')"
+                  [class.active-sort]="logsPlayerSortBy() === 'hps'"
+                >
+                  {{ i18n.t('event.details.logs_th_hps') }} ⇅
+                </th>
+                <th
+                  (click)="setPlayerSort('damageTaken')"
+                  [class.active-sort]="logsPlayerSortBy() === 'damageTaken'"
+                >
+                  {{ i18n.t('event.details.logs_th_damage_taken') }} ⇅
+                </th>
+                <th
+                  (click)="setPlayerSort('deaths')"
+                  [class.active-sort]="logsPlayerSortBy() === 'deaths'"
+                >
+                  {{ i18n.t('event.details.logs_th_deaths') }} ⇅
+                </th>
+                <th
+                  (click)="setPlayerSort('activeTime')"
+                  [class.active-sort]="logsPlayerSortBy() === 'activeTime'"
+                >
+                  {{ i18n.t('event.details.logs_th_active') }} ⇅
+                </th>
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (player of getSortedPlayersForSelectedFight(); track player.name) {
+                <tr>
+                  <td>
+                    <div class="player-cell">
+                      <img
+                        [src]="'assets/icons/class/' + getClassIcon(player.class)"
+                        class="class-icon-img"
+                        alt=""
+                      />
+                      <span class="player-name-bold" [class]="'text-class-' + player.class">{{
+                        player.name
+                      }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="parse-pill" [class]="getParseClass(player.parse)">
+                      {{ player.parse }}
+                    </span>
+                  </td>
+                  <td class="damage-text font-bold">{{ formatNumberWithSpaces(player.dps) }}</td>
+                  <td class="heal-text font-bold">{{ formatNumberWithSpaces(player.hps) }}</td>
+                  <td class="text-slate-600">{{ formatNumberWithSpaces(player.damageTaken) }}</td>
+                  <td>
+                    <span class="death-pill" [class.dead]="player.deaths > 0">
+                      {{ player.deaths > 0 ? '☠️ ' + player.deaths : '0' }}
+                    </span>
+                  </td>
+                  <td
+                    class="font-bold"
+                    [class.text-amber-600]="player.activeTime < 90"
+                    [class.text-emerald-600]="player.activeTime >= 95"
+                  >
+                    {{ player.activeTime }}%
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
-
+    }
     <!-- SUB-TAB 4: MVP Leaderboard -->
-    <div class="logs-mvp-panel animated-fade-in" *ngIf="logsSubTab() === 'mvp'">
-      <div class="mvp-podium-container" *ngIf="logsMetrics()!.mvpLeaderboard && logsMetrics()!.mvpLeaderboard.length > 0">
-        <!-- 2nd Place (Silver) -->
-        <div class="podium-item place-2" *ngIf="logsMetrics()!.mvpLeaderboard[1]; let p2">
-          <div class="podium-item-box">
-            <span class="podium-rank-badge rank-2">🥈</span>
-            <img [src]="'assets/icons/class/' + getClassIcon(p2.class)" class="podium-class-img" alt="">
-            <span class="podium-player-name" [class]="'text-class-' + p2.class">{{ p2.name }}</span>
-            <span class="podium-score">{{ p2.score }} pts</span>
-          </div>
-        </div>
-
-        <!-- 1st Place (Gold) -->
-        <div class="podium-item place-1" *ngIf="logsMetrics()!.mvpLeaderboard[0]; let p1">
-          <div class="podium-item-box">
-            <span class="podium-rank-badge rank-1">👑 🥇</span>
-            <img [src]="'assets/icons/class/' + getClassIcon(p1.class)" class="podium-class-img" alt="">
-            <span class="podium-player-name" [class]="'text-class-' + p1.class">{{ p1.name }}</span>
-            <span class="podium-score">{{ p1.score }} pts</span>
-          </div>
-        </div>
-
-        <!-- 3rd Place (Bronze) -->
-        <div class="podium-item place-3" *ngIf="logsMetrics()!.mvpLeaderboard[2]; let p3">
-          <div class="podium-item-box">
-            <span class="podium-rank-badge rank-3">🥉</span>
-            <img [src]="'assets/icons/class/' + getClassIcon(p3.class)" class="podium-class-img" alt="">
-            <span class="podium-player-name" [class]="'text-class-' + p3.class">{{ p3.name }}</span>
-            <span class="podium-score">{{ p3.score }} pts</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Leaderboard Table -->
-      <div class="table-card table-responsive" style="margin-top: 2rem;">
-        <table class="modern-table logs-table">
-          <thead>
-            <tr>
-              <th>{{ i18n.t('event.details.logs_mvp_rank') }}</th>
-              <th>{{ i18n.t('event.details.logs_th_player') }}</th>
-              <th>{{ i18n.t('event.details.logs_mvp_score') }}</th>
-              <th>{{ i18n.t('event.details.logs_mvp_dps_avg') }}</th>
-              <th>{{ i18n.t('event.details.logs_mvp_hps_avg') }}</th>
-              <th>{{ i18n.t('event.details.logs_mvp_damage_taken') }}</th>
-              <th>{{ i18n.t('event.details.logs_mvp_avoidable_deaths') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (entry of logsMetrics()!.mvpLeaderboard || []; track entry.name) {
-              <tr [class.highlight-top-3]="$index < 3">
-                <td class="font-bold">
-                  <span class="rank-badge-row" [class.gold]="$index === 0" [class.silver]="$index === 1" [class.bronze]="$index === 2">
-                    {{ $index + 1 }}
-                  </span>
-                </td>
-                <td>
-                  <div class="player-cell">
-                    <img [src]="'assets/icons/class/' + getClassIcon(entry.class)" class="class-icon-img" alt="">
-                    <span class="player-name-bold" [class]="'text-class-' + entry.class">{{ entry.name }}</span>
-                  </div>
-                </td>
-                <td class="font-bold" style="color: #0074e0;">{{ entry.score }} pts</td>
-                <td class="damage-text font-bold">{{ formatNumberWithSpaces(entry.dpsAvg) }}</td>
-                <td class="heal-text font-bold">{{ formatNumberWithSpaces(entry.hpsAvg) }}</td>
-                <td class="text-slate-600 font-bold">{{ formatNumberWithSpaces(entry.damageTakenSum) }}</td>
-                <td>
-                  <span class="death-pill" [class.dead]="entry.deathsCount > 0">
-                    {{ entry.deathsCount }}
-                  </span>
-                </td>
-              </tr>
+    @if (logsSubTab() === 'mvp') {
+      <div class="logs-mvp-panel animated-fade-in">
+        @if (logsMetrics()!.mvpLeaderboard && logsMetrics()!.mvpLeaderboard.length > 0) {
+          <div class="mvp-podium-container">
+            <!-- 2nd Place (Silver) -->
+            @if (logsMetrics()!.mvpLeaderboard[1]; as p2) {
+              <div class="podium-item place-2">
+                <div class="podium-item-box">
+                  <span class="podium-rank-badge rank-2">🥈</span>
+                  <img
+                    [src]="'assets/icons/class/' + getClassIcon(p2.class)"
+                    class="podium-class-img"
+                    alt=""
+                  />
+                  <span class="podium-player-name" [class]="'text-class-' + p2.class">{{
+                    p2.name
+                  }}</span>
+                  <span class="podium-score">{{ p2.score }} pts</span>
+                </div>
+              </div>
             }
-          </tbody>
-        </table>
+            <!-- 1st Place (Gold) -->
+            @if (logsMetrics()!.mvpLeaderboard[0]; as p1) {
+              <div class="podium-item place-1">
+                <div class="podium-item-box">
+                  <span class="podium-rank-badge rank-1">👑 🥇</span>
+                  <img
+                    [src]="'assets/icons/class/' + getClassIcon(p1.class)"
+                    class="podium-class-img"
+                    alt=""
+                  />
+                  <span class="podium-player-name" [class]="'text-class-' + p1.class">{{
+                    p1.name
+                  }}</span>
+                  <span class="podium-score">{{ p1.score }} pts</span>
+                </div>
+              </div>
+            }
+            <!-- 3rd Place (Bronze) -->
+            @if (logsMetrics()!.mvpLeaderboard[2]; as p3) {
+              <div class="podium-item place-3">
+                <div class="podium-item-box">
+                  <span class="podium-rank-badge rank-3">🥉</span>
+                  <img
+                    [src]="'assets/icons/class/' + getClassIcon(p3.class)"
+                    class="podium-class-img"
+                    alt=""
+                  />
+                  <span class="podium-player-name" [class]="'text-class-' + p3.class">{{
+                    p3.name
+                  }}</span>
+                  <span class="podium-score">{{ p3.score }} pts</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+        <!-- Leaderboard Table -->
+        <div class="table-card table-responsive" style="margin-top: 2rem">
+          <table class="modern-table logs-table">
+            <thead>
+              <tr>
+                <th>{{ i18n.t('event.details.logs_mvp_rank') }}</th>
+                <th>{{ i18n.t('event.details.logs_th_player') }}</th>
+                <th>{{ i18n.t('event.details.logs_mvp_score') }}</th>
+                <th>{{ i18n.t('event.details.logs_mvp_dps_avg') }}</th>
+                <th>{{ i18n.t('event.details.logs_mvp_hps_avg') }}</th>
+                <th>{{ i18n.t('event.details.logs_mvp_damage_taken') }}</th>
+                <th>{{ i18n.t('event.details.logs_mvp_avoidable_deaths') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (entry of logsMetrics()!.mvpLeaderboard || []; track entry.name) {
+                <tr [class.highlight-top-3]="$index < 3">
+                  <td class="font-bold">
+                    <span
+                      class="rank-badge-row"
+                      [class.gold]="$index === 0"
+                      [class.silver]="$index === 1"
+                      [class.bronze]="$index === 2"
+                    >
+                      {{ $index + 1 }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="player-cell">
+                      <img
+                        [src]="'assets/icons/class/' + getClassIcon(entry.class)"
+                        class="class-icon-img"
+                        alt=""
+                      />
+                      <span class="player-name-bold" [class]="'text-class-' + entry.class">{{
+                        entry.name
+                      }}</span>
+                    </div>
+                  </td>
+                  <td class="font-bold" style="color: #0074e0">{{ entry.score }} pts</td>
+                  <td class="damage-text font-bold">{{ formatNumberWithSpaces(entry.dpsAvg) }}</td>
+                  <td class="heal-text font-bold">{{ formatNumberWithSpaces(entry.hpsAvg) }}</td>
+                  <td class="text-slate-600 font-bold">
+                    {{ formatNumberWithSpaces(entry.damageTakenSum) }}
+                  </td>
+                  <td>
+                    <span class="death-pill" [class.dead]="entry.deathsCount > 0">
+                      {{ entry.deathsCount }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
-
-  </ng-container>
+    }
+  }
 </div>

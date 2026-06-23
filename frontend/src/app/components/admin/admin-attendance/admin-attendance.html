@@ -5,7 +5,8 @@
       <p class="subtitle">{{ i18n.t('admin.attendance.subtitle') }}</p>
     </div>
     <button class="btn-refresh" (click)="loadAttendance()" [disabled]="isLoading()">
-      <span class="refresh-icon" [class.spinning]="isLoading()">🔄</span> {{ i18n.t('admin.attendance.btn_refresh') }}
+      <span class="refresh-icon" [class.spinning]="isLoading()">🔄</span>
+      {{ i18n.t('admin.attendance.btn_refresh') }}
     </button>
   </div>
 
@@ -23,65 +24,80 @@
   </div>
 
   <!-- Loading State -->
-  <div class="loading-state" *ngIf="isLoading()">
-    <div class="spinner"></div>
-    <p>{{ i18n.t('admin.attendance.loading') }}</p>
-  </div>
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>{{ i18n.t('admin.attendance.loading') }}</p>
+    </div>
+  }
 
   <!-- Empty State -->
-  <div class="empty-state" *ngIf="!isLoading() && getFilteredList().length === 0">
-    <p>{{ i18n.t('admin.attendance.empty_state') }}</p>
-  </div>
+  @if (!isLoading() && getFilteredList().length === 0) {
+    <div class="empty-state">
+      <p>{{ i18n.t('admin.attendance.empty_state') }}</p>
+    </div>
+  }
 
   <!-- Attendance Table -->
-  <div class="attendance-table-wrapper" *ngIf="!isLoading() && getFilteredList().length > 0">
-    <table class="attendance-table">
-      <thead>
-        <tr>
-          <th>{{ i18n.t('admin.attendance.th_member') }}</th>
-          <th>{{ i18n.t('admin.attendance.th_main_char') }}</th>
-          <th>{{ i18n.t('admin.attendance.th_events_attended') }}</th>
-          <th>{{ i18n.t('admin.attendance.th_attendance_rate') }}</th>
-          <th class="progress-col">{{ i18n.t('admin.attendance.th_progress') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let item of getFilteredList()">
-          <td>
-            <div class="member-cell">
-              <span class="battletag">{{ item.battletag }}</span>
-            </div>
-          </td>
-          <td>
-            <div class="character-cell" *ngIf="item.main_character_name">
-              <span class="char-name" [class]="'class-' + getClassCategory(item.main_character_class)">
-                {{ item.main_character_name }}
-              </span>
-            </div>
-            <span class="no-char" *ngIf="!item.main_character_name">{{ i18n.t('admin.attendance.no_character') }}</span>
-          </td>
-          <td>
-            <div class="stats-cell">
-              <span class="stats-value">{{ item.attended }} / {{ item.total_eligible }}</span>
-              <span class="stats-sub">{{ i18n.t('admin.attendance.events_label') }}</span>
-            </div>
-          </td>
-          <td>
-            <span class="percentage-badge" [class]="getAttendanceClass(item.percentage)">
-              {{ item.percentage }}%
-            </span>
-          </td>
-          <td class="progress-col">
-            <div class="progress-bar-container">
-              <div
-                class="progress-bar-fill"
-                [class]="getAttendanceClass(item.percentage)"
-                [style.width]="item.percentage + '%'">
-              </div>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  @if (!isLoading() && getFilteredList().length > 0) {
+    <div class="attendance-table-wrapper">
+      <table class="attendance-table">
+        <thead>
+          <tr>
+            <th>{{ i18n.t('admin.attendance.th_member') }}</th>
+            <th>{{ i18n.t('admin.attendance.th_main_char') }}</th>
+            <th>{{ i18n.t('admin.attendance.th_events_attended') }}</th>
+            <th>{{ i18n.t('admin.attendance.th_attendance_rate') }}</th>
+            <th class="progress-col">{{ i18n.t('admin.attendance.th_progress') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of getFilteredList(); track item) {
+            <tr>
+              <td>
+                <div class="member-cell">
+                  <span class="battletag">{{ item.battletag }}</span>
+                </div>
+              </td>
+              <td>
+                @if (item.main_character_name) {
+                  <div class="character-cell">
+                    <span
+                      class="char-name"
+                      [class]="'class-' + getClassCategory(item.main_character_class)"
+                    >
+                      {{ item.main_character_name }}
+                    </span>
+                  </div>
+                }
+                @if (!item.main_character_name) {
+                  <span class="no-char">{{ i18n.t('admin.attendance.no_character') }}</span>
+                }
+              </td>
+              <td>
+                <div class="stats-cell">
+                  <span class="stats-value">{{ item.attended }} / {{ item.total_eligible }}</span>
+                  <span class="stats-sub">{{ i18n.t('admin.attendance.events_label') }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="percentage-badge" [class]="getAttendanceClass(item.percentage)">
+                  {{ item.percentage }}%
+                </span>
+              </td>
+              <td class="progress-col">
+                <div class="progress-bar-container">
+                  <div
+                    class="progress-bar-fill"
+                    [class]="getAttendanceClass(item.percentage)"
+                    [style.width]="item.percentage + '%'"
+                  ></div>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
 </div>

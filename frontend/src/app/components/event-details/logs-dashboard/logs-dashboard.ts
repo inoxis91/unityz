@@ -1,15 +1,20 @@
 import { Component, Input, OnInit, signal, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
-import { CalendarService, WclReportMetrics, WclFight, WclPlayerPerf } from '../../../services/calendar';
+import {
+  CalendarService,
+  WclReportMetrics,
+  WclFight,
+  WclPlayerPerf,
+} from '../../../services/calendar';
 import { I18nService } from '../../../services/i18n';
 
 @Component({
   selector: 'app-logs-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './logs-dashboard.html',
-  styleUrl: './logs-dashboard.css'
+  styleUrl: './logs-dashboard.css',
 })
 export class LogsDashboardComponent implements OnInit {
   private calendarService = inject(CalendarService);
@@ -24,7 +29,9 @@ export class LogsDashboardComponent implements OnInit {
   logsError = signal<boolean>(false);
 
   // Sorting
-  logsPlayerSortBy = signal<'dps' | 'hps' | 'activeTime' | 'damageTaken' | 'deaths' | 'parse'>('dps');
+  logsPlayerSortBy = signal<'dps' | 'hps' | 'activeTime' | 'damageTaken' | 'deaths' | 'parse'>(
+    'dps',
+  );
   logsPlayerSortOrder = signal<'asc' | 'desc'>('desc');
 
   ngOnInit() {
@@ -48,7 +55,7 @@ export class LogsDashboardComponent implements OnInit {
         console.error('Error loading logs metrics:', err);
         this.logsError.set(true);
         this.loadingLogs.set(false);
-      }
+      },
     });
   }
 
@@ -88,20 +95,20 @@ export class LogsDashboardComponent implements OnInit {
     const metrics = this.logsMetrics();
     const fightId = this.selectedFightId();
     if (!metrics || fightId === null) return null;
-    return metrics.fights.find(f => f.id === fightId) || null;
+    return metrics.fights.find((f) => f.id === fightId) || null;
   }
 
   getSortedPlayersForSelectedFight(): WclPlayerPerf[] {
     const fight = this.getSelectedFight();
     if (!fight) return [];
-    
+
     const sortBy = this.logsPlayerSortBy();
     const isDesc = this.logsPlayerSortOrder() === 'desc';
-    
+
     return [...(fight.players || [])].sort((a, b) => {
       let valA = a[sortBy];
       let valB = b[sortBy];
-      
+
       if (valA < valB) return isDesc ? 1 : -1;
       if (valA > valB) return isDesc ? -1 : 1;
       return 0;
@@ -110,7 +117,7 @@ export class LogsDashboardComponent implements OnInit {
 
   setPlayerSort(field: 'dps' | 'hps' | 'activeTime' | 'damageTaken' | 'deaths' | 'parse') {
     if (this.logsPlayerSortBy() === field) {
-      this.logsPlayerSortOrder.update(o => o === 'desc' ? 'asc' : 'desc');
+      this.logsPlayerSortOrder.update((o) => (o === 'desc' ? 'asc' : 'desc'));
     } else {
       this.logsPlayerSortBy.set(field);
       this.logsPlayerSortOrder.set('desc');

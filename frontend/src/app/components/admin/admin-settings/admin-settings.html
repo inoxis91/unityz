@@ -1,217 +1,359 @@
 <div class="admin-settings-container animated-fade-in">
-  <div *ngIf="isLoading()" class="loading">
-    <span class="spinner"></span>
-  </div>
+  @if (isLoading()) {
+    <div class="loading">
+      <span class="spinner"></span>
+    </div>
+  }
 
-  <div *ngIf="!isLoading()" class="settings-layout">
-    <!-- Left column: General + Discord settings -->
-    <div class="settings-column" style="flex: 1.2; display: flex; flex-direction: column; gap: 2rem;">
-
-      <!-- General Guild Settings (Fees/Cotisations) - ALWAYS UNLOCKED -->
-      <div class="settings-form-box general-settings-box">
-        <h3>{{ i18n.t('admin.settings.title') }}</h3>
-        <p class="section-desc">{{ i18n.t('admin.settings.desc') }}</p>
-
-        <div class="form-group-switch">
-          <label class="switch-label">
-            <input type="checkbox" [checked]="feesEnabled()" (change)="feesEnabled.set(!feesEnabled())" />
-            <span class="slider"></span>
-          </label>
-          <div class="switch-text">
-            <span class="switch-title">{{ i18n.t('admin.settings.enable_fees') }}</span>
-            <span class="switch-desc">{{ i18n.t('admin.settings.enable_fees_desc') }}</span>
-          </div>
-        </div>
-
-        <div class="form-group" style="margin-top: 1.5rem;" *ngIf="feesEnabled()">
-          <label>{{ i18n.t('admin.settings.min_fee') }}</label>
-          <div class="input-mimic gold-input-mimic" style="display: flex; align-items: center; background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; padding: 0.65rem 0.85rem; gap: 0.5rem;">
-            <input type="number" [ngModel]="minimumFeeAmount()" (ngModelChange)="minimumFeeAmount.set($event)" name="minimumFeeAmount" placeholder="ex: 2000" min="0" required style="background: none; border: none; color: #ffffff; font-size: 0.9rem; width: 100%; outline: none;" />
-            <span class="unit" style="color: #f59e0b; font-weight: 800; font-size: 0.85rem;">PO</span>
-          </div>
-          <p class="help-text" style="color: #64748b; font-size: 0.8rem; margin: 0.25rem 0 0 0; text-align: left;">{{ i18n.t('admin.settings.min_fee_help') }}</p>
-        </div>
-
-        <!-- Disclaimers for Discord Notifications in Unpaid/Medium plan -->
-        <div class="discord-unpaid-disclaimer" style="display: flex; gap: 0.75rem; background: rgba(245, 158, 11, 0.04); border: 1px solid rgba(245, 158, 11, 0.15); border-radius: 6px; padding: 1rem; margin-top: 1.5rem; text-align: left;" *ngIf="!isPro() && feesEnabled()">
-          <span style="font-size: 1.25rem; line-height: 1;">⚠️</span>
-          <p style="font-size: 0.82rem; color: #d97706; margin: 0; line-height: 1.45;">
-            <strong>{{ i18n.t('admin.settings.restriction_title') }}</strong> {{ i18n.t('admin.settings.restriction_desc') }}
-          </p>
-        </div>
-
-        <button type="button" class="btn-save" (click)="saveSettings()" [disabled]="isSaving()" style="width: 100%; margin-top: 1.5rem;">
-          {{ isSaving() ? i18n.t('admin.settings.saving') : i18n.t('admin.settings.save_btn') }}
-        </button>
-      </div>
-
-      <!-- Discord Settings Box - LOCKED IF NOT PRO -->
-      <div class="settings-form-box" [class.pro-locked-box]="!isPro()">
-        <!-- Locked Overlay Banner -->
-        <div class="pro-locked-banner animated-fade-in" *ngIf="!isPro()">
-          <span class="lock-icon">🔒</span>
-          <div class="banner-badge">PRO</div>
-          <div class="banner-text">
-            <h4>{{ i18n.t('admin.discord.locked_title') }}</h4>
-            <p>{{ i18n.t('admin.discord.locked_desc') }}</p>
-          </div>
-          <button class="btn-upgrade" routerLink="/payment">{{ i18n.t('admin.discord.btn_unlock') }}</button>
-        </div>
-
-        <div class="settings-form-content" [class.muted-opacity]="!isPro()">
-          <h3>{{ i18n.t('admin.settings.discord_title') }}</h3>
-          <p class="section-desc">{{ i18n.t('admin.settings.discord_desc') }}</p>
-
+  @if (!isLoading()) {
+    <div class="settings-layout">
+      <!-- Left column: General + Discord settings -->
+      <div
+        class="settings-column"
+        style="flex: 1.2; display: flex; flex-direction: column; gap: 2rem"
+      >
+        <!-- General Guild Settings (Fees/Cotisations) - ALWAYS UNLOCKED -->
+        <div class="settings-form-box general-settings-box">
+          <h3>{{ i18n.t('admin.settings.title') }}</h3>
+          <p class="section-desc">{{ i18n.t('admin.settings.desc') }}</p>
           <div class="form-group-switch">
             <label class="switch-label">
-              <input type="checkbox" [checked]="discordEnabled()" (change)="discordEnabled.set(!discordEnabled())" [disabled]="!isPro()" />
+              <input
+                type="checkbox"
+                [checked]="feesEnabled()"
+                (change)="feesEnabled.set(!feesEnabled())"
+              />
               <span class="slider"></span>
             </label>
             <div class="switch-text">
-              <span class="switch-title">{{ i18n.t('admin.settings.discord_enable') }}</span>
-              <span class="switch-desc">{{ i18n.t('admin.settings.discord_enable_desc') }}</span>
+              <span class="switch-title">{{ i18n.t('admin.settings.enable_fees') }}</span>
+              <span class="switch-desc">{{ i18n.t('admin.settings.enable_fees_desc') }}</span>
             </div>
           </div>
-
-          <div class="form-group" style="margin-top: 1rem;" *ngIf="discordEnabled() && isPro()">
-            <label>{{ i18n.t('admin.settings.discord_locale') }}</label>
-            <select [ngModel]="discordLocale()" (ngModelChange)="discordLocale.set($event)" name="discordLocale" class="custom-select" style="background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; padding: 0.65rem 0.85rem; color: #ffffff; font-size: 0.9rem; outline: none; width: 100%;">
-              <option value="en">{{ i18n.t('admin.settings.discord_locale_en') }}</option>
-              <option value="fr">{{ i18n.t('admin.settings.discord_locale_fr') }}</option>
-            </select>
-            <p class="help-text" style="color: #64748b; font-size: 0.8rem; margin: 0.25rem 0 0 0; text-align: left;">{{ i18n.t('admin.settings.discord_locale_help') }}</p>
+          @if (feesEnabled()) {
+            <div class="form-group" style="margin-top: 1.5rem">
+              <label>{{ i18n.t('admin.settings.min_fee') }}</label>
+              <div
+                class="input-mimic gold-input-mimic"
+                style="
+                  display: flex;
+                  align-items: center;
+                  background: #0f172a;
+                  border: 1px solid rgba(255, 255, 255, 0.08);
+                  border-radius: 6px;
+                  padding: 0.65rem 0.85rem;
+                  gap: 0.5rem;
+                "
+              >
+                <input
+                  type="number"
+                  [ngModel]="minimumFeeAmount()"
+                  (ngModelChange)="minimumFeeAmount.set($event)"
+                  name="minimumFeeAmount"
+                  placeholder="ex: 2000"
+                  min="0"
+                  required
+                  style="
+                    background: none;
+                    border: none;
+                    color: #ffffff;
+                    font-size: 0.9rem;
+                    width: 100%;
+                    outline: none;
+                  "
+                />
+                <span class="unit" style="color: #f59e0b; font-weight: 800; font-size: 0.85rem"
+                  >PO</span
+                >
+              </div>
+              <p
+                class="help-text"
+                style="color: #64748b; font-size: 0.8rem; margin: 0.25rem 0 0 0; text-align: left"
+              >
+                {{ i18n.t('admin.settings.min_fee_help') }}
+              </p>
+            </div>
+          }
+          <!-- Disclaimers for Discord Notifications in Unpaid/Medium plan -->
+          @if (!isPro() && feesEnabled()) {
+            <div
+              class="discord-unpaid-disclaimer"
+              style="
+                display: flex;
+                gap: 0.75rem;
+                background: rgba(245, 158, 11, 0.04);
+                border: 1px solid rgba(245, 158, 11, 0.15);
+                border-radius: 6px;
+                padding: 1rem;
+                margin-top: 1.5rem;
+                text-align: left;
+              "
+            >
+              <span style="font-size: 1.25rem; line-height: 1">⚠️</span>
+              <p style="font-size: 0.82rem; color: #d97706; margin: 0; line-height: 1.45">
+                <strong>{{ i18n.t('admin.settings.restriction_title') }}</strong>
+                {{ i18n.t('admin.settings.restriction_desc') }}
+              </p>
+            </div>
+          }
+          <button
+            type="button"
+            class="btn-save"
+            (click)="saveSettings()"
+            [disabled]="isSaving()"
+            style="width: 100%; margin-top: 1.5rem"
+          >
+            {{ isSaving() ? i18n.t('admin.settings.saving') : i18n.t('admin.settings.save_btn') }}
+          </button>
+        </div>
+        <!-- Discord Settings Box - LOCKED IF NOT PRO -->
+        <div class="settings-form-box" [class.pro-locked-box]="!isPro()">
+          <!-- Locked Overlay Banner -->
+          @if (!isPro()) {
+            <div class="pro-locked-banner animated-fade-in">
+              <span class="lock-icon">🔒</span>
+              <div class="banner-badge">PRO</div>
+              <div class="banner-text">
+                <h4>{{ i18n.t('admin.discord.locked_title') }}</h4>
+                <p>{{ i18n.t('admin.discord.locked_desc') }}</p>
+              </div>
+              <button class="btn-upgrade" routerLink="/payment">
+                {{ i18n.t('admin.discord.btn_unlock') }}
+              </button>
+            </div>
+          }
+          <div class="settings-form-content" [class.muted-opacity]="!isPro()">
+            <h3>{{ i18n.t('admin.settings.discord_title') }}</h3>
+            <p class="section-desc">{{ i18n.t('admin.settings.discord_desc') }}</p>
+            <div class="form-group-switch">
+              <label class="switch-label">
+                <input
+                  type="checkbox"
+                  [checked]="discordEnabled()"
+                  (change)="discordEnabled.set(!discordEnabled())"
+                  [disabled]="!isPro()"
+                />
+                <span class="slider"></span>
+              </label>
+              <div class="switch-text">
+                <span class="switch-title">{{ i18n.t('admin.settings.discord_enable') }}</span>
+                <span class="switch-desc">{{ i18n.t('admin.settings.discord_enable_desc') }}</span>
+              </div>
+            </div>
+            @if (discordEnabled() && isPro()) {
+              <div class="form-group" style="margin-top: 1rem">
+                <label>{{ i18n.t('admin.settings.discord_locale') }}</label>
+                <select
+                  [ngModel]="discordLocale()"
+                  (ngModelChange)="discordLocale.set($event)"
+                  name="discordLocale"
+                  class="custom-select"
+                  style="
+                    background: #0f172a;
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 6px;
+                    padding: 0.65rem 0.85rem;
+                    color: #ffffff;
+                    font-size: 0.9rem;
+                    outline: none;
+                    width: 100%;
+                  "
+                >
+                  <option value="en">{{ i18n.t('admin.settings.discord_locale_en') }}</option>
+                  <option value="fr">{{ i18n.t('admin.settings.discord_locale_fr') }}</option>
+                </select>
+                <p
+                  class="help-text"
+                  style="color: #64748b; font-size: 0.8rem; margin: 0.25rem 0 0 0; text-align: left"
+                >
+                  {{ i18n.t('admin.settings.discord_locale_help') }}
+                </p>
+              </div>
+            }
+            <form (submit)="saveSettings()" class="settings-form">
+              <div class="form-group">
+                <label>{{ i18n.t('admin.settings.discord_guild_id') }}</label>
+                <input
+                  type="text"
+                  [ngModel]="discordGuildId()"
+                  (ngModelChange)="discordGuildId.set($event)"
+                  name="discordGuildId"
+                  placeholder="ex: 1489220257158791279"
+                  [disabled]="!discordEnabled() || !isPro()"
+                />
+              </div>
+              <div class="form-group">
+                <label>{{ i18n.t('admin.settings.discord_events_channel') }}</label>
+                <input
+                  type="text"
+                  [ngModel]="discordEventsChannelId()"
+                  (ngModelChange)="discordEventsChannelId.set($event)"
+                  name="discordEventsChannelId"
+                  placeholder="ex: 1509267337147056249"
+                  [disabled]="!discordEnabled() || !isPro()"
+                />
+              </div>
+              <div class="form-group">
+                <label>{{ i18n.t('admin.settings.discord_officer_channel') }}</label>
+                <input
+                  type="text"
+                  [ngModel]="discordOfficerChannelId()"
+                  (ngModelChange)="discordOfficerChannelId.set($event)"
+                  name="discordOfficerChannelId"
+                  placeholder="ex: 1509267337147056249"
+                  [disabled]="!discordEnabled() || !isPro()"
+                />
+              </div>
+              <div class="form-group">
+                <label>{{ i18n.t('admin.settings.discord_crafts_channel') }}</label>
+                <input
+                  type="text"
+                  [ngModel]="discordCraftsChannelId()"
+                  (ngModelChange)="discordCraftsChannelId.set($event)"
+                  name="discordCraftsChannelId"
+                  placeholder="ex: 1509267337147056249"
+                  [disabled]="!discordEnabled() || !isPro()"
+                />
+              </div>
+              <div class="form-group">
+                <label>{{ i18n.t('admin.settings.discord_fees_channel') }}</label>
+                <input
+                  type="text"
+                  [ngModel]="discordFeesChannelId()"
+                  (ngModelChange)="discordFeesChannelId.set($event)"
+                  name="discordFeesChannelId"
+                  placeholder="ex: 1489523542780285100"
+                  [disabled]="!discordEnabled() || !isPro()"
+                />
+              </div>
+              <div class="form-group">
+                <label>{{ i18n.t('admin.settings.discord_reminder_channel') }}</label>
+                <input
+                  type="text"
+                  [ngModel]="discordReminderChannelId()"
+                  (ngModelChange)="discordReminderChannelId.set($event)"
+                  name="discordReminderChannelId"
+                  placeholder="ex: 1429498219142053903"
+                  [disabled]="!discordEnabled() || !isPro()"
+                />
+              </div>
+              <button type="submit" class="btn-save" [disabled]="isSaving() || !isPro()">
+                {{
+                  isSaving() ? i18n.t('admin.settings.saving') : i18n.t('admin.settings.save_btn')
+                }}
+              </button>
+            </form>
           </div>
-
-          <form (submit)="saveSettings()" class="settings-form">
-            <div class="form-group">
-              <label>{{ i18n.t('admin.settings.discord_guild_id') }}</label>
-              <input type="text" [ngModel]="discordGuildId()" (ngModelChange)="discordGuildId.set($event)" name="discordGuildId" placeholder="ex: 1489220257158791279" [disabled]="!discordEnabled() || !isPro()" />
-            </div>
-
-            <div class="form-group">
-              <label>{{ i18n.t('admin.settings.discord_events_channel') }}</label>
-              <input type="text" [ngModel]="discordEventsChannelId()" (ngModelChange)="discordEventsChannelId.set($event)" name="discordEventsChannelId" placeholder="ex: 1509267337147056249" [disabled]="!discordEnabled() || !isPro()" />
-            </div>
-
-            <div class="form-group">
-              <label>{{ i18n.t('admin.settings.discord_officer_channel') }}</label>
-              <input type="text" [ngModel]="discordOfficerChannelId()" (ngModelChange)="discordOfficerChannelId.set($event)" name="discordOfficerChannelId" placeholder="ex: 1509267337147056249" [disabled]="!discordEnabled() || !isPro()" />
-            </div>
-
-            <div class="form-group">
-              <label>{{ i18n.t('admin.settings.discord_crafts_channel') }}</label>
-              <input type="text" [ngModel]="discordCraftsChannelId()" (ngModelChange)="discordCraftsChannelId.set($event)" name="discordCraftsChannelId" placeholder="ex: 1509267337147056249" [disabled]="!discordEnabled() || !isPro()" />
-            </div>
-
-            <div class="form-group">
-              <label>{{ i18n.t('admin.settings.discord_fees_channel') }}</label>
-              <input type="text" [ngModel]="discordFeesChannelId()" (ngModelChange)="discordFeesChannelId.set($event)" name="discordFeesChannelId" placeholder="ex: 1489523542780285100" [disabled]="!discordEnabled() || !isPro()" />
-            </div>
-
-            <div class="form-group">
-              <label>{{ i18n.t('admin.settings.discord_reminder_channel') }}</label>
-              <input type="text" [ngModel]="discordReminderChannelId()" (ngModelChange)="discordReminderChannelId.set($event)" name="discordReminderChannelId" placeholder="ex: 1429498219142053903" [disabled]="!discordEnabled() || !isPro()" />
-            </div>
-
-            <button type="submit" class="btn-save" [disabled]="isSaving() || !isPro()">
-              {{ isSaving() ? i18n.t('admin.settings.saving') : i18n.t('admin.settings.save_btn') }}
+        </div>
+      </div>
+      <!-- Instructions / Guide -->
+      <div class="instructions-card" [class.pro-locked-box-guide]="!isPro()">
+        <!-- Locked Overlay for Guide -->
+        @if (!isPro()) {
+          <div class="pro-locked-banner-guide animated-fade-in">
+            <span class="lock-icon-guide">🔒</span>
+            <div class="banner-badge-guide">PRO</div>
+            <h4>{{ i18n.t('admin.discord.locked_title') }}</h4>
+            <p>{{ i18n.t('admin.discord.locked_desc') }}</p>
+            <button class="btn-upgrade-guide" routerLink="/payment">
+              {{ i18n.t('admin.discord.btn_unlock') }}
             </button>
-          </form>
+          </div>
+        }
+        <div class="instructions-content" [class.muted-opacity-guide]="!isPro()">
+          <div class="instructions-header">
+            <div class="bot-avatar">
+              <svg
+                viewBox="0 0 127.14 96.36"
+                width="30"
+                height="23"
+                fill="#ffffff"
+                class="discord-logo"
+              >
+                <path
+                  d="M107.7,8.07A105.15,107,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a77.7,77.7,0,0,0,6.63-10.85,68.43,68.43,0,0,1-10.51-5c.88-.65,1.72-1.34,2.53-2a75.14,75.14,0,0,0,93,0c.81.71,1.65,1.4,2.53,2a68.43,68.43,0,0,1-10.51,5,77.7,77.7,0,0,0,6.63,10.85,105.73,105.73,0,0,0,31.06-18.83C129.54,50.75,123.63,27.91,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"
+                />
+              </svg>
+            </div>
+            <div class="header-text">
+              <h3>{{ i18n.t('admin.discord.wizard_title') }}</h3>
+              <p class="guide-subtitle">{{ i18n.t('admin.discord.wizard_desc') }}</p>
+            </div>
+          </div>
+          <div class="steps-container">
+            <!-- Step 1 -->
+            <div class="step-item">
+              <div class="step-left">
+                <span class="step-num">1</span>
+                <span class="step-line"></span>
+              </div>
+              <div class="step-right">
+                <strong>{{ i18n.t('admin.discord.step1_title') }}</strong>
+                <p>{{ i18n.t('admin.discord.step1_desc') }}</p>
+                <a
+                  [href]="
+                    'https://discord.com/api/oauth2/authorize?client_id=' +
+                    discordClientId() +
+                    '&permissions=8&scope=bot'
+                  "
+                  target="_blank"
+                  class="btn-invite-discord"
+                >
+                  <svg viewBox="0 0 127.14 96.36" width="16" height="12" fill="currentColor">
+                    <path
+                      d="M107.7,8.07A105.15,107,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a77.7,77.7,0,0,0,6.63-10.85,68.43,68.43,0,0,1-10.51-5c.88-.65,1.72-1.34,2.53-2a75.14,75.14,0,0,0,93,0c.81.71,1.65,1.4,2.53,2a68.43,68.43,0,0,1-10.51,5,77.7,77.7,0,0,0,6.63,10.85,105.73,105.73,0,0,0,31.06-18.83C129.54,50.75,123.63,27.91,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"
+                    />
+                  </svg>
+                  <span>{{ i18n.t('admin.discord.step1_btn') }}</span>
+                </a>
+              </div>
+            </div>
+            <!-- Step 2 -->
+            <div class="step-item">
+              <div class="step-left">
+                <span class="step-num">2</span>
+                <span class="step-line"></span>
+              </div>
+              <div class="step-right">
+                <strong>{{ i18n.t('admin.discord.step2_title') }}</strong>
+                <p>{{ i18n.t('admin.discord.step2_desc') }}</p>
+              </div>
+            </div>
+            <!-- Step 3 -->
+            <div class="step-item">
+              <div class="step-left">
+                <span class="step-num">3</span>
+                <span class="step-line"></span>
+              </div>
+              <div class="step-right">
+                <strong>{{ i18n.t('admin.discord.step3_title') }}</strong>
+                <p>{{ i18n.t('admin.discord.step3_desc') }}</p>
+              </div>
+            </div>
+            <!-- Step 4 -->
+            <div class="step-item">
+              <div class="step-left">
+                <span class="step-num">4</span>
+                <span class="step-line"></span>
+              </div>
+              <div class="step-right">
+                <strong>{{ i18n.t('admin.discord.step4_title') }}</strong>
+                <p>{{ i18n.t('admin.discord.step4_desc') }}</p>
+              </div>
+            </div>
+            <!-- Step 5 -->
+            <div class="step-item">
+              <div class="step-left">
+                <span class="step-num">5</span>
+              </div>
+              <div class="step-right">
+                <strong>{{ i18n.t('admin.discord.step5_title') }}</strong>
+                <p>{{ i18n.t('admin.discord.step5_desc') }}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-
-    <!-- Instructions / Guide -->
-    <div class="instructions-card" [class.pro-locked-box-guide]="!isPro()">
-      <!-- Locked Overlay for Guide -->
-      <div class="pro-locked-banner-guide animated-fade-in" *ngIf="!isPro()">
-        <span class="lock-icon-guide">🔒</span>
-        <div class="banner-badge-guide">PRO</div>
-        <h4>{{ i18n.t('admin.discord.locked_title') }}</h4>
-        <p>{{ i18n.t('admin.discord.locked_desc') }}</p>
-        <button class="btn-upgrade-guide" routerLink="/payment">{{ i18n.t('admin.discord.btn_unlock') }}</button>
-      </div>
-
-      <div class="instructions-content" [class.muted-opacity-guide]="!isPro()">
-        <div class="instructions-header">
-          <div class="bot-avatar">
-            <svg viewBox="0 0 127.14 96.36" width="30" height="23" fill="#ffffff" class="discord-logo">
-              <path d="M107.7,8.07A105.15,107,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a77.7,77.7,0,0,0,6.63-10.85,68.43,68.43,0,0,1-10.51-5c.88-.65,1.72-1.34,2.53-2a75.14,75.14,0,0,0,93,0c.81.71,1.65,1.4,2.53,2a68.43,68.43,0,0,1-10.51,5,77.7,77.7,0,0,0,6.63,10.85,105.73,105.73,0,0,0,31.06-18.83C129.54,50.75,123.63,27.91,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/>
-            </svg>
-          </div>
-          <div class="header-text">
-            <h3>{{ i18n.t('admin.discord.wizard_title') }}</h3>
-            <p class="guide-subtitle">{{ i18n.t('admin.discord.wizard_desc') }}</p>
-          </div>
-        </div>
-
-        <div class="steps-container">
-          <!-- Step 1 -->
-          <div class="step-item">
-            <div class="step-left">
-              <span class="step-num">1</span>
-              <span class="step-line"></span>
-            </div>
-            <div class="step-right">
-              <strong>{{ i18n.t('admin.discord.step1_title') }}</strong>
-              <p>{{ i18n.t('admin.discord.step1_desc') }}</p>
-              <a [href]="'https://discord.com/api/oauth2/authorize?client_id=' + (discordClientId()) + '&permissions=8&scope=bot'" target="_blank" class="btn-invite-discord">
-                <svg viewBox="0 0 127.14 96.36" width="16" height="12" fill="currentColor">
-                  <path d="M107.7,8.07A105.15,107,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a77.7,77.7,0,0,0,6.63-10.85,68.43,68.43,0,0,1-10.51-5c.88-.65,1.72-1.34,2.53-2a75.14,75.14,0,0,0,93,0c.81.71,1.65,1.4,2.53,2a68.43,68.43,0,0,1-10.51,5,77.7,77.7,0,0,0,6.63,10.85,105.73,105.73,0,0,0,31.06-18.83C129.54,50.75,123.63,27.91,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/>
-                </svg>
-                <span>{{ i18n.t('admin.discord.step1_btn') }}</span>
-              </a>
-            </div>
-          </div>
-
-          <!-- Step 2 -->
-          <div class="step-item">
-            <div class="step-left">
-              <span class="step-num">2</span>
-              <span class="step-line"></span>
-            </div>
-            <div class="step-right">
-              <strong>{{ i18n.t('admin.discord.step2_title') }}</strong>
-              <p>{{ i18n.t('admin.discord.step2_desc') }}</p>
-            </div>
-          </div>
-
-          <!-- Step 3 -->
-          <div class="step-item">
-            <div class="step-left">
-              <span class="step-num">3</span>
-              <span class="step-line"></span>
-            </div>
-            <div class="step-right">
-              <strong>{{ i18n.t('admin.discord.step3_title') }}</strong>
-              <p>{{ i18n.t('admin.discord.step3_desc') }}</p>
-            </div>
-          </div>
-
-          <!-- Step 4 -->
-          <div class="step-item">
-            <div class="step-left">
-              <span class="step-num">4</span>
-              <span class="step-line"></span>
-            </div>
-            <div class="step-right">
-              <strong>{{ i18n.t('admin.discord.step4_title') }}</strong>
-              <p>{{ i18n.t('admin.discord.step4_desc') }}</p>
-            </div>
-          </div>
-
-          <!-- Step 5 -->
-          <div class="step-item">
-            <div class="step-left">
-              <span class="step-num">5</span>
-            </div>
-            <div class="step-right">
-              <strong>{{ i18n.t('admin.discord.step5_title') }}</strong>
-              <p>{{ i18n.t('admin.discord.step5_desc') }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  }
 </div>

@@ -1,415 +1,670 @@
-<div class="dashboard-wrapper animated-fade-in" *ngIf="authService.currentUser() as user">
-  
-  <!-- Hero Section: Welcome & Roster -->
-  <section class="hero-section">
-    <div class="welcome-box">
-      <div class="user-main-info">
-        <span class="greeting">{{ i18n.t('dashboard.welcome') }}</span>
-        <h1>{{ mainCharacter()?.name || user.battletag }}</h1>
-      </div>
-      
-      <div class="roster-info-card" *ngIf="myRoster() as roster; else noRoster">
-        <span class="label">{{ i18n.t('dashboard.current_roster') }}</span>
-        <div class="roster-details">
-          <span class="roster-icon">
-            <img src="assets/icons/tank.png" class="role-icon-img" alt="Roster">
-          </span>
-          <div class="roster-text">
-            <h3>{{ roster.name }}</h3>
-            <p>{{ roster.description }}</p>
-          </div>
+@if (authService.currentUser(); as user) {
+  <div class="dashboard-wrapper animated-fade-in">
+    <!-- Hero Section: Welcome & Roster -->
+    <section class="hero-section">
+      <div class="welcome-box">
+        <div class="user-main-info">
+          <span class="greeting">{{ i18n.t('dashboard.welcome') }}</span>
+          <h1>{{ mainCharacter()?.name || user.battletag }}</h1>
         </div>
-      </div>
-      <ng-template #noRoster>
-        <div class="roster-info-card unassigned">
-          <p>{{ i18n.t('dashboard.no_roster') }}</p>
-        </div>
-      </ng-template>
-
-      <!-- Dashboard Cotisation Summary -->
-      <div class="dashboard-fee-card">
-        <div class="fee-header">
-          <h3>{{ i18n.t('dashboard.fee_status') }}</h3>
-          <a routerLink="/fees" class="view-all">{{ i18n.t('dashboard.details') }}</a>
-        </div>
-        <div class="fee-months">
-          @for (m of feeSummary(); track m.name) {
-            <div class="fee-month-mini" [class]="m.status.class">
-              <span class="m-name">{{ m.name }}</span>
-              <div class="m-status">
-                <span class="icon">{{ m.status.icon }}</span>
-                <span class="val">{{ m.status.label }}</span>
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-
-      <!-- Dashboard Attendance Summary -->
-      <div class="dashboard-attendance-card" *ngIf="myAttendance() as att">
-        <div class="attendance-header">
-          <h3>{{ i18n.t('dashboard.attendance.title') }}</h3>
-          <a href="javascript:void(0)" (click)="showAttendanceModal.set(true)" class="view-all">{{ i18n.t('dashboard.attendance.details') }}</a>
-        </div>
-        <div class="attendance-body">
-          <div class="attendance-circular" [style.--progress]="att.percentage + '%'">
-            <span class="attendance-value">{{ att.percentage }}%</span>
-          </div>
-          <div class="attendance-details">
-            <span class="label">{{ i18n.t('dashboard.attendance.current_month') }}</span>
-            <span class="stats">{{ i18n.t('dashboard.attendance.events_count').split('{attended}').join(att.attended.toString()).split('{eligible}').join(att.total_eligible.toString()) }}</span>
-            <span class="help-text">{{ i18n.t('dashboard.attendance.help_text') }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Main Character Display -->
-    <div class="main-char-display" *ngIf="mainCharacter() as char" [class]="'bg-class-' + getClassCategory(char.class)">
-      <div class="char-image-container" *ngIf="getCharacterImage() as imageUrl">
-        <img [src]="imageUrl" alt="Character Render" class="char-render">
-      </div>
-      
-      <div class="char-content">
-        <div class="char-top">
-          <span class="level">{{ i18n.t('char.level').split('{level}').join(char.level.toString()) }}</span>
-          <div class="char-badges">
-            <span class="ilvl-badge" *ngIf="charDetails()?.summary as sum">{{ sum.equipped_item_level }} iLvl</span>
-            <span class="rio-badge" *ngIf="mainCharacterRioScore()">{{ mainCharacterRioScore() }} RIO</span>
-            <span class="main-badge">MAIN</span>
-          </div>
-        </div>
-        <div class="char-body">
-          <h2>{{ char.name }}</h2>
-          <span class="realm">{{ char.realm }}</span>
-        </div>
-        <div class="char-footer">
-          <div class="roles">
-            <img *ngIf="char.is_tank" src="assets/icons/tank.png" class="role-icon-img large" title="Tank" alt="Tank">
-            <img *ngIf="char.is_heal" src="assets/icons/heal.png" class="role-icon-img large" title="Healer" alt="Heal">
-            <img *ngIf="char.is_dps" src="assets/icons/dps.png" class="role-icon-img large" title="DPS" alt="DPS">
-          </div>
-          <div class="footer-links">
-            <a [href]="characterService.getRaiderIoUrl(char.name, char.realm)" target="_blank" class="logs-link" (click)="$event.stopPropagation()">
-              <img src="assets/icons/raiderio.webp" alt="Raider.IO" [title]="i18n.t('dashboard.tooltip.rio')">
-            </a>
-            <a [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="logs-link" (click)="$event.stopPropagation()">
-              <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" [title]="i18n.t('dashboard.tooltip.logs')">
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Loading Overlay -->
-      <div class="char-loading" *ngIf="loadingDetails()">
-        <div class="spinner"></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Birthday Section -->
-  <section class="birthday-announcements animated-fade-in" *ngIf="birthdays().length > 0" style="margin-bottom: 2.5rem;">
-    <div class="birthday-card" style="background: linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%); border: 1px solid #fde8bb; border-radius: 24px; padding: 1.75rem; display: flex; align-items: center; gap: 1.75rem; box-shadow: 0 4px 20px rgba(251, 191, 36, 0.08);">
-      <div class="birthday-icon" style="font-size: 2.8rem; line-height: 1; animation: bdayBounce 2s infinite;">🎂</div>
-      <div class="birthday-messages" style="flex-grow: 1;">
-        <h2 style="margin: 0 0 0.5rem 0; font-size: 1.25rem; font-weight: 800; color: #b45309; display: flex; align-items: center; gap: 0.5rem;">
-          {{ i18n.t('dashboard.birthday.title') }}
-        </h2>
-        <div class="messages-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
-          @for (bday of birthdays(); track bday.id) {
-            <div class="birthday-item" style="font-size: 1.05rem; color: #78350f; font-weight: 600;">
-              @if (isBirthdayToday(bday.birthday)) {
-                <span class="special-bday" style="background: linear-gradient(90deg, #f59e0b, #ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; font-size: 1.1rem; display: inline-flex; align-items: center; gap: 0.5rem; animation: bdayPulse 1.5s infinite;">
-                  {{ i18n.t('dashboard.birthday.today_prefix') }}<strong>{{ bday.main_character }}</strong>{{ i18n.t('dashboard.birthday.today_suffix') }}
-                </span>
-              } @else {
-                <span class="month-bday" style="display: inline-flex; align-items: center; gap: 0.4rem;">
-                  {{ i18n.t('dashboard.birthday.month_prefix') }}<strong>{{ bday.main_character }}</strong>{{ i18n.t('dashboard.birthday.month_suffix').replace('{date}', formatBirthdayDay(bday.birthday)) }}
-                </span>
-              }
-            </div>
-          }
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <div class="dashboard-grid">
-    
-    <!-- Upcoming Events Column -->
-    <section class="events-column">
-      <div class="section-header">
-        <h2>{{ i18n.t('dashboard.upcoming_events') }}</h2>
-        <a routerLink="/calendar" class="view-all">{{ i18n.t('dashboard.view_all') }}</a>
-      </div>
-
-      <div class="events-list">
-        @for (event of upcomingEvents(); track event.id) {
-          <div class="event-card" [routerLink]="['/events', event.id]">
-            <div class="event-date">
-              <span class="day">{{ event.start_time | date:'dd' }}</span>
-              <span class="month">{{ event.start_time | date:'MMM' }}</span>
-            </div>
-            <div class="event-main">
-              <div class="event-type" [class]="event.type.toLowerCase()">{{ event.type }}</div>
-              <h3>{{ event.title }}</h3>
-              
-              <div class="event-status-row">
-                <span class="time">{{ event.start_time | date:'HH:mm' }}</span>
-                
-                @if (getSignupStatus(event.id); as signup) {
-                  <span class="status-indicator" [class]="signup.status">
-                    <ng-container [ngSwitch]="signup.status">
-                      <span *ngSwitchCase="'signed_up'">{{ i18n.t('dashboard.signed_up') }}</span>
-                      <span *ngSwitchCase="'standby'">{{ i18n.t('dashboard.standby') }}</span>
-                      <span *ngSwitchCase="'absent'">{{ i18n.t('dashboard.absent') }}</span>
-                      <span *ngSwitchDefault>{{ i18n.t('dashboard.signed_up') }}</span>
-                    </ng-container>
-                  </span>
-                } @else {
-                  <span class="status-indicator none">{{ i18n.t('dashboard.unregistered') }}</span>
-                }
-              </div>
-            </div>
-            <div class="event-countdown">
-              <span class="timer-icon">⏳</span>
-              <span class="timer-text">{{ getCountdown(event.start_time) }}</span>
-            </div>
-          </div>
-        }
-        @if (upcomingEvents().length === 0) {
-          <div class="empty-state">
-            <p>{{ i18n.t('dashboard.no_events') }}</p>
-          </div>
-        }
-      </div>
-    </section>
-
-    <!-- My Characters Column -->
-    <section class="chars-column">
-      <div class="section-header">
-        <h2>{{ i18n.t('dashboard.my_characters') }}</h2>
-        <a [routerLink]="['/options']" [queryParams]="{tab: 'characters'}" class="view-all">{{ i18n.t('dashboard.manage') }}</a>
-      </div>
-
-      <div class="chars-grid">
-        @for (char of myCharacters(); track char.id) {
-          <div class="simple-char-card" [class]="'border-class-' + getClassCategory(char.class)">
-            <div class="char-info">
-              <span class="name" [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</span>
-              <span class="realm">{{ char.realm }}</span>
-              <span class="roster-badge-dashboard" *ngIf="char.roster_name">
-                <span class="badge-icon">👥</span>{{ char.roster_name }}
+        @if (myRoster(); as roster) {
+          <div class="roster-info-card">
+            <span class="label">{{ i18n.t('dashboard.current_roster') }}</span>
+            <div class="roster-details">
+              <span class="roster-icon">
+                <img src="assets/icons/tank.png" class="role-icon-img" alt="Roster" />
               </span>
+              <div class="roster-text">
+                <h3>{{ roster.name }}</h3>
+                <p>{{ roster.description }}</p>
+              </div>
             </div>
-            <div class="char-meta">
-              <span class="lvl">{{ char.level }}</span>
-              <span class="rio-mini" *ngIf="getRioScoreForKey(char.name, char.realm)">{{ getRioScoreForKey(char.name, char.realm) }}</span>
-              <span class="main-star" *ngIf="char.is_main">⭐</span>
-              <a [href]="characterService.getRaiderIoUrl(char.name, char.realm)" target="_blank" class="logs-link-mini" (click)="$event.stopPropagation()">
-                <img src="assets/icons/raiderio.webp" alt="Raider.IO" [title]="i18n.t('dashboard.tooltip.rio')">
-              </a>
-              <a [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="logs-link-mini" (click)="$event.stopPropagation()">
-                <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" [title]="i18n.t('dashboard.tooltip.logs')">
-              </a>
+          </div>
+        } @else {
+          <div class="roster-info-card unassigned">
+            <p>{{ i18n.t('dashboard.no_roster') }}</p>
+          </div>
+        }
+        <!-- Dashboard Cotisation Summary -->
+        <div class="dashboard-fee-card">
+          <div class="fee-header">
+            <h3>{{ i18n.t('dashboard.fee_status') }}</h3>
+            <a routerLink="/fees" class="view-all">{{ i18n.t('dashboard.details') }}</a>
+          </div>
+          <div class="fee-months">
+            @for (m of feeSummary(); track m.name) {
+              <div class="fee-month-mini" [class]="m.status.class">
+                <span class="m-name">{{ m.name }}</span>
+                <div class="m-status">
+                  <span class="icon">{{ m.status.icon }}</span>
+                  <span class="val">{{ m.status.label }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+        <!-- Dashboard Attendance Summary -->
+        @if (myAttendance(); as att) {
+          <div class="dashboard-attendance-card">
+            <div class="attendance-header">
+              <h3>{{ i18n.t('dashboard.attendance.title') }}</h3>
+              <a
+                href="javascript:void(0)"
+                (click)="showAttendanceModal.set(true)"
+                class="view-all"
+                >{{ i18n.t('dashboard.attendance.details') }}</a
+              >
+            </div>
+            <div class="attendance-body">
+              <div class="attendance-circular" [style.--progress]="att.percentage + '%'">
+                <span class="attendance-value">{{ att.percentage }}%</span>
+              </div>
+              <div class="attendance-details">
+                <span class="label">{{ i18n.t('dashboard.attendance.current_month') }}</span>
+                <span class="stats">{{
+                  i18n
+                    .t('dashboard.attendance.events_count')
+                    .split('{attended}')
+                    .join(att.attended.toString())
+                    .split('{eligible}')
+                    .join(att.total_eligible.toString())
+                }}</span>
+                <span class="help-text">{{ i18n.t('dashboard.attendance.help_text') }}</span>
+              </div>
             </div>
           </div>
         }
-        @if (myCharacters().length === 0) {
-          <div class="empty-state">
-            <p>{{ i18n.t('dashboard.no_linked_chars') }}</p>
-            <button class="btn-import" [routerLink]="['/options']" [queryParams]="{tab: 'characters'}">{{ i18n.t('dashboard.import') }}</button>
-          </div>
-        }
       </div>
-    </section>
-
-  </div>
-
-  <!-- Warcraft Logs Parses Section -->
-  <section class="parses-section animated-fade-in" style="margin-top: 2.5rem; margin-bottom: 2.5rem;">
-    <div class="section-header flex-header">
-      <div class="header-titles">
-        <h2>{{ i18n.t('dashboard.parses.title') }}</h2>
-        <p class="subtitle" *ngIf="selectedCharacter()">
-          {{ i18n.t('dashboard.parses.subtitle') }} — <strong class="char-highlight" [class]="'class-' + getClassCategory(selectedCharacter()?.class)">{{ selectedCharacter()?.name }}</strong>
-        </p>
-      </div>
-      <div class="header-actions" *ngIf="myParses() && selectedCharacter()">
-        <a [href]="characterService.getWarcraftLogsUrl(selectedCharacter()?.name, selectedCharacter()?.realm)" target="_blank" class="wcl-btn">
-          <img src="assets/icons/warcraftlogs.png" alt="WCL" class="wcl-mini-icon">
-          {{ i18n.t('dashboard.parses.view_wcl') }}
-        </a>
-      </div>
-    </div>
-
-    <!-- Main Character Parse Card -->
-    <div class="parses-card" *ngIf="mainCharacter(); else noMainChar">
-      <!-- Loading State -->
-      <div class="parses-loading" *ngIf="loadingParses()">
-        <div class="spinner"></div>
-        <p>{{ i18n.t('dashboard.parses.loading') }}</p>
-      </div>
-
-      <!-- Content State -->
-      <ng-container *ngIf="!loadingParses() && myParses() as parses">
-        <div class="parses-header-row">
-          <div class="parses-tabs">
-            <button class="tab-btn" [class.active]="parsesTab() === 'raid'" (click)="parsesTab.set('raid')">
-              🛡️ {{ i18n.t('dashboard.parses.raid') }}
-            </button>
-            <button class="tab-btn" [class.active]="parsesTab() === 'dungeon'" (click)="parsesTab.set('dungeon')">
-              🌀 {{ i18n.t('dashboard.parses.dungeons') }}
-            </button>
-          </div>
-
-          <div class="parses-controls">
-            <!-- Character Dropdown -->
-            <div class="control-group">
-              <label>{{ i18n.t('dashboard.parses.character_label') }}</label>
-              <select class="styled-select" (change)="onCharacterChange($event)">
-                @for (c of myCharacters(); track c.id) {
-                  <option [value]="c.id" [selected]="c.id === selectedCharacterId()">{{ c.name }} ({{ c.realm }})</option>
+      <!-- Main Character Display -->
+      @if (mainCharacter(); as char) {
+        <div class="main-char-display" [class]="'bg-class-' + getClassCategory(char.class)">
+          @if (getCharacterImage(); as imageUrl) {
+            <div class="char-image-container">
+              <img [src]="imageUrl" alt="Character Render" class="char-render" />
+            </div>
+          }
+          <div class="char-content">
+            <div class="char-top">
+              <span class="level">{{
+                i18n.t('char.level').split('{level}').join(char.level.toString())
+              }}</span>
+              <div class="char-badges">
+                @if (charDetails()?.summary; as sum) {
+                  <span class="ilvl-badge">{{ sum.equipped_item_level }} iLvl</span>
                 }
-              </select>
-            </div>
-
-            <!-- Difficulty Dropdown (only for Raid) -->
-            <div class="control-group" *ngIf="parsesTab() === 'raid'">
-              <label>{{ i18n.t('dashboard.parses.difficulty_label') }}</label>
-              <select class="styled-select" (change)="onDifficultyChange($event)">
-                <option [value]="3" [selected]="selectedDifficulty() === 3">{{ i18n.t('difficulty.3') }}</option>
-                <option [value]="4" [selected]="selectedDifficulty() === 4">{{ i18n.t('difficulty.4') }}</option>
-                <option [value]="5" [selected]="selectedDifficulty() === 5">{{ i18n.t('difficulty.5') }}</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="parses-content-container">
-          <!-- Left side: Summary -->
-          <div class="parses-summary-col">
-            <div class="summary-metric-box">
-              <span class="box-label">{{ i18n.t('dashboard.parses.best_average') }}</span>
-              <div class="box-value-container">
-                <span class="box-value" [class]="getParseColorClass(parsesTab() === 'raid' ? parses.raidRankings.bestPerformanceAverage : parses.dungeonRankings.bestPerformanceAverage)">
-                  {{ parsesTab() === 'raid' ? parses.raidRankings.bestPerformanceAverage : parses.dungeonRankings.bestPerformanceAverage }}
-                </span>
-                <span class="percent-sign">%</span>
-              </div>
-              <div class="parse-rank-indicator" [class]="getParseColorClass(parsesTab() === 'raid' ? parses.raidRankings.bestPerformanceAverage : parses.dungeonRankings.bestPerformanceAverage)">
-                <span class="bullet">●</span>
-                <span class="text">
-                  {{ i18n.t('dashboard.attendance.current_month') }}
-                </span>
+                @if (mainCharacterRioScore()) {
+                  <span class="rio-badge">{{ mainCharacterRioScore() }} RIO</span>
+                }
+                <span class="main-badge">MAIN</span>
               </div>
             </div>
-          </div>
-
-          <!-- Right side: Grid of specific encounters -->
-          <div class="parses-grid-col">
-            <div class="encounters-grid">
-              @for (p of (parsesTab() === 'raid' ? parses.raidRankings.rankings : parses.dungeonRankings.rankings); track p.encounterId) {
-                <div class="encounter-row">
-                  <div class="encounter-info">
-                    <div class="encounter-title-row">
-                      <span class="enc-name">{{ i18n.t('encounter.' + p.encounterId) }}</span>
-                      <span class="difficulty-badge" [class]="'diff-' + p.difficulty" *ngIf="p.difficulty">
-                        {{ p.difficulty === 10 && p.keyLevel ? ('Clef +' + p.keyLevel) : i18n.t('difficulty.' + p.difficulty) }}
-                      </span>
-                    </div>
-                    <span class="enc-spec">{{ p.spec || 'N/A' }}</span>
-                  </div>
-                  <div class="encounter-percentile-container">
-                    <div class="percentile-badge" [class]="getParseColorClass(p.percentile)">
-                      {{ p.percentile !== null && p.percentile !== undefined ? p.percentile : '-' }}
-                    </div>
-                    <div class="encounter-progress-bg">
-                      <div class="encounter-progress-bar" [style.width]="(p.percentile !== null && p.percentile !== undefined ? p.percentile : 0) + '%'" [class]="getParseColorClass(p.percentile)"></div>
-                    </div>
-                    <div class="encounter-rank" *ngIf="p.rank > 0">
-                      <span class="rank-label">{{ i18n.t('dashboard.parses.rank') }}</span>
-                      <span class="rank-val">#{{ p.rank | number }}</span>
-                    </div>
-                  </div>
-                </div>
-              }
-              @if ((parsesTab() === 'raid' ? parses.raidRankings.rankings : parses.dungeonRankings.rankings).length === 0) {
-                <div class="no-parses-empty">
-                  <p>{{ i18n.t('dashboard.parses.no_parses') }}</p>
-                </div>
-              }
+            <div class="char-body">
+              <h2>{{ char.name }}</h2>
+              <span class="realm">{{ char.realm }}</span>
+            </div>
+            <div class="char-footer">
+              <div class="roles">
+                @if (char.is_tank) {
+                  <img
+                    src="assets/icons/tank.png"
+                    class="role-icon-img large"
+                    title="Tank"
+                    alt="Tank"
+                  />
+                }
+                @if (char.is_heal) {
+                  <img
+                    src="assets/icons/heal.png"
+                    class="role-icon-img large"
+                    title="Healer"
+                    alt="Heal"
+                  />
+                }
+                @if (char.is_dps) {
+                  <img
+                    src="assets/icons/dps.png"
+                    class="role-icon-img large"
+                    title="DPS"
+                    alt="DPS"
+                  />
+                }
+              </div>
+              <div class="footer-links">
+                <a
+                  [href]="characterService.getRaiderIoUrl(char.name, char.realm)"
+                  target="_blank"
+                  class="logs-link"
+                  (click)="$event.stopPropagation()"
+                >
+                  <img
+                    src="assets/icons/raiderio.webp"
+                    alt="Raider.IO"
+                    [title]="i18n.t('dashboard.tooltip.rio')"
+                  />
+                </a>
+                <a
+                  [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)"
+                  target="_blank"
+                  class="logs-link"
+                  (click)="$event.stopPropagation()"
+                >
+                  <img
+                    src="assets/icons/warcraftlogs.png"
+                    alt="Warcraft Logs"
+                    [title]="i18n.t('dashboard.tooltip.logs')"
+                  />
+                </a>
+              </div>
             </div>
           </div>
+          <!-- Loading Overlay -->
+          @if (loadingDetails()) {
+            <div class="char-loading">
+              <div class="spinner"></div>
+            </div>
+          }
         </div>
-      </ng-container>
-    </div>
-
-    <ng-template #noMainChar>
-      <div class="parses-card empty-parses-card">
-        <div class="empty-state">
-          <p>{{ i18n.t('dashboard.parses.no_char') }}</p>
-          <button class="btn-import" [routerLink]="['/options']" [queryParams]="{tab: 'characters'}">{{ i18n.t('dashboard.import') }}</button>
-        </div>
-      </div>
-    </ng-template>
-  </section>
-
-  <!-- Attendance Details Modal -->
-  <div class="modal-overlay" *ngIf="showAttendanceModal() && myAttendance() as att" (click)="showAttendanceModal.set(false)">
-    <div class="modal-container" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>{{ i18n.t('dashboard.attendance.title') }}</h2>
-        <button class="modal-close" (click)="showAttendanceModal.set(false)">×</button>
-      </div>
-      <div class="modal-content">
-        <div class="attendance-modal-summary">
-          <div class="summary-stat">
-            <span class="label">{{ i18n.t('dashboard.attendance.rate') }}</span>
-            <span class="val">{{ att.percentage }}%</span>
+      }
+    </section>
+    <!-- Birthday Section -->
+    @if (birthdays().length > 0) {
+      <section class="birthday-announcements animated-fade-in" style="margin-bottom: 2.5rem">
+        <div
+          class="birthday-card"
+          style="
+            background: linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%);
+            border: 1px solid #fde8bb;
+            border-radius: 24px;
+            padding: 1.75rem;
+            display: flex;
+            align-items: center;
+            gap: 1.75rem;
+            box-shadow: 0 4px 20px rgba(251, 191, 36, 0.08);
+          "
+        >
+          <div
+            class="birthday-icon"
+            style="font-size: 2.8rem; line-height: 1; animation: bdayBounce 2s infinite"
+          >
+            🎂
           </div>
-          <div class="summary-stat">
-            <span class="label">{{ i18n.t('dashboard.attendance.presences') }}</span>
-            <span class="val">{{ att.attended }}</span>
-          </div>
-          <div class="summary-stat">
-            <span class="label">{{ i18n.t('dashboard.attendance.eligible_events') }}</span>
-            <span class="val">{{ att.total_eligible }}</span>
-          </div>
-        </div>
-
-        <h3 style="margin-bottom: 1rem; color: #1e293b;">{{ i18n.t('dashboard.attendance.history_title') }}</h3>
-        <div class="attendance-events-list">
-          @for (evt of att.events; track evt.id) {
-            <div class="attendance-event-row">
-              <div class="event-row-info">
-                <h4>{{ evt.title }}</h4>
-                <div class="meta">
-                  <span>📅 {{ evt.start_time | date:'dd MMM yyyy, HH:mm' }}</span>
-                  <span *ngIf="evt.roster_name" style="color: #3b82f6; font-weight: 600;">🔴 {{ evt.roster_name }}</span>
-                  <span *ngIf="evt.character_name" class="character-tag">
-                    🛡️ {{ evt.character_name }}
-                  </span>
-                </div>
-              </div>
-              <div class="event-row-status">
-                <span class="status-badge" [class.attended]="evt.status === 'signed_up' || evt.status === 'standby'" [class.absent]="evt.status === 'absent'" [class.unregistered]="!evt.status">
-                  @if (evt.status === 'signed_up' || evt.status === 'standby') {
-                    {{ i18n.t('dashboard.attendance.status_present') }}
-                  } @else if (evt.status === 'absent') {
-                    {{ i18n.t('dashboard.attendance.status_absent') }}
+          <div class="birthday-messages" style="flex-grow: 1">
+            <h2
+              style="
+                margin: 0 0 0.5rem 0;
+                font-size: 1.25rem;
+                font-weight: 800;
+                color: #b45309;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+              "
+            >
+              {{ i18n.t('dashboard.birthday.title') }}
+            </h2>
+            <div class="messages-list" style="display: flex; flex-direction: column; gap: 0.5rem">
+              @for (bday of birthdays(); track bday.id) {
+                <div
+                  class="birthday-item"
+                  style="font-size: 1.05rem; color: #78350f; font-weight: 600"
+                >
+                  @if (isBirthdayToday(bday.birthday)) {
+                    <span
+                      class="special-bday"
+                      style="
+                        background: linear-gradient(90deg, #f59e0b, #ef4444);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        font-weight: 800;
+                        font-size: 1.1rem;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        animation: bdayPulse 1.5s infinite;
+                      "
+                    >
+                      {{ i18n.t('dashboard.birthday.today_prefix')
+                      }}<strong>{{ bday.main_character }}</strong
+                      >{{ i18n.t('dashboard.birthday.today_suffix') }}
+                    </span>
                   } @else {
-                    {{ i18n.t('dashboard.attendance.status_unregistered') }}
+                    <span
+                      class="month-bday"
+                      style="display: inline-flex; align-items: center; gap: 0.4rem"
+                    >
+                      {{ i18n.t('dashboard.birthday.month_prefix')
+                      }}<strong>{{ bday.main_character }}</strong
+                      >{{
+                        i18n
+                          .t('dashboard.birthday.month_suffix')
+                          .replace('{date}', formatBirthdayDay(bday.birthday))
+                      }}
+                    </span>
                   }
-                </span>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </section>
+    }
+    <div class="dashboard-grid">
+      <!-- Upcoming Events Column -->
+      <section class="events-column">
+        <div class="section-header">
+          <h2>{{ i18n.t('dashboard.upcoming_events') }}</h2>
+          <a routerLink="/calendar" class="view-all">{{ i18n.t('dashboard.view_all') }}</a>
+        </div>
+        <div class="events-list">
+          @for (event of upcomingEvents(); track event.id) {
+            <div class="event-card" [routerLink]="['/events', event.id]">
+              <div class="event-date">
+                <span class="day">{{ event.start_time | date: 'dd' }}</span>
+                <span class="month">{{ event.start_time | date: 'MMM' }}</span>
+              </div>
+              <div class="event-main">
+                <div class="event-type" [class]="event.type.toLowerCase()">{{ event.type }}</div>
+                <h3>{{ event.title }}</h3>
+                <div class="event-status-row">
+                  <span class="time">{{ event.start_time | date: 'HH:mm' }}</span>
+                  @if (getSignupStatus(event.id); as signup) {
+                    <span class="status-indicator" [class]="signup.status">
+                      @switch (signup.status) {
+                        @case ('signed_up') {
+                          <span>{{ i18n.t('dashboard.signed_up') }}</span>
+                        }
+                        @case ('standby') {
+                          <span>{{ i18n.t('dashboard.standby') }}</span>
+                        }
+                        @case ('absent') {
+                          <span>{{ i18n.t('dashboard.absent') }}</span>
+                        }
+                        @default {
+                          <span>{{ i18n.t('dashboard.signed_up') }}</span>
+                        }
+                      }
+                    </span>
+                  } @else {
+                    <span class="status-indicator none">{{
+                      i18n.t('dashboard.unregistered')
+                    }}</span>
+                  }
+                </div>
+              </div>
+              <div class="event-countdown">
+                <span class="timer-icon">⏳</span>
+                <span class="timer-text">{{ getCountdown(event.start_time) }}</span>
               </div>
             </div>
           }
-          @if (att.events.length === 0) {
-            <p style="text-align: center; color: #64748b; margin-top: 2rem;">{{ i18n.t('dashboard.attendance.no_events') }}</p>
+          @if (upcomingEvents().length === 0) {
+            <div class="empty-state">
+              <p>{{ i18n.t('dashboard.no_events') }}</p>
+            </div>
           }
         </div>
-      </div>
+      </section>
+      <!-- My Characters Column -->
+      <section class="chars-column">
+        <div class="section-header">
+          <h2>{{ i18n.t('dashboard.my_characters') }}</h2>
+          <a [routerLink]="['/options']" [queryParams]="{ tab: 'characters' }" class="view-all">{{
+            i18n.t('dashboard.manage')
+          }}</a>
+        </div>
+        <div class="chars-grid">
+          @for (char of myCharacters(); track char.id) {
+            <div class="simple-char-card" [class]="'border-class-' + getClassCategory(char.class)">
+              <div class="char-info">
+                <span class="name" [class]="'class-' + getClassCategory(char.class)">{{
+                  char.name
+                }}</span>
+                <span class="realm">{{ char.realm }}</span>
+                @if (char.roster_name) {
+                  <span class="roster-badge-dashboard">
+                    <span class="badge-icon">👥</span>{{ char.roster_name }}
+                  </span>
+                }
+              </div>
+              <div class="char-meta">
+                <span class="lvl">{{ char.level }}</span>
+                @if (getRioScoreForKey(char.name, char.realm)) {
+                  <span class="rio-mini">{{ getRioScoreForKey(char.name, char.realm) }}</span>
+                }
+                @if (char.is_main) {
+                  <span class="main-star">⭐</span>
+                }
+                <a
+                  [href]="characterService.getRaiderIoUrl(char.name, char.realm)"
+                  target="_blank"
+                  class="logs-link-mini"
+                  (click)="$event.stopPropagation()"
+                >
+                  <img
+                    src="assets/icons/raiderio.webp"
+                    alt="Raider.IO"
+                    [title]="i18n.t('dashboard.tooltip.rio')"
+                  />
+                </a>
+                <a
+                  [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)"
+                  target="_blank"
+                  class="logs-link-mini"
+                  (click)="$event.stopPropagation()"
+                >
+                  <img
+                    src="assets/icons/warcraftlogs.png"
+                    alt="Warcraft Logs"
+                    [title]="i18n.t('dashboard.tooltip.logs')"
+                  />
+                </a>
+              </div>
+            </div>
+          }
+          @if (myCharacters().length === 0) {
+            <div class="empty-state">
+              <p>{{ i18n.t('dashboard.no_linked_chars') }}</p>
+              <button
+                class="btn-import"
+                [routerLink]="['/options']"
+                [queryParams]="{ tab: 'characters' }"
+              >
+                {{ i18n.t('dashboard.import') }}
+              </button>
+            </div>
+          }
+        </div>
+      </section>
     </div>
+    <!-- Warcraft Logs Parses Section -->
+    <section
+      class="parses-section animated-fade-in"
+      style="margin-top: 2.5rem; margin-bottom: 2.5rem"
+    >
+      <div class="section-header flex-header">
+        <div class="header-titles">
+          <h2>{{ i18n.t('dashboard.parses.title') }}</h2>
+          @if (selectedCharacter()) {
+            <p class="subtitle">
+              {{ i18n.t('dashboard.parses.subtitle') }} —
+              <strong
+                class="char-highlight"
+                [class]="'class-' + getClassCategory(selectedCharacter()?.class)"
+                >{{ selectedCharacter()?.name }}</strong
+              >
+            </p>
+          }
+        </div>
+        @if (myParses() && selectedCharacter()) {
+          <div class="header-actions">
+            <a
+              [href]="
+                characterService.getWarcraftLogsUrl(
+                  selectedCharacter()?.name,
+                  selectedCharacter()?.realm
+                )
+              "
+              target="_blank"
+              class="wcl-btn"
+            >
+              <img src="assets/icons/warcraftlogs.png" alt="WCL" class="wcl-mini-icon" />
+              {{ i18n.t('dashboard.parses.view_wcl') }}
+            </a>
+          </div>
+        }
+      </div>
+      <!-- Main Character Parse Card -->
+      @if (mainCharacter()) {
+        <div class="parses-card">
+          <!-- Loading State -->
+          @if (loadingParses()) {
+            <div class="parses-loading">
+              <div class="spinner"></div>
+              <p>{{ i18n.t('dashboard.parses.loading') }}</p>
+            </div>
+          }
+          <!-- Content State -->
+          @if (!loadingParses() && myParses(); as parses) {
+            <div class="parses-header-row">
+              <div class="parses-tabs">
+                <button
+                  class="tab-btn"
+                  [class.active]="parsesTab() === 'raid'"
+                  (click)="parsesTab.set('raid')"
+                >
+                  🛡️ {{ i18n.t('dashboard.parses.raid') }}
+                </button>
+                <button
+                  class="tab-btn"
+                  [class.active]="parsesTab() === 'dungeon'"
+                  (click)="parsesTab.set('dungeon')"
+                >
+                  🌀 {{ i18n.t('dashboard.parses.dungeons') }}
+                </button>
+              </div>
+              <div class="parses-controls">
+                <!-- Character Dropdown -->
+                <div class="control-group">
+                  <label>{{ i18n.t('dashboard.parses.character_label') }}</label>
+                  <select class="styled-select" (change)="onCharacterChange($event)">
+                    @for (c of myCharacters(); track c.id) {
+                      <option [value]="c.id" [selected]="c.id === selectedCharacterId()">
+                        {{ c.name }} ({{ c.realm }})
+                      </option>
+                    }
+                  </select>
+                </div>
+                <!-- Difficulty Dropdown (only for Raid) -->
+                @if (parsesTab() === 'raid') {
+                  <div class="control-group">
+                    <label>{{ i18n.t('dashboard.parses.difficulty_label') }}</label>
+                    <select class="styled-select" (change)="onDifficultyChange($event)">
+                      <option [value]="3" [selected]="selectedDifficulty() === 3">
+                        {{ i18n.t('difficulty.3') }}
+                      </option>
+                      <option [value]="4" [selected]="selectedDifficulty() === 4">
+                        {{ i18n.t('difficulty.4') }}
+                      </option>
+                      <option [value]="5" [selected]="selectedDifficulty() === 5">
+                        {{ i18n.t('difficulty.5') }}
+                      </option>
+                    </select>
+                  </div>
+                }
+              </div>
+            </div>
+            <div class="parses-content-container">
+              <!-- Left side: Summary -->
+              <div class="parses-summary-col">
+                <div class="summary-metric-box">
+                  <span class="box-label">{{ i18n.t('dashboard.parses.best_average') }}</span>
+                  <div class="box-value-container">
+                    <span
+                      class="box-value"
+                      [class]="
+                        getParseColorClass(
+                          parsesTab() === 'raid'
+                            ? parses.raidRankings.bestPerformanceAverage
+                            : parses.dungeonRankings.bestPerformanceAverage
+                        )
+                      "
+                    >
+                      {{
+                        parsesTab() === 'raid'
+                          ? parses.raidRankings.bestPerformanceAverage
+                          : parses.dungeonRankings.bestPerformanceAverage
+                      }}
+                    </span>
+                    <span class="percent-sign">%</span>
+                  </div>
+                  <div
+                    class="parse-rank-indicator"
+                    [class]="
+                      getParseColorClass(
+                        parsesTab() === 'raid'
+                          ? parses.raidRankings.bestPerformanceAverage
+                          : parses.dungeonRankings.bestPerformanceAverage
+                      )
+                    "
+                  >
+                    <span class="bullet">●</span>
+                    <span class="text">
+                      {{ i18n.t('dashboard.attendance.current_month') }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <!-- Right side: Grid of specific encounters -->
+              <div class="parses-grid-col">
+                <div class="encounters-grid">
+                  @for (
+                    p of parsesTab() === 'raid'
+                      ? parses.raidRankings.rankings
+                      : parses.dungeonRankings.rankings;
+                    track p.encounterId
+                  ) {
+                    <div class="encounter-row">
+                      <div class="encounter-info">
+                        <div class="encounter-title-row">
+                          <span class="enc-name">{{ i18n.t('encounter.' + p.encounterId) }}</span>
+                          @if (p.difficulty) {
+                            <span class="difficulty-badge" [class]="'diff-' + p.difficulty">
+                              {{
+                                p.difficulty === 10 && p.keyLevel
+                                  ? 'Clef +' + p.keyLevel
+                                  : i18n.t('difficulty.' + p.difficulty)
+                              }}
+                            </span>
+                          }
+                        </div>
+                        <span class="enc-spec">{{ p.spec || 'N/A' }}</span>
+                      </div>
+                      <div class="encounter-percentile-container">
+                        <div class="percentile-badge" [class]="getParseColorClass(p.percentile)">
+                          {{
+                            p.percentile !== null && p.percentile !== undefined ? p.percentile : '-'
+                          }}
+                        </div>
+                        <div class="encounter-progress-bg">
+                          <div
+                            class="encounter-progress-bar"
+                            [style.width]="
+                              (p.percentile !== null && p.percentile !== undefined
+                                ? p.percentile
+                                : 0) + '%'
+                            "
+                            [class]="getParseColorClass(p.percentile)"
+                          ></div>
+                        </div>
+                        @if (p.rank > 0) {
+                          <div class="encounter-rank">
+                            <span class="rank-label">{{ i18n.t('dashboard.parses.rank') }}</span>
+                            <span class="rank-val">#{{ p.rank | number }}</span>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                  @if (
+                    (parsesTab() === 'raid'
+                      ? parses.raidRankings.rankings
+                      : parses.dungeonRankings.rankings
+                    ).length === 0
+                  ) {
+                    <div class="no-parses-empty">
+                      <p>{{ i18n.t('dashboard.parses.no_parses') }}</p>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="parses-card empty-parses-card">
+          <div class="empty-state">
+            <p>{{ i18n.t('dashboard.parses.no_char') }}</p>
+            <button
+              class="btn-import"
+              [routerLink]="['/options']"
+              [queryParams]="{ tab: 'characters' }"
+            >
+              {{ i18n.t('dashboard.import') }}
+            </button>
+          </div>
+        </div>
+      }
+    </section>
+    <!-- Attendance Details Modal -->
+    @if (showAttendanceModal() && myAttendance(); as att) {
+      <div class="modal-overlay" (click)="showAttendanceModal.set(false)">
+        <div class="modal-container" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>{{ i18n.t('dashboard.attendance.title') }}</h2>
+            <button class="modal-close" (click)="showAttendanceModal.set(false)">×</button>
+          </div>
+          <div class="modal-content">
+            <div class="attendance-modal-summary">
+              <div class="summary-stat">
+                <span class="label">{{ i18n.t('dashboard.attendance.rate') }}</span>
+                <span class="val">{{ att.percentage }}%</span>
+              </div>
+              <div class="summary-stat">
+                <span class="label">{{ i18n.t('dashboard.attendance.presences') }}</span>
+                <span class="val">{{ att.attended }}</span>
+              </div>
+              <div class="summary-stat">
+                <span class="label">{{ i18n.t('dashboard.attendance.eligible_events') }}</span>
+                <span class="val">{{ att.total_eligible }}</span>
+              </div>
+            </div>
+            <h3 style="margin-bottom: 1rem; color: #1e293b">
+              {{ i18n.t('dashboard.attendance.history_title') }}
+            </h3>
+            <div class="attendance-events-list">
+              @for (evt of att.events; track evt.id) {
+                <div class="attendance-event-row">
+                  <div class="event-row-info">
+                    <h4>{{ evt.title }}</h4>
+                    <div class="meta">
+                      <span>📅 {{ evt.start_time | date: 'dd MMM yyyy, HH:mm' }}</span>
+                      @if (evt.roster_name) {
+                        <span style="color: #3b82f6; font-weight: 600"
+                          >🔴 {{ evt.roster_name }}</span
+                        >
+                      }
+                      @if (evt.character_name) {
+                        <span class="character-tag"> 🛡️ {{ evt.character_name }} </span>
+                      }
+                    </div>
+                  </div>
+                  <div class="event-row-status">
+                    <span
+                      class="status-badge"
+                      [class.attended]="evt.status === 'signed_up' || evt.status === 'standby'"
+                      [class.absent]="evt.status === 'absent'"
+                      [class.unregistered]="!evt.status"
+                    >
+                      @if (evt.status === 'signed_up' || evt.status === 'standby') {
+                        {{ i18n.t('dashboard.attendance.status_present') }}
+                      } @else if (evt.status === 'absent') {
+                        {{ i18n.t('dashboard.attendance.status_absent') }}
+                      } @else {
+                        {{ i18n.t('dashboard.attendance.status_unregistered') }}
+                      }
+                    </span>
+                  </div>
+                </div>
+              }
+              @if (att.events.length === 0) {
+                <p style="text-align: center; color: #64748b; margin-top: 2rem">
+                  {{ i18n.t('dashboard.attendance.no_events') }}
+                </p>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    }
   </div>
-</div>
+}

@@ -12,8 +12,17 @@ describe('OptionsComponent', () => {
   let component: OptionsComponent;
   let fixture: ComponentFixture<OptionsComponent>;
 
+  const stableUser = {
+    id: 1,
+    role: 'member',
+    subscription_tier: 'free',
+    subscription_expires_at: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+    subscription_status: 'active',
+    professions: ['alchemy']
+  };
+
   const mockAuthService = {
-    currentUser: () => ({ id: 1, role: 'member', subscription_tier: 'free', subscription_expires_at: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), subscription_status: 'active', professions: ['alchemy'] }),
+    currentUser: () => stableUser,
     currentGuild: () => ({ name: 'Test Guild' }),
     isGMOrOfficer: () => true,
     isAdmin: () => false,

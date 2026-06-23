@@ -1,20 +1,33 @@
 <div class="roster-manager">
   <div class="header">
     <h2>{{ i18n.t('admin.rosters.title') }}</h2>
-    <button class="btn-primary" [disabled]="limitReached()" [title]="limitReached() ? i18n.t('admin.rosters.tooltip_limit') : i18n.t('admin.rosters.tooltip_create')" (click)="showCreateModal.set(true)">
+    <button
+      class="btn-primary"
+      [disabled]="limitReached()"
+      [title]="
+        limitReached()
+          ? i18n.t('admin.rosters.tooltip_limit')
+          : i18n.t('admin.rosters.tooltip_create')
+      "
+      (click)="showCreateModal.set(true)"
+    >
       {{ i18n.t('admin.rosters.btn_create') }}
     </button>
   </div>
 
   <!-- Quota Limit Notice -->
-  <div class="quota-locked-notice animated-fade-in" *ngIf="limitReached()">
-    <span class="notice-icon">⚠️</span>
-    <div class="notice-text">
-      <strong>{{ i18n.t('admin.rosters.quota_title') }}</strong>
-      <p>{{ i18n.t('admin.rosters.quota_desc').replace('{pro_badge}', 'Pro') }}</p>
+  @if (limitReached()) {
+    <div class="quota-locked-notice animated-fade-in">
+      <span class="notice-icon">⚠️</span>
+      <div class="notice-text">
+        <strong>{{ i18n.t('admin.rosters.quota_title') }}</strong>
+        <p>{{ i18n.t('admin.rosters.quota_desc').replace('{pro_badge}', 'Pro') }}</p>
+      </div>
+      <button class="btn-upgrade-mini" routerLink="/payment">
+        {{ i18n.t('admin.rosters.btn_upgrade') }}
+      </button>
     </div>
-    <button class="btn-upgrade-mini" routerLink="/payment">{{ i18n.t('admin.rosters.btn_upgrade') }}</button>
-  </div>
+  }
 
   <div class="manager-layout" cdkDropListGroup>
     <!-- Pool de personnages non assignés -->
@@ -24,18 +37,37 @@
         cdkDropList
         [cdkDropListData]="rosterService.unassignedCharacters()"
         class="character-list"
-        (cdkDropListDropped)="drop($event, null)">
+        (cdkDropListDropped)="drop($event, null)"
+      >
         @for (char of rosterService.unassignedCharacters(); track char.id) {
-          <div class="character-card" [class]="'border-class-' + getClassCategory(char.class)" cdkDrag (contextmenu)="onContextMenu($event, char, null)">
+          <div
+            class="character-card"
+            [class]="'border-class-' + getClassCategory(char.class)"
+            cdkDrag
+            (contextmenu)="onContextMenu($event, char, null)"
+          >
             <div class="char-main">
-              <span class="char-name" [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</span>
+              <span class="char-name" [class]="'class-' + getClassCategory(char.class)">{{
+                char.name
+              }}</span>
             </div>
             <div class="char-roles">
-              <img *ngIf="char.is_tank" src="assets/icons/tank.png" class="role-icon-img small" alt="Tank">
-              <img *ngIf="char.is_heal" src="assets/icons/heal.png" class="role-icon-img small" alt="Heal">
-              <img *ngIf="char.is_dps" src="assets/icons/dps.png" class="role-icon-img small" alt="DPS">
-              <a [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="logs-link-mini" (click)="$event.stopPropagation()">
-                <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs">
+              @if (char.is_tank) {
+                <img src="assets/icons/tank.png" class="role-icon-img small" alt="Tank" />
+              }
+              @if (char.is_heal) {
+                <img src="assets/icons/heal.png" class="role-icon-img small" alt="Heal" />
+              }
+              @if (char.is_dps) {
+                <img src="assets/icons/dps.png" class="role-icon-img small" alt="DPS" />
+              }
+              <a
+                [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)"
+                target="_blank"
+                class="logs-link-mini"
+                (click)="$event.stopPropagation()"
+              >
+                <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" />
               </a>
             </div>
           </div>
@@ -54,39 +86,95 @@
             <div class="roster-title">
               <div class="title-with-weight">
                 <h4>{{ roster.name }}</h4>
-                <span class="weight-label">{{ i18n.t('admin.rosters.weight_label').replace('{weight}', roster.weight.toString()) }}</span>
+                <span class="weight-label">{{
+                  i18n.t('admin.rosters.weight_label').replace('{weight}', roster.weight.toString())
+                }}</span>
               </div>
               <p class="roster-desc">{{ roster.description }}</p>
             </div>
             <div class="roster-actions">
-              <button class="btn-action-icon edit" (click)="openEditModal(roster)" [title]="i18n.t('admin.rosters.tooltip_edit')">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              <button
+                class="btn-action-icon edit"
+                (click)="openEditModal(roster)"
+                [title]="i18n.t('admin.rosters.tooltip_edit')"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
               </button>
-              <button class="btn-action-icon delete" (click)="onDeleteRoster(roster.id)" [title]="i18n.t('admin.rosters.tooltip_delete')">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+              <button
+                class="btn-action-icon delete"
+                (click)="onDeleteRoster(roster.id)"
+                [title]="i18n.t('admin.rosters.tooltip_delete')"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path
+                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                  ></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
               </button>
             </div>
           </div>
-          
+
           <div
             cdkDropList
             [cdkDropListData]="roster.characters || []"
             class="roster-list"
-            (cdkDropListDropped)="drop($event, roster.id)">
+            (cdkDropListDropped)="drop($event, roster.id)"
+          >
             @for (char of roster.characters; track char.id) {
-              <div class="character-card" [class]="'border-class-' + getClassCategory(char.class)" cdkDrag (contextmenu)="onContextMenu($event, char, roster.id)">
+              <div
+                class="character-card"
+                [class]="'border-class-' + getClassCategory(char.class)"
+                cdkDrag
+                (contextmenu)="onContextMenu($event, char, roster.id)"
+              >
                 <div class="char-main">
-                  <span class="char-name" [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</span>
+                  <span class="char-name" [class]="'class-' + getClassCategory(char.class)">{{
+                    char.name
+                  }}</span>
                 </div>
                 <div class="char-roles">
-                  <img *ngIf="char.is_tank" src="assets/icons/tank.png" class="role-icon-img small" alt="Tank">
-                  <img *ngIf="char.is_heal" src="assets/icons/heal.png" class="role-icon-img small" alt="Heal">
-                  <img *ngIf="char.is_dps" src="assets/icons/dps.png" class="role-icon-img small" alt="DPS">
-                  <a [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="logs-link-mini" (click)="$event.stopPropagation()">
-                    <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs">
+                  @if (char.is_tank) {
+                    <img src="assets/icons/tank.png" class="role-icon-img small" alt="Tank" />
+                  }
+                  @if (char.is_heal) {
+                    <img src="assets/icons/heal.png" class="role-icon-img small" alt="Heal" />
+                  }
+                  @if (char.is_dps) {
+                    <img src="assets/icons/dps.png" class="role-icon-img small" alt="DPS" />
+                  }
+                  <a
+                    [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)"
+                    target="_blank"
+                    class="logs-link-mini"
+                    (click)="$event.stopPropagation()"
+                  >
+                    <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" />
                   </a>
                 </div>
-
               </div>
             }
             @if (!roster.characters || roster.characters.length === 0) {
@@ -100,62 +188,82 @@
 </div>
 
 <!-- Modal de création -->
-<div class="modal-backdrop" *ngIf="showCreateModal()">
-  <div class="modal">
-    <h3>{{ i18n.t('admin.rosters.modal_create_title') }}</h3>
-    <div class="form-group">
-      <label>{{ i18n.t('admin.rosters.label_name') }}</label>
-      <input type="text" [(ngModel)]="newRoster.name" [placeholder]="i18n.t('admin.rosters.placeholder_name')">
-    </div>
-    <div class="form-group">
-      <label>{{ i18n.t('admin.rosters.label_weight') }}</label>
-      <input type="number" [(ngModel)]="newRoster.weight" min="1">
-    </div>
-    <div class="form-group">
-      <label>{{ i18n.t('admin.rosters.label_description') }}</label>
-      <textarea [(ngModel)]="newRoster.description" [placeholder]="i18n.t('admin.rosters.placeholder_description')"></textarea>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" (click)="closeModal()">{{ i18n.t('admin.rosters.btn_cancel') }}</button>
-      <button class="btn-primary" (click)="onCreateRoster()">{{ i18n.t('admin.rosters.btn_submit_create') }}</button>
+@if (showCreateModal()) {
+  <div class="modal-backdrop">
+    <div class="modal">
+      <h3>{{ i18n.t('admin.rosters.modal_create_title') }}</h3>
+      <div class="form-group">
+        <label>{{ i18n.t('admin.rosters.label_name') }}</label>
+        <input
+          type="text"
+          [(ngModel)]="newRoster.name"
+          [placeholder]="i18n.t('admin.rosters.placeholder_name')"
+        />
+      </div>
+      <div class="form-group">
+        <label>{{ i18n.t('admin.rosters.label_weight') }}</label>
+        <input type="number" [(ngModel)]="newRoster.weight" min="1" />
+      </div>
+      <div class="form-group">
+        <label>{{ i18n.t('admin.rosters.label_description') }}</label>
+        <textarea
+          [(ngModel)]="newRoster.description"
+          [placeholder]="i18n.t('admin.rosters.placeholder_description')"
+        ></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeModal()">
+          {{ i18n.t('admin.rosters.btn_cancel') }}
+        </button>
+        <button class="btn-primary" (click)="onCreateRoster()">
+          {{ i18n.t('admin.rosters.btn_submit_create') }}
+        </button>
+      </div>
     </div>
   </div>
-</div>
+}
 
 <!-- Modal d'édition -->
-<div class="modal-backdrop" *ngIf="showEditModal() && editingRoster">
-  <div class="modal">
-    <h3>{{ i18n.t('admin.rosters.modal_edit_title') }}</h3>
-    <div class="form-group">
-      <label>{{ i18n.t('admin.rosters.label_name') }}</label>
-      <input type="text" [(ngModel)]="editingRoster.name">
-    </div>
-    <div class="form-group">
-      <label>{{ i18n.t('admin.rosters.label_weight') }}</label>
-      <input type="number" [(ngModel)]="editingRoster.weight" min="1">
-    </div>
-    <div class="form-group">
-      <label>{{ i18n.t('admin.rosters.label_description') }}</label>
-      <textarea [(ngModel)]="editingRoster.description"></textarea>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" (click)="closeEditModal()">{{ i18n.t('admin.rosters.btn_cancel') }}</button>
-      <button class="btn-primary" (click)="onUpdateRoster()">{{ i18n.t('admin.rosters.btn_submit_edit') }}</button>
+@if (showEditModal() && editingRoster) {
+  <div class="modal-backdrop">
+    <div class="modal">
+      <h3>{{ i18n.t('admin.rosters.modal_edit_title') }}</h3>
+      <div class="form-group">
+        <label>{{ i18n.t('admin.rosters.label_name') }}</label>
+        <input type="text" [(ngModel)]="editingRoster.name" />
+      </div>
+      <div class="form-group">
+        <label>{{ i18n.t('admin.rosters.label_weight') }}</label>
+        <input type="number" [(ngModel)]="editingRoster.weight" min="1" />
+      </div>
+      <div class="form-group">
+        <label>{{ i18n.t('admin.rosters.label_description') }}</label>
+        <textarea [(ngModel)]="editingRoster.description"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeEditModal()">
+          {{ i18n.t('admin.rosters.btn_cancel') }}
+        </button>
+        <button class="btn-primary" (click)="onUpdateRoster()">
+          {{ i18n.t('admin.rosters.btn_submit_edit') }}
+        </button>
+      </div>
     </div>
   </div>
-</div>
+}
 
 <!-- Context Menu for Players -->
 @if (contextMenuVisible() && contextMenuCharacter()) {
-  <div 
-    class="context-menu" 
-    [style.top.px]="contextMenuPosition().y" 
+  <div
+    class="context-menu"
+    [style.top.px]="contextMenuPosition().y"
     [style.left.px]="contextMenuPosition().x"
-    (click)="$event.stopPropagation()">
+    (click)="$event.stopPropagation()"
+  >
     <div class="context-menu-header">
       {{ contextMenuCharacter()?.name }}
     </div>
-    
+
     <div class="context-menu-section-title">
       {{ i18n.t('admin.rosters.context_menu.assign_to') }}
     </div>
@@ -163,10 +271,12 @@
     <ul class="context-menu-list">
       @if (contextMenuCurrentRosterId() !== null) {
         <li (click)="moveToRoster(null)">
-          <span class="roster-option-name">{{ i18n.t('admin.rosters.context_menu.unassigned') }}</span>
+          <span class="roster-option-name">{{
+            i18n.t('admin.rosters.context_menu.unassigned')
+          }}</span>
         </li>
       }
-      
+
       @for (roster of rosterService.rosters(); track roster.id) {
         @if (contextMenuCurrentRosterId() !== roster.id) {
           <li (click)="moveToRoster(roster.id)">

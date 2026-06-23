@@ -1,21 +1,29 @@
-import { Component, computed, signal, inject, OnInit, HostListener, ElementRef } from '@angular/core';
+import {
+  Component,
+  computed,
+  signal,
+  inject,
+  OnInit,
+  HostListener,
+  ElementRef,
+} from '@angular/core';
 import { AuthService } from '../../services/auth';
 import { I18nService } from '../../services/i18n';
 import { CraftService } from '../../services/craft';
-import { CommonModule } from '@angular/common';
+
 import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RouterModule],
   templateUrl: './navbar.html',
-  styleUrl: './navbar.css'
+  styleUrl: './navbar.css',
 })
 export class NavbarComponent implements OnInit {
   isMenuOpen = signal(false);
   isProfileOpen = signal(false);
-  
+
   public i18n = inject(I18nService);
   public craftService = inject(CraftService);
   private elementRef = inject(ElementRef);
@@ -34,17 +42,17 @@ export class NavbarComponent implements OnInit {
     const user = this.authService.currentUser();
     if (user && user.has_characters && user.active_guild_id && user.active_guild_is_paid) {
       this.craftService.loadPendingRequests().subscribe({
-        error: (err) => console.error('Error loading pending crafts for navbar:', err)
+        error: (err) => console.error('Error loading pending crafts for navbar:', err),
       });
     }
   }
 
   toggleMenu() {
-    this.isMenuOpen.update(v => !v);
+    this.isMenuOpen.update((v) => !v);
   }
 
   toggleProfile() {
-    this.isProfileOpen.update(v => !v);
+    this.isProfileOpen.update((v) => !v);
   }
 
   closeMenu() {
