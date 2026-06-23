@@ -128,7 +128,11 @@ export class CharacterService {
   }
 
   // Récupère les parses Warcraft Logs d'un personnage
-  getCharacterParses(charId: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${charId}/parses`, { withCredentials: true });
+  getCharacterParses(charId: string, difficulty?: number): Observable<any> {
+    let url = `${this.apiUrl}/${charId}/parses`;
+    if (difficulty) {
+      url += `?difficulty=${difficulty}`;
+    }
+    return this.http.get<any>(url, { withCredentials: true });
   }
 }

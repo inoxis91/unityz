@@ -206,7 +206,8 @@ router.get('/:id/parses', isAuthenticated, requireActiveGuild, requirePaidGuild,
       .replace(/[^\w\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-');
-    const parses = await WclService.getCharacterParses(character.name, realmSlug, region, character.class);
+    const difficultyParam = req.query.difficulty ? parseInt(req.query.difficulty as string, 10) : undefined;
+    const parses = await WclService.getCharacterParses(character.name, realmSlug, region, character.class, difficultyParam);
     res.json(parses);
   } catch (error) {
     next(error);

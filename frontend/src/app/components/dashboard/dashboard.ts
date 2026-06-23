@@ -42,6 +42,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   mainCharacter = computed(() => this.myCharacters().find(c => c.is_main));
 
+  selectedCharacterId = signal<string>('');
+  selectedDifficulty = signal<number>(5); // Default to Mythic (5)
+  selectedCharacter = computed(() => {
+    const id = this.selectedCharacterId();
+    return this.myCharacters().find(c => c.id === id) || this.mainCharacter();
+  });
+
   isBirthdayToday(birthdayStr: string): boolean {
     if (!birthdayStr) return false;
     const bdayParts = birthdayStr.substring(0, 10).split('-');
@@ -122,10 +129,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.characterService.getRioScore(main.name, main.realm).subscribe(score => {
           this.mainCharacterRioScore.set(score);
         });
+      }
+    });
 
-        // Load Warcraft Logs parses
+    // Load Warcraft Logs parses reactively when selected character or difficulty changes
+    effect(() => {
+      const charId = this.selectedCharacterId();
+      const difficulty = this.selectedDifficulty();
+      
+      if (charId) {
         this.loadingParses.set(true);
-        this.characterService.getCharacterParses('main').subscribe({
+        this.characterService.getCharacterParses(charId, difficulty).subscribe({
           next: (parses) => {
             this.myParses.set(parses);
             this.loadingParses.set(false);
@@ -154,6 +168,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Load characters
     this.characterService.getMyCharacters().subscribe(chars => {
       this.myCharacters.set(chars);
+      
+      // Auto-select the main character initially
+      const main = chars.find(c => c.is_main) || chars[0];
+      if (main && main.id) {
+        this.selectedCharacterId.set(main.id);
+      }
+
       // Fetch RIO scores for all
       chars.forEach(c => {
         this.characterService.getRioScore(c.name, c.realm).subscribe(score => {
@@ -265,5 +286,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (percentile >= 50) return 'uncommon';
     if (percentile >= 25) return 'common';
     return 'poor';
+  }
+
+  onCharacterChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    if (select && select.value) {
+      this.selectedCharacterId.set(select.value);
+    }
+  }
+
+  onDifficultyChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    if (select && select.value) {
+      this.selectedDifficulty.set(parseInt(select.value, 10));
+    }
   }
 }

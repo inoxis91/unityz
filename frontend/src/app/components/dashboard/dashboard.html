@@ -231,12 +231,12 @@
     <div class="section-header flex-header">
       <div class="header-titles">
         <h2>{{ i18n.t('dashboard.parses.title') }}</h2>
-        <p class="subtitle" *ngIf="mainCharacter()">
-          {{ i18n.t('dashboard.parses.subtitle') }} — <strong class="char-highlight" [class]="'class-' + getClassCategory(mainCharacter()?.class)">{{ mainCharacter()?.name }}</strong>
+        <p class="subtitle" *ngIf="selectedCharacter()">
+          {{ i18n.t('dashboard.parses.subtitle') }} — <strong class="char-highlight" [class]="'class-' + getClassCategory(selectedCharacter()?.class)">{{ selectedCharacter()?.name }}</strong>
         </p>
       </div>
-      <div class="header-actions" *ngIf="myParses()">
-        <a [href]="characterService.getWarcraftLogsUrl(mainCharacter()?.name, mainCharacter()?.realm)" target="_blank" class="wcl-btn">
+      <div class="header-actions" *ngIf="myParses() && selectedCharacter()">
+        <a [href]="characterService.getWarcraftLogsUrl(selectedCharacter()?.name, selectedCharacter()?.realm)" target="_blank" class="wcl-btn">
           <img src="assets/icons/warcraftlogs.png" alt="WCL" class="wcl-mini-icon">
           {{ i18n.t('dashboard.parses.view_wcl') }}
         </a>
@@ -253,13 +253,37 @@
 
       <!-- Content State -->
       <ng-container *ngIf="!loadingParses() && myParses() as parses">
-        <div class="parses-tabs">
-          <button class="tab-btn" [class.active]="parsesTab() === 'raid'" (click)="parsesTab.set('raid')">
-            🛡️ {{ i18n.t('dashboard.parses.raid') }}
-          </button>
-          <button class="tab-btn" [class.active]="parsesTab() === 'dungeon'" (click)="parsesTab.set('dungeon')">
-            🌀 {{ i18n.t('dashboard.parses.dungeons') }}
-          </button>
+        <div class="parses-header-row">
+          <div class="parses-tabs">
+            <button class="tab-btn" [class.active]="parsesTab() === 'raid'" (click)="parsesTab.set('raid')">
+              🛡️ {{ i18n.t('dashboard.parses.raid') }}
+            </button>
+            <button class="tab-btn" [class.active]="parsesTab() === 'dungeon'" (click)="parsesTab.set('dungeon')">
+              🌀 {{ i18n.t('dashboard.parses.dungeons') }}
+            </button>
+          </div>
+
+          <div class="parses-controls">
+            <!-- Character Dropdown -->
+            <div class="control-group">
+              <label>{{ i18n.t('dashboard.parses.character_label') }}</label>
+              <select class="styled-select" [value]="selectedCharacterId()" (change)="onCharacterChange($event)">
+                @for (c of myCharacters(); track c.id) {
+                  <option [value]="c.id">{{ c.name }} ({{ c.realm }})</option>
+                }
+              </select>
+            </div>
+
+            <!-- Difficulty Dropdown (only for Raid) -->
+            <div class="control-group" *ngIf="parsesTab() === 'raid'">
+              <label>{{ i18n.t('dashboard.parses.difficulty_label') }}</label>
+              <select class="styled-select" [value]="selectedDifficulty()" (change)="onDifficultyChange($event)">
+                <option [value]="3">{{ i18n.t('difficulty.3') }}</option>
+                <option [value]="4">{{ i18n.t('difficulty.4') }}</option>
+                <option [value]="5">{{ i18n.t('difficulty.5') }}</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         <div class="parses-content-container">
@@ -291,7 +315,7 @@
                     <div class="encounter-title-row">
                       <span class="enc-name">{{ i18n.t('encounter.' + p.encounterId) }}</span>
                       <span class="difficulty-badge" [class]="'diff-' + p.difficulty" *ngIf="p.difficulty">
-                        {{ i18n.t('difficulty.' + p.difficulty) }}
+                        {{ p.difficulty === 10 && p.keyLevel ? ('Clef +' + p.keyLevel) : i18n.t('difficulty.' + p.difficulty) }}
                       </span>
                     </div>
                     <span class="enc-spec">{{ p.spec || 'N/A' }}</span>

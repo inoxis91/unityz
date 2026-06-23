@@ -399,6 +399,9 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'dashboard.parses.loading': 'Chargement des performances...',
     'dashboard.parses.view_wcl': 'Voir sur Warcraft Logs',
     'dashboard.parses.no_char': 'Sélectionnez ou liez un personnage principal pour voir ses performances.',
+    'dashboard.parses.character_label': 'Personnage',
+    'dashboard.parses.difficulty_label': 'Difficulté',
+    'dashboard.parses.key_level': 'Niveau',
 
     // Encounters / Dungeons (Midnight Zone 46 / 47 - Mock & Real Live)
     'encounter.5011': 'Imperator Averzian',
@@ -1338,6 +1341,9 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'dashboard.parses.loading': 'Loading performances...',
     'dashboard.parses.view_wcl': 'View on Warcraft Logs',
     'dashboard.parses.no_char': 'Select or link a main character to see their performance.',
+    'dashboard.parses.character_label': 'Character',
+    'dashboard.parses.difficulty_label': 'Difficulty',
+    'dashboard.parses.key_level': 'Level',
 
     // Encounters / Dungeons (Midnight Zone 46 / 47 - Mock & Real Live)
     'encounter.5011': 'Imperator Averzian',

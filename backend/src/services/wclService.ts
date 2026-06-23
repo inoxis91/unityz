@@ -754,7 +754,8 @@ export class WclService {
     name: string,
     realmSlug: string,
     region: string,
-    characterClass?: string
+    characterClass?: string,
+    difficulty?: number
   ): Promise<any> {
     const token = await this.getAccessToken();
     if (!token) {
@@ -764,13 +765,13 @@ export class WclService {
 
     try {
       const query = `
-        query ($name: String!, $serverSlug: String!, $serverRegion: String!) {
+        query ($name: String!, $serverSlug: String!, $serverRegion: String!, $difficulty: Int) {
           characterData {
             character(name: $name, serverSlug: $serverSlug, serverRegion: $serverRegion) {
               id
               name
               classID
-              raidRankings: zoneRankings(zoneID: 46)
+              raidRankings: zoneRankings(zoneID: 46, difficulty: $difficulty)
               dungeonRankings: zoneRankings(zoneID: 47)
             }
           }
@@ -779,7 +780,7 @@ export class WclService {
 
       const response = await axios.post(
         'https://www.warcraftlogs.com/api/v2/client',
-        { query, variables: { name, serverSlug: realmSlug, serverRegion: region.toLowerCase() } },
+        { query, variables: { name, serverSlug: realmSlug, serverRegion: region.toLowerCase(), difficulty: difficulty || null } },
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -811,7 +812,8 @@ export class WclService {
           rank: r.allStars?.rank || 0,
           spec: r.spec || 'Unknown',
           amount: r.bestAmount !== undefined && r.bestAmount !== null ? Math.round(r.bestAmount) : 0,
-          difficulty: r.difficulty || defaultDiff
+          difficulty: r.difficulty || defaultDiff,
+          keyLevel: r.bestRank?.ilvl || null
         }));
       };
 
@@ -958,7 +960,8 @@ function generateMockParses(name: string, characterClass: string) {
       rank,
       spec,
       amount,
-      difficulty: 10
+      difficulty: 10,
+      keyLevel: Math.floor((hash % 15) + 4) // mock key levels between 4 and 18
     };
   });
 
