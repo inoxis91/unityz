@@ -772,7 +772,7 @@ export class WclService {
               name
               classID
               raidRankings: zoneRankings(zoneID: 46, difficulty: $difficulty)
-              dungeonRankings: zoneRankings(zoneID: 47)
+              dungeonRankings: zoneRankings(zoneID: 47, metric: points_and_damage)
             }
           }
         }
@@ -802,35 +802,69 @@ export class WclService {
       }
 
       const raidData = character.raidRankings || { bestPerformanceAverage: 0, medianPerformanceAverage: 0, rankings: [] };
-      const dungeonData = character.dungeonRankings || { bestPerformanceAverage: 0, medianPerformanceAverage: 0, rankings: [] };
+      const dungeonData = character.dungeonRankings || { bestPerformanceAverage: 0, medianPerformanceAverage: 0, rankings: [], throughputRankings: {} };
 
-      const formatRankings = (wclRankings: any[], defaultDiff: number) => {
-        return (wclRankings || []).map((r: any) => ({
-          encounterId: r.encounter?.id || 0,
-          encounterName: r.encounter?.name || 'Unknown',
-          percentile: r.rankPercent !== undefined && r.rankPercent !== null ? Math.round(r.rankPercent) : null,
-          rank: r.allStars?.rank || 0,
-          spec: r.spec || 'Unknown',
-          amount: r.bestAmount !== undefined && r.bestAmount !== null ? Math.round(r.bestAmount) : 0,
-          difficulty: r.difficulty || defaultDiff,
-          keyLevel: r.bestRank?.ilvl || null
-        }));
+      const formatRankings = (wclRankings: any[], defaultDiff: number, throughputRankings?: any) => {
+        return (wclRankings || []).map((r: any) => {
+          const encId = r.encounter?.id || 0;
+          let percentile = r.rankPercent !== undefined && r.rankPercent !== null ? Math.round(r.rankPercent) : null;
+          let keyLevel = r.bestRank?.ilvl || null;
+          let amount = r.bestAmount !== undefined && r.bestAmount !== null ? Math.round(r.bestAmount) : 0;
+
+          if (throughputRankings && throughputRankings[encId.toString()]) {
+            const tr = throughputRankings[encId.toString()];
+            if (tr.best_historical_percentile !== undefined && tr.best_historical_percentile !== null) {
+              percentile = Math.round(tr.best_historical_percentile);
+            }
+            if (tr.best_level) {
+              keyLevel = tr.best_level;
+            }
+            if (tr.best_per_second_amount) {
+              amount = Math.round(tr.best_per_second_amount);
+            }
+          }
+
+          return {
+            encounterId: encId,
+            encounterName: r.encounter?.name || 'Unknown',
+            percentile,
+            rank: r.allStars?.rank || 0,
+            spec: r.spec || 'Unknown',
+            amount,
+            difficulty: r.difficulty || defaultDiff,
+            keyLevel
+          };
+        });
       };
+
+      const formattedRaid = formatRankings(raidData.rankings, raidData.difficulty || 5);
+      const formattedDungeons = formatRankings(dungeonData.rankings, dungeonData.difficulty || 10, dungeonData.throughputRankings);
+
+      let bestRaidAvg = Math.round(raidData.bestPerformanceAverage || 0);
+      let bestDungeonAvg = Math.round(dungeonData.bestPerformanceAverage || 0);
+
+      // Re-calculate the dungeons average based on the specific historical DPS parses
+      if (formattedDungeons.length > 0) {
+        const validDung = formattedDungeons.filter(d => d.percentile !== null && d.percentile !== undefined);
+        if (validDung.length > 0) {
+          bestDungeonAvg = Math.round(validDung.reduce((sum, d) => sum + (d.percentile || 0), 0) / validDung.length);
+        }
+      }
 
       return {
         characterName: character.name,
         characterClass: characterClass || 'Unknown',
         raidRankings: {
-          bestPerformanceAverage: Math.round(raidData.bestPerformanceAverage || 0),
+          bestPerformanceAverage: bestRaidAvg,
           medianPerformanceAverage: Math.round(raidData.medianPerformanceAverage || 0),
           difficulty: raidData.difficulty || 5,
-          rankings: formatRankings(raidData.rankings, raidData.difficulty || 5)
+          rankings: formattedRaid
         },
         dungeonRankings: {
-          bestPerformanceAverage: Math.round(dungeonData.bestPerformanceAverage || 0),
+          bestPerformanceAverage: bestDungeonAvg,
           medianPerformanceAverage: Math.round(dungeonData.medianPerformanceAverage || 0),
           difficulty: dungeonData.difficulty || 10,
-          rankings: formatRankings(dungeonData.rankings, dungeonData.difficulty || 10)
+          rankings: formattedDungeons
         },
         isMock: false
       };
