@@ -279,13 +279,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   getParseColorClass(percentile: number | undefined): string {
-    if (!percentile) return 'poor';
-    if (percentile >= 99) return 'legendary';
-    if (percentile >= 95) return 'epic';
-    if (percentile >= 75) return 'rare';
-    if (percentile >= 50) return 'uncommon';
-    if (percentile >= 25) return 'common';
-    return 'poor';
+    if (percentile === undefined || percentile === null) return 'gray';
+    if (percentile >= 99) return 'pink';
+    if (percentile >= 90) return 'orange';
+    if (percentile >= 75) return 'purple';
+    if (percentile >= 50) return 'blue';
+    if (percentile >= 30) return 'green';
+    return 'gray';
   }
 
   onCharacterChange(event: Event) {

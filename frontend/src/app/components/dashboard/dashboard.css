@@ -1263,72 +1263,76 @@
 }
 
 /* WCL Parse Colors */
-.legendary {
-  color: #ff8000 !important;
+.pink {
+  color: #ec4899 !important; /* WCL Pink */
 }
-.percentile-badge.legendary, .encounter-progress-bar.legendary {
-  background-color: #ff8000 !important; /* legendary orange/gold */
+.percentile-badge.pink, .encounter-progress-bar.pink {
+  background-color: #ec4899 !important;
   color: white !important;
 }
-.summary-metric-box:has(.box-value.legendary) {
+.summary-metric-box:has(.box-value.pink) {
+  border-color: rgba(236, 72, 153, 0.2);
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.02) 0%, rgba(236, 72, 153, 0.05) 100%);
+}
+
+.orange {
+  color: #ff8000 !important; /* WCL Orange */
+}
+.percentile-badge.orange, .encounter-progress-bar.orange {
+  background-color: #ff8000 !important;
+  color: white !important;
+}
+.summary-metric-box:has(.box-value.orange) {
   border-color: rgba(255, 128, 0, 0.2);
   background: linear-gradient(135deg, rgba(255, 128, 0, 0.02) 0%, rgba(255, 128, 0, 0.05) 100%);
 }
 
-.epic {
-  color: #a335ee !important;
+.purple {
+  color: #a335ee !important; /* WCL Purple */
 }
-.percentile-badge.epic, .encounter-progress-bar.epic {
+.percentile-badge.purple, .encounter-progress-bar.purple {
   background-color: #a335ee !important;
   color: white !important;
 }
-.summary-metric-box:has(.box-value.epic) {
+.summary-metric-box:has(.box-value.purple) {
   border-color: rgba(163, 53, 238, 0.2);
   background: linear-gradient(135deg, rgba(163, 53, 238, 0.02) 0%, rgba(163, 53, 238, 0.05) 100%);
 }
 
-.rare {
-  color: #0070dd !important;
+.blue {
+  color: #0070dd !important; /* WCL Blue */
 }
-.percentile-badge.rare, .encounter-progress-bar.rare {
+.percentile-badge.blue, .encounter-progress-bar.blue {
   background-color: #0070dd !important;
   color: white !important;
 }
-.summary-metric-box:has(.box-value.rare) {
+.summary-metric-box:has(.box-value.blue) {
   border-color: rgba(0, 112, 221, 0.2);
   background: linear-gradient(135deg, rgba(0, 112, 221, 0.02) 0%, rgba(0, 112, 221, 0.05) 100%);
 }
 
-.uncommon {
-  color: #16a34a !important; /* dark green for better visibility */
+.green {
+  color: #16a34a !important; /* WCL Green */
 }
-.percentile-badge.uncommon, .encounter-progress-bar.uncommon {
+.percentile-badge.green, .encounter-progress-bar.green {
   background-color: #16a34a !important;
   color: white !important;
 }
-.summary-metric-box:has(.box-value.uncommon) {
+.summary-metric-box:has(.box-value.green) {
   border-color: rgba(22, 163, 74, 0.2);
   background: linear-gradient(135deg, rgba(22, 163, 74, 0.02) 0%, rgba(22, 163, 74, 0.05) 100%);
 }
 
-.common {
-  color: #4b5563 !important; /* darker gray for text contrast */
+.gray {
+  color: #9ca3af !important; /* WCL Gray */
 }
-.percentile-badge.common, .encounter-progress-bar.common {
+.percentile-badge.gray, .encounter-progress-bar.gray {
   background-color: #9ca3af !important;
   color: white !important;
 }
-.summary-metric-box:has(.box-value.common) {
+.summary-metric-box:has(.box-value.gray) {
   border-color: rgba(156, 163, 175, 0.2);
   background: linear-gradient(135deg, rgba(156, 163, 175, 0.02) 0%, rgba(156, 163, 175, 0.05) 100%);
-}
-
-.poor {
-  color: #9ca3af !important;
-}
-.percentile-badge.poor, .encounter-progress-bar.poor {
-  background-color: #9ca3af !important;
-  color: white !important;
 }
 
 /* Responsive adjustment for Parses Card */
