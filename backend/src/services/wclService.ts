@@ -772,6 +772,7 @@ export class WclService {
               name
               classID
               raidRankings: zoneRankings(zoneID: 46, difficulty: $difficulty)
+              sporefallRankings: zoneRankings(zoneID: 50, difficulty: $difficulty)
               dungeonRankings: zoneRankings(zoneID: 47, metric: points_and_damage)
             }
           }
@@ -802,6 +803,7 @@ export class WclService {
       }
 
       const raidData = character.raidRankings || { bestPerformanceAverage: 0, medianPerformanceAverage: 0, rankings: [] };
+      const sporefallData = character.sporefallRankings || { bestPerformanceAverage: 0, medianPerformanceAverage: 0, rankings: [] };
       const dungeonData = character.dungeonRankings || { bestPerformanceAverage: 0, medianPerformanceAverage: 0, rankings: [], throughputRankings: {} };
 
       const formatRankings = (wclRankings: any[], defaultDiff: number, throughputRankings?: any) => {
@@ -837,11 +839,22 @@ export class WclService {
         });
       };
 
-      const formattedRaid = formatRankings(raidData.rankings, raidData.difficulty || 5);
+      const formattedRaid = [
+        ...formatRankings(raidData.rankings, raidData.difficulty || 5),
+        ...formatRankings(sporefallData.rankings, sporefallData.difficulty || 5)
+      ];
       const formattedDungeons = formatRankings(dungeonData.rankings, 10, dungeonData.throughputRankings);
 
       let bestRaidAvg = Math.round(raidData.bestPerformanceAverage || 0);
       let bestDungeonAvg = Math.round(dungeonData.bestPerformanceAverage || 0);
+
+      // Re-calculate the raid average based on the merged list (Zone 46 + Zone 50)
+      if (formattedRaid.length > 0) {
+        const validRaid = formattedRaid.filter(r => r.percentile !== null && r.percentile !== undefined);
+        if (validRaid.length > 0) {
+          bestRaidAvg = Math.round(validRaid.reduce((sum, r) => sum + (r.percentile || 0), 0) / validRaid.length);
+        }
+      }
 
       // Re-calculate the dungeons average based on the specific historical DPS parses
       if (formattedDungeons.length > 0) {
@@ -950,7 +963,8 @@ function generateMockParses(name: string, characterClass: string) {
     { id: 5016, name: "Crown of the Cosmos" },
     { id: 5017, name: "Chimaerus, the Undreamt God" },
     { id: 5018, name: "Belo'ren, Child of Al'ar" },
-    { id: 5019, name: "Midnight Falls" }
+    { id: 5019, name: "Midnight Falls" },
+    { id: 3159, name: "Rotmire" }
   ];
 
   const dungeonEncounters = [
