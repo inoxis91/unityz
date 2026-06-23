@@ -288,17 +288,22 @@
               @for (p of (parsesTab() === 'raid' ? parses.raidRankings.rankings : parses.dungeonRankings.rankings); track p.encounterId) {
                 <div class="encounter-row">
                   <div class="encounter-info">
-                    <span class="enc-name">{{ i18n.t('encounter.' + p.encounterId) }}</span>
-                    <span class="enc-spec">{{ p.spec }}</span>
+                    <div class="encounter-title-row">
+                      <span class="enc-name">{{ i18n.t('encounter.' + p.encounterId) }}</span>
+                      <span class="difficulty-badge" [class]="'diff-' + p.difficulty" *ngIf="p.difficulty">
+                        {{ i18n.t('difficulty.' + p.difficulty) }}
+                      </span>
+                    </div>
+                    <span class="enc-spec">{{ p.spec || 'N/A' }}</span>
                   </div>
                   <div class="encounter-percentile-container">
                     <div class="percentile-badge" [class]="getParseColorClass(p.percentile)">
-                      {{ p.percentile }}
+                      {{ p.percentile !== null && p.percentile !== undefined ? p.percentile : '-' }}
                     </div>
                     <div class="encounter-progress-bg">
-                      <div class="encounter-progress-bar" [style.width]="p.percentile + '%'" [class]="getParseColorClass(p.percentile)"></div>
+                      <div class="encounter-progress-bar" [style.width]="(p.percentile !== null && p.percentile !== undefined ? p.percentile : 0) + '%'" [class]="getParseColorClass(p.percentile)"></div>
                     </div>
-                    <div class="encounter-rank">
+                    <div class="encounter-rank" *ngIf="p.rank > 0">
                       <span class="rank-label">{{ i18n.t('dashboard.parses.rank') }}</span>
                       <span class="rank-val">#{{ p.rank | number }}</span>
                     </div>

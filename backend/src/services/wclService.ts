@@ -770,30 +770,8 @@ export class WclService {
               id
               name
               classID
-              raidRankings: zoneRankings(zoneID: 46) {
-                bestPerformanceAverage
-                medianPerformanceAverage
-                rankings {
-                  encounter { id name }
-                  rank
-                  percentile
-                  spec
-                  amount
-                  difficulty
-                }
-              }
-              dungeonRankings: zoneRankings(zoneID: 47) {
-                bestPerformanceAverage
-                medianPerformanceAverage
-                rankings {
-                  encounter { id name }
-                  rank
-                  percentile
-                  spec
-                  amount
-                  difficulty
-                }
-              }
+              raidRankings: zoneRankings(zoneID: 46)
+              dungeonRankings: zoneRankings(zoneID: 47)
             }
           }
         }
@@ -811,24 +789,29 @@ export class WclService {
         }
       );
 
+      if (response.data.errors) {
+        console.warn('[WCL API] GraphQL Errors:', response.data.errors);
+        return generateMockParses(name, characterClass || 'Unknown');
+      }
+
       const character = response.data?.data?.characterData?.character;
       if (!character) {
         console.warn(`[WCL API] Character not found: ${name}-${realmSlug} in ${region}. Generating mock parses.`);
         return generateMockParses(name, characterClass || 'Unknown');
       }
 
-      const raidRankings = character.raidRankings || { bestPerformanceAverage: 0, medianPerformanceAverage: 0, rankings: [] };
-      const dungeonRankings = character.dungeonRankings || { bestPerformanceAverage: 0, medianPerformanceAverage: 0, rankings: [] };
+      const raidData = character.raidRankings || { bestPerformanceAverage: 0, medianPerformanceAverage: 0, rankings: [] };
+      const dungeonData = character.dungeonRankings || { bestPerformanceAverage: 0, medianPerformanceAverage: 0, rankings: [] };
 
-      const formatRankings = (wclRankings: any[]) => {
+      const formatRankings = (wclRankings: any[], defaultDiff: number) => {
         return (wclRankings || []).map((r: any) => ({
           encounterId: r.encounter?.id || 0,
           encounterName: r.encounter?.name || 'Unknown',
-          percentile: Math.round(r.percentile || 0),
-          rank: r.rank || 0,
+          percentile: r.rankPercent !== undefined && r.rankPercent !== null ? Math.round(r.rankPercent) : null,
+          rank: r.allStars?.rank || 0,
           spec: r.spec || 'Unknown',
-          amount: Math.round(r.amount || 0),
-          difficulty: r.difficulty || 4
+          amount: r.bestAmount !== undefined && r.bestAmount !== null ? Math.round(r.bestAmount) : 0,
+          difficulty: r.difficulty || defaultDiff
         }));
       };
 
@@ -836,14 +819,16 @@ export class WclService {
         characterName: character.name,
         characterClass: characterClass || 'Unknown',
         raidRankings: {
-          bestPerformanceAverage: Math.round(raidRankings.bestPerformanceAverage || 0),
-          medianPerformanceAverage: Math.round(raidRankings.medianPerformanceAverage || 0),
-          rankings: formatRankings(raidRankings.rankings)
+          bestPerformanceAverage: Math.round(raidData.bestPerformanceAverage || 0),
+          medianPerformanceAverage: Math.round(raidData.medianPerformanceAverage || 0),
+          difficulty: raidData.difficulty || 5,
+          rankings: formatRankings(raidData.rankings, raidData.difficulty || 5)
         },
         dungeonRankings: {
-          bestPerformanceAverage: Math.round(dungeonRankings.bestPerformanceAverage || 0),
-          medianPerformanceAverage: Math.round(dungeonRankings.medianPerformanceAverage || 0),
-          rankings: formatRankings(dungeonRankings.rankings)
+          bestPerformanceAverage: Math.round(dungeonData.bestPerformanceAverage || 0),
+          medianPerformanceAverage: Math.round(dungeonData.medianPerformanceAverage || 0),
+          difficulty: dungeonData.difficulty || 10,
+          rankings: formatRankings(dungeonData.rankings, dungeonData.difficulty || 10)
         },
         isMock: false
       };

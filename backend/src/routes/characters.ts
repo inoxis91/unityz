@@ -199,7 +199,13 @@ router.get('/:id/parses', isAuthenticated, requireActiveGuild, requirePaidGuild,
       }
     }
 
-    const realmSlug = character.realm.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
+    const realmSlug = character.realm.toLowerCase()
+      .trim()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
     const parses = await WclService.getCharacterParses(character.name, realmSlug, region, character.class);
     res.json(parses);
   } catch (error) {

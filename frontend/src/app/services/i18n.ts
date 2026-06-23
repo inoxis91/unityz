@@ -400,7 +400,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'dashboard.parses.view_wcl': 'Voir sur Warcraft Logs',
     'dashboard.parses.no_char': 'Sélectionnez ou liez un personnage principal pour voir ses performances.',
 
-    // Encounters / Dungeons (Midnight Zone 46 / 47)
+    // Encounters / Dungeons (Midnight Zone 46 / 47 - Mock & Real Live)
     'encounter.5011': 'Imperator Averzian',
     'encounter.5012': 'Vorasius',
     'encounter.5013': 'Fallen-King Salhadaar',
@@ -410,6 +410,15 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'encounter.5017': 'Chimaerus, the Undreamt God',
     'encounter.5018': 'Belo\'ren, Child of Al\'ar',
     'encounter.5019': 'Midnight Falls',
+    'encounter.3176': 'Imperator Averzian',
+    'encounter.3177': 'Vorasius',
+    'encounter.3179': 'Fallen-King Salhadaar',
+    'encounter.3178': 'Vaelgor & Ezzorak',
+    'encounter.3180': 'Lightblinded Vanguard',
+    'encounter.3181': 'Crown of the Cosmos',
+    'encounter.3306': 'Chimaerus, the Undreamt God',
+    'encounter.3182': 'Belo\'ren, Child of Al\'ar',
+    'encounter.3183': 'Midnight Falls',
     'encounter.14021': 'Cavernes fongiques d\'Harandar',
     'encounter.14022': 'Sanctuaire balafré par le Vide',
     'encounter.14023': 'Ruines de Solanar',
@@ -418,6 +427,20 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'encounter.14026': 'Avant-poste du Puits de soleil',
     'encounter.14027': 'Donjon du Voile-d\'ombre',
     'encounter.14028': 'Faille de K\'aresh',
+    'encounter.112526': 'Académie d\'Algeth\'ar',
+    'encounter.12811': 'Terrasse des Magistères',
+    'encounter.12874': 'Cavernes de Maisara',
+    'encounter.12915': 'Point-nexus Xenas',
+    'encounter.10658': 'Fosse de Saron',
+    'encounter.361753': 'Siège du Triumvirat',
+    'encounter.61209': 'Orée du ciel',
+    'encounter.12805': 'Aiguille des Coursevent',
+
+    // Difficulties
+    'difficulty.3': 'Normal',
+    'difficulty.4': 'Héroïque',
+    'difficulty.5': 'Mythique',
+    'difficulty.10': 'M+',
 
     // Month translations
     'month.0': 'Janvier',
@@ -1316,7 +1339,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'dashboard.parses.view_wcl': 'View on Warcraft Logs',
     'dashboard.parses.no_char': 'Select or link a main character to see their performance.',
 
-    // Encounters / Dungeons (Midnight Zone 46 / 47)
+    // Encounters / Dungeons (Midnight Zone 46 / 47 - Mock & Real Live)
     'encounter.5011': 'Imperator Averzian',
     'encounter.5012': 'Vorasius',
     'encounter.5013': 'Fallen-King Salhadaar',
@@ -1326,6 +1349,15 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'encounter.5017': 'Chimaerus, the Undreamt God',
     'encounter.5018': 'Belo\'ren, Child of Al\'ar',
     'encounter.5019': 'Midnight Falls',
+    'encounter.3176': 'Imperator Averzian',
+    'encounter.3177': 'Vorasius',
+    'encounter.3179': 'Fallen-King Salhadaar',
+    'encounter.3178': 'Vaelgor & Ezzorak',
+    'encounter.3180': 'Lightblinded Vanguard',
+    'encounter.3181': 'Crown of the Cosmos',
+    'encounter.3306': 'Chimaerus, the Undreamt God',
+    'encounter.3182': 'Belo\'ren, Child of Al\'ar',
+    'encounter.3183': 'Midnight Falls',
     'encounter.14021': 'Harandar Fungal Caves',
     'encounter.14022': 'Void-Scarred Sanctum',
     'encounter.14023': 'Ruins of Solanar',
@@ -1334,6 +1366,20 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'encounter.14026': 'Sunwell Outpost',
     'encounter.14027': 'Shadow-Veil Keep',
     'encounter.14028': 'K\'aresh Rift',
+    'encounter.112526': 'Algeth\'ar Academy',
+    'encounter.12811': 'Magisters\' Terrace',
+    'encounter.12874': 'Maisara Caverns',
+    'encounter.12915': 'Nexus-Point Xenas',
+    'encounter.10658': 'Pit of Saron',
+    'encounter.361753': 'Seat of the Triumvirate',
+    'encounter.61209': 'Skyreach',
+    'encounter.12805': 'Windrunner Spire',
+
+    // Difficulties
+    'difficulty.3': 'Normal',
+    'difficulty.4': 'Heroic',
+    'difficulty.5': 'Mythic',
+    'difficulty.10': 'M+',
 
     // Month translations
     'month.0': 'January',
