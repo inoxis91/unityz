@@ -546,6 +546,8 @@ export class WclService {
       role: 'tank' | 'heal' | 'dps';
       dpsSum: number;
       hpsSum: number;
+      damageDoneTotal: number;
+      healingDoneTotal: number;
       damageTakenSum: number;
       deathsSum: number;
       fightsCount: number;
@@ -571,6 +573,8 @@ export class WclService {
             role: p.role,
             dpsSum: 0,
             hpsSum: 0,
+            damageDoneTotal: 0,
+            healingDoneTotal: 0,
             damageTakenSum: 0,
             deathsSum: 0,
             fightsCount: 0,
@@ -591,6 +595,8 @@ export class WclService {
         }
         playerScoresMap[p.name].dpsSum += p.dps;
         playerScoresMap[p.name].hpsSum += p.hps;
+        playerScoresMap[p.name].damageDoneTotal += p.dps * f.duration;
+        playerScoresMap[p.name].healingDoneTotal += p.hps * f.duration;
         playerScoresMap[p.name].damageTakenSum += (p.damageTaken || 0);
         playerScoresMap[p.name].deathsSum += p.deaths;
         playerScoresMap[p.name].fightsCount += 1;
@@ -611,7 +617,7 @@ export class WclService {
     });
 
     // 1. Dégâts infligés (DPS) - 200 pts for 1st, -10 pts per rank below, +20 pts for tanks
-    const sortedByDps = [...playersList].sort((a, b) => b.dpsSum - a.dpsSum);
+    const sortedByDps = [...playersList].sort((a, b) => b.damageDoneTotal - a.damageDoneTotal);
     sortedByDps.forEach((p, index) => {
       let points = Math.max(0, 200 - index * 10);
       if (p.role === 'tank') {
@@ -623,7 +629,7 @@ export class WclService {
     // 2. Soins (HPS) - Separate scales for Healers/Tanks and DPS players
     // Healers & Tanks : start at 200 pts, decrease by 10 pts per rank
     const healersAndTanks = playersList.filter(p => p.role !== 'dps');
-    const sortedHealersAndTanks = [...healersAndTanks].sort((a, b) => b.hpsSum - a.hpsSum);
+    const sortedHealersAndTanks = [...healersAndTanks].sort((a, b) => b.healingDoneTotal - a.healingDoneTotal);
     sortedHealersAndTanks.forEach((p, index) => {
       let points = Math.max(0, 200 - index * 10);
       if (p.role === 'tank') {
@@ -634,7 +640,7 @@ export class WclService {
 
     // DPS : start at 100 pts (malus of 100), decrease by 3 pts per rank
     const dpsPlayers = playersList.filter(p => p.role === 'dps');
-    const sortedDps = [...dpsPlayers].sort((a, b) => b.hpsSum - a.hpsSum);
+    const sortedDps = [...dpsPlayers].sort((a, b) => b.healingDoneTotal - a.healingDoneTotal);
     sortedDps.forEach((p, index) => {
       p.hpsPoints = Math.max(0, 100 - index * 3);
     });
@@ -678,8 +684,8 @@ export class WclService {
         name: p.name,
         class: p.class,
         score: Math.round(p.totalScore),
-        dpsTotal: Math.round(p.dpsSum),
-        hpsTotal: Math.round(p.hpsSum),
+        dpsTotal: Math.round(p.damageDoneTotal),
+        hpsTotal: Math.round(p.healingDoneTotal),
         deathsCount: p.avoidableDeaths,
         damageTakenSum: p.damageTakenSum
       };
