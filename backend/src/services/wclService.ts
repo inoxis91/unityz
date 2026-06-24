@@ -514,20 +514,16 @@ export class WclService {
     // Summing global damage/healing
     let totalDamage = 0;
     let totalHealing = 0;
-    let sumDps = 0;
-    let sumHps = 0;
 
     fights.forEach(f => {
-      sumDps += f.averageDps;
-      sumHps += f.averageHps;
       f.players.forEach(p => {
         totalDamage += p.dps * f.duration;
         totalHealing += p.hps * f.duration;
       });
     });
 
-    const raidAvgDps = fights.length > 0 ? Math.round(sumDps / fights.length) : 0;
-    const raidAvgHps = fights.length > 0 ? Math.round(sumHps / fights.length) : 0;
+    const raidAvgDps = totalDuration > 0 ? Math.round(totalDamage / totalDuration) : 0;
+    const raidAvgHps = totalDuration > 0 ? Math.round(totalHealing / totalDuration) : 0;
 
     // Find most deadly boss (wipe count + deathsCount)
     const bossDeaths: Record<string, number> = {};
@@ -827,13 +823,17 @@ export class WclService {
       const dungeonData = character.dungeonRankings || { bestPerformanceAverage: 0, medianPerformanceAverage: 0, rankings: [], throughputRankings: {} };
 
       const formatRankings = (wclRankings: any[], defaultDiff: number, throughputRankings?: any) => {
-        return (wclRankings || []).map((r: any) => {
+        const list = (wclRankings || []).map((r: any) => {
           const encId = r.encounter?.id || 0;
           let percentile = r.rankPercent !== undefined && r.rankPercent !== null ? Math.round(r.rankPercent) : null;
           let keyLevel = r.bestRank?.ilvl || null;
           let amount = r.bestAmount !== undefined && r.bestAmount !== null ? Math.round(r.bestAmount) : 0;
 
-          if (throughputRankings && throughputRankings[encId.toString()]) {
+          if (throughputRankings) {
+            // For dungeons, we MUST have a throughput ranking to consider it a real parse
+            if (!throughputRankings[encId.toString()]) {
+              return null;
+            }
             const tr = throughputRankings[encId.toString()];
             if (tr.best_historical_percentile !== undefined && tr.best_historical_percentile !== null) {
               percentile = Math.round(tr.best_historical_percentile);
@@ -857,6 +857,8 @@ export class WclService {
             keyLevel
           };
         });
+
+        return list.filter((item): item is NonNullable<typeof item> => item !== null);
       };
 
       const formattedRaid = [
