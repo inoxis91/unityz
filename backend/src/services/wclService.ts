@@ -649,22 +649,22 @@ export class WclService {
     });
 
     // 2. Soins (HPS) - Separate scales for Healers/Tanks and DPS players
-    // Healers & Tanks : start at 200 pts, decrease by 10 pts per rank
+    // Healers & Tanks : start at 260 pts, decrease by 10 pts per rank
     const healersAndTanks = playersList.filter(p => p.role !== 'dps');
     const sortedHealersAndTanks = [...healersAndTanks].sort((a, b) => b.healingDoneTotal - a.healingDoneTotal);
     sortedHealersAndTanks.forEach((p, index) => {
-      let points = Math.max(0, 200 - index * 10);
+      let points = Math.max(0, 260 - index * 12);
       if (p.role === 'tank') {
         points += 10;
       }
       p.hpsPoints = points;
     });
 
-    // DPS : start at 100 pts (malus of 100), decrease by 3 pts per rank
+    // DPS : start at 160 pts (malus of 160), decrease by 5 pts per rank
     const dpsPlayers = playersList.filter(p => p.role === 'dps');
     const sortedDps = [...dpsPlayers].sort((a, b) => b.healingDoneTotal - a.healingDoneTotal);
     sortedDps.forEach((p, index) => {
-      p.hpsPoints = Math.max(0, 100 - index * 3);
+      p.hpsPoints = Math.max(0, 160 - index * 5);
     });
 
     // 3. Morts - Malus of 20 points per avoidable death
@@ -681,16 +681,16 @@ export class WclService {
       p.damageTakenMalus = -malus;
     });
 
-    // 5. Potion de burst (Potentiel de lumière) - Bonus of 5 points per potion used
+    // 5. Potion de burst (Potentiel de lumière) - Bonus of 3 points per potion used
     playersList.forEach(p => {
-      p.potionBonusPoints = p.potionsUsedTotal * 5;
+      p.potionBonusPoints = p.potionsUsedTotal * 3;
     });
 
     // Compute total score
     playersList.forEach(p => {
       let score = p.dpsPoints + p.hpsPoints + p.deathMalus + p.damageTakenMalus + p.potionBonusPoints;
       if (p.role === 'tank') {
-        score -= 50; // Apply standard tank malus of 50 points
+        score -= 40; // Apply standard tank malus of 40 points
       }
       p.totalScore = score;
     });
