@@ -673,11 +673,11 @@ export class WclService {
     });
 
     // 4. Dégâts subis (Damage taken) - Malus for non-tanks.
-    // Highest damage taken gets -20 points, decreasing by 2 points per player (caps at 0)
+    // Highest damage taken gets -30 points, decreasing by 5 points per player (caps at 0)
     const nonTanks = playersList.filter(p => p.role !== 'tank');
     const sortedByDamage = [...nonTanks].sort((a, b) => b.damageTakenSum - a.damageTakenSum);
     sortedByDamage.forEach((p, index) => {
-      const malus = Math.max(0, 20 - index * 2);
+      const malus = Math.max(0, 30 - index * 5);
       p.damageTakenMalus = -malus;
     });
 
