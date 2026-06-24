@@ -553,6 +553,7 @@ export class WclService {
       damageTakenSum: number;
       deathsSum: number;
       fightsCount: number;
+      wipesCount: number;
       dpsAvg: number;
       hpsAvg: number;
       avoidableDeaths: number;
@@ -577,6 +578,7 @@ export class WclService {
             damageTakenSum: 0,
             deathsSum: 0,
             fightsCount: 0,
+            wipesCount: 0,
             dpsAvg: 0,
             hpsAvg: 0,
             avoidableDeaths: 0,
@@ -596,17 +598,20 @@ export class WclService {
         playerScoresMap[p.name].damageTakenSum += (p.damageTaken || 0);
         playerScoresMap[p.name].deathsSum += p.deaths;
         playerScoresMap[p.name].fightsCount += 1;
+        if (!f.kill) {
+          playerScoresMap[p.name].wipesCount += 1;
+        }
       });
     });
 
     const playersList = Object.values(playerScoresMap);
 
-    // Calculate averages and avoidable deaths using the formula: max(0, totalDeaths - totalWipes)
+    // Calculate averages and avoidable deaths using the formula: max(0, deathsSum - wipesCount)
     playersList.forEach(p => {
       const fc = p.fightsCount || 1;
       p.dpsAvg = p.dpsSum / fc;
       p.hpsAvg = p.hpsSum / fc;
-      p.avoidableDeaths = Math.max(0, p.deathsSum - totalWipes);
+      p.avoidableDeaths = Math.max(0, p.deathsSum - p.wipesCount);
     });
 
     // 1. Dégâts infligés (DPS) - 200 pts for 1st, -10 pts per rank below, +20 pts for tanks
