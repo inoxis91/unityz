@@ -41,6 +41,7 @@ app-participants, app-composition, app-logs-dashboard {
 .admin-actions {
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .btn-admin {
@@ -858,10 +859,37 @@ app-participants, app-composition, app-logs-dashboard {
 }
 
 @media (max-width: 768px) {
+  .details-container {
+    padding: 1rem;
+  }
+  .event-header-card {
+    padding: 1.25rem;
+  }
+  .event-title-row h1 {
+    font-size: 1.6rem;
+  }
   .event-header-top { flex-direction: column; gap: 1rem; }
-  .admin-actions { width: 100%; }
-  .btn-admin { flex: 1; justify-content: center; }
+  .admin-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .btn-admin {
+    flex: 1 1 calc(50% - 6px);
+    justify-content: center;
+    min-width: 140px;
+  }
   .form-grid { grid-template-columns: 1fr; }
+  .tabs {
+    width: 100%;
+    display: flex;
+    box-sizing: border-box;
+  }
+  .tabs button {
+    flex: 1;
+    padding: 10px 8px;
+    font-size: 0.9rem;
+    text-align: center;
+  }
 }
 
 @media (max-width: 640px) {
