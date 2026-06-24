@@ -176,7 +176,7 @@ export class EventService {
     
     let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     if (frontendUrl.endsWith('/')) frontendUrl = frontendUrl.slice(0, -1);
-    const eventLink = `${frontendUrl}/events/${event.id}`;
+    const eventLink = `<${frontendUrl}/events/${event.id}>`;
 
     // Mise en avant du roster / groupe invité
     let rosterTag = '';
@@ -443,7 +443,7 @@ export class EventService {
     
     let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     if (frontendUrl.endsWith('/')) frontendUrl = frontendUrl.slice(0, -1);
-    const eventLink = `${frontendUrl}/events/${event.id}`;
+    const eventLink = `<${frontendUrl}/events/${event.id}>`;
 
     let message = '';
     if (isManual) {
