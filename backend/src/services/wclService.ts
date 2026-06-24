@@ -32,8 +32,8 @@ export interface WclMvpEntry {
   name: string;
   class: string;
   score: number;
-  dpsAvg: number;
-  hpsAvg: number;
+  dpsTotal: number;
+  hpsTotal: number;
   deathsCount: number;
   damageTakenSum: number;
 }
@@ -330,6 +330,9 @@ export class WclService {
                   dDone.forEach((entry: any) => {
                     const name = entry.name;
                     const className = (entry.type || 'Mage').toLowerCase().replace(/\s+/g, '');
+                    if (!roleMap[name] && !WOW_CLASSES.includes(className)) {
+                      return; // Skip boss / NPC
+                    }
                     const dps = Math.round(entry.total / duration);
                     const activeTime = Math.min(100, parseFloat(((entry.activeTime / (duration * 1000)) * 100).toFixed(1))) || 100;
                     const deaths = deathMap[name] || 0;
@@ -353,6 +356,10 @@ export class WclService {
                   // 2. Process Healing Done
                   hDone.forEach((entry: any) => {
                     const name = entry.name;
+                    const className = (entry.type || 'Priest').toLowerCase().replace(/\s+/g, '');
+                    if (!roleMap[name] && !WOW_CLASSES.includes(className)) {
+                      return; // Skip boss / NPC
+                    }
                     const hps = Math.round(entry.total / duration);
                     const parse = parseMap[name] || 0;
                     const deaths = deathMap[name] || 0;
@@ -364,7 +371,6 @@ export class WclService {
                         playerMap[name].role = computedRole;
                       }
                     } else {
-                      const className = (entry.type || 'Priest').toLowerCase().replace(/\s+/g, '');
                       playerMap[name] = {
                         name,
                         class: className,
@@ -385,6 +391,9 @@ export class WclService {
                     if (!playerMap[name]) {
                       const deathEntry = deathsList.find((d: any) => d.name === name);
                       const className = (deathEntry?.type || 'Mage').toLowerCase().replace(/\s+/g, '');
+                      if (!roleMap[name] && !WOW_CLASSES.includes(className)) {
+                        return; // Skip boss / NPC
+                      }
                       const computedRole = roleMap[name] || getRoleFromIcon(deathEntry?.icon);
                       playerMap[name] = {
                         name,
@@ -601,7 +610,7 @@ export class WclService {
     });
 
     // 1. Dégâts infligés (DPS) - 200 pts for 1st, -10 pts per rank below, +20 pts for tanks
-    const sortedByDps = [...playersList].sort((a, b) => b.dpsAvg - a.dpsAvg);
+    const sortedByDps = [...playersList].sort((a, b) => b.dpsSum - a.dpsSum);
     sortedByDps.forEach((p, index) => {
       let points = Math.max(0, 200 - index * 10);
       if (p.role === 'tank') {
@@ -613,7 +622,7 @@ export class WclService {
     // 2. Soins (HPS) - Separate scales for Healers/Tanks and DPS players
     // Healers & Tanks : start at 200 pts, decrease by 10 pts per rank
     const healersAndTanks = playersList.filter(p => p.role !== 'dps');
-    const sortedHealersAndTanks = [...healersAndTanks].sort((a, b) => b.hpsAvg - a.hpsAvg);
+    const sortedHealersAndTanks = [...healersAndTanks].sort((a, b) => b.hpsSum - a.hpsSum);
     sortedHealersAndTanks.forEach((p, index) => {
       let points = Math.max(0, 200 - index * 10);
       if (p.role === 'tank') {
@@ -624,7 +633,7 @@ export class WclService {
 
     // DPS : start at 100 pts (malus of 100), decrease by 3 pts per rank
     const dpsPlayers = playersList.filter(p => p.role === 'dps');
-    const sortedDps = [...dpsPlayers].sort((a, b) => b.hpsAvg - a.hpsAvg);
+    const sortedDps = [...dpsPlayers].sort((a, b) => b.hpsSum - a.hpsSum);
     sortedDps.forEach((p, index) => {
       p.hpsPoints = Math.max(0, 100 - index * 3);
     });
@@ -668,8 +677,8 @@ export class WclService {
         name: p.name,
         class: p.class,
         score: Math.round(p.totalScore),
-        dpsAvg: Math.round(p.dpsAvg),
-        hpsAvg: Math.round(p.hpsAvg),
+        dpsTotal: Math.round(p.dpsSum),
+        hpsTotal: Math.round(p.hpsSum),
         deathsCount: p.avoidableDeaths,
         damageTakenSum: p.damageTakenSum
       };

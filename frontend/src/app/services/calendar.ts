@@ -74,8 +74,8 @@ export interface WclMvpEntry {
   name: string;
   class: string;
   score: number;
-  dpsAvg: number;
-  hpsAvg: number;
+  dpsTotal: number;
+  hpsTotal: number;
   deathsCount: number;
   damageTakenSum: number;
 }
