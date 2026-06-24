@@ -485,6 +485,7 @@
                 <th>{{ i18n.t('event.details.logs_mvp_hps_avg') }}</th>
                 <th>{{ i18n.t('event.details.logs_mvp_damage_taken') }}</th>
                 <th>{{ i18n.t('event.details.logs_mvp_avoidable_deaths') }}</th>
+                <th>{{ i18n.t('event.details.logs_mvp_potions') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -521,6 +522,11 @@
                   <td>
                     <span class="death-pill" [class.dead]="entry.deathsCount > 0">
                       {{ entry.deathsCount }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="potion-pill" [class.used]="entry.potionsUsed > 0">
+                      🧪 {{ entry.potionsUsed }}
                     </span>
                   </td>
                 </tr>

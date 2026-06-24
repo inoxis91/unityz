@@ -55,6 +55,7 @@ export interface WclPlayerPerf {
   damageTaken: number;
   activeTime: number;
   parse: number;
+  potionsUsed?: number;
 }
 
 export interface WclFight {
@@ -78,6 +79,7 @@ export interface WclMvpEntry {
   hpsTotal: number;
   deathsCount: number;
   damageTakenSum: number;
+  potionsUsed: number;
 }
 
 export interface WclReportMetrics {
