@@ -685,13 +685,14 @@ export class WclService {
     }).sort((a, b) => b.score - a.score);
 
     // Calculate player total deaths across all fights
-    const playerDeaths: Record<string, { class: string; deaths: number }> = {};
+    const playerDeaths: Record<string, { class: string; deaths: number; fightsCount: number }> = {};
     fights.forEach(f => {
       f.players.forEach(p => {
         if (!playerDeaths[p.name]) {
-          playerDeaths[p.name] = { class: p.class, deaths: 0 };
+          playerDeaths[p.name] = { class: p.class, deaths: 0, fightsCount: 0 };
         }
         playerDeaths[p.name].deaths += p.deaths;
+        playerDeaths[p.name].fightsCount += 1;
       });
     });
 
@@ -703,16 +704,21 @@ export class WclService {
     let leastDiedClass = '';
     let minPlayerDeaths = 999999;
 
+    const totalFightsCount = fights.length;
+
     for (const [name, info] of Object.entries(playerDeaths)) {
       if (info.deaths > maxPlayerDeaths) {
         maxPlayerDeaths = info.deaths;
         mostDiedName = name;
         mostDiedClass = info.class;
       }
-      if (info.deaths < minPlayerDeaths) {
-        minPlayerDeaths = info.deaths;
-        leastDiedName = name;
-        leastDiedClass = info.class;
+      // Survivor (leastDiedPlayer) must have participated in ALL fights
+      if (info.fightsCount === totalFightsCount) {
+        if (info.deaths < minPlayerDeaths) {
+          minPlayerDeaths = info.deaths;
+          leastDiedName = name;
+          leastDiedClass = info.class;
+        }
       }
     }
 

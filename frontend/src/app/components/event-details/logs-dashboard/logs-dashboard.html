@@ -67,15 +67,16 @@
                   i18n.t('event.details.logs_survivor')
                 }}</span>
                 <span class="val-player" style="font-weight: 850">
-                  {{
-                    logsMetrics()!.leastDiedPlayer?.name || i18n.t('event.details.logs_none')
-                  }}
-                  ({{ logsMetrics()!.leastDiedPlayer?.deaths }}
-                  {{
-                    logsMetrics()!.leastDiedPlayer?.deaths === 1
-                      ? i18n.t('event.details.logs_death')
-                      : i18n.t('event.details.logs_deaths')
-                  }})
+                  @if (logsMetrics()!.leastDiedPlayer; as survivor) {
+                    {{ survivor.name }} ({{ survivor.deaths }}
+                    {{
+                      survivor.deaths === 1
+                        ? i18n.t('event.details.logs_death')
+                        : i18n.t('event.details.logs_deaths')
+                    }})
+                  } @else {
+                    {{ i18n.t('event.details.logs_none') }}
+                  }
                 </span>
               </div>
               <div
@@ -91,14 +92,16 @@
                   i18n.t('event.details.logs_died_most')
                 }}</span>
                 <span class="val-player" style="font-weight: 850">
-                  {{ logsMetrics()!.mostDiedPlayer?.name || i18n.t('event.details.logs_none') }} ({{
-                    logsMetrics()!.mostDiedPlayer?.deaths
-                  }}
-                  {{
-                    logsMetrics()!.mostDiedPlayer?.deaths === 1
-                      ? i18n.t('event.details.logs_death')
-                      : i18n.t('event.details.logs_deaths')
-                  }})
+                  @if (logsMetrics()!.mostDiedPlayer; as victim) {
+                    {{ victim.name }} ({{ victim.deaths }}
+                    {{
+                      victim.deaths === 1
+                        ? i18n.t('event.details.logs_death')
+                        : i18n.t('event.details.logs_deaths')
+                    }})
+                  } @else {
+                    {{ i18n.t('event.details.logs_none') }}
+                  }
                 </span>
               </div>
             </div>
