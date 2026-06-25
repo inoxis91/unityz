@@ -13,7 +13,7 @@ export interface WclPlayerPerf {
   damageTaken: number;
   activeTime: number; // percentage
   parse: number;
-  potionsUsed?: number;
+  burstPotionsUsed?: number;
 }
 
 export interface WclFight {
@@ -37,7 +37,7 @@ export interface WclMvpEntry {
   hpsTotal: number;
   deathsCount: number;
   damageTakenSum: number;
-  potionsUsed: number;
+  burstPotionsUsed: number;
 }
 
 export interface WclReportMetrics {
@@ -260,7 +260,8 @@ export class WclService {
                         damageTable: table(fightIDs: [$fightId], dataType: DamageDone)
                         healingTable: table(fightIDs: [$fightId], dataType: Healing)
                         damageTakenTable: table(fightIDs: [$fightId], dataType: DamageTaken)
-                        potionTable: table(fightIDs: [$fightId], dataType: Casts, abilityID: 1236616)
+                        burstPotionTable1: table(fightIDs: [$fightId], dataType: Casts, abilityID: 1236616)
+                        burstPotionTable2: table(fightIDs: [$fightId], dataType: Casts, abilityID: 1236994)
                         rankings: rankings(fightIDs: [$fightId])
                         deathsTable: table(fightIDs: [$fightId], dataType: Deaths)
                       }
@@ -285,13 +286,21 @@ export class WclService {
                   const dDone = reportTables.damageTable?.data?.entries || [];
                   const hDone = reportTables.healingTable?.data?.entries || [];
                   const dTaken = reportTables.damageTakenTable?.data?.entries || [];
-                  const potions = reportTables.potionTable?.data?.entries || [];
+                  const burstPotions1 = reportTables.burstPotionTable1?.data?.entries || [];
+                  const burstPotions2 = reportTables.burstPotionTable2?.data?.entries || [];
 
-                  // Map potions used by player name
-                  const potionMap: Record<string, number> = {};
-                  potions.forEach((entry: any) => {
+                  // Map burst potions used by player name
+                  const burstPotionMap: Record<string, number> = {};
+                  
+                  burstPotions1.forEach((entry: any) => {
                     if (entry.name) {
-                      potionMap[entry.name] = (potionMap[entry.name] || 0) + (entry.total || 0);
+                      burstPotionMap[entry.name] = (burstPotionMap[entry.name] || 0) + (entry.total || 0);
+                    }
+                  });
+                  
+                  burstPotions2.forEach((entry: any) => {
+                    if (entry.name) {
+                      burstPotionMap[entry.name] = (burstPotionMap[entry.name] || 0) + (entry.total || 0);
                     }
                   });
 
@@ -434,9 +443,9 @@ export class WclService {
                     }
                   });
 
-                  // Populate potions used for all parsed players
+                  // Populate burst potions used for all parsed players
                   Object.keys(playerMap).forEach(name => {
-                    playerMap[name].potionsUsed = potionMap[name] || 0;
+                    playerMap[name].burstPotionsUsed = burstPotionMap[name] || 0;
                   });
 
                   const playersList = Object.values(playerMap);
@@ -576,8 +585,8 @@ export class WclService {
       hpsPoints: number;
       damageTakenMalus: number;
       deathMalus: number;
-      potionBonusPoints: number;
-      potionsUsedTotal: number;
+      burstPotionBonusPoints: number;
+      burstPotionsUsedTotal: number;
       totalScore: number;
     }
 
@@ -605,8 +614,8 @@ export class WclService {
             hpsPoints: 0,
             damageTakenMalus: 0,
             deathMalus: 0,
-            potionBonusPoints: 0,
-            potionsUsedTotal: 0,
+            burstPotionBonusPoints: 0,
+            burstPotionsUsedTotal: 0,
             totalScore: 0
           };
         }
@@ -620,7 +629,7 @@ export class WclService {
         playerScoresMap[p.name].healingDoneTotal += p.hps * f.duration;
         playerScoresMap[p.name].damageTakenSum += (p.damageTaken || 0);
         playerScoresMap[p.name].deathsSum += p.deaths;
-        playerScoresMap[p.name].potionsUsedTotal += (p.potionsUsed || 0);
+        playerScoresMap[p.name].burstPotionsUsedTotal += (p.burstPotionsUsed || 0);
         playerScoresMap[p.name].fightsCount += 1;
         if (!f.kill) {
           playerScoresMap[p.name].wipesCount += 1;
@@ -681,14 +690,14 @@ export class WclService {
       p.damageTakenMalus = -malus;
     });
 
-    // 5. Potion de burst (Potentiel de lumière) - Bonus of 3 points per potion used
+    // 5. Potion de burst (Potentiel de lumière & 1236994) - Bonus of 3 points per potion used
     playersList.forEach(p => {
-      p.potionBonusPoints = p.potionsUsedTotal * 3;
+      p.burstPotionBonusPoints = p.burstPotionsUsedTotal * 3;
     });
 
     // Compute total score
     playersList.forEach(p => {
-      let score = p.dpsPoints + p.hpsPoints + p.deathMalus + p.damageTakenMalus + p.potionBonusPoints;
+      let score = p.dpsPoints + p.hpsPoints + p.deathMalus + p.damageTakenMalus + p.burstPotionBonusPoints;
       if (p.role === 'tank') {
         score -= 40; // Apply standard tank malus of 40 points
       }
@@ -715,7 +724,7 @@ export class WclService {
         hpsTotal: Math.round(p.healingDoneTotal),
         deathsCount: p.avoidableDeaths,
         damageTakenSum: p.damageTakenSum,
-        potionsUsed: p.potionsUsedTotal
+        burstPotionsUsed: p.burstPotionsUsedTotal
       };
     }).sort((a, b) => b.score - a.score);
 
