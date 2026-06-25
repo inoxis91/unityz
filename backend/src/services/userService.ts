@@ -506,6 +506,18 @@ export class UserService {
             AND e.start_time::date >= a.start_date 
             AND e.start_time::date <= a.end_date
         )
+        AND (
+          e.type != 'reunion'
+          OR e.invited_groups IS NULL
+          OR array_length(e.invited_groups, 1) IS NULL
+          OR 'all' = ANY(e.invited_groups)
+          OR EXISTS (
+            SELECT 1 
+            FROM users u2
+            WHERE u2.id = $2 
+              AND (u2.role = 'admin' OR u2.role = ANY(e.invited_groups))
+          )
+        )
       ORDER BY e.start_time DESC
     `;
     const result = await pool.query(query, [guildId, userId]);
@@ -526,13 +538,13 @@ export class UserService {
   static async getGuildAttendance(guildId: string): Promise<any[]> {
     const query = `
       WITH guild_users AS (
-        SELECT DISTINCT u.id, u.battletag
+        SELECT DISTINCT u.id, u.battletag, u.role
         FROM users u
         LEFT JOIN characters c ON u.id = c.user_id
         WHERE c.guild_id = $1 OR u.active_guild_id = $1
       ),
       past_events AS (
-        SELECT e.id, e.title, e.roster_id, r.weight as roster_weight, e.start_time
+        SELECT e.id, e.title, e.roster_id, r.weight as roster_weight, e.start_time, e.type, e.invited_groups
         FROM events e
         LEFT JOIN rosters r ON e.roster_id = r.id
         WHERE e.guild_id = $1
@@ -562,6 +574,14 @@ export class UserService {
                AND a.guild_id = $1
                AND pe.start_time::date >= a.start_date
                AND pe.start_time::date <= a.end_date
+           )
+           AND (
+             pe.type != 'reunion'
+             OR pe.invited_groups IS NULL
+             OR array_length(pe.invited_groups, 1) IS NULL
+             OR 'all' = ANY(pe.invited_groups)
+             OR gu.role = 'admin'
+             OR gu.role = ANY(pe.invited_groups)
            )
       ),
       user_attendance AS (
