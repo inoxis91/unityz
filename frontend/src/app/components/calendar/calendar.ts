@@ -495,7 +495,7 @@ export class CalendarComponent implements OnInit {
       invited_groups: props.invited_groups || [],
       start_time: `${startH}:${startM}:00`,
       end_time: `${endH}:${endM}:00`,
-      logs: props.logs || null
+      logs: null
     });
     this.toast.info(this.i18n.t('calendar.toast.copied'));
   }
@@ -532,7 +532,7 @@ export class CalendarComponent implements OnInit {
       invited_groups: copied.invited_groups,
       start_time: `${dateStr}T${copied.start_time}`,
       end_time: `${finalEndDate}T${copied.end_time}`,
-      logs: copied.logs || null
+      logs: null
     };
 
     this.calendarService.createEvent(eventData).subscribe({
