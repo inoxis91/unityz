@@ -21,7 +21,10 @@ export class ParticipantsComponent {
   private toast = inject(ToastService);
   public i18n = inject(I18nService);
 
-  @Input() event!: any;
+  eventSig = signal<any>(null);
+  @Input() set event(val: any) { this.eventSig.set(val); }
+  get event(): any { return this.eventSig(); }
+
   @Input() canManageEvents!: boolean;
   @Input() rioScores!: Map<string, number>;
 
@@ -72,8 +75,9 @@ export class ParticipantsComponent {
   });
 
   isSignupDisabled = computed(() => {
-    if (!this.event) return true;
-    if (this.event.registrations_locked) return true;
+    const evt = this.eventSig();
+    if (!evt) return true;
+    if (evt.registrations_locked) return true;
     if (this.isEventPast()) return true;
     if (this.signupStatus() === 'absent') return false;
     if (!this.selectedCharacterId()) return true;
