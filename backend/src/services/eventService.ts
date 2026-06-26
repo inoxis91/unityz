@@ -18,6 +18,7 @@ export interface Event {
   invited_groups?: string[];
   is_canceled?: boolean;
   canceled_reason?: string | null;
+  registrations_locked?: boolean;
   logs?: string | null;
   created_at: Date;
   updated_at: Date;
@@ -56,7 +57,7 @@ export class EventService {
              to_char(e.start_time, 'YYYY-MM-DD"T"HH24:MI:SS') as start_time,
              to_char(e.end_time, 'YYYY-MM-DD"T"HH24:MI:SS') as end_time,
              e.type, e.roster_id, e.mm_groups_count, e.created_by, e.invited_groups,
-             e.is_canceled, e.canceled_reason, e.logs,
+             e.is_canceled, e.canceled_reason, e.registrations_locked, e.logs,
              r.name as roster_name, r.weight as roster_weight
       FROM events e
       LEFT JOIN rosters r ON e.roster_id = r.id
@@ -87,7 +88,7 @@ export class EventService {
              to_char(e.start_time, 'YYYY-MM-DD"T"HH24:MI:SS') as start_time,
              to_char(e.end_time, 'YYYY-MM-DD"T"HH24:MI:SS') as end_time,
              e.type, e.roster_id, e.mm_groups_count, e.created_by, e.guild_id, e.invited_groups,
-             e.is_canceled, e.canceled_reason, e.logs,
+             e.is_canceled, e.canceled_reason, e.registrations_locked, e.logs,
              r.name as roster_name, r.weight as roster_weight
       FROM events e
       LEFT JOIN rosters r ON e.roster_id = r.id
@@ -308,6 +309,18 @@ export class EventService {
     return event;
   }
 
+  static async toggleRegistrationLock(id: string): Promise<Event | null> {
+    const query = `
+      UPDATE events 
+      SET registrations_locked = NOT COALESCE(registrations_locked, FALSE), updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1
+      RETURNING *
+    `;
+    const result = await pool.query(query, [id]);
+    const event = result.rows[0] || null;
+    return event;
+  }
+
   static async getSignups(eventId: string): Promise<Signup[]> {
     const query = `
       SELECT s.*, 
@@ -348,6 +361,22 @@ export class EventService {
   }
 
   static async signup(eventId: string, userId: string, data: any): Promise<Signup> {
+    const eventQuery = 'SELECT registrations_locked, is_canceled FROM events WHERE id = $1';
+    const eventRes = await pool.query(eventQuery, [eventId]);
+    const event = eventRes.rows[0];
+    if (event) {
+      if (event.registrations_locked) {
+        const error = new Error('Registrations are locked for this event') as any;
+        error.statusCode = 400;
+        throw error;
+      }
+      if (event.is_canceled) {
+        const error = new Error('This event has been canceled') as any;
+        error.statusCode = 400;
+        throw error;
+      }
+    }
+
     const charId = data.character_id && data.character_id !== '' ? data.character_id : null;
     const query = `
       INSERT INTO event_signups (event_id, user_id, character_id, role, comment, status)
@@ -366,6 +395,22 @@ export class EventService {
   }
 
   static async unsignup(eventId: string, userId: string): Promise<boolean> {
+    const eventQuery = 'SELECT registrations_locked, is_canceled FROM events WHERE id = $1';
+    const eventRes = await pool.query(eventQuery, [eventId]);
+    const event = eventRes.rows[0];
+    if (event) {
+      if (event.registrations_locked) {
+        const error = new Error('Registrations are locked for this event') as any;
+        error.statusCode = 400;
+        throw error;
+      }
+      if (event.is_canceled) {
+        const error = new Error('This event has been canceled') as any;
+        error.statusCode = 400;
+        throw error;
+      }
+    }
+
     const query = 'DELETE FROM event_signups WHERE event_id = $1 AND user_id = $2';
     const result = await pool.query(query, [eventId, userId]);
     return (result.rowCount ?? 0) > 0;

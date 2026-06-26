@@ -238,6 +238,24 @@ export class EventDetailsComponent implements OnInit {
     });
   }
 
+  onToggleRegistrationLock() {
+    const evt = this.event();
+    if (!evt || !evt.id) return;
+
+    this.calendarService.toggleRegistrationLock(evt.id).subscribe({
+      next: (updatedEvent) => {
+        this.event.set(updatedEvent);
+        this.loadEvent(evt.id!);
+        if (updatedEvent.registrations_locked) {
+          this.toast.success(this.i18n.t('event.details.toast_lock_success'));
+        } else {
+          this.toast.success(this.i18n.t('event.details.toast_unlock_success'));
+        }
+      },
+      error: () => this.toast.error(this.i18n.t('event.details.toast_lock_error'))
+    });
+  }
+
   async onRemindEvent() {
     const evt = this.event();
     if (!evt) return;

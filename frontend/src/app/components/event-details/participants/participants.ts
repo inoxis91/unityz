@@ -73,6 +73,7 @@ export class ParticipantsComponent {
 
   isSignupDisabled = computed(() => {
     if (!this.event) return true;
+    if (this.event.registrations_locked) return true;
     if (this.isEventPast()) return true;
     if (this.signupStatus() === 'absent') return false;
     if (!this.selectedCharacterId()) return true;

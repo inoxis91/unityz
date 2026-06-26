@@ -209,6 +209,20 @@ router.delete('/:id/signup', isAuthenticated, async (req, res, next) => {
   }
 });
 
+// POST /api/events/:id/toggle-lock : Bloque/Débloque les inscriptions à un événement
+router.post('/:id/toggle-lock', canManageEvents, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const event = await EventService.toggleRegistrationLock(id as string);
+    if (!event) {
+      return res.status(404).json({ status: 'error', message: 'Event not found' });
+    }
+    res.json(event);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // POST /api/events/:id/cancel : Annule un événement
 router.post('/:id/cancel', canManageEvents, async (req, res, next) => {
   try {

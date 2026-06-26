@@ -9,12 +9,18 @@
           <p>⚠️ {{ i18n.t('event.details.event_past_warning') }}</p>
         </div>
       }
+      <!-- Locked Event Warning -->
+      @if (event?.registrations_locked && !isEventPast()) {
+        <div class="warning-box locked-warning animate-fade-in" style="margin-bottom: 1rem">
+          <p>🔒 {{ i18n.t('event.details.registrations_locked_warning') }}</p>
+        </div>
+      }
       <div class="status-selector">
         <button
           [class.active]="signupStatus() === 'signed_up'"
           (click)="setStatus('signed_up')"
           class="status-btn present"
-          [disabled]="isEventPast()"
+          [disabled]="isEventPast() || event?.registrations_locked"
         >
           <span class="dot"></span> {{ i18n.t('event.details.status_present') }}
         </button>
@@ -22,7 +28,7 @@
           [class.active]="signupStatus() === 'standby'"
           (click)="setStatus('standby')"
           class="status-btn standby"
-          [disabled]="isEventPast()"
+          [disabled]="isEventPast() || event?.registrations_locked"
         >
           <span class="dot"></span> {{ i18n.t('event.details.status_maybe') }}
         </button>
@@ -30,7 +36,7 @@
           [class.active]="signupStatus() === 'absent'"
           (click)="setStatus('absent')"
           class="status-btn absent"
-          [disabled]="isEventPast()"
+          [disabled]="isEventPast() || event?.registrations_locked"
         >
           <span class="dot"></span> {{ i18n.t('event.details.status_absent') }}
         </button>
@@ -45,7 +51,7 @@
                 (ngModelChange)="selectedCharacterId.set($event)"
                 (change)="onCharacterChange()"
                 class="modern-select"
-                [disabled]="isEventPast()"
+                [disabled]="isEventPast() || event?.registrations_locked"
               >
                 @for (char of myCharactersSig(); track char) {
                   <option [value]="char.id" [disabled]="!isCharacterAllowed(char)">
@@ -86,7 +92,7 @@
                 <button
                   [class.active]="selectedRole() === 'tank'"
                   (click)="selectedRole.set('tank')"
-                  [disabled]="isEventPast()"
+                  [disabled]="isEventPast() || event?.registrations_locked"
                 >
                   <img src="assets/icons/tank.png" class="role-icon-img" alt="Tank" />
                   {{ i18n.t('event.details.role_tank') }}
@@ -94,7 +100,7 @@
                 <button
                   [class.active]="selectedRole() === 'heal'"
                   (click)="selectedRole.set('heal')"
-                  [disabled]="isEventPast()"
+                  [disabled]="isEventPast() || event?.registrations_locked"
                 >
                   <img src="assets/icons/heal.png" class="role-icon-img" alt="Heal" />
                   {{ i18n.t('event.details.role_heal') }}
@@ -102,7 +108,7 @@
                 <button
                   [class.active]="selectedRole() === 'dps'"
                   (click)="selectedRole.set('dps')"
-                  [disabled]="isEventPast()"
+                  [disabled]="isEventPast() || event?.registrations_locked"
                 >
                   <img src="assets/icons/dps.png" class="role-icon-img" alt="DPS" />
                   {{ i18n.t('event.details.role_dps') }}
@@ -119,7 +125,7 @@
           (ngModelChange)="comment.set($event)"
           [placeholder]="i18n.t('event.details.comment_placeholder')"
           rows="3"
-          [disabled]="isEventPast()"
+          [disabled]="isEventPast() || event?.registrations_locked"
         ></textarea>
       </div>
       <div class="actions">

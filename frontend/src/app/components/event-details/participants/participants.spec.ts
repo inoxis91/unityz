@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { signal } from '@angular/core';
@@ -133,5 +134,23 @@ describe('ParticipantsComponent', () => {
     component.toggleDateSort();
     expect(component.sortMethod()).toBe('date');
     expect(component.sortDirection()).toBe('asc');
+  });
+
+  it('should disable signup if registrations are locked', () => {
+    component.event = {
+      id: 'event-1',
+      title: 'Locked Event',
+      start_time: '2026-06-27T20:00:00.000Z',
+      end_time: '2026-06-27T23:00:00.000Z',
+      type: 'raid',
+      registrations_locked: true
+    };
+    component.myCharacters = [
+      { id: 'char-1', name: 'Main', class: 'warrior', is_main: true }
+    ];
+    component.selectedCharacterId.set('char-1');
+    component.signupStatus.set('signed_up');
+
+    expect(component.isSignupDisabled()).toBe(true);
   });
 });

@@ -81,6 +81,24 @@ app-participants, app-composition, app-logs-dashboard {
   background: #fef2f2;
 }
 
+.btn-admin.lock:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  background: #eff6ff;
+}
+
+.btn-admin.lock.locked {
+  border-color: #fca5a5;
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+.btn-admin.lock.locked:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: #fee2e2;
+}
+
 /* Modal Styling */
 .modal-overlay {
   position: fixed;
@@ -536,6 +554,7 @@ app-participants, app-composition, app-logs-dashboard {
 .role-selector button { padding: 12px 8px; border: 2px solid #f1f5f9; background: #f8fafc; border-radius: 12px; cursor: pointer; transition: all 0.2s; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; }
 .role-selector button.active { background: #3b82f6; color: white; border-color: #3b82f6; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2); }
 .warning-box { background: #fffbeb; border: 1px solid #fef3c7; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; }
+.warning-box.locked-warning { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
 .btn-action { width: 100%; padding: 14px 20px; border-radius: 14px; font-size: 1rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.3s; border: none; }
 .btn-action.confirm { background: #0074e0; color: white; box-shadow: 0 4px 12px rgba(0, 116, 224, 0.2); }
 .btn-action.confirm:hover:not(:disabled) { background: #0056a3; transform: translateY(-2px); }

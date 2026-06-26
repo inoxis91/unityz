@@ -76,6 +76,17 @@
             }
             @if (!event()?.is_canceled) {
               <button
+                class="btn-admin lock"
+                [class.locked]="event()?.registrations_locked"
+                (click)="onToggleRegistrationLock()"
+                [title]="event()?.registrations_locked ? i18n.t('event.details.btn_unlock_registrations') : i18n.t('event.details.btn_lock_registrations')"
+              >
+                <span class="icon">{{ event()?.registrations_locked ? '🔓' : '🔒' }}</span> 
+                {{ event()?.registrations_locked ? i18n.t('event.details.btn_unlock_registrations') : i18n.t('event.details.btn_lock_registrations') }}
+              </button>
+            }
+            @if (!event()?.is_canceled) {
+              <button
                 class="btn-admin edit"
                 (click)="onCancelEvent()"
                 [title]="i18n.t('event.details.btn_cancel_activity')"

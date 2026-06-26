@@ -17,6 +17,7 @@ export interface CalendarEvent {
   invited_groups?: string[];
   is_canceled?: boolean;
   canceled_reason?: string | null;
+  registrations_locked?: boolean;
   logs?: string | null;
   created_by?: string;
   creator_name?: string;
@@ -138,6 +139,10 @@ export class CalendarService {
 
   cancelEvent(id: string, reason: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/${id}/cancel`, { reason }, { withCredentials: true });
+  }
+
+  toggleRegistrationLock(id: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${id}/toggle-lock`, {}, { withCredentials: true });
   }
 
   updateGroupsCount(eventId: string, count: number): Observable<any> {

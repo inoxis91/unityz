@@ -336,6 +336,7 @@ export const initDb = async (retries = 5, delay = 3000): Promise<void> => {
         mm_groups_count INTEGER DEFAULT 0,
         is_canceled BOOLEAN DEFAULT FALSE,
         canceled_reason TEXT,
+        registrations_locked BOOLEAN DEFAULT FALSE,
         created_by VARCHAR(255) REFERENCES users(id),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -363,6 +364,9 @@ export const initDb = async (retries = 5, delay = 3000): Promise<void> => {
         END IF;
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='events' AND column_name='logs') THEN
           ALTER TABLE events ADD COLUMN logs TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='events' AND column_name='registrations_locked') THEN
+          ALTER TABLE events ADD COLUMN registrations_locked BOOLEAN DEFAULT FALSE;
         END IF;
       END $$;
     `);
