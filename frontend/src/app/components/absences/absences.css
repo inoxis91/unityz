@@ -207,10 +207,9 @@ textarea.form-control {
 
 .reason-cell {
   max-width: 250px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   color: #64748b;
+  white-space: normal;
+  word-break: break-word;
 }
 
 @media (max-width: 768px) {
