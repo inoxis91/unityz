@@ -159,7 +159,8 @@ export class UserService {
           if (char.name && (char.level || 0) >= 10) {
             characterSummaries.push({
               name: char.name,
-              realm: char.realm?.name || 'Inconnu'
+              realm: char.realm?.name || 'Inconnu',
+              realmSlug: char.realm?.slug || null
             });
           }
         });
@@ -172,7 +173,7 @@ export class UserService {
     await Promise.all(
       characterSummaries.map(async (char) => {
         try {
-          const summary = await BlizzardService.getCharacterSummary(accessToken, char.realm, char.name);
+          const summary = await BlizzardService.getCharacterSummary(accessToken, char.realmSlug || char.realm, char.name);
           if (summary && summary.guild) {
             uniqueGuildsMap.set(summary.guild.id, {
               blizzard_id: summary.guild.id,
@@ -258,7 +259,7 @@ export class UserService {
             if (account.characters) {
               account.characters.forEach((char: any) => {
                 if (char.name && (char.level || 0) >= 10) {
-                  characterSummaries.push({ name: char.name, realm: char.realm?.name || 'Inconnu' });
+                  characterSummaries.push({ name: char.name, realm: char.realm?.name || 'Inconnu', realmSlug: char.realm?.slug || null });
                 }
               });
             }
@@ -266,7 +267,7 @@ export class UserService {
 
           for (const char of characterSummaries) {
             try {
-              const summary = await BlizzardService.getCharacterSummary(accessToken, char.realm, char.name);
+              const summary = await BlizzardService.getCharacterSummary(accessToken, char.realmSlug || char.realm, char.name);
               if (summary && summary.guild && summary.guild.id === blizzardId) {
                 name = summary.guild.name;
                 realm = summary.guild.realm?.name || char.realm;
@@ -325,6 +326,7 @@ export class UserService {
               charactersToCheck.push({
                 name: char.name,
                 realm: char.realm?.name || 'Inconnu',
+                realmSlug: char.realm?.slug || null,
                 class: (char.character_class?.name || char.playable_class?.name || 'Inconnu'),
                 level: char.level || 0
               });
@@ -336,7 +338,7 @@ export class UserService {
       await Promise.all(
         charactersToCheck.map(async (char) => {
           try {
-            const summary = await BlizzardService.getCharacterSummary(accessToken, char.realm, char.name);
+            const summary = await BlizzardService.getCharacterSummary(accessToken, char.realmSlug || char.realm, char.name);
             if (summary && summary.guild && summary.guild.id === guild.blizzard_id) {
               matchingCharacters.push({
                 ...char,

@@ -87,6 +87,7 @@ router.get('/bnet', isAuthenticated, async (req, res, next) => {
             allCharacters.push({
               name: char.name,
               realm: char.realm?.name || 'Inconnu',
+              realmSlug: char.realm?.slug || null,
               class: (char.character_class?.name || char.playable_class?.name || 'Inconnu'),
               level: char.level || 0,
               guild: null
@@ -96,22 +97,36 @@ router.get('/bnet', isAuthenticated, async (req, res, next) => {
       }
     });
 
+    console.log(`[Bnet Sync] Found ${allCharacters.length} characters (>= level 10) on Bnet account.`);
+
     // Fetch summaries in parallel and filter by active guild's blizzard ID
     const matchingCharacters: any[] = [];
     await Promise.all(
       allCharacters.map(async (char) => {
         try {
-          const summary = await BlizzardService.getCharacterSummary(accessToken, char.realm, char.name);
-          if (summary && summary.guild && summary.guild.id === guild.blizzard_id) {
-            char.guild = {
-              id: summary.guild.id,
-              name: summary.guild.name,
-              realm: summary.guild.realm?.name || char.realm
-            };
-            matchingCharacters.push(char);
+          const summary = await BlizzardService.getCharacterSummary(accessToken, char.realmSlug || char.realm, char.name);
+          if (!summary) {
+            console.log(`[Bnet Sync] Could not fetch summary for character: ${char.name}-${char.realm}. Character might be inactive or has third-party data sharing disabled in Battle.net settings.`);
+            return;
           }
-        } catch (err) {
-          // Ignore, keep guild as null
+          if (!summary.guild) {
+            console.log(`[Bnet Sync] Character ${char.name}-${char.realm} is not in any guild.`);
+            return;
+          }
+          if (summary.guild.id !== guild.blizzard_id) {
+            console.log(`[Bnet Sync] Character ${char.name}-${char.realm} is in guild '${summary.guild.name}' (ID: ${summary.guild.id}) but active guild is '${guild.name}' (ID: ${guild.blizzard_id}).`);
+            return;
+          }
+
+          console.log(`[Bnet Sync] Match found! Character ${char.name}-${char.realm} belongs to the active guild.`);
+          char.guild = {
+            id: summary.guild.id,
+            name: summary.guild.name,
+            realm: summary.guild.realm?.name || char.realm
+          };
+          matchingCharacters.push(char);
+        } catch (err: any) {
+          console.error(`[Bnet Sync] Error checking character ${char.name}-${char.realm}:`, err.message);
         }
       })
     );

@@ -26,6 +26,28 @@
   font-size: 2.5rem;
 }
 
+.btn-change-guild-header {
+  margin-left: auto;
+  background: rgba(59, 130, 246, 0.12);
+  color: #ffffff;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  font-weight: 700;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-change-guild-header:hover {
+  background: rgba(59, 130, 246, 0.25);
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+}
+
 .guild-details h2 {
   font-size: 1.4rem;
   font-weight: 800;

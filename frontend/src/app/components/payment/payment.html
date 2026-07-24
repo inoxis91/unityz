@@ -11,6 +11,11 @@
           }})
         </p>
       </div>
+      @if (!verifyingSession()) {
+        <button class="btn-change-guild-header" routerLink="/select-guild">
+          {{ i18n.t('payment.btn_change_guild') }}
+        </button>
+      }
     </div>
   }
 

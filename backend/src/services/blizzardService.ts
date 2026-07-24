@@ -85,7 +85,7 @@ export class BlizzardService {
 
   private static formatCharSlug(text: string): string {
     // Pour les noms de personnages, on garde les caractères spéciaux/accents
-    // Mais on met en minuscule pour l'URL
-    return text.toLowerCase().trim();
+    // Mais on met en minuscule et on encode pour l'URL
+    return encodeURIComponent(text.toLowerCase().trim());
   }
 }
