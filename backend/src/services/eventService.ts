@@ -467,6 +467,7 @@ export class EventService {
       FROM events e
       LEFT JOIN rosters r ON e.roster_id = r.id
       WHERE e.start_time::date = $1::date
+        AND NOT COALESCE(e.is_canceled, FALSE)
       ORDER BY e.start_time ASC
     `;
     const result = await pool.query(query, [date.toISOString().split('T')[0]]);
@@ -517,6 +518,11 @@ export class EventService {
   static async sendManualReminder(eventId: string): Promise<void> {
     const event = await this.getById(eventId);
     if (!event) throw new Error('Event not found');
+    if (event.is_canceled) {
+      const error = new Error('Cannot send a reminder for a canceled event') as any;
+      error.statusCode = 400;
+      throw error;
+    }
     if (!event.guild_id) return;
 
     // Fetch guild Discord settings

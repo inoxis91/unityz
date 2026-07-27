@@ -54,7 +54,13 @@ export const getProfessionsForCraft = (slot: string, armorType: string): string[
     return professions;
   }
 
-  // 2. Armure en plaque, mailles, armes 1M, 2M et Bouclier (offhand) -> Forge
+  // 2. Dos (back) -> Couture (Tailoring) exclusivement
+  if (slot === 'back') {
+    professions.push('tailoring');
+    return professions;
+  }
+
+  // 3. Armure en plaque, mailles, armes 1M, 2M et Bouclier (offhand) -> Forge
   if (
     armorType === 'plate' ||
     armorType === 'mail' ||
@@ -65,22 +71,22 @@ export const getProfessionsForCraft = (slot: string, armorType: string): string[
     professions.push('blacksmithing');
   }
 
-  // 3. Cuir -> Travail du cuir
+  // 4. Cuir -> Travail du cuir
   if (armorType === 'leather') {
     professions.push('leatherworking');
   }
 
-  // 4. Armures en tissu -> Couture
-  if (armorType === 'cloth' || slot === 'back') {
+  // 5. Armures en tissu -> Couture
+  if (armorType === 'cloth') {
     professions.push('tailoring');
   }
 
-  // 5. Bâtons -> Calligraphie (inscription)
+  // 6. Bâtons -> Calligraphie (inscription)
   if (armorType === 'staff') {
     professions.push('inscription');
   }
 
-  // 6. Baguettes -> Enchantement (enchanting)
+  // 7. Baguettes -> Enchantement (enchanting)
   if (armorType === 'wand') {
     professions.push('enchanting');
   }
