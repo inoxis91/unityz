@@ -22,6 +22,22 @@ export interface Character {
   roster_name?: string | null;
 }
 
+export interface GuildCharacterOverview {
+  id: string;
+  name: string;
+  realm: string;
+  class: string;
+  level: number;
+  is_tank: boolean;
+  is_heal: boolean;
+  is_dps: boolean;
+  is_main: boolean;
+  roster_id: string | null;
+  roster_name: string | null;
+  owner_battletag: string;
+  owner_id: string;
+}
+
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -134,5 +150,10 @@ export class CharacterService {
       url += `?difficulty=${difficulty}`;
     }
     return this.http.get<any>(url, { withCredentials: true });
+  }
+
+  // Récupère l'ensemble des personnages de la guilde active (Vue admin)
+  getGuildCharactersOverview(): Observable<GuildCharacterOverview[]> {
+    return this.http.get<GuildCharacterOverview[]>(`${this.apiUrl}/guild-overview`, { withCredentials: true });
   }
 }

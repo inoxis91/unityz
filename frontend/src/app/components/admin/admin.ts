@@ -2,6 +2,7 @@ import { Component, OnInit, signal, inject } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { AdminRostersComponent } from './admin-rosters/admin-rosters';
+import { AdminCharactersComponent } from './admin-characters/admin-characters';
 import { AdminFeesComponent } from './admin-fees/admin-fees';
 import { AdminUsersComponent } from './admin-users/admin-users';
 import { AdminSettingsComponent } from './admin-settings/admin-settings';
@@ -16,6 +17,7 @@ import { I18nService } from '../../services/i18n';
   imports: [
     FormsModule,
     AdminRostersComponent,
+    AdminCharactersComponent,
     AdminFeesComponent,
     AdminUsersComponent,
     AdminSettingsComponent,
@@ -28,7 +30,7 @@ import { I18nService } from '../../services/i18n';
 export class AdminComponent implements OnInit {
   public authService = inject(AuthService);
   public i18n = inject(I18nService);
-  activeTab = signal<'users' | 'rosters' | 'fees' | 'attendance' | 'absences' | 'settings'>(
+  activeTab = signal<'users' | 'rosters' | 'characters' | 'fees' | 'attendance' | 'absences' | 'settings'>(
     'users',
   );
 

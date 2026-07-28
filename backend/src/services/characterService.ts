@@ -138,4 +138,30 @@ export class CharacterService {
       throw new Error('Character not found or not owned by user');
     }
   }
+
+  static async getAllForGuild(guildId: string): Promise<any[]> {
+    const query = `
+      SELECT 
+        c.id,
+        c.name,
+        c.realm,
+        c.class,
+        c.level,
+        c.is_tank,
+        c.is_heal,
+        c.is_dps,
+        c.is_main,
+        c.roster_id,
+        r.name as roster_name,
+        u.battletag as owner_battletag,
+        u.id as owner_id
+      FROM characters c
+      JOIN users u ON c.user_id = u.id
+      LEFT JOIN rosters r ON c.roster_id = r.id
+      WHERE c.guild_id = $1
+      ORDER BY u.battletag ASC, c.is_main DESC, c.name ASC
+    `;
+    const result = await pool.query(query, [guildId]);
+    return result.rows;
+  }
 }

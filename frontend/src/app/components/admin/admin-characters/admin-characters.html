@@ -1,0 +1,221 @@
+<div class="characters-overview-container">
+  <div class="overview-header">
+    <h2>{{ i18n.t('admin.characters.title') }}</h2>
+    <p class="subtitle">{{ i18n.t('admin.characters.subtitle') }}</p>
+  </div>
+
+  <!-- Filters and Search Bar -->
+  <div class="filters-card">
+    <div class="filters-grid">
+      <!-- Search Input -->
+      <div class="filter-group search-group">
+        <input
+          type="text"
+          [placeholder]="i18n.t('admin.characters.search_placeholder')"
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+          class="form-control search-input"
+        />
+        <span class="search-icon">🔍</span>
+      </div>
+
+      <!-- Class Filter -->
+      <div class="filter-group">
+        <select
+          [value]="selectedClass()"
+          (change)="selectedClass.set($any($event.target).value)"
+          class="form-control select-input"
+        >
+          <option value="all">{{ i18n.t('admin.characters.filter_class') }}</option>
+          @for (cls of classesList(); track cls) {
+            <option [value]="cls">{{ cls }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Role Filter -->
+      <div class="filter-group">
+        <select
+          [value]="selectedRole()"
+          (change)="selectedRole.set($any($event.target).value)"
+          class="form-control select-input"
+        >
+          <option value="all">{{ i18n.t('admin.characters.filter_role_all') }}</option>
+          <option value="tank">{{ i18n.t('admin.characters.filter_role_tank') }}</option>
+          <option value="heal">{{ i18n.t('admin.characters.filter_role_heal') }}</option>
+          <option value="dps">{{ i18n.t('admin.characters.filter_role_dps') }}</option>
+        </select>
+      </div>
+
+      <!-- Main/Alt Filter -->
+      <div class="filter-group checkbox-group">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [checked]="showOnlyMains()"
+            (change)="showOnlyMains.set($any($event.target).checked)"
+            class="checkbox-input"
+          />
+          <span class="checkbox-text">{{ i18n.t('admin.characters.filter_mains_only') }}</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Characters Table -->
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>{{ i18n.t('admin.characters.loading') }}</p>
+    </div>
+  } @else {
+    <div class="table-card">
+      <div class="table-responsive">
+        <table class="characters-table">
+          <thead>
+            <tr>
+              <!-- Sortable columns -->
+              <th class="th-main">{{ i18n.t('admin.characters.th_main') }}</th>
+              <th (click)="toggleSort('name')" class="sortable">
+                {{ i18n.t('admin.characters.th_name') }}
+                @if (sortBy() === 'name') {
+                  <span class="sort-indicator">{{ sortOrder() === 'asc' ? '▲' : '▼' }}</span>
+                }
+              </th>
+              <th (click)="toggleSort('class')" class="sortable text-center">
+                {{ i18n.t('admin.characters.th_class') }}
+                @if (sortBy() === 'class') {
+                  <span class="sort-indicator">{{ sortOrder() === 'asc' ? '▲' : '▼' }}</span>
+                }
+              </th>
+              <th (click)="toggleSort('level')" class="sortable text-center">
+                {{ i18n.t('admin.characters.th_level') }}
+                @if (sortBy() === 'level') {
+                  <span class="sort-indicator">{{ sortOrder() === 'asc' ? '▲' : '▼' }}</span>
+                }
+              </th>
+              <th class="text-center">{{ i18n.t('admin.characters.th_roles') }}</th>
+              <th (click)="toggleSort('owner')" class="sortable">
+                {{ i18n.t('admin.characters.th_owner') }}
+                @if (sortBy() === 'owner') {
+                  <span class="sort-indicator">{{ sortOrder() === 'asc' ? '▲' : '▼' }}</span>
+                }
+              </th>
+              <th (click)="toggleSort('roster')" class="sortable">
+                {{ i18n.t('admin.characters.th_roster') }}
+                @if (sortBy() === 'roster') {
+                  <span class="sort-indicator">{{ sortOrder() === 'asc' ? '▲' : '▼' }}</span>
+                }
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (char of filteredCharacters(); track char.id) {
+              <tr
+                [class.is-main-row]="char.is_main"
+                [class]="'border-class-' + getClassCategory(char.class)"
+              >
+                <!-- Main / Alt Badge -->
+                <td class="main-cell text-center">
+                  @if (char.is_main) {
+                    <span class="badge main-badge" [title]="i18n.t('char.manager.star_main')">
+                      ⭐ {{ i18n.t('admin.characters.main_badge') }}
+                    </span>
+                  } @else {
+                    <span class="badge alt-badge">
+                      {{ i18n.t('admin.characters.alt_badge') }}
+                    </span>
+                  }
+                </td>
+
+                <!-- Character Name (Class colored) -->
+                <td class="name-cell">
+                  <span class="char-name" [class]="'class-' + getClassCategory(char.class)">
+                    {{ char.name }}
+                  </span>
+                  <span class="realm-name">{{ char.realm }}</span>
+                </td>
+
+                <!-- Character Class -->
+                <td class="class-cell text-center">
+                  <div class="class-info-badge">
+                    <img
+                      [src]="getClassIcon(char.class)"
+                      [alt]="char.class"
+                      class="class-icon-img"
+                    />
+                    <span class="class-label-text" [class]="'class-' + getClassCategory(char.class)">
+                      {{ char.class }}
+                    </span>
+                  </div>
+                </td>
+
+                <!-- Level -->
+                <td class="level-cell text-center">
+                  <span class="level-badge" [class.max-level]="char.level === 80">
+                    {{ char.level }}
+                  </span>
+                </td>
+
+                <!-- Role / Specializations (Tanks/Heal/DPS badges) -->
+                <td class="roles-cell text-center">
+                  <div class="roles-indicators">
+                    @if (char.is_tank) {
+                      <div class="role-badge tank" [title]="i18n.t('char.role.tooltip.tank')">
+                        <img src="assets/icons/tank.png" alt="Tank" class="role-icon" />
+                      </div>
+                    }
+                    @if (char.is_heal) {
+                      <div class="role-badge heal" [title]="i18n.t('char.role.tooltip.healer')">
+                        <img src="assets/icons/heal.png" alt="Heal" class="role-icon" />
+                      </div>
+                    }
+                    @if (char.is_dps) {
+                      <div class="role-badge dps" [title]="i18n.t('char.role.tooltip.dps')">
+                        <img src="assets/icons/dps.png" alt="DPS" class="role-icon" />
+                      </div>
+                    }
+                    @if (!char.is_tank && !char.is_heal && !char.is_dps) {
+                      <span class="no-role-indicator">-</span>
+                    }
+                  </div>
+                </td>
+
+                <!-- Owner (Member) -->
+                <td class="owner-cell">
+                  <div class="owner-info" [title]="char.owner_battletag">
+                    <span class="battlenet-logo">🔷</span>
+                    <span class="owner-name">{{ getCleanBattleTag(char.owner_battletag) }}</span>
+                    <span class="battletag-suffix">#{{ char.owner_battletag.split('#')[1] }}</span>
+                  </div>
+                </td>
+
+                <!-- Roster -->
+                <td class="roster-cell">
+                  @if (char.roster_name) {
+                    <span class="badge roster-badge">
+                      🛡️ {{ char.roster_name }}
+                    </span>
+                  } @else {
+                    <span class="badge unassigned-badge">
+                      {{ i18n.t('admin.characters.unassigned_roster') }}
+                    </span>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="empty-row text-center">
+                  <div class="empty-container">
+                    <span class="empty-icon">👥</span>
+                    <p>{{ i18n.t('admin.characters.no_chars') }}</p>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

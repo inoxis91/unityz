@@ -3,7 +3,7 @@ import axios from 'axios';
 import pool from '../lib/db';
 import { CharacterService } from '../services/characterService';
 import { BlizzardService } from '../services/blizzardService';
-import { isAuthenticated, requireActiveGuild, requirePaidGuild } from '../middlewares/auth';
+import { isAuthenticated, requireActiveGuild, requirePaidGuild, canManageRosters } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import { importCharactersSchema, updateRolesSchema, setMainSchema } from '../schemas/characterSchemas';
 import { WclService } from '../services/wclService';
@@ -141,6 +141,20 @@ router.get('/bnet', isAuthenticated, async (req, res, next) => {
 router.get('/', isAuthenticated, async (req, res, next) => {
   try {
     const characters = await CharacterService.getByUserId(req.user!.id, req.user!.active_guild_id || undefined);
+    res.json(characters);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/characters/guild-overview : Récupère tous les personnages de la guilde active (Admin / Raid Leader)
+router.get('/guild-overview', isAuthenticated, requireActiveGuild, canManageRosters, async (req, res, next) => {
+  try {
+    const guildId = req.user!.active_guild_id;
+    if (!guildId) {
+      return res.status(400).json({ status: 'error', message: 'No active guild selected' });
+    }
+    const characters = await CharacterService.getAllForGuild(guildId);
     res.json(characters);
   } catch (error) {
     next(error);

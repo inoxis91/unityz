@@ -1,0 +1,430 @@
+.characters-overview-container {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+.overview-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.overview-header .subtitle {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.95rem;
+  color: #64748b;
+}
+
+/* Filters Card */
+.filters-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+  border: 1px solid #e2e8f0;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: 2fr 1.25fr 1.25fr 1.5fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.search-group {
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 0.95rem;
+  pointer-events: none;
+}
+
+.form-control {
+  width: 100%;
+  height: 42px;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.9rem;
+  color: #1e293b;
+  background-color: #f8fafc;
+  transition: all 0.2s ease-in-out;
+  box-sizing: border-box;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.search-input {
+  padding-right: 2.5rem;
+}
+
+.checkbox-group {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-input {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+.checkbox-text {
+  font-size: 0.9rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+/* Table Card */
+.table-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.characters-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.characters-table th,
+.characters-table td {
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.characters-table th {
+  background-color: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.characters-table th.sortable {
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.characters-table th.sortable:hover {
+  background-color: #e2e8f0;
+  color: #1e293b;
+}
+
+.sort-indicator {
+  margin-left: 0.25rem;
+  font-size: 0.75rem;
+  color: #3b82f6;
+}
+
+.characters-table tbody tr {
+  transition: background-color 0.15s ease-in-out;
+}
+
+.characters-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.is-main-row {
+  background-color: rgba(254, 243, 199, 0.15);
+}
+
+.is-main-row:hover {
+  background-color: rgba(254, 243, 199, 0.25) !important;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.main-badge {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.alt-badge {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.roster-badge {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.unassigned-badge {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fee2e2;
+  font-weight: 500;
+  text-transform: none;
+}
+
+/* Character Info */
+.char-name {
+  font-size: 1rem;
+  font-weight: 600;
+  display: block;
+}
+
+.realm-name {
+  font-size: 0.75rem;
+  color: #64748b;
+  display: block;
+  margin-top: 0.1rem;
+}
+
+/* Class Info */
+.class-info-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #1e293b;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.class-icon-img {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+}
+
+.class-label-text {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Level Badge */
+.level-badge {
+  display: inline-block;
+  font-weight: 700;
+  font-size: 0.85rem;
+  background-color: #e2e8f0;
+  color: #475569;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  min-width: 20px;
+}
+
+.level-badge.max-level {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+/* Roles */
+.roles-indicators {
+  display: inline-flex;
+  gap: 0.4rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.role-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #cbd5e1;
+}
+
+.role-badge.tank {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.role-badge.heal {
+  background-color: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.role-badge.dps {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.role-icon {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+
+.no-role-indicator {
+  color: #cbd5e1;
+  font-weight: bold;
+}
+
+/* Owner Info */
+.owner-info {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.battlenet-logo {
+  font-size: 0.9rem;
+  margin-right: 0.35rem;
+}
+
+.owner-name {
+  color: #334155;
+  font-weight: 600;
+}
+
+.battletag-suffix {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  margin-left: 0.1rem;
+}
+
+/* Loading State */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  gap: 1rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* Empty Row */
+.empty-row {
+  padding: 4rem 2rem !important;
+}
+
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: #94a3b8;
+}
+
+.empty-icon {
+  font-size: 2.5rem;
+}
+
+.empty-container p {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Responsive Rules */
+@media (max-width: 1024px) {
+  .filters-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .checkbox-group {
+    justify-content: flex-start;
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 640px) {
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .checkbox-group {
+    grid-column: span 1;
+  }
+  
+  .overview-header h2 {
+    font-size: 1.5rem;
+  }
+}

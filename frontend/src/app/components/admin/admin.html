@@ -11,6 +11,11 @@
         {{ i18n.t('admin.tab.rosters') }}
       </button>
     }
+    @if (authService.canManageRosters()) {
+      <button [class.active]="activeTab() === 'characters'" (click)="activeTab.set('characters')">
+        {{ i18n.t('admin.tab.characters') }}
+      </button>
+    }
     @if (authService.canManageEvents()) {
       <button [class.active]="activeTab() === 'attendance'" (click)="activeTab.set('attendance')">
         {{ i18n.t('admin.tab.attendance') }}
@@ -42,6 +47,12 @@
   @if (activeTab() === 'rosters' && authService.canManageRosters()) {
     <div class="tab-content">
       <app-admin-rosters></app-admin-rosters>
+    </div>
+  }
+
+  @if (activeTab() === 'characters' && authService.canManageRosters()) {
+    <div class="tab-content">
+      <app-admin-characters></app-admin-characters>
     </div>
   }
 
