@@ -161,6 +161,20 @@ router.get('/guild-overview', isAuthenticated, requireActiveGuild, canManageRost
   }
 });
 
+// GET /api/characters/guild-roster : Récupère tous les personnages de la guilde active (visible pour tous les membres)
+router.get('/guild-roster', isAuthenticated, requireActiveGuild, async (req, res, next) => {
+  try {
+    const guildId = req.user!.active_guild_id;
+    if (!guildId) {
+      return res.status(400).json({ status: 'error', message: 'No active guild selected' });
+    }
+    const characters = await CharacterService.getAllForGuild(guildId);
+    res.json(characters);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // PATCH /api/characters/:id/main : Définit un personnage comme "Main"
 router.patch('/:id/main', isAuthenticated, requireActiveGuild, requirePaidGuild, validate(setMainSchema), async (req, res, next) => {
   try {

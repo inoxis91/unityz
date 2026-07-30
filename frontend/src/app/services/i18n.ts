@@ -16,6 +16,19 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'nav.options': 'Paramètres',
     'nav.profile': 'Profil',
     'nav.absences': 'Absences',
+    'nav.guild_characters': 'Annuaire de Guilde',
+
+    // Guild Characters Grid
+    'guild_chars.title': 'Annuaire des Personnages de Guilde',
+    'guild_chars.subtitle': 'Retrouvez tous les personnages de la guilde classés par rôle, statut et classe.',
+    'guild_chars.mains': 'Personnages Principaux',
+    'guild_chars.alts': 'Personnages Secondaires (Rerolls)',
+    'guild_chars.tanks': '🛡️ Tanks',
+    'guild_chars.heals': '💚 Soigneurs',
+    'guild_chars.dps': '⚔️ DPS',
+    'guild_chars.dashboard_link': "Voir l'annuaire",
+    'guild_chars.empty_cell': 'Aucun personnage',
+    'guild_chars.total_characters': 'Total : {count} personnages',
 
     // Warning Banner
     'banner.discord_warning': 'Attention : Vous n\'avez pas encore lié votre compte Discord. Cette liaison est indispensable pour recevoir les notifications et rappels importants de la guilde.',
@@ -992,6 +1005,19 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'nav.options': 'Settings',
     'nav.profile': 'Profile',
     'nav.absences': 'Absences',
+    'nav.guild_characters': 'Guild Directory',
+
+    // Guild Characters Grid
+    'guild_chars.title': 'Guild Character Directory',
+    'guild_chars.subtitle': 'Find all guild characters sorted by role, status, and class.',
+    'guild_chars.mains': 'Main Characters',
+    'guild_chars.alts': 'Alt Characters (Rerolls)',
+    'guild_chars.tanks': '🛡️ Tanks',
+    'guild_chars.heals': '💚 Healers',
+    'guild_chars.dps': '⚔️ DPS',
+    'guild_chars.dashboard_link': 'View directory',
+    'guild_chars.empty_cell': 'No characters',
+    'guild_chars.total_characters': 'Total: {count} characters',
 
     // Warning Banner
     'banner.discord_warning': 'Warning: You have not linked your Discord account yet. This link is essential to receive important guild notifications and reminders.',

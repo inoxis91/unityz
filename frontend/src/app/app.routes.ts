@@ -15,6 +15,7 @@ import { CraftsComponent } from './components/crafts/crafts';
 import { TermsOfServiceComponent } from './components/legal/terms';
 import { PrivacyPolicyComponent } from './components/legal/privacy';
 import { AbsencesComponent } from './components/absences/absences';
+import { GuildCharactersComponent } from './components/guild-characters/guild-characters';
 
 export const routes: Routes = [
   { path: '', component: LandingComponent },
@@ -34,6 +35,11 @@ export const routes: Routes = [
   { 
     path: 'dashboard', 
     component: DashboardComponent, 
+    canActivate: [authGuard] 
+  },
+  { 
+    path: 'guild-characters', 
+    component: GuildCharactersComponent, 
     canActivate: [authGuard] 
   },
   { 

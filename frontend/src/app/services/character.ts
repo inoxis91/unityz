@@ -156,4 +156,9 @@ export class CharacterService {
   getGuildCharactersOverview(): Observable<GuildCharacterOverview[]> {
     return this.http.get<GuildCharacterOverview[]>(`${this.apiUrl}/guild-overview`, { withCredentials: true });
   }
+
+  // Récupère l'ensemble des personnages de la guilde active (Vue membre public)
+  getGuildCharactersRoster(): Observable<GuildCharacterOverview[]> {
+    return this.http.get<GuildCharacterOverview[]>(`${this.apiUrl}/guild-roster`, { withCredentials: true });
+  }
 }

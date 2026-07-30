@@ -40,6 +40,11 @@
           >
         }
         @if (user.has_characters && user.active_guild_id && user.active_guild_is_paid) {
+          <a routerLink="/guild-characters" routerLinkActive="active" (click)="closeMenu()">{{
+            i18n.t('nav.guild_characters')
+          }}</a>
+        }
+        @if (user.has_characters && user.active_guild_id && user.active_guild_is_paid) {
           <a routerLink="/calendar" routerLinkActive="active" (click)="closeMenu()">{{
             i18n.t('nav.calendar')
           }}</a>
