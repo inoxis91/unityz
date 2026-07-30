@@ -604,6 +604,21 @@
         </div>
       }
     </section>
+    
+    <!-- Bottom Guild Directory Link Button -->
+    <div class="dashboard-bottom-directory-banner" routerLink="/guild-characters">
+      <div class="banner-content">
+        <span class="banner-icon">🔎</span>
+        <div class="banner-text">
+          <h3>{{ i18n.t('guild_chars.title') }}</h3>
+          <p>{{ i18n.t('guild_chars.subtitle') }}</p>
+        </div>
+      </div>
+      <button class="banner-btn">
+        {{ i18n.currentLocale() === 'fr' ? 'Accéder à l\'Annuaire' : 'Access Directory' }} <span class="arrow">→</span>
+      </button>
+    </div>
+
     <!-- Attendance Details Modal -->
     @if (showAttendanceModal() && myAttendance(); as att) {
       <div class="modal-overlay" (click)="showAttendanceModal.set(false)">

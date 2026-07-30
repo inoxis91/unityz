@@ -65,24 +65,15 @@
               <span class="count-badge">{{ mainTanks().length }}</span>
             </div>
             <div class="role-column-body">
-              @for (char of mainTanks(); track char.id) {
-                <div class="char-row-card" [class]="'border-class-' + getClassCategory(char.class)">
-                  <div class="char-details">
-                    <img [src]="getClassIcon(char.class)" class="class-icon-mini" [alt]="char.class" />
-                    <span class="char-name-link" [class]="'class-' + getClassCategory(char.class)">
+              <div class="char-names-grid">
+                @for (char of mainTanks(); track char.id) {
+                  <div class="char-pill-card" [class]="'border-class-' + getClassCategory(char.class)">
+                    <span class="char-name-text" [class]="'class-' + getClassCategory(char.class)">
                       {{ char.name }}
                     </span>
                   </div>
-                  <div class="char-actions">
-                    <a [href]="getRaiderIoUrl(char.name, char.realm)" target="_blank" class="action-icon-link">
-                      <img src="assets/icons/raiderio.webp" alt="Raider.IO" title="Raider.IO" />
-                    </a>
-                    <a [href]="getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="action-icon-link">
-                      <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" title="Warcraft Logs" />
-                    </a>
-                  </div>
-                </div>
-              }
+                }
+              </div>
               @if (mainTanks().length === 0) {
                 <div class="empty-column-state">
                   <p>{{ i18n.t('guild_chars.empty_cell') }}</p>
@@ -99,24 +90,15 @@
               <span class="count-badge">{{ mainHealers().length }}</span>
             </div>
             <div class="role-column-body">
-              @for (char of mainHealers(); track char.id) {
-                <div class="char-row-card" [class]="'border-class-' + getClassCategory(char.class)">
-                  <div class="char-details">
-                    <img [src]="getClassIcon(char.class)" class="class-icon-mini" [alt]="char.class" />
-                    <span class="char-name-link" [class]="'class-' + getClassCategory(char.class)">
+              <div class="char-names-grid">
+                @for (char of mainHealers(); track char.id) {
+                  <div class="char-pill-card" [class]="'border-class-' + getClassCategory(char.class)">
+                    <span class="char-name-text" [class]="'class-' + getClassCategory(char.class)">
                       {{ char.name }}
                     </span>
                   </div>
-                  <div class="char-actions">
-                    <a [href]="getRaiderIoUrl(char.name, char.realm)" target="_blank" class="action-icon-link">
-                      <img src="assets/icons/raiderio.webp" alt="Raider.IO" title="Raider.IO" />
-                    </a>
-                    <a [href]="getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="action-icon-link">
-                      <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" title="Warcraft Logs" />
-                    </a>
-                  </div>
-                </div>
-              }
+                }
+              </div>
               @if (mainHealers().length === 0) {
                 <div class="empty-column-state">
                   <p>{{ i18n.t('guild_chars.empty_cell') }}</p>
@@ -133,24 +115,15 @@
               <span class="count-badge">{{ mainDps().length }}</span>
             </div>
             <div class="role-column-body">
-              @for (char of mainDps(); track char.id) {
-                <div class="char-row-card" [class]="'border-class-' + getClassCategory(char.class)">
-                  <div class="char-details">
-                    <img [src]="getClassIcon(char.class)" class="class-icon-mini" [alt]="char.class" />
-                    <span class="char-name-link" [class]="'class-' + getClassCategory(char.class)">
+              <div class="char-names-grid">
+                @for (char of mainDps(); track char.id) {
+                  <div class="char-pill-card" [class]="'border-class-' + getClassCategory(char.class)">
+                    <span class="char-name-text" [class]="'class-' + getClassCategory(char.class)">
                       {{ char.name }}
                     </span>
                   </div>
-                  <div class="char-actions">
-                    <a [href]="getRaiderIoUrl(char.name, char.realm)" target="_blank" class="action-icon-link">
-                      <img src="assets/icons/raiderio.webp" alt="Raider.IO" title="Raider.IO" />
-                    </a>
-                    <a [href]="getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="action-icon-link">
-                      <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" title="Warcraft Logs" />
-                    </a>
-                  </div>
-                </div>
-              }
+                }
+              </div>
               @if (mainDps().length === 0) {
                 <div class="empty-column-state">
                   <p>{{ i18n.t('guild_chars.empty_cell') }}</p>
@@ -177,24 +150,15 @@
               <span class="count-badge">{{ altTanks().length }}</span>
             </div>
             <div class="role-column-body">
-              @for (char of altTanks(); track char.id) {
-                <div class="char-row-card" [class]="'border-class-' + getClassCategory(char.class)">
-                  <div class="char-details">
-                    <img [src]="getClassIcon(char.class)" class="class-icon-mini" [alt]="char.class" />
-                    <span class="char-name-link" [class]="'class-' + getClassCategory(char.class)">
+              <div class="char-names-grid">
+                @for (char of altTanks(); track char.id) {
+                  <div class="char-pill-card" [class]="'border-class-' + getClassCategory(char.class)">
+                    <span class="char-name-text" [class]="'class-' + getClassCategory(char.class)">
                       {{ char.name }}
                     </span>
                   </div>
-                  <div class="char-actions">
-                    <a [href]="getRaiderIoUrl(char.name, char.realm)" target="_blank" class="action-icon-link">
-                      <img src="assets/icons/raiderio.webp" alt="Raider.IO" title="Raider.IO" />
-                    </a>
-                    <a [href]="getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="action-icon-link">
-                      <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" title="Warcraft Logs" />
-                    </a>
-                  </div>
-                </div>
-              }
+                }
+              </div>
               @if (altTanks().length === 0) {
                 <div class="empty-column-state">
                   <p>{{ i18n.t('guild_chars.empty_cell') }}</p>
@@ -211,24 +175,15 @@
               <span class="count-badge">{{ altHealers().length }}</span>
             </div>
             <div class="role-column-body">
-              @for (char of altHealers(); track char.id) {
-                <div class="char-row-card" [class]="'border-class-' + getClassCategory(char.class)">
-                  <div class="char-details">
-                    <img [src]="getClassIcon(char.class)" class="class-icon-mini" [alt]="char.class" />
-                    <span class="char-name-link" [class]="'class-' + getClassCategory(char.class)">
+              <div class="char-names-grid">
+                @for (char of altHealers(); track char.id) {
+                  <div class="char-pill-card" [class]="'border-class-' + getClassCategory(char.class)">
+                    <span class="char-name-text" [class]="'class-' + getClassCategory(char.class)">
                       {{ char.name }}
                     </span>
                   </div>
-                  <div class="char-actions">
-                    <a [href]="getRaiderIoUrl(char.name, char.realm)" target="_blank" class="action-icon-link">
-                      <img src="assets/icons/raiderio.webp" alt="Raider.IO" title="Raider.IO" />
-                    </a>
-                    <a [href]="getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="action-icon-link">
-                      <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" title="Warcraft Logs" />
-                    </a>
-                  </div>
-                </div>
-              }
+                }
+              </div>
               @if (altHealers().length === 0) {
                 <div class="empty-column-state">
                   <p>{{ i18n.t('guild_chars.empty_cell') }}</p>
@@ -245,24 +200,15 @@
               <span class="count-badge">{{ altDps().length }}</span>
             </div>
             <div class="role-column-body">
-              @for (char of altDps(); track char.id) {
-                <div class="char-row-card" [class]="'border-class-' + getClassCategory(char.class)">
-                  <div class="char-details">
-                    <img [src]="getClassIcon(char.class)" class="class-icon-mini" [alt]="char.class" />
-                    <span class="char-name-link" [class]="'class-' + getClassCategory(char.class)">
+              <div class="char-names-grid">
+                @for (char of altDps(); track char.id) {
+                  <div class="char-pill-card" [class]="'border-class-' + getClassCategory(char.class)">
+                    <span class="char-name-text" [class]="'class-' + getClassCategory(char.class)">
                       {{ char.name }}
                     </span>
                   </div>
-                  <div class="char-actions">
-                    <a [href]="getRaiderIoUrl(char.name, char.realm)" target="_blank" class="action-icon-link">
-                      <img src="assets/icons/raiderio.webp" alt="Raider.IO" title="Raider.IO" />
-                    </a>
-                    <a [href]="getWarcraftLogsUrl(char.name, char.realm)" target="_blank" class="action-icon-link">
-                      <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" title="Warcraft Logs" />
-                    </a>
-                  </div>
-                </div>
-              }
+                }
+              </div>
               @if (altDps().length === 0) {
                 <div class="empty-column-state">
                   <p>{{ i18n.t('guild_chars.empty_cell') }}</p>
