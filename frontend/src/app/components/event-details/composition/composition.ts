@@ -99,6 +99,7 @@ export class CompositionComponent {
   onAddGroup() {
     if (!this.event || !this.event.id) return;
     const newCount = (this.event.mm_groups_count || 0) + 1;
+    this.event.mm_groups_count = newCount;
     this.calendarService.updateGroupsCount(this.event.id, newCount).subscribe(() => {
       this.compositionChanged.emit();
     });
@@ -107,24 +108,33 @@ export class CompositionComponent {
   onRemoveGroup(index: number) {
     if (!this.event || !this.event.id) return;
 
-    // 1. Move all members of this group back to unassigned (index 0)
-    const membersInGroup = this.signupsSig().filter((s) => s.group_index === index);
-    const movePromises = membersInGroup.map((m) =>
-      this.calendarService.updateSignupGroup(this.event.id!, m.user_id, 0).toPromise(),
-    );
+    // Mise à jour optimiste de l'UI pour éviter les lenteurs
+    const currentSignups = this.signupsSig();
+    const updatedSignups = currentSignups.map((s) => {
+      if (s.group_index === index) {
+        return { ...s, group_index: 0 };
+      } else if (s.group_index && s.group_index > index) {
+        return { ...s, group_index: s.group_index - 1 };
+      }
+      return s;
+    });
+    this.signupsSig.set(updatedSignups);
+    this.event.mm_groups_count = Math.max(0, (this.event.mm_groups_count || 0) - 1);
 
-    Promise.all(movePromises).then(() => {
-      // 2. Decrement group count
-      const newCount = Math.max(0, (this.event.mm_groups_count || 0) - 1);
-      this.calendarService.updateGroupsCount(this.event.id!, newCount).subscribe(() => {
+    this.calendarService.deleteGroup(this.event.id, index).subscribe({
+      next: () => {
         this.compositionChanged.emit();
-      });
+      },
+      error: () => {
+        this.toast.error(this.i18n.t('event.details.toast_remove_error'));
+        this.compositionChanged.emit();
+      },
     });
   }
 
   dropToGroup(event: CdkDragDrop<Signup[]>, groupIndex: number) {
     if (event.previousContainer === event.container) return;
-    const member = event.previousContainer.data[event.previousIndex];
+    const member = event.item.data;
     if (!this.event || !this.event.id || !member) return;
 
     // Optimistic UI update

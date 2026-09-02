@@ -104,10 +104,14 @@ export class EventDetailsComponent implements OnInit {
         const name = s.character_name || s.main_character_name;
         const realm = s.character_realm || s.main_character_realm;
         if (name && realm) {
+          const key = `${name}-${realm}`.toLowerCase();
+          if (this.rioScores().has(key)) {
+            return; // Déjà récupéré, éviter de multiplier les souscriptions et les mises à jour de signaux
+          }
           this.characterService.getRioScore(name, realm).subscribe(score => {
             this.rioScores.update(map => {
               const newMap = new Map(map);
-              newMap.set(`${name}-${realm}`.toLowerCase(), score);
+              newMap.set(key, score);
               return newMap;
             });
           });

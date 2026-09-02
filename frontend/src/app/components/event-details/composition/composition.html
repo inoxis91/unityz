@@ -132,6 +132,7 @@
             [class]="'class-' + getClassCategory(m.character_class || m.main_character_class)"
             [class.can-drag]="canManageEvents"
             [cdkDragDisabled]="!canManageEvents"
+            [cdkDragData]="m"
             cdkDrag
           >
             <div class="role-badge" [class]="m.role">
@@ -231,6 +232,7 @@
                       [class]="
                         'class-' + getClassCategory(m.character_class || m.main_character_class)
                       "
+                      [cdkDragData]="m"
                       cdkDrag
                       [cdkDragDisabled]="!canManageEvents"
                     >
@@ -269,6 +271,7 @@
                       [class]="
                         'class-' + getClassCategory(m.character_class || m.main_character_class)
                       "
+                      [cdkDragData]="m"
                       cdkDrag
                       [cdkDragDisabled]="!canManageEvents"
                     >
@@ -307,6 +310,7 @@
                       [class]="
                         'class-' + getClassCategory(m.character_class || m.main_character_class)
                       "
+                      [cdkDragData]="m"
                       cdkDrag
                       [cdkDragDisabled]="!canManageEvents"
                     >

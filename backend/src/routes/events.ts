@@ -160,6 +160,24 @@ router.patch('/:id/groups-count', canManageEvents, validate(updateGroupsCountSch
   }
 });
 
+// DELETE /api/events/:id/groups/:index : Supprime un groupe MM+ et réorganise les membres
+router.delete('/:id/groups/:index', canManageEvents, async (req, res, next) => {
+  try {
+    const eventId = req.params.id as string;
+    const index = parseInt(req.params.index as string, 10);
+    if (isNaN(index) || index < 1) {
+      return res.status(400).json({ status: 'error', message: 'Invalid group index' });
+    }
+    const success = await EventService.deleteGroup(eventId, index);
+    if (!success) {
+      return res.status(404).json({ status: 'error', message: 'Event not found' });
+    }
+    res.json({ status: 'success', message: 'Group deleted and members shifted successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // PATCH /api/events/:id/signups/:userId/group : Déplace un utilisateur dans un groupe MM+
 router.patch('/:id/signups/:userId/group', canManageEvents, validate(updateSignupGroupSchema), async (req, res, next) => {
   try {

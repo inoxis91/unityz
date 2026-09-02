@@ -149,6 +149,10 @@ export class CalendarService {
     return this.http.patch(`${this.apiUrl}/${eventId}/groups-count`, { count }, { withCredentials: true });
   }
 
+  deleteGroup(eventId: string, groupIndex: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${eventId}/groups/${groupIndex}`, { withCredentials: true });
+  }
+
   updateSignupGroup(eventId: string, userId: string, groupIndex: number): Observable<any> {
     return this.http.patch(`${this.apiUrl}/${eventId}/signups/${userId}/group`, { group_index: groupIndex }, { withCredentials: true });
   }

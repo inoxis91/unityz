@@ -461,6 +461,39 @@ export class EventService {
     return (result.rowCount ?? 0) > 0;
   }
 
+  static async deleteGroup(eventId: string, groupIndex: number): Promise<boolean> {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // 1. Déplacer les membres du groupe supprimé vers "sans groupe" (group_index = 0)
+      await client.query(
+        'UPDATE event_signups SET group_index = 0, updated_at = CURRENT_TIMESTAMP WHERE event_id = $1 AND group_index = $2',
+        [eventId, groupIndex]
+      );
+
+      // 2. Décaler les index des groupes suivants de -1
+      await client.query(
+        'UPDATE event_signups SET group_index = group_index - 1, updated_at = CURRENT_TIMESTAMP WHERE event_id = $1 AND group_index > $2',
+        [eventId, groupIndex]
+      );
+
+      // 3. Décrémenter le nombre total de groupes de l'événement
+      const result = await client.query(
+        'UPDATE events SET mm_groups_count = GREATEST(0, mm_groups_count - 1), updated_at = CURRENT_TIMESTAMP WHERE id = $1',
+        [eventId]
+      );
+
+      await client.query('COMMIT');
+      return (result.rowCount ?? 0) > 0;
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
+  }
+
   static async getEventsForDate(date: Date): Promise<Event[]> {
     const query = `
       SELECT e.*, r.name as roster_name
