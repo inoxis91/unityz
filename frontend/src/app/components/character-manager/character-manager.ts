@@ -57,6 +57,10 @@ export class CharacterManagerComponent implements OnInit {
       error: (err) => {
         console.error('Error fetching Bnet characters', err);
         this.loadingBnet.set(false);
+        if (err.status === 401) {
+          this.toast.error(this.i18n.t('char.manager.toast.bnet_session_expired'));
+          this.authService.login(window.location.pathname);
+        }
       },
     });
   }

@@ -671,6 +671,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'char.manager.confirm.delete_desc': 'Voulez-vous vraiment retirer {name} de votre liste ?',
     'char.manager.toast.delete_success': '{name} a été retiré.',
     'char.manager.toast.delete_error': 'Erreur lors de la suppression.',
+    'char.manager.toast.bnet_session_expired': 'Votre session Battle.net a expiré. Reconnexion en cours...',
 
     // Crafts
     'crafts.title': 'Demandes de Crafts',
@@ -1660,6 +1661,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'char.manager.confirm.delete_desc': 'Are you sure you want to remove {name} from your list?',
     'char.manager.toast.delete_success': '{name} has been removed.',
     'char.manager.toast.delete_error': 'Error deleting.',
+    'char.manager.toast.bnet_session_expired': 'Your Battle.net session has expired. Reconnecting...',
 
     // Crafts
     'crafts.title': 'Craft Requests',
