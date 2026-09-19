@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth';
 import { I18nService } from '../../services/i18n';
+import { ToastService } from '../../services/toast';
 
 @Component({
   selector: 'app-select-guild',
@@ -16,10 +17,12 @@ export class SelectGuildComponent implements OnInit {
   public authService = inject(AuthService);
   public i18n = inject(I18nService);
   private router = inject(Router);
+  private toast = inject(ToastService);
 
   guilds = signal<any[]>([]);
   isLoading = signal(true);
   isImporting = signal(false);
+  loadError = signal(false);
 
   step = signal<1 | 2>(1);
   selectedGuild = signal<any | null>(null);
@@ -47,6 +50,7 @@ export class SelectGuildComponent implements OnInit {
 
   loadGuilds() {
     this.isLoading.set(true);
+    this.loadError.set(false);
     this.authService.getUserGuilds().subscribe({
       next: (data) => {
         this.guilds.set(data);
@@ -55,6 +59,13 @@ export class SelectGuildComponent implements OnInit {
       error: (err) => {
         console.error('Error fetching guilds', err);
         this.isLoading.set(false);
+        if (err.status === 401) {
+          this.toast.error(this.i18n.t('select.guild.toast.bnet_session_expired'));
+          this.authService.login(window.location.pathname);
+        } else {
+          this.loadError.set(true);
+          this.toast.error(this.i18n.t('select.guild.toast.fetch_error'));
+        }
       }
     });
   }

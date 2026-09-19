@@ -35,8 +35,19 @@
           }
         </div>
       }
+      <!-- Fetch error state -->
+      @if (!isLoading() && loadError()) {
+        <div class="no-guilds">
+          <div class="no-guilds-icon">⚠️</div>
+          <h3>{{ i18n.t('select.guild.fetch_error') }}</h3>
+          <p>{{ i18n.t('select.guild.fetch_error_sub') }}</p>
+          <button class="btn-back-center" (click)="loadGuilds()">
+            {{ i18n.t('select.guild.btn_retry') }}
+          </button>
+        </div>
+      }
       <!-- No Guilds state -->
-      @if (!isLoading() && guilds().length === 0) {
+      @if (!isLoading() && !loadError() && guilds().length === 0) {
         <div class="no-guilds">
           <div class="no-guilds-icon">🛡️</div>
           <h3>{{ i18n.t('select.guild.no_guilds') }}</h3>
