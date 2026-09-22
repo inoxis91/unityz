@@ -51,7 +51,7 @@ export class BlizzardService {
       });
       return response.data;
     } catch (error: any) {
-      console.error(`[Blizzard API] Summary Error [${characterName}-${realm}]: ${error.response?.status}`);
+      console.error(`[Blizzard API] Summary Error [${characterName}-${realm}] (${url}): ${error.response?.status} - ${error.response?.data?.detail || error.message}`);
       return null;
     }
   }
@@ -74,13 +74,14 @@ export class BlizzardService {
   }
 
   private static formatRealmSlug(text: string): string {
-    return text.toLowerCase()
-      .trim()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, "") // Supprime les accents pour les royaumes
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-');
+    // Le slug Blizzard d'un royaume conserve les accents (ex: "la-croisade-\u00e9carlate"),
+    // il ne faut donc pas les retirer comme pour un slug g\u00e9n\u00e9raliste.
+    return encodeURIComponent(
+      text.toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+    );
   }
 
   private static formatCharSlug(text: string): string {
