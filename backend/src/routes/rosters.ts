@@ -76,7 +76,7 @@ router.post('/', canManageRosters, validate(createRosterSchema), async (req, res
 // PUT /api/rosters/:id : Modifie un roster
 router.put('/:id', canManageRosters, validate(updateRosterSchema), async (req, res, next) => {
   try {
-    const roster = await RosterService.update(req.params.id as string, req.body);
+    const roster = await RosterService.update(req.params.id as string, req.body, req.user!.active_guild_id!);
     if (!roster) {
       return res.status(404).json({ status: 'error', message: 'Roster not found' });
     }
@@ -89,7 +89,7 @@ router.put('/:id', canManageRosters, validate(updateRosterSchema), async (req, r
 // DELETE /api/rosters/:id : Supprime un roster
 router.delete('/:id', canManageRosters, async (req, res, next) => {
   try {
-    const success = await RosterService.delete(req.params.id as string);
+    const success = await RosterService.delete(req.params.id as string, req.user!.active_guild_id!);
     if (!success) {
       return res.status(404).json({ status: 'error', message: 'Roster not found' });
     }
@@ -102,9 +102,14 @@ router.delete('/:id', canManageRosters, async (req, res, next) => {
 // PATCH /api/rosters/assign/:characterId : Assigne un personnage à un roster
 router.patch('/assign/:characterId', canManageRosters, validate(assignCharacterSchema), async (req, res, next) => {
   try {
-    const success = await RosterService.assignCharacter(req.params.characterId as string, req.body.rosterId);
+    const success = await RosterService.assignCharacter(
+      req.params.characterId as string,
+      req.body.rosterId,
+      req.user!.active_guild_id!,
+      req.body.role,
+    );
     if (!success) {
-      return res.status(404).json({ status: 'error', message: 'Character not found' });
+      return res.status(404).json({ status: 'error', message: 'Character or roster not found' });
     }
     res.json({ status: 'success', message: 'Character assigned successfully' });
   } catch (error) {

@@ -16,34 +16,35 @@ describe('AdminRostersComponent', () => {
   let fixture: ComponentFixture<AdminRostersComponent>;
 
   const mockRosterService = {
-    rosters: signal([]),
-    unassignedCharacters: signal([]),
+    rosters: signal<any[]>([]),
+    unassignedCharacters: signal<Character[]>([]),
     loadRosters: () => of([]),
     loadUnassignedCharacters: () => of([]),
-    assignCharacter: (charId: string, rosterId: string | null) => of({ success: true })
+    assignCharacter: (charId: string, rosterId: string | null, role?: string) =>
+      of({ success: true }),
   };
 
   const mockCharacterService = {
     getClassId: (className: string | undefined) => 'warrior',
-    getWarcraftLogsUrl: (name: string, realm: string) => ''
+    getWarcraftLogsUrl: (name: string, realm: string) => '',
   };
 
   const mockAuthService = {
     currentUser: () => ({ id: 1, subscription_tier: 'pro' }),
-    currentGuild: () => null
+    currentGuild: () => null,
   };
 
   const mockConfirmService = {
-    ask: () => Promise.resolve(true)
+    ask: () => Promise.resolve(true),
   };
 
   const mockToastService = {
     success: () => {},
-    error: () => {}
+    error: () => {},
   };
 
   const mockI18nService = {
-    t: (key: string) => key
+    t: (key: string) => key,
   };
 
   beforeEach(async () => {
@@ -56,8 +57,8 @@ describe('AdminRostersComponent', () => {
         { provide: ConfirmService, useValue: mockConfirmService },
         { provide: ToastService, useValue: mockToastService },
         { provide: I18nService, useValue: mockI18nService },
-        { provide: HttpClient, useValue: {} }
-      ]
+        { provide: HttpClient, useValue: {} },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(AdminRostersComponent);
@@ -73,7 +74,7 @@ describe('AdminRostersComponent', () => {
     const mockEvent = {
       preventDefault: () => {},
       clientX: 100,
-      clientY: 200
+      clientY: 200,
     } as unknown as MouseEvent;
 
     const mockChar: Character = {
@@ -81,7 +82,7 @@ describe('AdminRostersComponent', () => {
       name: 'TestChar',
       realm: 'Elune',
       class: 'Guerrier',
-      level: 80
+      level: 80,
     };
 
     component.onContextMenu(mockEvent, mockChar, 'roster-1');
@@ -95,31 +96,60 @@ describe('AdminRostersComponent', () => {
   it('should close context menu on document click', () => {
     component.contextMenuVisible.set(true);
 
-    const mockEvent = {} as MouseEvent;
-    component.onDocumentClick(mockEvent);
+    component.onDocumentClick();
 
     expect(component.contextMenuVisible()).toBe(false);
   });
 
-  it('should assign character and reload on moveToRoster', () => {
+  it('should assign character optimistically on moveToRoster', () => {
     const mockChar: Character = {
       id: 'char-1',
       name: 'TestChar',
       realm: 'Elune',
       class: 'Guerrier',
-      level: 80
+      level: 80,
+      is_heal: true,
+      is_dps: true,
     };
+    mockRosterService.unassignedCharacters.set([mockChar]);
+    mockRosterService.rosters.set([{ id: 'roster-2', name: 'R2', weight: 1, characters: [] }]);
 
     component.contextMenuCharacter.set(mockChar);
     component.contextMenuVisible.set(true);
 
     const assignSpy = vi.spyOn(mockRosterService, 'assignCharacter');
-    const loadSpy = vi.spyOn(component, 'loadAll');
 
     component.moveToRoster('roster-2');
 
-    expect(assignSpy).toHaveBeenCalledWith('char-1', 'roster-2');
+    // Rôle par défaut déduit des rôles déclarés (heal prioritaire sur dps)
+    expect(assignSpy).toHaveBeenCalledWith('char-1', 'roster-2', 'heal');
     expect(component.contextMenuVisible()).toBe(false);
-    expect(loadSpy).toHaveBeenCalled();
+    expect(mockRosterService.unassignedCharacters()).toEqual([]);
+    expect(component.bucket('roster-2', 'heal').map((c) => c.id)).toEqual(['char-1']);
+  });
+
+  it('should change the role of a character within its roster', () => {
+    const mockChar: Character = {
+      id: 'char-1',
+      name: 'TestChar',
+      realm: 'Elune',
+      class: 'Guerrier',
+      level: 80,
+      roster_id: 'roster-1',
+      roster_role: 'dps',
+    };
+    mockRosterService.rosters.set([
+      { id: 'roster-1', name: 'R1', weight: 1, characters: [mockChar] },
+    ]);
+
+    const assignSpy = vi.spyOn(mockRosterService, 'assignCharacter');
+    component.contextMenuCharacter.set(mockChar);
+    component.contextMenuCurrentRosterId.set('roster-1');
+
+    component.setRole('tank');
+
+    expect(assignSpy).toHaveBeenCalledWith('char-1', 'roster-1', 'tank');
+    expect(component.bucket('roster-1', 'dps')).toEqual([]);
+    expect(component.bucket('roster-1', 'tank').map((c) => c.id)).toEqual(['char-1']);
   });
 });

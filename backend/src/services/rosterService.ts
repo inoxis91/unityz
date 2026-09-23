@@ -1,6 +1,11 @@
 import pool from '../lib/db';
 import { Character } from './characterService';
 
+export type RosterRole = 'tank' | 'heal' | 'dps';
+
+// Rôle par défaut déduit des rôles déclarés par le joueur (priorité tank > heal > dps)
+const DEFAULT_ROLE_SQL = `CASE WHEN is_tank THEN 'tank' WHEN is_heal THEN 'heal' ELSE 'dps' END`;
+
 export interface Roster {
   id: string;
   name: string;
@@ -20,14 +25,17 @@ export class RosterService {
       params.push(guildId);
     }
     rostersQuery += ' ORDER BY weight ASC, name ASC';
-    const rostersResult = await pool.query(rostersQuery, params);
-    const rosters = rostersResult.rows;
+    const rosters: Roster[] = (await pool.query(rostersQuery, params)).rows;
+    if (rosters.length === 0) return rosters;
 
-    for (const roster of rosters) {
-      const charsQuery = 'SELECT * FROM characters WHERE roster_id = $1 ORDER BY name ASC';
-      const charsResult = await pool.query(charsQuery, [roster.id]);
-      roster.characters = charsResult.rows;
-    }
+    const charsResult = await pool.query(
+      `SELECT *, COALESCE(roster_role, ${DEFAULT_ROLE_SQL}) AS roster_role
+       FROM characters WHERE roster_id = ANY($1::uuid[]) ORDER BY name ASC`,
+      [rosters.map((r) => r.id)],
+    );
+    const byRoster = new Map<string, Character[]>(rosters.map((r) => [r.id, []]));
+    for (const char of charsResult.rows) byRoster.get(char.roster_id)?.push(char);
+    for (const roster of rosters) roster.characters = byRoster.get(roster.id);
 
     return rosters;
   }
@@ -54,30 +62,44 @@ export class RosterService {
     return result.rows[0];
   }
 
-  static async update(id: string, data: Partial<Roster>): Promise<Roster | null> {
+  static async update(id: string, data: Partial<Roster>, guildId: string): Promise<Roster | null> {
     const query = `
       UPDATE rosters 
       SET name = $1, description = $2, weight = $3, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $4
+      WHERE id = $4 AND guild_id = $5
       RETURNING *
     `;
-    const result = await pool.query(query, [data.name, data.description, data.weight, id]);
+    const result = await pool.query(query, [data.name, data.description, data.weight, id, guildId]);
     return result.rows[0] || null;
   }
 
-  static async delete(id: string): Promise<boolean> {
-    const query = 'DELETE FROM rosters WHERE id = $1';
-    const result = await pool.query(query, [id]);
+  static async delete(id: string, guildId: string): Promise<boolean> {
+    const query = 'DELETE FROM rosters WHERE id = $1 AND guild_id = $2';
+    const result = await pool.query(query, [id, guildId]);
     return (result.rowCount ?? 0) > 0;
   }
 
-  static async assignCharacter(characterId: string, rosterId: string | null): Promise<boolean> {
+  /**
+   * Assigne un personnage à un roster (ou le désassigne si rosterId est null).
+   * Sans rôle explicite, conserve le rôle actuel ou le déduit des rôles déclarés.
+   * Le personnage et le roster doivent appartenir à la guilde active.
+   */
+  static async assignCharacter(
+    characterId: string,
+    rosterId: string | null,
+    guildId: string,
+    role?: RosterRole,
+  ): Promise<boolean> {
     const query = `
       UPDATE characters 
-      SET roster_id = $1, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $2
+      SET roster_id = $1,
+          roster_role = CASE WHEN $1::uuid IS NULL THEN NULL
+                             ELSE COALESCE($2, roster_role, ${DEFAULT_ROLE_SQL}) END,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = $3 AND guild_id = $4
+        AND ($1::uuid IS NULL OR EXISTS (SELECT 1 FROM rosters WHERE id = $1 AND guild_id = $4))
     `;
-    const result = await pool.query(query, [rosterId, characterId]);
+    const result = await pool.query(query, [rosterId, role ?? null, characterId, guildId]);
     return (result.rowCount ?? 0) > 0;
   }
 }

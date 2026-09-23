@@ -25,5 +25,6 @@ export const assignCharacterSchema = z.object({
   }),
   body: z.object({
     rosterId: z.string().uuid().nullable(),
+    role: z.enum(['tank', 'heal', 'dps']).optional(),
   }),
 });

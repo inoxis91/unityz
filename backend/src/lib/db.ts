@@ -208,6 +208,7 @@ export const initDb = async (retries = 5, delay = 3000): Promise<void> => {
         is_heal BOOLEAN DEFAULT FALSE,
         is_dps BOOLEAN DEFAULT FALSE,
         is_main BOOLEAN DEFAULT FALSE,
+        roster_role VARCHAR(10) CHECK (roster_role IN ('tank', 'heal', 'dps')),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(name, realm, user_id)
@@ -318,6 +319,13 @@ export const initDb = async (retries = 5, delay = 3000): Promise<void> => {
       BEGIN 
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='characters' AND column_name='roster_id') THEN
           ALTER TABLE characters ADD COLUMN roster_id UUID REFERENCES rosters(id) ON DELETE SET NULL;
+        END IF;
+        -- Rôle tenu par le personnage dans son roster (catégorisation tank/heal/dps)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='characters' AND column_name='roster_role') THEN
+          ALTER TABLE characters ADD COLUMN roster_role VARCHAR(10) CHECK (roster_role IN ('tank', 'heal', 'dps'));
+          UPDATE characters
+          SET roster_role = CASE WHEN is_tank THEN 'tank' WHEN is_heal THEN 'heal' ELSE 'dps' END
+          WHERE roster_id IS NOT NULL;
         END IF;
       END $$;
     `);

@@ -4,6 +4,7 @@ export interface Character {
   id: string;
   user_id: string;
   roster_id: string | null;
+  roster_role?: 'tank' | 'heal' | 'dps' | null;
   name: string;
   realm: string;
   class: string;

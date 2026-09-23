@@ -1,6 +1,9 @@
 <div class="roster-manager">
-  <div class="header">
-    <h2>{{ i18n.t('admin.rosters.title') }}</h2>
+  <header class="header">
+    <div class="header-text">
+      <h2>{{ i18n.t('admin.rosters.title') }}</h2>
+      <p class="subtitle">{{ i18n.t('admin.rosters.subtitle') }}</p>
+    </div>
     <button
       class="btn-primary"
       [disabled]="limitReached()"
@@ -13,7 +16,7 @@
     >
       {{ i18n.t('admin.rosters.btn_create') }}
     </button>
-  </div>
+  </header>
 
   <!-- Quota Limit Notice -->
   @if (limitReached()) {
@@ -31,77 +34,104 @@
 
   <div class="manager-layout" cdkDropListGroup>
     <!-- Pool de personnages non assignés -->
-    <div class="character-pool">
-      <h3>{{ i18n.t('admin.rosters.unassigned_title') }}</h3>
+    <aside class="character-pool">
+      <div class="pool-header">
+        <h3>{{ i18n.t('admin.rosters.unassigned_title') }}</h3>
+        <span class="count-badge">{{ rosterService.unassignedCharacters().length }}</span>
+      </div>
+
+      <input
+        type="search"
+        class="pool-search"
+        [ngModel]="poolSearch()"
+        (ngModelChange)="poolSearch.set($event)"
+        [placeholder]="i18n.t('admin.rosters.search_placeholder')"
+      />
+      <div class="pool-filters">
+        @for (role of roles; track role) {
+          <button
+            type="button"
+            class="filter-chip"
+            [class.active]="poolRole() === role"
+            [attr.aria-pressed]="poolRole() === role"
+            (click)="togglePoolRole(role)"
+          >
+            <img [src]="'assets/icons/' + role + '.png'" alt="" />
+            {{ i18n.t('admin.rosters.role.' + role) }}
+          </button>
+        }
+      </div>
+
       <div
         cdkDropList
-        [cdkDropListData]="rosterService.unassignedCharacters()"
-        class="character-list"
+        [cdkDropListData]="filteredUnassigned()"
+        class="character-list pool-list"
         (cdkDropListDropped)="drop($event, null)"
       >
-        @for (char of rosterService.unassignedCharacters(); track char.id) {
+        @for (char of filteredUnassigned(); track char.id) {
           <div
             class="character-card"
             [class]="'border-class-' + getClassCategory(char.class)"
             cdkDrag
+            [cdkDragData]="char"
             (contextmenu)="onContextMenu($event, char, null)"
           >
-            <div class="char-main">
-              <span class="char-name" [class]="'class-' + getClassCategory(char.class)">{{
-                char.name
-              }}</span>
-            </div>
-            <div class="char-roles">
-              @if (char.is_tank) {
-                <img src="assets/icons/tank.png" class="role-icon-img small" alt="Tank" />
-              }
-              @if (char.is_heal) {
-                <img src="assets/icons/heal.png" class="role-icon-img small" alt="Heal" />
-              }
-              @if (char.is_dps) {
-                <img src="assets/icons/dps.png" class="role-icon-img small" alt="DPS" />
-              }
-              <a
-                [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)"
-                target="_blank"
-                class="logs-link-mini"
-                (click)="$event.stopPropagation()"
-              >
-                <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" />
-              </a>
-            </div>
+            <ng-container
+              *ngTemplateOutlet="charContent; context: { $implicit: char, rosterId: null }"
+            />
           </div>
-        }
-        @if (rosterService.unassignedCharacters().length === 0) {
+        } @empty {
           <p class="empty-msg">{{ i18n.t('admin.rosters.unassigned_empty') }}</p>
         }
       </div>
-    </div>
+    </aside>
 
     <!-- Liste des rosters -->
-    <div class="rosters-grid">
+    <section class="rosters">
       @for (roster of rosterService.rosters(); track roster.id) {
-        <div class="roster-card">
-          <div class="roster-header">
+        <article class="roster-card">
+          <header class="roster-header">
             <div class="roster-title">
-              <div class="title-with-weight">
+              <div class="title-line">
                 <h4>{{ roster.name }}</h4>
-                <span class="weight-label">{{
+                <span class="weight-badge">{{
                   i18n.t('admin.rosters.weight_label').replace('{weight}', roster.weight.toString())
                 }}</span>
               </div>
-              <p class="roster-desc">{{ roster.description }}</p>
+              @if (roster.description) {
+                <p class="roster-desc">{{ roster.description }}</p>
+              }
             </div>
+
+            <div class="roster-summary">
+              @for (role of roles; track role) {
+                <span
+                  class="summary-pill"
+                  [class]="'role-' + role"
+                  [title]="i18n.t('admin.rosters.role.' + role)"
+                >
+                  <img [src]="'assets/icons/' + role + '.png'" alt="" />
+                  {{ bucket(roster.id, role).length }}
+                </span>
+              }
+              <span class="summary-total">{{
+                i18n
+                  .t('admin.rosters.total_label')
+                  .replace('{count}', (roster.characters?.length ?? 0).toString())
+              }}</span>
+            </div>
+
             <div class="roster-actions">
               <button
                 class="btn-action-icon edit"
                 (click)="openEditModal(roster)"
                 [title]="i18n.t('admin.rosters.tooltip_edit')"
+                [attr.aria-label]="i18n.t('admin.rosters.tooltip_edit')"
               >
                 <svg
                   viewBox="0 0 24 24"
-                  width="18"
-                  height="18"
+                  width="16"
+                  height="16"
                   fill="none"
                   stroke="currentColor"
                   stroke-width="2"
@@ -116,11 +146,12 @@
                 class="btn-action-icon delete"
                 (click)="onDeleteRoster(roster.id)"
                 [title]="i18n.t('admin.rosters.tooltip_delete')"
+                [attr.aria-label]="i18n.t('admin.rosters.tooltip_delete')"
               >
                 <svg
                   viewBox="0 0 24 24"
-                  width="18"
-                  height="18"
+                  width="16"
+                  height="16"
                   fill="none"
                   stroke="currentColor"
                   stroke-width="2"
@@ -136,56 +167,86 @@
                 </svg>
               </button>
             </div>
-          </div>
+          </header>
 
-          <div
-            cdkDropList
-            [cdkDropListData]="roster.characters || []"
-            class="roster-list"
-            (cdkDropListDropped)="drop($event, roster.id)"
-          >
-            @for (char of roster.characters; track char.id) {
-              <div
-                class="character-card"
-                [class]="'border-class-' + getClassCategory(char.class)"
-                cdkDrag
-                (contextmenu)="onContextMenu($event, char, roster.id)"
-              >
-                <div class="char-main">
-                  <span class="char-name" [class]="'class-' + getClassCategory(char.class)">{{
-                    char.name
-                  }}</span>
+          <div class="role-columns">
+            @for (role of roles; track role) {
+              <div class="role-column" [class]="'role-' + role">
+                <div class="role-header">
+                  <img [src]="'assets/icons/' + role + '.png'" alt="" />
+                  <span>{{ i18n.t('admin.rosters.role.' + role) }}</span>
+                  <span class="role-count">{{ bucket(roster.id, role).length }}</span>
                 </div>
-                <div class="char-roles">
-                  @if (char.is_tank) {
-                    <img src="assets/icons/tank.png" class="role-icon-img small" alt="Tank" />
+                <div
+                  cdkDropList
+                  [cdkDropListData]="bucket(roster.id, role)"
+                  class="roster-list"
+                  (cdkDropListDropped)="drop($event, roster.id, role)"
+                >
+                  @for (char of bucket(roster.id, role); track char.id) {
+                    <div
+                      class="character-card"
+                      [class]="'border-class-' + getClassCategory(char.class)"
+                      cdkDrag
+                      [cdkDragData]="char"
+                      (contextmenu)="onContextMenu($event, char, roster.id)"
+                    >
+                      <ng-container
+                        *ngTemplateOutlet="
+                          charContent;
+                          context: { $implicit: char, rosterId: roster.id }
+                        "
+                      />
+                    </div>
+                  } @empty {
+                    <p class="drop-hint">{{ i18n.t('admin.rosters.drop_here') }}</p>
                   }
-                  @if (char.is_heal) {
-                    <img src="assets/icons/heal.png" class="role-icon-img small" alt="Heal" />
-                  }
-                  @if (char.is_dps) {
-                    <img src="assets/icons/dps.png" class="role-icon-img small" alt="DPS" />
-                  }
-                  <a
-                    [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)"
-                    target="_blank"
-                    class="logs-link-mini"
-                    (click)="$event.stopPropagation()"
-                  >
-                    <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" />
-                  </a>
                 </div>
               </div>
             }
-            @if (!roster.characters || roster.characters.length === 0) {
-              <p class="empty-msg">{{ i18n.t('admin.rosters.empty_drag') }}</p>
-            }
           </div>
-        </div>
+        </article>
+      } @empty {
+        <div class="no-roster">{{ i18n.t('admin.rosters.no_roster') }}</div>
       }
-    </div>
+    </section>
   </div>
 </div>
+
+<!-- Contenu d'une carte personnage (partagé entre le pool et les rosters).
+     Dans un roster, la colonne donne le rôle tenu : seuls les rôles alternatifs sont affichés. -->
+<ng-template #charContent let-char let-rosterId="rosterId">
+  <span class="char-name" [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</span>
+  <span class="char-meta">
+    @if (char.is_tank && (!rosterId || roleOf(char) !== 'tank')) {
+      <img src="assets/icons/tank.png" class="role-icon-img" alt="Tank" />
+    }
+    @if (char.is_heal && (!rosterId || roleOf(char) !== 'heal')) {
+      <img src="assets/icons/heal.png" class="role-icon-img" alt="Heal" />
+    }
+    @if (char.is_dps && (!rosterId || roleOf(char) !== 'dps')) {
+      <img src="assets/icons/dps.png" class="role-icon-img" alt="DPS" />
+    }
+    <a
+      [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)"
+      target="_blank"
+      rel="noopener"
+      class="logs-link-mini"
+      (click)="$event.stopPropagation()"
+    >
+      <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" />
+    </a>
+    <button
+      type="button"
+      class="btn-more"
+      [attr.aria-label]="i18n.t('admin.rosters.tooltip_actions')"
+      [title]="i18n.t('admin.rosters.tooltip_actions')"
+      (click)="onContextMenu($event, char, rosterId)"
+    >
+      ⋯
+    </button>
+  </span>
+</ng-template>
 
 <!-- Modal de création -->
 @if (showCreateModal()) {
@@ -253,7 +314,7 @@
 }
 
 <!-- Context Menu for Players -->
-@if (contextMenuVisible() && contextMenuCharacter()) {
+@if (contextMenuVisible() && contextMenuCharacter(); as menuChar) {
   <div
     class="context-menu"
     [style.top.px]="contextMenuPosition().y"
@@ -261,8 +322,27 @@
     (click)="$event.stopPropagation()"
   >
     <div class="context-menu-header">
-      {{ contextMenuCharacter()?.name }}
+      {{ menuChar.name }}
     </div>
+
+    @if (contextMenuCurrentRosterId() !== null) {
+      <div class="context-menu-section-title">
+        {{ i18n.t('admin.rosters.context_menu.role') }}
+      </div>
+      <div class="context-menu-roles">
+        @for (role of roles; track role) {
+          <button
+            type="button"
+            [class]="'role-' + role"
+            [class.active]="roleOf(menuChar) === role"
+            (click)="setRole(role)"
+          >
+            <img [src]="'assets/icons/' + role + '.png'" alt="" />
+            {{ i18n.t('admin.rosters.role.' + role) }}
+          </button>
+        }
+      </div>
+    }
 
     <div class="context-menu-section-title">
       {{ i18n.t('admin.rosters.context_menu.assign_to') }}

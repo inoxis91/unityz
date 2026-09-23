@@ -9,6 +9,7 @@ export interface Character {
   class: string;
   level: number;
   roster_id?: string | null;
+  roster_role?: 'tank' | 'heal' | 'dps' | null;
   is_tank?: boolean;
   is_heal?: boolean;
   is_dps?: boolean;
