@@ -389,8 +389,12 @@ export class EventService {
         role = EXCLUDED.role, 
         comment = EXCLUDED.comment, 
         status = EXCLUDED.status,
-        -- Line-up raid : un absent sort de la sélection ; un changement de personnage invalide le rôle imposé
-        selection = CASE WHEN EXCLUDED.status = 'absent' THEN NULL ELSE event_signups.selection END,
+        -- Line-up raid : la décision du raid lead porte sur un personnage précis. Passer absent ou
+        -- changer de personnage renvoie le joueur « en attente » et efface le rôle imposé.
+        selection = CASE
+          WHEN EXCLUDED.status = 'absent' OR EXCLUDED.character_id IS DISTINCT FROM event_signups.character_id THEN NULL
+          ELSE event_signups.selection
+        END,
         assigned_role = CASE
           WHEN EXCLUDED.status = 'absent' OR EXCLUDED.character_id IS DISTINCT FROM event_signups.character_id THEN NULL
           ELSE event_signups.assigned_role
