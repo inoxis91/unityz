@@ -1,0 +1,76 @@
+{
+  "extends": [
+    "stylelint-config-recommended"
+  ],
+  "ignoreFiles": [
+    "dist/**",
+    "src/app/components/landing/**",
+    "src/app/components/login/**",
+    "src/app/components/select-guild/**",
+    "src/app/components/payment/**"
+  ],
+  "rules": {
+    "selector-pseudo-element-no-unknown": [
+      true,
+      {
+        "ignorePseudoElements": [
+          "ng-deep"
+        ]
+      }
+    ],
+    "no-descending-specificity": null
+  },
+  "overrides": [
+    {
+      "files": [
+        "src/app/**/*.css"
+      ],
+      "rules": {
+        "color-no-hex": [
+          true,
+          {
+            "message": "Use a --ui-* / --color-* / --wcl-* token (see src/styles.css)"
+          }
+        ],
+        "color-named": [
+          "never",
+          {
+            "ignoreProperties": [
+              "/mask/"
+            ],
+            "message": "Use a --ui-* token (see src/styles.css)"
+          }
+        ],
+        "declaration-property-value-disallowed-list": [
+          {
+            "font-size": [
+              "/^0\\.([0-6]\\d*|7|7[0-4]\\d*)rem$/",
+              "/^([0-9]|1[01])(\\.\\d+)?px$/"
+            ]
+          },
+          {
+            "message": "Font sizes below 0.75rem (12px) are not readable enough"
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/app/components/navbar/**/*.css",
+        "src/app/components/support-widget/**/*.css"
+      ],
+      "rules": {
+        "color-no-hex": null,
+        "color-named": null
+      }
+    },
+    {
+      "files": [
+        "src/styles.css"
+      ],
+      "rules": {
+        "no-duplicate-selectors": null
+      }
+    }
+  ]
+}

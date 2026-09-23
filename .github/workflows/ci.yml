@@ -1,0 +1,115 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend (lint, unit tests, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Stylelint (design tokens, font sizes)
+        run: npm run lint:css
+      - run: npx ng test --watch=false
+      - run: npm run build
+
+  backend:
+    name: Backend (type check)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npx tsc --noEmit
+
+  a11y:
+    name: Accessibility (axe, light + dark themes)
+    runs-on: ubuntu-latest
+    needs: [frontend, backend]
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: guild_manager_user
+          POSTGRES_PASSWORD: guild_manager_password
+          POSTGRES_DB: guild_manager_db
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U guild_manager_user"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      # Non-production: enables /api/mock-auth used by the Playwright setup
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://guild_manager_user:guild_manager_password@localhost:5432/guild_manager_db
+      SESSION_SECRET: ci-only-secret
+      FRONTEND_URL: http://localhost:4200
+      BNET_CLIENT_ID: ci
+      BNET_CLIENT_SECRET: ci
+      BNET_CALLBACK_URL: http://localhost:3000/api/auth/bnet/callback
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            backend/package-lock.json
+      - run: npm ci
+        working-directory: backend
+      - run: npm ci
+        working-directory: frontend
+      - name: Start backend
+        working-directory: backend
+        run: |
+          npm run build
+          nohup node dist/index.js > ../backend.log 2>&1 &
+      - name: Start frontend
+        working-directory: frontend
+        run: nohup npx ng serve --port 4200 > ../frontend.log 2>&1 &
+      - name: Wait for the stack
+        run: |
+          for i in $(seq 1 90); do
+            curl -sf http://localhost:3000/api/mock-auth/users > /dev/null \
+              && curl -sf http://localhost:4200 > /dev/null && exit 0
+            sleep 2
+          done
+          cat backend.log frontend.log
+          exit 1
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: npm run e2e
+        working-directory: frontend
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+            backend.log
+          retention-days: 7
