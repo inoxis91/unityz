@@ -33,7 +33,7 @@
         <h2>{{ i18n.t('crafts.pending_title') }}</h2>
         @if (craftService.pendingRequests().length === 0) {
           <div class="empty-state">
-            <span class="empty-icon">🎉</span>
+            <span class="empty-icon" aria-hidden="true">🎉</span>
             <p>{{ i18n.t('crafts.empty_state') }}</p>
           </div>
         } @else {

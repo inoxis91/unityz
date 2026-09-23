@@ -1,6 +1,9 @@
 /*
  * Design tokens (--ui-*)
- * Components must use these instead of hard-coded neutrals/tints so they follow the active theme.
+ * Components must use these instead of hard-coded colors so they follow the active theme
+ * (enforced by Stylelint: `npm run lint:css`).
+ * Contract: --ui-text-* and --ui-fg-* reach WCAG AA (4.5:1) on --ui-bg-page, --ui-surface(-muted/-subtle)
+ * and on their own -50/-100 tints; solid fills reach AA with their --ui-on-* token.
  * The theme is set on <html data-theme="light|dark"> by ThemeService (and by the inline boot
  * script in index.html to avoid a flash of the wrong theme).
  */
@@ -15,7 +18,52 @@
   /* Solid neutral pill (counters): high-contrast in light, subdued in dark */
   --ui-badge-bg: #0f172a;
   --ui-badge-fg: #ffffff;
-  --ui-placeholder: #64748b;
+  --ui-placeholder: #58687f;
+  /* Solid fills that carry text (buttons, badges, pills): each passes AA with its --ui-on-* */
+  --ui-brand: #0074e0;
+  --ui-brand-hover: #005bb5;
+  --ui-accent: #2563eb;
+  --ui-accent-hover: #1d4ed8;
+  --ui-success: #15803d;
+  --ui-success-hover: #166534;
+  --ui-danger: #dc2626;
+  --ui-danger-hover: #b91c1c;
+  --ui-warning: #f59e0b;
+  --ui-warning-hover: #d97706;
+  --ui-discord: #5865f2;
+  --ui-discord-hover: #4752c4;
+  --ui-neutral: #475569;
+  --ui-neutral-hover: #334155;
+  --ui-purple: #7c3aed;
+  --ui-on-solid: #ffffff;
+  --ui-on-warning: #1e293b;
+  /* Status indicators without text (dots, stripes, bars, state borders) */
+  --ui-status-success: #22c55e;
+  --ui-status-danger: #ef4444;
+  --ui-status-warning: #f59e0b;
+  --ui-status-info: #3b82f6;
+  --ui-focus: #3b82f6;
+  /* Raid roles: indicator (borders, bars), readable text, tinted background */
+  --ui-role-tank: var(--ui-status-info);
+  --ui-role-tank-text: var(--ui-fg-blue-600);
+  --ui-role-tank-bg: var(--ui-bg-blue-50);
+  --ui-role-heal: var(--ui-status-success);
+  --ui-role-heal-text: var(--ui-fg-green-700);
+  --ui-role-heal-bg: var(--ui-bg-green-50);
+  --ui-role-dps: var(--ui-status-danger);
+  --ui-role-dps-text: var(--ui-fg-red-600);
+  --ui-role-dps-bg: var(--ui-bg-red-50);
+  /* Calendar activity types */
+  --ui-event-raid: #e74c3c;
+  --ui-event-mm: #a29bfe;
+  --ui-event-reunion: #10b981;
+  --ui-event-custom: #3498db;
+  /* Always-dark panels (hero cards, code previews) */
+  --ui-inverse-surface: #1e293b;
+  --ui-inverse-surface-strong: #0f172a;
+  --ui-on-inverse: #f8fafc;
+  --ui-on-inverse-muted: #cbd5e1;
+  --ui-on-inverse-faint: #94a3b8;
   --ui-scrollbar-track: #f1f1f1;
   --ui-scrollbar-thumb: #cccccc;
   --ui-scrollbar-thumb-hover: #bbbbbb;
@@ -30,37 +78,33 @@
   --ui-border-subtle: #f1f5f9;
   --ui-border: #e2e8f0;
   --ui-border-strong: #cbd5e1;
+  --ui-border-hover: #94a3b8;
   /* Text */
   --ui-text-strong: #0f172a;
   --ui-text-primary: #1e293b;
   --ui-text-secondary: #334155;
   --ui-text-tertiary: #475569;
-  --ui-text-muted: #64748b;
-  --ui-text-faint: #94a3b8;
+  --ui-text-muted: #58687f;
   --ui-text-disabled: #cbd5e1;
   /* Foreground hues */
-  --ui-fg-brand: #0074e0;
+  --ui-fg-brand: #0064cf;
   --ui-fg-brand-strong: #005bb5;
-  --ui-fg-blue-500: #3b82f6;
-  --ui-fg-blue-600: #2563eb;
+  --ui-fg-blue-600: #1f5de4;
   --ui-fg-blue-700: #1d4ed8;
   --ui-fg-blue-800: #1e40af;
   --ui-fg-sky-700: #0369a1;
   --ui-fg-indigo-600: #4f46e5;
   --ui-fg-indigo-950: #1e1b4b;
   --ui-fg-purple-700: #7e22ce;
-  --ui-fg-red-500: #ef4444;
-  --ui-fg-red-600: #dc2626;
+  --ui-fg-red-600: #ce0d18;
   --ui-fg-red-700: #b91c1c;
   --ui-fg-red-800: #991b1b;
-  --ui-fg-green-600: #16a34a;
   --ui-fg-green-700: #15803d;
   --ui-fg-green-800: #166534;
   --ui-fg-teal-700: #0f766e;
-  --ui-fg-amber-600: #d97706;
-  --ui-fg-amber-700: #b45309;
+  --ui-fg-amber-700: #a94900;
   --ui-fg-amber-800: #92400e;
-  --ui-fg-orange-700: #c2410c;
+  --ui-fg-orange-700: #b33200;
   /* Tinted backgrounds */
   --ui-bg-red-50: #fef2f2;
   --ui-bg-red-100: #fee2e2;
@@ -103,6 +147,10 @@
   --ui-badge-bg: #3a4763;
   --ui-badge-fg: #f8fafc;
   --ui-placeholder: #97a4b8;
+  --ui-neutral: #56637d;
+  --ui-neutral-hover: #64718c;
+  --ui-inverse-surface: #1f2a3e;
+  --ui-inverse-surface-strong: #111827;
   --ui-scrollbar-track: #0f1626;
   --ui-scrollbar-thumb: #334155;
   --ui-scrollbar-thumb-hover: #475569;
@@ -117,18 +165,17 @@
   --ui-border-subtle: #222d42;
   --ui-border: #2c3852;
   --ui-border-strong: #3d4a66;
+  --ui-border-hover: #56637d;
   /* Text */
   --ui-text-strong: #f8fafc;
   --ui-text-primary: #e2e8f0;
   --ui-text-secondary: #cbd5e1;
   --ui-text-tertiary: #b3bfd1;
   --ui-text-muted: #97a4b8;
-  --ui-text-faint: #8794aa;
   --ui-text-disabled: #56637d;
   /* Foreground hues */
   --ui-fg-brand: #5aa9ff;
   --ui-fg-brand-strong: #8cc4ff;
-  --ui-fg-blue-500: #60a5fa;
   --ui-fg-blue-600: #7fb0fb;
   --ui-fg-blue-700: #93c5fd;
   --ui-fg-blue-800: #bfdbfe;
@@ -136,15 +183,12 @@
   --ui-fg-indigo-600: #a5b4fc;
   --ui-fg-indigo-950: #c7d2fe;
   --ui-fg-purple-700: #d8b4fe;
-  --ui-fg-red-500: #f87171;
   --ui-fg-red-600: #f87171;
   --ui-fg-red-700: #fca5a5;
   --ui-fg-red-800: #fca5a5;
-  --ui-fg-green-600: #4ade80;
   --ui-fg-green-700: #4ade80;
   --ui-fg-green-800: #86efac;
   --ui-fg-teal-700: #5eead4;
-  --ui-fg-amber-600: #fbbf24;
   --ui-fg-amber-700: #fcd34d;
   --ui-fg-amber-800: #fcd34d;
   --ui-fg-orange-700: #fdba74;
@@ -187,74 +231,143 @@ body {
   color: var(--ui-text-body);
 }
 
-/* WOW Class Colors Variables */
+/*
+ * WoW class colors
+ * --color-<class>       official hue: borders, accents, fills
+ * --color-<class>-text  same hue tuned for AA text on the current theme surfaces
+ * --color-<class>-on    text color on a --color-<class> fill
+ */
 :root {
-  --color-death-knight: #C41E3A;
-  --color-dk: #C41E3A;
-  --color-demon-hunter: #A330C9;
-  --color-dh: #A330C9;
-  --color-druid: #FF7C0A;
-  --color-evoker: #33937F;
-  --color-hunter: #AAD372;
-  --color-mage: #3FC7EB;
-  --color-monk: #00FF98;
-  --color-paladin: #F48CBA;
-  --color-priest: #FFFFFF;
-  --color-rogue: #FFF468;
-  --color-shaman: #0070DD;
-  --color-warlock: #8788EE;
-  --color-warrior: #C69B6D;
+  --color-death-knight: #c41e3a;
+  --color-death-knight-text: #c41e3a;
+  --color-death-knight-on: #ffffff;
+  --color-demon-hunter: #a330c9;
+  --color-demon-hunter-text: #a330c9;
+  --color-demon-hunter-on: #ffffff;
+  --color-druid: #ff7c0a;
+  --color-druid-text: #b45605;
+  --color-druid-on: #0f172a;
+  --color-evoker: #33937f;
+  --color-evoker-text: #2a7d6c;
+  --color-evoker-on: #0f172a;
+  --color-hunter: #aad372;
+  --color-hunter-text: #5f783e;
+  --color-hunter-on: #0f172a;
+  --color-mage: #3fc7eb;
+  --color-mage-text: #237a91;
+  --color-mage-on: #0f172a;
+  --color-monk: #00ff98;
+  --color-monk-text: #00834b;
+  --color-monk-on: #0f172a;
+  --color-paladin: #f48cba;
+  --color-paladin-text: #a05a79;
+  --color-paladin-on: #0f172a;
+  --color-priest: #ffffff;
+  --color-priest-text: #58687f;
+  --color-priest-on: #0f172a;
+  --color-rogue: #fff468;
+  --color-rogue-text: #77722c;
+  --color-rogue-on: #0f172a;
+  --color-shaman: #0070dd;
+  --color-shaman-text: #0070dd;
+  --color-shaman-on: #ffffff;
+  --color-warlock: #8788ee;
+  --color-warlock-text: #6869ba;
+  --color-warlock-on: #0f172a;
+  --color-warrior: #c69b6d;
+  --color-warrior-text: #8b6c4b;
+  --color-warrior-on: #0f172a;
+  --color-dk: var(--color-death-knight);
+  --color-dh: var(--color-demon-hunter);
 }
 
-/* Class color utility classes */
-.class-death-knight { color: var(--color-death-knight) !important; }
-.class-demon-hunter { color: var(--color-demon-hunter) !important; }
-.class-druid { color: var(--color-druid) !important; }
-.class-evoker { color: var(--color-evoker) !important; }
-.class-hunter { color: var(--color-hunter) !important; }
-.class-mage { color: var(--color-mage) !important; }
-.class-monk { color: var(--color-monk) !important; }
-.class-paladin { color: var(--color-paladin) !important; }
-.class-priest { color: var(--color-priest) !important; text-shadow: -1px -1px 0 #1e293b, 1px -1px 0 #1e293b, -1px 1px 0 #1e293b, 1px 1px 0 #1e293b; }
-.class-rogue { color: var(--color-rogue) !important; text-shadow: 1px 1px 1px #000; }
-.class-shaman { color: var(--color-shaman) !important; }
-.class-warlock { color: var(--color-warlock) !important; }
-.class-warrior { color: var(--color-warrior) !important; }
-
-/* Specific rules for Priest text legibility on cards and lists */
-.class-priest.modern-comp-card .name,
-.class-priest.participant-card .participant-name,
-.class-priest.mm-member-card .name,
-.class-priest.alt-row .alt-name,
-.class-priest .name,
-.class-priest .participant-name,
-.class-priest .alt-name {
-  color: var(--ui-text-primary) !important;
-  text-shadow: none !important;
+/* Dark theme, and always-dark panels (.inverse-context) inside the light theme */
+:root[data-theme='dark'],
+.inverse-context {
+  --color-death-knight-text: #e58687;
+  --color-demon-hunter-text: #c888e1;
+  --color-druid-text: #ff7c0a;
+  --color-evoker-text: #6cad9c;
+  --color-hunter-text: #aad372;
+  --color-mage-text: #3fc7eb;
+  --color-monk-text: #00ff98;
+  --color-paladin-text: #f48cba;
+  --color-priest-text: #ffffff;
+  --color-rogue-text: #fff468;
+  --color-shaman-text: #6aa2ec;
+  --color-warlock-text: #9598f1;
+  --color-warrior-text: #c69b6d;
 }
 
-.class-priest .participant-comment p {
-  color: var(--ui-text-primary) !important;
+/* Class text (names in lists, tables) */
+.class-death-knight { color: var(--color-death-knight-text) !important; }
+.class-demon-hunter { color: var(--color-demon-hunter-text) !important; }
+.class-druid { color: var(--color-druid-text) !important; }
+.class-evoker { color: var(--color-evoker-text) !important; }
+.class-hunter { color: var(--color-hunter-text) !important; }
+.class-mage { color: var(--color-mage-text) !important; }
+.class-monk { color: var(--color-monk-text) !important; }
+.class-paladin { color: var(--color-paladin-text) !important; }
+.class-priest { color: var(--color-priest-text) !important; }
+.class-rogue { color: var(--color-rogue-text) !important; }
+.class-shaman { color: var(--color-shaman-text) !important; }
+.class-warlock { color: var(--color-warlock-text) !important; }
+.class-warrior { color: var(--color-warrior-text) !important; }
+
+/* Class fills (cards): text takes the readable on-color, children inherit it */
+.bg-class-death-knight { background-color: var(--color-death-knight) !important; color: var(--color-death-knight-on); }
+.bg-class-demon-hunter { background-color: var(--color-demon-hunter) !important; color: var(--color-demon-hunter-on); }
+.bg-class-druid { background-color: var(--color-druid) !important; color: var(--color-druid-on); }
+.bg-class-evoker { background-color: var(--color-evoker) !important; color: var(--color-evoker-on); }
+.bg-class-hunter { background-color: var(--color-hunter) !important; color: var(--color-hunter-on); }
+.bg-class-mage { background-color: var(--color-mage) !important; color: var(--color-mage-on); }
+.bg-class-monk { background-color: var(--color-monk) !important; color: var(--color-monk-on); }
+.bg-class-paladin { background-color: var(--color-paladin) !important; color: var(--color-paladin-on); }
+.bg-class-rogue { background-color: var(--color-rogue) !important; color: var(--color-rogue-on); }
+.bg-class-shaman { background-color: var(--color-shaman) !important; color: var(--color-shaman-on); }
+.bg-class-warlock { background-color: var(--color-warlock) !important; color: var(--color-warlock-on); }
+.bg-class-warrior { background-color: var(--color-warrior) !important; color: var(--color-warrior-on); }
+/* Priest white would glare in dark mode: use a neutral surface instead */
+.bg-class-priest { background-color: var(--ui-surface-subtle) !important; color: var(--ui-text-primary); border-color: var(--ui-border-strong); }
+.bg-class-unknown { background-color: var(--ui-neutral) !important; color: var(--ui-on-solid); }
+
+/*
+ * Warcraft Logs percentile palette (gray < green < blue < purple < orange < pink < gold)
+ * --wcl-<tier>: fill, text on it is --wcl-<tier>-on; --wcl-<tier>-text: AA text on surfaces
+ */
+:root {
+  --wcl-gray: #9d9d9d;
+  --wcl-green: #1eff00;
+  --wcl-blue: #0070dd;
+  --wcl-purple: #a335ee;
+  --wcl-orange: #ff8000;
+  --wcl-pink: #e268a8;
+  --wcl-gold: #e5cc80;
+  --wcl-gray-on: #111827;
+  --wcl-green-on: #111827;
+  --wcl-blue-on: #ffffff;
+  --wcl-purple-on: #ffffff;
+  --wcl-orange-on: #111827;
+  --wcl-pink-on: #111827;
+  --wcl-gold-on: #111827;
+  --wcl-gray-text: #58687f;
+  --wcl-green-text: #0a8300;
+  --wcl-blue-text: #0070dd;
+  --wcl-purple-text: #a335ee;
+  --wcl-orange-text: #b45800;
+  --wcl-pink-text: #b04f82;
+  --wcl-gold-text: #7d6f43;
 }
 
-.class-priest .participant-comment {
-  background: rgba(var(--ui-shade-rgb), 0.05) !important;
+:root[data-theme='dark'] {
+  --wcl-gray-text: #9d9d9d;
+  --wcl-green-text: #1eff00;
+  --wcl-blue-text: #6aa2ec;
+  --wcl-purple-text: #b871f6;
+  --wcl-orange-text: #ff8000;
+  --wcl-pink-text: #e268a8;
+  --wcl-gold-text: #e5cc80;
 }
-
-/* Background variants */
-.bg-class-death-knight { background-color: var(--color-death-knight) !important; color: white; }
-.bg-class-demon-hunter { background-color: var(--color-demon-hunter) !important; color: white; }
-.bg-class-druid { background-color: var(--color-druid) !important; color: white; }
-.bg-class-evoker { background-color: var(--color-evoker) !important; color: white; }
-.bg-class-hunter { background-color: var(--color-hunter) !important; color: black; }
-.bg-class-mage { background-color: var(--color-mage) !important; color: black; }
-.bg-class-monk { background-color: var(--color-monk) !important; color: black; }
-.bg-class-paladin { background-color: var(--color-paladin) !important; color: black; }
-.bg-class-priest { background-color: var(--color-priest) !important; color: black; border: 1px solid #ddd; }
-.bg-class-rogue { background-color: var(--color-rogue) !important; color: black; }
-.bg-class-shaman { background-color: var(--color-shaman) !important; color: white; }
-.bg-class-warlock { background-color: var(--color-warlock) !important; color: white; }
-.bg-class-warrior { background-color: var(--color-warrior) !important; color: white; }
 
 /* Border variants */
 .border-class-death-knight { border-left: 4px solid var(--color-death-knight) !important; }
@@ -292,9 +405,9 @@ textarea::placeholder {
   opacity: 0.8;
 }
 
-.btn-primary { background-color: #0074e0; color: white; }
-.btn-success { background-color: #28a745; color: white; }
-.btn-danger { background-color: #c41e3a; color: white; }
+.btn-primary { background-color: var(--ui-brand); color: var(--ui-on-solid); }
+.btn-success { background-color: var(--ui-success); color: var(--ui-on-solid); }
+.btn-danger { background-color: var(--ui-danger); color: var(--ui-on-solid); }
 
 .animated-fade-in {
   animation: fadeIn 0.3s ease-in-out;

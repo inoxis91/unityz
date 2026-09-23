@@ -7,11 +7,13 @@ import { CalendarService, CalendarEvent, Signup } from '../../services/calendar'
 import { RosterService, Roster } from '../../services/roster';
 import { FeeService, FeeAllocation } from '../../services/fee';
 import { I18nService } from '../../services/i18n';
+import { DashboardBirthdaysComponent, GuildBirthday } from './birthdays/birthdays';
+import { DashboardParsesComponent } from './parses/parses';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, DashboardBirthdaysComponent, DashboardParsesComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css'
 })
@@ -32,49 +34,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   mainCharacterRioScore = signal<number | null>(null);
   rioScores = signal<Map<string, number>>(new Map());
 
-  birthdays = signal<any[]>([]);
-
-  myParses = signal<any | null>(null);
-  loadingParses = signal<boolean>(false);
-  parsesTab = signal<'raid' | 'dungeon'>('raid');
+  birthdays = signal<GuildBirthday[]>([]);
 
   private timerInterval: any;
 
   mainCharacter = computed(() => this.myCharacters().find(c => c.is_main));
-
-  selectedCharacterId = signal<string>('');
-  selectedDifficulty = signal<number>(5); // Default to Mythic (5)
-  selectedCharacter = computed(() => {
-    const id = this.selectedCharacterId();
-    return this.myCharacters().find(c => c.id === id) || this.mainCharacter();
-  });
-
-  isBirthdayToday(birthdayStr: string): boolean {
-    if (!birthdayStr) return false;
-    const bdayParts = birthdayStr.substring(0, 10).split('-');
-    if (bdayParts.length < 3) return false;
-    
-    const bdayMonth = parseInt(bdayParts[1], 10);
-    const bdayDay = parseInt(bdayParts[2], 10);
-    
-    const today = new Date();
-    const todayMonth = today.getMonth() + 1;
-    const todayDay = today.getDate();
-    
-    return bdayMonth === todayMonth && bdayDay === todayDay;
-  }
-
-  formatBirthdayDay(birthdayStr: string): string {
-    if (!birthdayStr) return '';
-    const bdayParts = birthdayStr.substring(0, 10).split('-');
-    if (bdayParts.length < 3) return '';
-    
-    const monthIndex = parseInt(bdayParts[1], 10) - 1;
-    const day = parseInt(bdayParts[2], 10);
-    
-    const tempDate = new Date(2000, monthIndex, day);
-    return tempDate.toLocaleDateString(this.i18n.currentLocale() === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'long' });
-  }
 
   // Computed summary for next 3 months
   minimumFee = computed(() => this.authService.currentUser()?.active_guild_minimum_fee_amount ?? 2000);
@@ -131,26 +95,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         });
       }
     });
-
-    // Load Warcraft Logs parses reactively when selected character or difficulty changes
-    effect(() => {
-      const charId = this.selectedCharacterId();
-      const difficulty = this.selectedDifficulty();
-      
-      if (charId) {
-        this.loadingParses.set(true);
-        this.characterService.getCharacterParses(charId, difficulty).subscribe({
-          next: (parses) => {
-            this.myParses.set(parses);
-            this.loadingParses.set(false);
-          },
-          error: (err) => {
-            console.error('Error fetching parses:', err);
-            this.loadingParses.set(false);
-          }
-        });
-      }
-    });
   }
 
   ngOnInit() {
@@ -168,12 +112,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Load characters
     this.characterService.getMyCharacters().subscribe(chars => {
       this.myCharacters.set(chars);
-      
-      // Auto-select the main character initially
-      const main = chars.find(c => c.is_main) || chars[0];
-      if (main && main.id) {
-        this.selectedCharacterId.set(main.id);
-      }
 
       // Fetch RIO scores for all
       chars.forEach(c => {
@@ -276,29 +214,5 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   getRioScoreForKey(name: string, realm: string): number | null {
     return this.rioScores().get(`${name}-${realm}`.toLowerCase()) || null;
-  }
-
-  getParseColorClass(percentile: number | undefined): string {
-    if (percentile === undefined || percentile === null) return 'gray';
-    if (percentile >= 99) return 'pink';
-    if (percentile >= 90) return 'orange';
-    if (percentile >= 75) return 'purple';
-    if (percentile >= 50) return 'blue';
-    if (percentile >= 30) return 'green';
-    return 'gray';
-  }
-
-  onCharacterChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    if (select && select.value) {
-      this.selectedCharacterId.set(select.value);
-    }
-  }
-
-  onDifficultyChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    if (select && select.value) {
-      this.selectedDifficulty.set(parseInt(select.value, 10));
-    }
   }
 }

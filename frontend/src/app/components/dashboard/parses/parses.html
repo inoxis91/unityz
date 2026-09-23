@@ -1,0 +1,212 @@
+<section class="parses-section">
+  <div class="section-header flex-header">
+    <div class="header-titles">
+      <h2>{{ i18n.t('dashboard.parses.title') }}</h2>
+      @if (selectedCharacter()) {
+        <p class="subtitle">
+          {{ i18n.t('dashboard.parses.subtitle') }} —
+          <strong
+            class="char-highlight"
+            [class]="'class-' + getClassCategory(selectedCharacter()?.class)"
+            >{{ selectedCharacter()?.name }}</strong
+          >
+        </p>
+      }
+    </div>
+    @if (parses.hasValue() && parses.value() && selectedCharacter()) {
+      <div class="header-actions">
+        <a
+          [href]="
+            characterService.getWarcraftLogsUrl(
+              selectedCharacter()?.name,
+              selectedCharacter()?.realm
+            )
+          "
+          target="_blank"
+          class="wcl-btn"
+        >
+          <img src="assets/icons/warcraftlogs.png" alt="WCL" class="wcl-mini-icon" />
+          {{ i18n.t('dashboard.parses.view_wcl') }}
+        </a>
+      </div>
+    }
+  </div>
+  <!-- Main Character Parse Card -->
+  @if (mainCharacter()) {
+    <div class="parses-card">
+      <!-- Loading State -->
+      @if (parses.isLoading()) {
+        <div class="parses-loading">
+          <div class="spinner"></div>
+          <p>{{ i18n.t('dashboard.parses.loading') }}</p>
+        </div>
+      }
+      <!-- Content State -->
+      @if (!parses.isLoading() && parses.hasValue() && parses.value(); as data) {
+        <div class="parses-header-row">
+          <div class="parses-tabs">
+            <button
+              class="tab-btn"
+              [class.active]="parsesTab() === 'raid'"
+              (click)="parsesTab.set('raid')"
+            >
+              🛡️ {{ i18n.t('dashboard.parses.raid') }}
+            </button>
+            <button
+              class="tab-btn"
+              [class.active]="parsesTab() === 'dungeon'"
+              (click)="parsesTab.set('dungeon')"
+            >
+              🌀 {{ i18n.t('dashboard.parses.dungeons') }}
+            </button>
+          </div>
+          <div class="parses-controls">
+            <!-- Character Dropdown -->
+            <div class="control-group">
+              <label>{{ i18n.t('dashboard.parses.character_label') }}</label>
+              <select class="styled-select" (change)="onCharacterChange($event)">
+                @for (c of characters(); track c.id) {
+                  <option [value]="c.id" [selected]="c.id === selectedCharacterId()">
+                    {{ c.name }} ({{ c.realm }})
+                  </option>
+                }
+              </select>
+            </div>
+            <!-- Difficulty Dropdown (only for Raid) -->
+            @if (parsesTab() === 'raid') {
+              <div class="control-group">
+                <label>{{ i18n.t('dashboard.parses.difficulty_label') }}</label>
+                <select class="styled-select" (change)="onDifficultyChange($event)">
+                  <option [value]="3" [selected]="selectedDifficulty() === 3">
+                    {{ i18n.t('difficulty.3') }}
+                  </option>
+                  <option [value]="4" [selected]="selectedDifficulty() === 4">
+                    {{ i18n.t('difficulty.4') }}
+                  </option>
+                  <option [value]="5" [selected]="selectedDifficulty() === 5">
+                    {{ i18n.t('difficulty.5') }}
+                  </option>
+                </select>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="parses-content-container">
+          <!-- Left side: Summary -->
+          <div class="parses-summary-col">
+            <div class="summary-metric-box">
+              <span class="box-label">{{ i18n.t('dashboard.parses.best_average') }}</span>
+              <div class="box-value-container">
+                <span
+                  class="box-value"
+                  [class]="
+                    parseColorClass(
+                      parsesTab() === 'raid'
+                        ? data.raidRankings.bestPerformanceAverage
+                        : data.dungeonRankings.bestPerformanceAverage
+                    )
+                  "
+                >
+                  {{
+                    parsesTab() === 'raid'
+                      ? data.raidRankings.bestPerformanceAverage
+                      : data.dungeonRankings.bestPerformanceAverage
+                  }}
+                </span>
+                <span class="percent-sign">%</span>
+              </div>
+              <div
+                class="parse-rank-indicator"
+                [class]="
+                  parseColorClass(
+                    parsesTab() === 'raid'
+                      ? data.raidRankings.bestPerformanceAverage
+                      : data.dungeonRankings.bestPerformanceAverage
+                  )
+                "
+              >
+                <span class="bullet">●</span>
+                <span class="text">
+                  {{ i18n.t('dashboard.attendance.current_month') }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <!-- Right side: Grid of specific encounters -->
+          <div class="parses-grid-col">
+            <div class="encounters-grid">
+              @for (
+                p of parsesTab() === 'raid'
+                  ? data.raidRankings.rankings
+                  : data.dungeonRankings.rankings;
+                track p.encounterId
+              ) {
+                <div class="encounter-row">
+                  <div class="encounter-info">
+                    <div class="encounter-title-row">
+                      <span class="enc-name">{{ i18n.t('encounter.' + p.encounterId) }}</span>
+                      @if (p.difficulty) {
+                        <span class="difficulty-badge" [class]="'diff-' + p.difficulty">
+                          {{
+                            p.difficulty === 10 && p.keyLevel
+                              ? 'Clef +' + p.keyLevel
+                              : i18n.t('difficulty.' + p.difficulty)
+                          }}
+                        </span>
+                      }
+                    </div>
+                    <span class="enc-spec">{{ p.spec || 'N/A' }}</span>
+                  </div>
+                  <div class="encounter-percentile-container">
+                    <div class="percentile-badge" [class]="parseColorClass(p.percentile)">
+                      {{ p.percentile !== null && p.percentile !== undefined ? p.percentile : '-' }}
+                    </div>
+                    <div class="encounter-progress-bg">
+                      <div
+                        class="encounter-progress-bar"
+                        [style.width]="
+                          (p.percentile !== null && p.percentile !== undefined ? p.percentile : 0) +
+                          '%'
+                        "
+                        [class]="parseColorClass(p.percentile)"
+                      ></div>
+                    </div>
+                    @if (p.rank > 0) {
+                      <div class="encounter-rank">
+                        <span class="rank-label">{{ i18n.t('dashboard.parses.rank') }}</span>
+                        <span class="rank-val">#{{ p.rank | number }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+              @if (
+                (parsesTab() === 'raid'
+                  ? data.raidRankings.rankings
+                  : data.dungeonRankings.rankings
+                ).length === 0
+              ) {
+                <div class="no-parses-empty">
+                  <p>{{ i18n.t('dashboard.parses.no_parses') }}</p>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="parses-card empty-parses-card">
+      <div class="empty-state">
+        <p>{{ i18n.t('dashboard.parses.no_char') }}</p>
+        <button
+          class="btn-import"
+          [routerLink]="['/options']"
+          [queryParams]="{ tab: 'characters' }"
+        >
+          {{ i18n.t('dashboard.import') }}
+        </button>
+      </div>
+    </div>
+  }
+</section>

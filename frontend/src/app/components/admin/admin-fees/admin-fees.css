@@ -32,7 +32,7 @@
 
 .btn-remind {
   background: var(--ui-bg-amber-100);
-  color: var(--ui-fg-amber-600);
+  color: var(--ui-fg-amber-700);
   border: 1px solid var(--ui-bd-amber-300);
   font-weight: 700;
   cursor: pointer;
@@ -45,9 +45,9 @@
 }
 
 .btn-remind:hover {
-  background: #f59e0b;
-  color: white;
-  border-color: #d97706;
+  background: var(--ui-warning);
+  color: var(--ui-on-warning);
+  border-color: var(--ui-status-warning);
 }
 
 /* Overview Header & Year Nav */
@@ -80,7 +80,7 @@
   height: 36px;
   border-radius: 50%;
   cursor: pointer;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--ui-text-muted);
   display: flex;
   justify-content: center;
@@ -89,8 +89,8 @@
 }
 
 .btn-year:hover {
-  background: #0074e0;
-  color: white;
+  background: var(--ui-brand);
+  color: var(--ui-on-solid);
 }
 
 .overview-legend {
@@ -117,11 +117,11 @@
 
 .user-info { display: flex; flex-direction: column; }
 .btag { font-weight: 800; font-size: 1.1rem; color: var(--ui-text-primary); }
-.date { font-size: 0.8rem; color: var(--ui-text-faint); }
+.date { font-size: 0.8rem; color: var(--ui-text-muted); }
 
 .decl-details .val { font-size: 1.5rem; font-weight: 800; color: var(--ui-fg-brand); }
 .decl-details p { margin: 4px 0; font-size: 0.9rem; color: var(--ui-text-muted); font-weight: 600; }
-.decl-details .comment { font-style: italic; color: var(--ui-text-faint); }
+.decl-details .comment { font-style: italic; color: var(--ui-text-muted); }
 
 .actions { display: flex; gap: 1rem; }
 .actions button {
@@ -156,7 +156,7 @@
 .guild-overview-table th {
   background: var(--ui-surface-muted);
   padding: 12px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 800;
   text-transform: uppercase;
   color: var(--ui-text-muted);
@@ -201,15 +201,15 @@
 }
 
 .status-icon { font-size: 0.8rem; }
-.status-amount { font-size: 0.65rem; font-weight: 800; color: var(--ui-text-muted); }
+.status-amount { font-size: 0.75rem; font-weight: 800; color: var(--ui-text-muted); }
 
-.status-box.paid { background: var(--ui-bg-green-50); border-color: #22c55e; }
+.status-box.paid { background: var(--ui-bg-green-50); border-color: var(--ui-status-success); }
 .status-box.paid .status-amount { color: var(--ui-fg-green-800); }
 
-.status-box.donation { background: var(--ui-bg-amber-50); border-color: #f59e0b; }
+.status-box.donation { background: var(--ui-bg-amber-50); border-color: var(--ui-status-warning); }
 .status-box.donation .status-amount { color: var(--ui-fg-amber-800); }
 
-.status-box.partial { background: var(--ui-bg-red-50); border-color: #ef4444; }
+.status-box.partial { background: var(--ui-bg-red-50); border-color: var(--ui-status-danger); }
 .status-box.partial .status-amount { color: var(--ui-fg-red-800); }
 
 /* Modals */
@@ -309,7 +309,7 @@
 
 .modal textarea:focus {
   outline: none;
-  border-color: #ef4444; /* red focus for refuse modal */
+  border-color: var(--ui-status-danger); /* red focus for refuse modal */
   background: var(--ui-surface);
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
 }
@@ -335,7 +335,7 @@
 
 .input-with-icon input:focus, .modern-input:focus {
   outline: none;
-  border-color: #0074e0;
+  border-color: var(--ui-focus);
   background: var(--ui-surface);
   box-shadow: 0 0 0 3px rgba(0, 116, 224, 0.15);
 }
@@ -344,7 +344,7 @@
   position: absolute;
   right: 15px;
   font-weight: 800;
-  color: var(--ui-text-faint);
+  color: var(--ui-text-muted);
 }
 
 /* Modal Actions */
@@ -366,12 +366,12 @@
 }
 
 .btn-primary {
-  background: #0074e0;
-  color: white;
+  background: var(--ui-brand);
+  color: var(--ui-on-solid);
 }
 
 .btn-primary:hover {
-  background: #005bb5;
+  background: var(--ui-brand-hover);
   box-shadow: 0 4px 12px rgba(0, 116, 224, 0.2);
 }
 
@@ -386,12 +386,12 @@
 }
 
 .btn-danger {
-  background: #ef4444;
-  color: white;
+  background: var(--ui-danger);
+  color: var(--ui-on-solid);
 }
 
 .btn-danger:hover {
-  background: #dc2626;
+  background: var(--ui-danger-hover);
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
 }
 
@@ -448,7 +448,7 @@
 .main-badge {
   background: var(--ui-bg-blue-100);
   color: var(--ui-fg-blue-800);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 800;
   padding: 4px 8px;
   border-radius: 6px;

@@ -1,0 +1,26 @@
+<h3>{{ i18n.t('event.details.raid_buffs') }}</h3>
+<div class="buffs-grid">
+  @for (buff of buffs(); track buff.id) {
+    <div
+      class="buff-card"
+      [class.missing]="!buff.present"
+      [title]="i18n.t('buff.label.' + buff.id)"
+    >
+      <div class="buff-icon">
+        @if (buff.icon.includes('/')) {
+          <img [src]="buff.icon" [alt]="i18n.t('buff.label.' + buff.id)" />
+        } @else {
+          <span aria-hidden="true">{{ buff.icon }}</span>
+        }
+      </div>
+      <div class="buff-info">
+        <span class="buff-label">{{ i18n.t('buff.desc.' + buff.id) }}</span>
+        @if (buff.present) {
+          <span class="buff-count">x{{ buff.count }}</span>
+        } @else {
+          <span class="buff-status">{{ i18n.t('event.details.buff_missing') }}</span>
+        }
+      </div>
+    </div>
+  }
+</div>

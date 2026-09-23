@@ -15,6 +15,18 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { I18nService } from '../../services/i18n';
 import { forkJoin } from 'rxjs';
+import { escapeHtml } from '../../utils/escape-html';
+
+type EventTypeKey = 'raid' | 'mm' | 'reunion' | 'custom';
+
+/** Clé de couleur d'un type d'activité (tokens --ui-event-* dans styles.css). */
+function eventTypeKey(type: string | undefined): EventTypeKey {
+  const t = (type || '').toLowerCase();
+  if (t.includes('raid')) return 'raid';
+  if (t.includes('mm+')) return 'mm';
+  if (t.includes('reunion')) return 'reunion';
+  return 'custom';
+}
 
 @Component({
   selector: 'app-calendar',
@@ -68,21 +80,19 @@ export class CalendarComponent implements OnInit {
       const isCanceled = event.extendedProps['is_canceled'];
       const startTime = event.start ? event.start.toLocaleTimeString(this.i18n.currentLocale() === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' }) : '';
       
-      let typeClass = 'tag-custom';
-      if (type.toLowerCase().includes('raid')) typeClass = 'tag-raid';
-      if (type.toLowerCase().includes('mm+')) typeClass = 'tag-mm';
-      if (type.toLowerCase().includes('reunion')) typeClass = 'tag-reunion';
+      const typeKey = eventTypeKey(type);
+      const typeClass = 'tag-' + typeKey;
 
       // Determine signup status badge html
       let statusHtml = '';
       if (signupStatus === 'signed_up') {
-        statusHtml = '<span class="status-indicator-badge present" title="Présent">✅</span>';
+        statusHtml = `<span class="status-indicator-badge present" title="${this.i18n.t('event.details.status_present')}">✅</span>`;
       } else if (signupStatus === 'standby') {
-        statusHtml = '<span class="status-indicator-badge standby" title="Peut-être">❓</span>';
+        statusHtml = `<span class="status-indicator-badge standby" title="${this.i18n.t('event.details.status_maybe')}">❓</span>`;
       } else if (signupStatus === 'absent') {
-        statusHtml = '<span class="status-indicator-badge absent" title="Absent">❌</span>';
+        statusHtml = `<span class="status-indicator-badge absent" title="${this.i18n.t('event.details.status_absent')}">❌</span>`;
       } else {
-        statusHtml = '<span class="status-indicator-badge none" title="Non répondu">⚪</span>';
+        statusHtml = `<span class="status-indicator-badge none" title="${this.i18n.t('dashboard.attendance.status_unregistered')}">⚪</span>`;
       }
 
       const isReunion = type.toLowerCase() === 'reunion';
@@ -91,27 +101,24 @@ export class CalendarComponent implements OnInit {
       const reunionLabel = isReunion && !isReunionAll ? this.getInvitedGroupsLabel(invitedGroups) : '';
 
       const rosterHtml = rosterName 
-        ? `<div class="event-tag tag-roster">${rosterName.toUpperCase()}</div>` 
+        ? `<div class="event-tag tag-roster">${escapeHtml(rosterName.toUpperCase())}</div>` 
         : (isReunion && !isReunionAll 
-            ? `<div class="event-tag tag-roster" title="${reunionLabel}">${reunionLabel.toUpperCase()}</div>` 
+            ? `<div class="event-tag tag-roster" title="${escapeHtml(reunionLabel)}">${escapeHtml(reunionLabel.toUpperCase())}</div>` 
             : `<div class="event-tag tag-all">${this.i18n.t('calendar.tag_all').toUpperCase()}</div>`);
-
-      const borderStyle = isCanceled 
-        ? 'border-left: 5px solid #94a3b8 !important;' 
-        : (type.toLowerCase() === 'raid' ? 'border-left: 5px solid #e74c3c !important;' : (type.toLowerCase() === 'mm+' ? 'border-left: 5px solid #a29bfe !important;' : (type.toLowerCase() === 'reunion' ? 'border-left: 5px solid #10b981 !important;' : 'border-left: 5px solid #3498db !important;')));
 
       const titlePrefix = isCanceled ? `<span class="canceled-tag">[${this.i18n.t('event.details.canceled')}]</span> ` : '';
 
+      // eventContent injecte du HTML brut : tout texte saisi par un utilisateur est échappé
       return {
         html: `
-          <div class="custom-event-card ${isCanceled ? 'canceled-event' : ''}" style="${borderStyle}">
+          <div class="custom-event-card type-${typeKey} ${isCanceled ? 'canceled-event' : ''}">
             <div class="event-time-row-calendar">
               <div class="event-time">${startTime}</div>
               ${statusHtml}
             </div>
-            <div class="event-title">${titlePrefix}${event.title}</div>
+            <div class="event-title">${titlePrefix}${escapeHtml(event.title)}</div>
             <div class="event-tags-container">
-              <div class="event-tag ${typeClass}">${isReunion ? this.i18n.t('calendar.form.type_reunion').toUpperCase() : type.toUpperCase()}</div>
+              <div class="event-tag ${typeClass}">${isReunion ? this.i18n.t('calendar.form.type_reunion').toUpperCase() : escapeHtml(type.toUpperCase())}</div>
               ${rosterHtml}
             </div>
           </div>
@@ -253,7 +260,7 @@ export class CalendarComponent implements OnInit {
             end: e.end_time,
             allDay: false,
             extendedProps: { ...e, signupStatus },
-            backgroundColor: e.type.toLowerCase() === 'raid' ? '#e74c3c' : (e.type.toLowerCase() === 'mm+' ? '#a29bfe' : (e.type.toLowerCase() === 'reunion' ? '#10b981' : '#3498db'))
+            backgroundColor: `var(--ui-event-${eventTypeKey(e.type)})`
           };
         });
         

@@ -70,9 +70,7 @@
 
                 <!-- Status Badge -->
                 @if (event.is_canceled) {
-                  <span
-                    class="mobile-status-badge absent"
-                    style="background: #94a3b8 !important; color: #ffffff !important"
+                  <span class="mobile-status-badge canceled"
                     >🚫 {{ i18n.t('event.details.canceled') }}</span
                   >
                 }

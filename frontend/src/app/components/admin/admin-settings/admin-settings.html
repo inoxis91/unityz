@@ -8,10 +8,7 @@
   @if (!isLoading()) {
     <div class="settings-layout">
       <!-- Left column: General + Discord settings -->
-      <div
-        class="settings-column"
-        style="flex: 1.2; display: flex; flex-direction: column; gap: 2rem"
-      >
+      <div class="settings-column">
         <!-- General Guild Settings (Fees/Cotisations) - ALWAYS UNLOCKED -->
         <div class="settings-form-box general-settings-box">
           <h3>{{ i18n.t('admin.settings.title') }}</h3>
@@ -31,20 +28,9 @@
             </div>
           </div>
           @if (feesEnabled()) {
-            <div class="form-group" style="margin-top: 1.5rem">
+            <div class="form-group spaced">
               <label>{{ i18n.t('admin.settings.min_fee') }}</label>
-              <div
-                class="input-mimic gold-input-mimic"
-                style="
-                  display: flex;
-                  align-items: center;
-                  background: #0f172a;
-                  border: 1px solid rgba(255, 255, 255, 0.08);
-                  border-radius: 6px;
-                  padding: 0.65rem 0.85rem;
-                  gap: 0.5rem;
-                "
-              >
+              <div class="input-mimic gold-input-mimic">
                 <input
                   type="number"
                   [ngModel]="minimumFeeAmount()"
@@ -53,44 +39,20 @@
                   placeholder="ex: 2000"
                   min="0"
                   required
-                  style="
-                    background: none;
-                    border: none;
-                    color: #ffffff;
-                    font-size: 0.9rem;
-                    width: 100%;
-                    outline: none;
-                  "
+                  [attr.aria-label]="i18n.t('admin.settings.min_fee')"
                 />
-                <span class="unit" style="color: #f59e0b; font-weight: 800; font-size: 0.85rem"
-                  >PO</span
-                >
+                <span class="unit">PO</span>
               </div>
-              <p
-                class="help-text"
-                style="color: var(--ui-text-muted); font-size: 0.8rem; margin: 0.25rem 0 0 0; text-align: left"
-              >
+              <p class="help-text">
                 {{ i18n.t('admin.settings.min_fee_help') }}
               </p>
             </div>
           }
           <!-- Disclaimers for Discord Notifications in Unpaid/Medium plan -->
           @if (!isPro() && feesEnabled()) {
-            <div
-              class="discord-unpaid-disclaimer"
-              style="
-                display: flex;
-                gap: 0.75rem;
-                background: rgba(245, 158, 11, 0.04);
-                border: 1px solid rgba(245, 158, 11, 0.15);
-                border-radius: 6px;
-                padding: 1rem;
-                margin-top: 1.5rem;
-                text-align: left;
-              "
-            >
-              <span style="font-size: 1.25rem; line-height: 1">⚠️</span>
-              <p style="font-size: 0.82rem; color: var(--ui-fg-amber-600); margin: 0; line-height: 1.45">
+            <div class="discord-unpaid-disclaimer">
+              <span class="disclaimer-icon" aria-hidden="true">⚠️</span>
+              <p class="disclaimer-text">
                 <strong>{{ i18n.t('admin.settings.restriction_title') }}</strong>
                 {{ i18n.t('admin.settings.restriction_desc') }}
               </p>
@@ -98,10 +60,9 @@
           }
           <button
             type="button"
-            class="btn-save"
+            class="btn-save block"
             (click)="saveSettings()"
             [disabled]="isSaving()"
-            style="width: 100%; margin-top: 1.5rem"
           >
             {{ isSaving() ? i18n.t('admin.settings.saving') : i18n.t('admin.settings.save_btn') }}
           </button>
@@ -141,31 +102,18 @@
               </div>
             </div>
             @if (discordEnabled() && isPro()) {
-              <div class="form-group" style="margin-top: 1rem">
+              <div class="form-group spaced-sm">
                 <label>{{ i18n.t('admin.settings.discord_locale') }}</label>
                 <select
                   [ngModel]="discordLocale()"
                   (ngModelChange)="discordLocale.set($event)"
                   name="discordLocale"
                   class="custom-select"
-                  style="
-                    background: #0f172a;
-                    border: 1px solid rgba(255, 255, 255, 0.08);
-                    border-radius: 6px;
-                    padding: 0.65rem 0.85rem;
-                    color: #ffffff;
-                    font-size: 0.9rem;
-                    outline: none;
-                    width: 100%;
-                  "
                 >
                   <option value="en">{{ i18n.t('admin.settings.discord_locale_en') }}</option>
                   <option value="fr">{{ i18n.t('admin.settings.discord_locale_fr') }}</option>
                 </select>
-                <p
-                  class="help-text"
-                  style="color: var(--ui-text-muted); font-size: 0.8rem; margin: 0.25rem 0 0 0; text-align: left"
-                >
+                <p class="help-text">
                   {{ i18n.t('admin.settings.discord_locale_help') }}
                 </p>
               </div>

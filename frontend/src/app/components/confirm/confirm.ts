@@ -74,11 +74,11 @@ import { ConfirmService } from '../../services/confirm';
         transition: all 0.2s;
       }
       .btn-primary {
-        background: #0074e0;
-        color: white;
+        background: var(--ui-brand);
+        color: var(--ui-on-solid);
       }
       .btn-primary:hover {
-        background: #0062be;
+        background: var(--ui-brand-hover);
         transform: translateY(-2px);
       }
       .btn-secondary {

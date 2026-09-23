@@ -1,4 +1,379 @@
-/* Participants component styles - mostly inherited from event-details global stylesheet */
+/* Moved from event-details.css (component used to be ViewEncapsulation.None) */
+.content-grid {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 2rem;
+}
+
+.form-card,
+.list-card {
+  background: var(--ui-surface);
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Participants List */
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.list-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-counts {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.count-badge.present {
+  background: var(--ui-bg-green-50);
+  color: var(--ui-fg-green-800);
+  border: 1px solid var(--ui-bd-green-200);
+}
+
+.count-badge.standby {
+  background: var(--ui-bg-amber-50);
+  color: var(--ui-fg-amber-800);
+  border: 1px solid var(--ui-bd-amber-100);
+}
+
+.count-badge.absent {
+  background: var(--ui-bg-red-50);
+  color: var(--ui-fg-red-800);
+  border: 1px solid var(--ui-bd-red-100);
+}
+
+.sort-controls {
+  display: flex;
+  background: var(--ui-surface-subtle);
+  padding: 4px;
+  border-radius: 10px;
+  gap: 4px;
+}
+
+.sort-controls button {
+  background: none;
+  border: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+  opacity: 0.5;
+}
+
+.sort-controls button:hover {
+  background: rgba(var(--ui-surface-rgb), 0.5);
+  opacity: 1;
+}
+
+.sort-controls button.active {
+  background: var(--ui-surface);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  opacity: 1;
+}
+
+.participant-card.clickable {
+  cursor: pointer;
+}
+
+.count-badge {
+  background: var(--ui-accent);
+  color: var(--ui-on-solid);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.participants-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.participant-card {
+  border-radius: 16px;
+  padding: 1.25rem;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.participant-card:hover {
+  transform: translateX(4px);
+  filter: brightness(1.05);
+}
+
+.participant-card.is-absent {
+  opacity: 0.55;
+  border-style: dashed;
+}
+
+/* Borders for status on colored cards */
+
+.participant-card.signed_up {
+  border-left: 12px solid var(--ui-status-success);
+}
+
+.participant-card.standby {
+  border-left: 12px solid var(--ui-status-warning);
+}
+
+.participant-card.absent {
+  border-left: 12px solid var(--ui-status-danger);
+}
+
+.participant-main {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.role-icon-box {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.role-icon-box .role-icon-img {
+  width: 28px;
+  height: 28px;
+}
+
+.char-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.participant-name {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: inherit;
+}
+
+.signup-time {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ui-on-solid) !important;
+  background: rgba(15, 23, 42, 0.45) !important;
+  padding: 3px 8px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-top: 4px;
+  width: fit-content;
+  letter-spacing: 0.3px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  text-shadow: none !important;
+}
+
+.participant-comment {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  /* Neutral bubble: readable whatever the class fill behind it */
+  background: rgba(var(--ui-surface-rgb), 0.88);
+  border-radius: 10px;
+  color: var(--ui-text-primary);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* Inscription Form Styling */
+
+.status-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.status-btn {
+  padding: 12px;
+  border: 2px solid var(--ui-border);
+  border-radius: 12px;
+  background: var(--ui-surface);
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.status-btn .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ui-surface-stronger);
+}
+
+.status-btn.present.active {
+  border-color: var(--ui-status-success);
+  background: var(--ui-bg-green-50);
+  color: var(--ui-fg-green-800);
+}
+
+.status-btn.present.active .dot {
+  background: var(--ui-status-success);
+}
+
+.status-btn.standby.active {
+  border-color: var(--ui-status-warning);
+  background: var(--ui-bg-amber-50);
+  color: var(--ui-fg-amber-800);
+}
+
+.status-btn.standby.active .dot {
+  background: var(--ui-status-warning);
+}
+
+.status-btn.absent.active {
+  border-color: var(--ui-status-danger);
+  background: var(--ui-bg-red-50);
+  color: var(--ui-fg-red-800);
+}
+
+.status-btn.absent.active .dot {
+  background: var(--ui-status-danger);
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--ui-text-primary);
+}
+
+.modern-select,
+textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--ui-border-subtle);
+  border-radius: 12px;
+  background: var(--ui-surface-muted);
+  font-size: 1rem;
+  outline: none;
+}
+
+.modern-select:focus,
+textarea:focus {
+  border-color: var(--ui-focus);
+}
+
+.role-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.role-selector button {
+  padding: 12px 8px;
+  border: 2px solid var(--ui-border-subtle);
+  background: var(--ui-surface-muted);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.role-selector button.active {
+  background: var(--ui-accent);
+  color: var(--ui-on-solid);
+  border-color: var(--ui-status-info);
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+}
+
+.warning-box {
+  background: var(--ui-bg-amber-50);
+  border: 1px solid var(--ui-bd-amber-100);
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.warning-box.locked-warning {
+  background: var(--ui-bg-red-50);
+  border-color: var(--ui-bd-red-300);
+  color: var(--ui-fg-red-800);
+}
+
+.btn-action {
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s;
+  border: none;
+}
+
+.btn-action.confirm {
+  background: var(--ui-brand);
+  color: var(--ui-on-solid);
+  box-shadow: 0 4px 12px rgba(0, 116, 224, 0.2);
+}
+
+.btn-action.confirm:hover:not(:disabled) {
+  background: var(--ui-brand-hover);
+  transform: translateY(-2px);
+}
+
+.btn-action:disabled {
+  background: var(--ui-surface-stronger) !important;
+  color: var(--ui-text-muted) !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 1024px) {
+  .content-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .form-card,
+  .list-card {
+    padding: 1.25rem;
+  }
+}
 
 /* Statut de line-up raid sur la carte participant */
 .lineup-chip {
@@ -8,12 +383,32 @@
   width: fit-content;
   padding: 3px 8px;
   border-radius: 6px;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  color: #ffffff;
+  color: var(--ui-on-solid);
   text-shadow: none;
 }
-.lineup-chip.selected { background: #16a34a; }
-.lineup-chip.benched { background: #475569; }
+.lineup-chip.selected {
+  background: var(--ui-success);
+}
+.lineup-chip.benched {
+  background: var(--ui-neutral);
+}
+
+.warning-box.spaced {
+  margin-bottom: 1rem;
+}
+
+.sort-controls .sort-date {
+  display: flex;
+  gap: 4px;
+  width: auto;
+  min-width: 32px;
+  padding: 0 6px;
+}
+
+.sort-arrow {
+  font-size: 0.75rem;
+}

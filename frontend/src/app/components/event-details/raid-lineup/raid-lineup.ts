@@ -16,7 +16,7 @@ import {
 import { ConfirmService } from '../../../services/confirm';
 import { I18nService } from '../../../services/i18n';
 import { ToastService } from '../../../services/toast';
-import { computeBuffs } from '../composition/composition';
+import { RaidBuffsComponent, computeBuffs } from '../raid-buffs/raid-buffs';
 import { LineupCardComponent } from './lineup-card/lineup-card';
 import { hasForcedRole, signupClassCss, signupDisplayName } from './lineup-utils';
 
@@ -35,7 +35,7 @@ const ERROR_KEYS: Record<string, string> = {
 @Component({
   selector: 'app-raid-lineup',
   standalone: true,
-  imports: [DragDropModule, LineupCardComponent],
+  imports: [DragDropModule, LineupCardComponent, RaidBuffsComponent],
   templateUrl: './raid-lineup.html',
   styleUrl: './raid-lineup.css',
 })

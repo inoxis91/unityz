@@ -31,8 +31,8 @@
 }
 
 .admin-tabs button.active {
-  background: #0074e0;
-  color: white;
+  background: var(--ui-brand);
+  color: var(--ui-on-solid);
 }
 
 .tab-content {

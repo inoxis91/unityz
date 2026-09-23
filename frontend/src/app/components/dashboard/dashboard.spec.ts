@@ -7,6 +7,8 @@ import { AuthService } from '../../services/auth';
 import { I18nService } from '../../services/i18n';
 import { CharacterService } from '../../services/character';
 import { CalendarService } from '../../services/calendar';
+import { RosterService } from '../../services/roster';
+import { FeeService } from '../../services/fee';
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent;
@@ -53,6 +55,8 @@ describe('DashboardComponent', () => {
         { provide: I18nService, useValue: mockI18nService },
         { provide: CharacterService, useValue: mockCharacterService },
         { provide: CalendarService, useValue: mockCalendarService },
+        { provide: RosterService, useValue: { getMyRoster: () => of(null) } },
+        { provide: FeeService, useValue: { loadMyAllocations: () => of([]) } },
         { provide: ActivatedRoute, useValue: { queryParams: of({}) } }
       ]
     }).compileComponents();

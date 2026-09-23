@@ -5,7 +5,7 @@
 
 h2 {
   color: var(--ui-text-strong);
-  border-bottom: 2px solid #0074e0;
+  border-bottom: 2px solid var(--ui-brand);
   padding-bottom: 10px;
 }
 .main-cell {
@@ -31,11 +31,16 @@ h2 {
   font-weight: 600;
 }
 
+/* Narrow screens: scroll the table instead of the page */
+.table-scroll {
+  margin-top: 1rem;
+  overflow-x: auto;
+}
+
 .char-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0 8px;
-  margin-top: 1rem;
 }
 
 .char-table tr {
@@ -101,13 +106,13 @@ h2 {
   opacity: 1;
   filter: grayscale(0);
   background: var(--ui-surface);
-  border-color: #3b82f6;
+  border-color: var(--ui-status-info);
   box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
 }
 
-.role-toggle.tank.active { background: var(--ui-bg-blue-50); border-color: #3b82f6; }
-.role-toggle.heal.active { background: var(--ui-bg-green-50); border-color: #22c55e; }
-.role-toggle.dps.active { background: var(--ui-bg-red-50); border-color: #ef4444; }
+.role-toggle.tank.active { background: var(--ui-role-tank-bg); border-color: var(--ui-role-tank); }
+.role-toggle.heal.active { background: var(--ui-role-heal-bg); border-color: var(--ui-role-heal); }
+.role-toggle.dps.active { background: var(--ui-role-dps-bg); border-color: var(--ui-role-dps); }
 
 .actions-cell {
   text-align: center;
@@ -120,19 +125,19 @@ h2 {
   cursor: pointer;
   padding: 8px;
   border-radius: 10px;
-  color: var(--ui-text-faint);
+  color: var(--ui-text-muted);
   transition: all 0.2s;
 }
 
 .btn-remove-icon:hover {
   background: var(--ui-bg-red-50);
-  color: var(--ui-fg-red-500);
+  color: var(--ui-fg-red-600);
   transform: scale(1.1);
 }
 
 .btn-fetch {
-  background-color: #0074e0;
-  color: white;
+  background-color: var(--ui-brand);
+  color: var(--ui-on-solid);
   border: none;
   padding: 10px 20px;
   border-radius: 4px;
@@ -140,8 +145,8 @@ h2 {
 }
 
 .btn-import {
-  background-color: #28a745;
-  color: white;
+  background-color: var(--ui-success);
+  color: var(--ui-on-solid);
   border: none;
   padding: 8px 16px;
   border-radius: 4px;
@@ -177,7 +182,7 @@ h2 {
 .bnet-char-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  border-color: #3b82f6;
+  border-color: var(--ui-status-info);
 }
 
 .char-info {
@@ -201,7 +206,7 @@ h2 {
   align-self: flex-start;
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--ui-fg-blue-500);
+  color: var(--ui-fg-blue-600);
   background: rgba(59, 130, 246, 0.1);
   padding: 0.15rem 0.5rem;
   border-radius: 4px;

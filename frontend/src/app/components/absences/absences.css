@@ -85,7 +85,7 @@
 
 .form-control:focus {
   outline: none;
-  border-color: #0074e0;
+  border-color: var(--ui-focus);
   box-shadow: 0 0 0 3px rgba(0, 116, 224, 0.15);
 }
 
@@ -94,8 +94,8 @@ textarea.form-control {
 }
 
 .btn-primary {
-  background: #0074e0;
-  color: white;
+  background: var(--ui-brand);
+  color: var(--ui-on-solid);
   border: none;
   padding: 0.85rem 1.5rem;
   font-size: 1rem;
@@ -107,7 +107,7 @@ textarea.form-control {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #0062be;
+  background: var(--ui-brand-hover);
   transform: translateY(-2px);
   box-shadow: 0 6px 15px rgba(0, 116, 224, 0.3);
 }
@@ -209,14 +209,14 @@ textarea.form-control {
   max-width: 250px;
   color: var(--ui-text-muted);
   white-space: normal;
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 768px) {
   .reason-cell {
     max-width: 150px;
     white-space: normal;
-    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 }
 
@@ -230,7 +230,7 @@ textarea.form-control {
 
 .btn-delete {
   background-color: var(--ui-bg-red-50);
-  color: var(--ui-fg-red-500);
+  color: var(--ui-fg-red-600);
   border: 1px solid var(--ui-bd-red-100);
   padding: 0.5rem 1rem;
   border-radius: 8px;
@@ -244,9 +244,9 @@ textarea.form-control {
 }
 
 .btn-delete:hover {
-  background-color: #ef4444;
-  color: white;
-  border-color: #ef4444;
+  background-color: var(--ui-danger);
+  color: var(--ui-on-solid);
+  border-color: var(--ui-status-danger);
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
 }
 

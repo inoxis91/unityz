@@ -1,35 +1,6 @@
 <!-- MODE: RAID -->
 @if (event?.type?.toLowerCase() !== 'mm+') {
-  <div class="buffs-container animated-fade-in">
-    <h3>{{ i18n.t('event.details.raid_buffs') }}</h3>
-    <div class="buffs-grid">
-      @for (buff of buffs(); track buff) {
-        <div
-          class="buff-card"
-          [class.missing]="!buff.present"
-          [title]="i18n.t('buff.label.' + buff.id)"
-        >
-          <div class="buff-icon">
-            @if (buff.icon.includes('/')) {
-              <img [src]="buff.icon" [alt]="i18n.t('buff.label.' + buff.id)" />
-            }
-            @if (!buff.icon.includes('/')) {
-              <span>{{ buff.icon }}</span>
-            }
-          </div>
-          <div class="buff-info">
-            <span class="buff-label">{{ i18n.t('buff.desc.' + buff.id) }}</span>
-            @if (buff.present) {
-              <span class="buff-count">x{{ buff.count }}</span>
-            }
-            @if (!buff.present) {
-              <span class="buff-status">{{ i18n.t('event.details.buff_missing') }}</span>
-            }
-          </div>
-        </div>
-      }
-    </div>
-  </div>
+  <app-raid-buffs class="animated-fade-in" [buffs]="buffs()" />
   <div class="composition-layout">
     <div class="role-column tanks">
       <div class="column-header">
@@ -43,7 +14,7 @@
         @for (s of tanks(); track s) {
           <div
             class="modern-comp-card clickable"
-            [class]="'class-' + getClassCategory(s.character_class || s.main_character_class)"
+            [class]="'bg-class-' + getClassCategory(s.character_class || s.main_character_class)"
             (click)="onOpenAltsModal(s)"
           >
             <div class="card-content">
@@ -67,7 +38,7 @@
         @for (s of heals(); track s) {
           <div
             class="modern-comp-card clickable"
-            [class]="'class-' + getClassCategory(s.character_class || s.main_character_class)"
+            [class]="'bg-class-' + getClassCategory(s.character_class || s.main_character_class)"
             (click)="onOpenAltsModal(s)"
           >
             <div class="card-content">
@@ -91,7 +62,7 @@
         @for (s of dps(); track s) {
           <div
             class="modern-comp-card clickable"
-            [class]="'class-' + getClassCategory(s.character_class || s.main_character_class)"
+            [class]="'bg-class-' + getClassCategory(s.character_class || s.main_character_class)"
             (click)="onOpenAltsModal(s)"
           >
             <div class="card-content">
@@ -129,7 +100,7 @@
         @for (m of unassignedMembers(); track m.user_id) {
           <div
             class="mm-member-card"
-            [class]="'class-' + getClassCategory(m.character_class || m.main_character_class)"
+            [class]="'bg-class-' + getClassCategory(m.character_class || m.main_character_class)"
             [class.can-drag]="canManageEvents"
             [cdkDragDisabled]="!canManageEvents"
             [cdkDragData]="m"
@@ -230,7 +201,7 @@
                     <div
                       class="mm-member-card small"
                       [class]="
-                        'class-' + getClassCategory(m.character_class || m.main_character_class)
+                        'bg-class-' + getClassCategory(m.character_class || m.main_character_class)
                       "
                       [cdkDragData]="m"
                       cdkDrag
@@ -269,7 +240,7 @@
                     <div
                       class="mm-member-card small"
                       [class]="
-                        'class-' + getClassCategory(m.character_class || m.main_character_class)
+                        'bg-class-' + getClassCategory(m.character_class || m.main_character_class)
                       "
                       [cdkDragData]="m"
                       cdkDrag
@@ -308,7 +279,7 @@
                     <div
                       class="mm-member-card small"
                       [class]="
-                        'class-' + getClassCategory(m.character_class || m.main_character_class)
+                        'bg-class-' + getClassCategory(m.character_class || m.main_character_class)
                       "
                       [cdkDragData]="m"
                       cdkDrag

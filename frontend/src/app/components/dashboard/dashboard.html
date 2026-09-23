@@ -80,7 +80,12 @@
         <div class="main-char-display" [class]="'bg-class-' + getClassCategory(char.class)">
           @if (getCharacterImage(); as imageUrl) {
             <div class="char-image-container">
-              <img [src]="imageUrl" alt="Character Render" class="char-render" referrerpolicy="no-referrer" />
+              <img
+                [src]="imageUrl"
+                alt="Character Render"
+                class="char-render"
+                referrerpolicy="no-referrer"
+              />
             </div>
           }
           <div class="char-content">
@@ -166,87 +171,8 @@
         </div>
       }
     </section>
-    <!-- Birthday Section -->
     @if (birthdays().length > 0) {
-      <section class="birthday-announcements animated-fade-in" style="margin-bottom: 2.5rem">
-        <div
-          class="birthday-card"
-          style="
-            background: linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%);
-            border: 1px solid #fde8bb;
-            border-radius: 24px;
-            padding: 1.75rem;
-            display: flex;
-            align-items: center;
-            gap: 1.75rem;
-            box-shadow: 0 4px 20px rgba(251, 191, 36, 0.08);
-          "
-        >
-          <div
-            class="birthday-icon"
-            style="font-size: 2.8rem; line-height: 1; animation: bdayBounce 2s infinite"
-          >
-            🎂
-          </div>
-          <div class="birthday-messages" style="flex-grow: 1">
-            <h2
-              style="
-                margin: 0 0 0.5rem 0;
-                font-size: 1.25rem;
-                font-weight: 800;
-                color: var(--ui-fg-amber-700);
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-              "
-            >
-              {{ i18n.t('dashboard.birthday.title') }}
-            </h2>
-            <div class="messages-list" style="display: flex; flex-direction: column; gap: 0.5rem">
-              @for (bday of birthdays(); track bday.id) {
-                <div
-                  class="birthday-item"
-                  style="font-size: 1.05rem; color: var(--ui-fg-amber-800); font-weight: 600"
-                >
-                  @if (isBirthdayToday(bday.birthday)) {
-                    <span
-                      class="special-bday"
-                      style="
-                        background: linear-gradient(90deg, #f59e0b, #ef4444);
-                        -webkit-background-clip: text;
-                        -webkit-text-fill-color: transparent;
-                        font-weight: 800;
-                        font-size: 1.1rem;
-                        display: inline-flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                        animation: bdayPulse 1.5s infinite;
-                      "
-                    >
-                      {{ i18n.t('dashboard.birthday.today_prefix')
-                      }}<strong>{{ bday.main_character }}</strong
-                      >{{ i18n.t('dashboard.birthday.today_suffix') }}
-                    </span>
-                  } @else {
-                    <span
-                      class="month-bday"
-                      style="display: inline-flex; align-items: center; gap: 0.4rem"
-                    >
-                      {{ i18n.t('dashboard.birthday.month_prefix')
-                      }}<strong>{{ bday.main_character }}</strong
-                      >{{
-                        i18n
-                          .t('dashboard.birthday.month_suffix')
-                          .replace('{date}', formatBirthdayDay(bday.birthday))
-                      }}
-                    </span>
-                  }
-                </div>
-              }
-            </div>
-          </div>
-        </div>
-      </section>
+      <app-dashboard-birthdays class="animated-fade-in" [birthdays]="birthdays()" />
     }
     <div class="dashboard-grid">
       <!-- Upcoming Events Column -->
@@ -376,226 +302,8 @@
         </div>
       </section>
     </div>
-    <!-- Warcraft Logs Parses Section -->
-    <section
-      class="parses-section animated-fade-in"
-      style="margin-top: 2.5rem; margin-bottom: 2.5rem"
-    >
-      <div class="section-header flex-header">
-        <div class="header-titles">
-          <h2>{{ i18n.t('dashboard.parses.title') }}</h2>
-          @if (selectedCharacter()) {
-            <p class="subtitle">
-              {{ i18n.t('dashboard.parses.subtitle') }} —
-              <strong
-                class="char-highlight"
-                [class]="'class-' + getClassCategory(selectedCharacter()?.class)"
-                >{{ selectedCharacter()?.name }}</strong
-              >
-            </p>
-          }
-        </div>
-        @if (myParses() && selectedCharacter()) {
-          <div class="header-actions">
-            <a
-              [href]="
-                characterService.getWarcraftLogsUrl(
-                  selectedCharacter()?.name,
-                  selectedCharacter()?.realm
-                )
-              "
-              target="_blank"
-              class="wcl-btn"
-            >
-              <img src="assets/icons/warcraftlogs.png" alt="WCL" class="wcl-mini-icon" />
-              {{ i18n.t('dashboard.parses.view_wcl') }}
-            </a>
-          </div>
-        }
-      </div>
-      <!-- Main Character Parse Card -->
-      @if (mainCharacter()) {
-        <div class="parses-card">
-          <!-- Loading State -->
-          @if (loadingParses()) {
-            <div class="parses-loading">
-              <div class="spinner"></div>
-              <p>{{ i18n.t('dashboard.parses.loading') }}</p>
-            </div>
-          }
-          <!-- Content State -->
-          @if (!loadingParses() && myParses(); as parses) {
-            <div class="parses-header-row">
-              <div class="parses-tabs">
-                <button
-                  class="tab-btn"
-                  [class.active]="parsesTab() === 'raid'"
-                  (click)="parsesTab.set('raid')"
-                >
-                  🛡️ {{ i18n.t('dashboard.parses.raid') }}
-                </button>
-                <button
-                  class="tab-btn"
-                  [class.active]="parsesTab() === 'dungeon'"
-                  (click)="parsesTab.set('dungeon')"
-                >
-                  🌀 {{ i18n.t('dashboard.parses.dungeons') }}
-                </button>
-              </div>
-              <div class="parses-controls">
-                <!-- Character Dropdown -->
-                <div class="control-group">
-                  <label>{{ i18n.t('dashboard.parses.character_label') }}</label>
-                  <select class="styled-select" (change)="onCharacterChange($event)">
-                    @for (c of myCharacters(); track c.id) {
-                      <option [value]="c.id" [selected]="c.id === selectedCharacterId()">
-                        {{ c.name }} ({{ c.realm }})
-                      </option>
-                    }
-                  </select>
-                </div>
-                <!-- Difficulty Dropdown (only for Raid) -->
-                @if (parsesTab() === 'raid') {
-                  <div class="control-group">
-                    <label>{{ i18n.t('dashboard.parses.difficulty_label') }}</label>
-                    <select class="styled-select" (change)="onDifficultyChange($event)">
-                      <option [value]="3" [selected]="selectedDifficulty() === 3">
-                        {{ i18n.t('difficulty.3') }}
-                      </option>
-                      <option [value]="4" [selected]="selectedDifficulty() === 4">
-                        {{ i18n.t('difficulty.4') }}
-                      </option>
-                      <option [value]="5" [selected]="selectedDifficulty() === 5">
-                        {{ i18n.t('difficulty.5') }}
-                      </option>
-                    </select>
-                  </div>
-                }
-              </div>
-            </div>
-            <div class="parses-content-container">
-              <!-- Left side: Summary -->
-              <div class="parses-summary-col">
-                <div class="summary-metric-box">
-                  <span class="box-label">{{ i18n.t('dashboard.parses.best_average') }}</span>
-                  <div class="box-value-container">
-                    <span
-                      class="box-value"
-                      [class]="
-                        getParseColorClass(
-                          parsesTab() === 'raid'
-                            ? parses.raidRankings.bestPerformanceAverage
-                            : parses.dungeonRankings.bestPerformanceAverage
-                        )
-                      "
-                    >
-                      {{
-                        parsesTab() === 'raid'
-                          ? parses.raidRankings.bestPerformanceAverage
-                          : parses.dungeonRankings.bestPerformanceAverage
-                      }}
-                    </span>
-                    <span class="percent-sign">%</span>
-                  </div>
-                  <div
-                    class="parse-rank-indicator"
-                    [class]="
-                      getParseColorClass(
-                        parsesTab() === 'raid'
-                          ? parses.raidRankings.bestPerformanceAverage
-                          : parses.dungeonRankings.bestPerformanceAverage
-                      )
-                    "
-                  >
-                    <span class="bullet">●</span>
-                    <span class="text">
-                      {{ i18n.t('dashboard.attendance.current_month') }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <!-- Right side: Grid of specific encounters -->
-              <div class="parses-grid-col">
-                <div class="encounters-grid">
-                  @for (
-                    p of parsesTab() === 'raid'
-                      ? parses.raidRankings.rankings
-                      : parses.dungeonRankings.rankings;
-                    track p.encounterId
-                  ) {
-                    <div class="encounter-row">
-                      <div class="encounter-info">
-                        <div class="encounter-title-row">
-                          <span class="enc-name">{{ i18n.t('encounter.' + p.encounterId) }}</span>
-                          @if (p.difficulty) {
-                            <span class="difficulty-badge" [class]="'diff-' + p.difficulty">
-                              {{
-                                p.difficulty === 10 && p.keyLevel
-                                  ? 'Clef +' + p.keyLevel
-                                  : i18n.t('difficulty.' + p.difficulty)
-                              }}
-                            </span>
-                          }
-                        </div>
-                        <span class="enc-spec">{{ p.spec || 'N/A' }}</span>
-                      </div>
-                      <div class="encounter-percentile-container">
-                        <div class="percentile-badge" [class]="getParseColorClass(p.percentile)">
-                          {{
-                            p.percentile !== null && p.percentile !== undefined ? p.percentile : '-'
-                          }}
-                        </div>
-                        <div class="encounter-progress-bg">
-                          <div
-                            class="encounter-progress-bar"
-                            [style.width]="
-                              (p.percentile !== null && p.percentile !== undefined
-                                ? p.percentile
-                                : 0) + '%'
-                            "
-                            [class]="getParseColorClass(p.percentile)"
-                          ></div>
-                        </div>
-                        @if (p.rank > 0) {
-                          <div class="encounter-rank">
-                            <span class="rank-label">{{ i18n.t('dashboard.parses.rank') }}</span>
-                            <span class="rank-val">#{{ p.rank | number }}</span>
-                          </div>
-                        }
-                      </div>
-                    </div>
-                  }
-                  @if (
-                    (parsesTab() === 'raid'
-                      ? parses.raidRankings.rankings
-                      : parses.dungeonRankings.rankings
-                    ).length === 0
-                  ) {
-                    <div class="no-parses-empty">
-                      <p>{{ i18n.t('dashboard.parses.no_parses') }}</p>
-                    </div>
-                  }
-                </div>
-              </div>
-            </div>
-          }
-        </div>
-      } @else {
-        <div class="parses-card empty-parses-card">
-          <div class="empty-state">
-            <p>{{ i18n.t('dashboard.parses.no_char') }}</p>
-            <button
-              class="btn-import"
-              [routerLink]="['/options']"
-              [queryParams]="{ tab: 'characters' }"
-            >
-              {{ i18n.t('dashboard.import') }}
-            </button>
-          </div>
-        </div>
-      }
-    </section>
-    
+    <app-dashboard-parses class="animated-fade-in" [characters]="myCharacters()" />
+
     <!-- Bottom Guild Directory Link Button -->
     <div class="dashboard-bottom-directory-banner" routerLink="/guild-characters">
       <div class="banner-content">
@@ -606,7 +314,7 @@
         </div>
       </div>
       <button class="banner-btn">
-        {{ i18n.currentLocale() === 'fr' ? 'Accéder à l\'Annuaire' : 'Access Directory' }} <span class="arrow">→</span>
+        {{ i18n.t('dashboard.directory_cta') }} <span class="arrow" aria-hidden="true">→</span>
       </button>
     </div>
 
@@ -633,7 +341,7 @@
                 <span class="val">{{ att.total_eligible }}</span>
               </div>
             </div>
-            <h3 style="margin-bottom: 1rem; color: var(--ui-text-primary)">
+            <h3 class="attendance-history-title">
               {{ i18n.t('dashboard.attendance.history_title') }}
             </h3>
             <div class="attendance-events-list">
@@ -644,9 +352,7 @@
                     <div class="meta">
                       <span>📅 {{ evt.start_time | date: 'dd MMM yyyy, HH:mm' }}</span>
                       @if (evt.roster_name) {
-                        <span style="color: var(--ui-fg-blue-500); font-weight: 600"
-                          >🔴 {{ evt.roster_name }}</span
-                        >
+                        <span class="roster-tag">🔴 {{ evt.roster_name }}</span>
                       }
                       @if (evt.character_name) {
                         <span class="character-tag"> 🛡️ {{ evt.character_name }} </span>
@@ -672,7 +378,7 @@
                 </div>
               }
               @if (att.events.length === 0) {
-                <p style="text-align: center; color: var(--ui-text-muted); margin-top: 2rem">
+                <p class="attendance-empty">
                   {{ i18n.t('dashboard.attendance.no_events') }}
                 </p>
               }

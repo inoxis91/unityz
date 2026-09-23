@@ -28,9 +28,11 @@ npm run build        # production build (budgets: 1MB warn / 2MB error initial; 
 npm test             # ng test (Vitest via @angular/build:unit-test)
 npx ng test --include src/app/services/auth.spec.ts   # single spec file
 npx prettier --write <file>                            # printWidth 100, singleQuote
+npm run lint:css     # Stylelint: bans hex/named colors and font sizes < 0.75rem in src/app
+npm run e2e          # Playwright + axe contrast checks (light, dark, dark mobile); needs the stack running
 ```
 
-There are no backend tests and no linter configured. `backend/test-wcl.ts` / `backend/fetch-report.ts` are ad-hoc WCL API scripts (`npx ts-node <file>` from `backend/`), not part of the app.
+There are no backend tests and no backend linter. CI (`.github/workflows/ci.yml`) runs Stylelint, unit tests and the build for the frontend, `tsc` for the backend, then the Playwright accessibility suite against Postgres + backend + `ng serve`. `backend/test-wcl.ts` / `backend/fetch-report.ts` are ad-hoc WCL API scripts (`npx ts-node <file>` from `backend/`), not part of the app.
 
 ## Backend architecture
 
@@ -57,6 +59,8 @@ There are no backend tests and no linter configured. `backend/test-wcl.ts` / `ba
 - Onboarding flow: login (Bnet) → `/select-guild` (sets active guild, imports characters) → `/payment` if the guild is unpaid → app.
 - UI strings go through `I18nService.t('key')` (`services/i18n.ts`, fr/en dictionaries in one file). Add keys to **both** locales. `LOCALE_ID` is `fr`.
 - WoW domain constants (classes, specs, icons) live in `constants/wow.ts`; class icons are in `public/assets/icons/class/`.
+- Theming: `ThemeService` sets `<html data-theme="light|dark">` (explicit choice in localStorage, otherwise the OS preference; `index.html` applies it before first paint). All colors in `src/app/**/*.css` must come from the tokens in `src/styles.css` (`--ui-*`, `--color-<class>*`, `--wcl-*`); see `docs/design-tokens.md`. Landing, login, select-guild, payment, navbar and the support widget are dark by design and exempt.
+- Component styles are emulated (no `ViewEncapsulation.None`): shared UI goes into its own component (e.g. `event-details/raid-buffs`) rather than leaking global selectors.
 
 ## Conventions
 

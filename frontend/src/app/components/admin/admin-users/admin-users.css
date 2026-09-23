@@ -96,12 +96,12 @@
 }
 
 .role-select:focus {
-  border-color: #0074e0;
+  border-color: var(--ui-focus);
   box-shadow: 0 0 0 3px rgba(0, 116, 224, 0.1);
 }
 
 .date-cell {
-  color: var(--ui-text-faint);
+  color: var(--ui-text-muted);
   font-size: 0.85rem;
 }
 
@@ -121,7 +121,7 @@
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s;
-  color: var(--ui-fg-red-500);
+  color: var(--ui-fg-red-600);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -130,7 +130,7 @@
 
 .btn-delete-user:hover:not(:disabled) {
   background: var(--ui-bg-red-50);
-  border-color: #ef4444;
+  border-color: var(--ui-status-danger);
   transform: translateY(-2px);
   box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1);
 }
@@ -229,12 +229,12 @@
   border: none;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
-  background: #0074e0;
-  color: white;
+  background: var(--ui-brand);
+  color: var(--ui-on-solid);
 }
 
 .btn-primary:hover {
-  background: #005bb5;
+  background: var(--ui-brand-hover);
   box-shadow: 0 4px 12px rgba(0, 116, 224, 0.2);
 }
 
@@ -278,7 +278,7 @@
 .main-badge {
   background: var(--ui-bg-blue-100);
   color: var(--ui-fg-blue-800);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 800;
   padding: 4px 8px;
   border-radius: 6px;

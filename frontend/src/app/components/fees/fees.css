@@ -9,7 +9,7 @@
 
 /* Discord Warning Section */
 .discord-warning-section { margin-bottom: 2rem; }
-.warning-card { border-color: #f59e0b; background: var(--ui-bg-amber-50); padding: 1.5rem 2rem; border-radius: 20px; border-width: 1px; border-style: solid; }
+.warning-card { border-color: var(--ui-status-warning); background: var(--ui-bg-amber-50); padding: 1.5rem 2rem; border-radius: 20px; border-width: 1px; border-style: solid; }
 .warning-header { display: flex; align-items: center; gap: 10px; margin-bottom: 0.5rem; }
 .warning-header h3 { margin: 0; font-size: 1.2rem; color: var(--ui-fg-amber-700); }
 .warning-icon { font-size: 1.5rem; }
@@ -20,8 +20,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #5865F2;
-  color: white;
+  background: var(--ui-discord);
+  color: var(--ui-on-solid);
   border: none;
   padding: 12px 24px;
   border-radius: 12px;
@@ -33,7 +33,7 @@
 }
 
 .btn-discord-login:hover {
-  background: #4752c4;
+  background: var(--ui-discord-hover);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3);
 }
@@ -83,8 +83,8 @@
 }
 
 .btn-year:hover {
-  background: #0074e0;
-  color: white;
+  background: var(--ui-brand);
+  color: var(--ui-on-solid);
 }
 
 /* Grid & Months */
@@ -100,9 +100,9 @@
 .legend { display: flex; gap: 1rem; }
 .legend-item { font-size: 0.8rem; font-weight: 600; color: var(--ui-text-muted); display: flex; align-items: center; gap: 6px; }
 .dot { width: 8px; height: 8px; border-radius: 50%; }
-.dot.paid { background: #22c55e; }
-.dot.donation { background: #f59e0b; }
-.dot.partial { background: #ef4444; }
+.dot.paid { background: var(--ui-status-success); }
+.dot.donation { background: var(--ui-status-warning); }
+.dot.partial { background: var(--ui-status-danger); }
 
 .months-grid {
   display: grid;
@@ -126,7 +126,7 @@
 .month-box.clickable { cursor: pointer; }
 .month-box.clickable:hover {
   transform: translateY(-4px);
-  border-color: #0074e0;
+  border-color: var(--ui-brand);
   background: var(--ui-surface);
   box-shadow: 0 10px 20px rgba(0, 116, 224, 0.1);
 }
@@ -140,9 +140,9 @@
   bottom: 0;
   left: 0;
   width: 100%;
-  background: #0074e0;
-  color: white;
-  font-size: 0.7rem;
+  background: var(--ui-brand);
+  color: var(--ui-on-solid);
+  font-size: 0.75rem;
   font-weight: 800;
   text-align: center;
   padding: 4px;
@@ -153,9 +153,9 @@
 
 .month-box.clickable:hover .click-hint { transform: translateY(0); }
 
-.month-box.paid { border-color: #22c55e; background: var(--ui-bg-green-50); }
-.month-box.donation { border-color: #f59e0b; background: var(--ui-bg-amber-50); }
-.month-box.partial { border-color: #ef4444; background: var(--ui-bg-red-50); }
+.month-box.paid { border-color: var(--ui-status-success); background: var(--ui-bg-green-50); }
+.month-box.donation { border-color: var(--ui-status-warning); background: var(--ui-bg-amber-50); }
+.month-box.partial { border-color: var(--ui-status-danger); background: var(--ui-bg-red-50); }
 
 /* Layout */
 .main-layout {
@@ -167,7 +167,7 @@
 /* Form Styles */
 .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
 .form-header h3 { margin: 0; }
-.btn-close { background: none; border: none; font-size: 1.5rem; color: var(--ui-text-faint); cursor: pointer; }
+.btn-close { background: none; border: none; font-size: 1.5rem; color: var(--ui-text-muted); cursor: pointer; }
 
 .selected-period {
   background: var(--ui-surface-muted);
@@ -177,7 +177,7 @@
   border: 1px solid var(--ui-border-subtle);
 }
 
-.selected-period .label { font-size: 0.75rem; font-weight: 700; color: var(--ui-text-faint); text-transform: uppercase; }
+.selected-period .label { font-size: 0.75rem; font-weight: 700; color: var(--ui-text-muted); text-transform: uppercase; }
 .period-badge { display: flex; align-items: center; gap: 10px; margin-top: 5px; }
 .period-badge strong { font-size: 1.3rem; color: var(--ui-text-primary); }
 
@@ -212,7 +212,7 @@
 .declaration-form input[type="number"]:focus,
 .declaration-form select:focus,
 .declaration-form textarea:focus {
-  border-color: #0074e0;
+  border-color: var(--ui-focus);
   background: var(--ui-surface);
   box-shadow: 0 0 0 4px rgba(0, 116, 224, 0.1);
 }
@@ -233,12 +233,12 @@
   position: absolute;
   right: 20px;
   font-weight: 800;
-  color: var(--ui-text-faint);
+  color: var(--ui-text-muted);
   pointer-events: none;
 }
 
 .gold-input input {
-  border-color: #f59e0b !important;
+  border-color: var(--ui-status-warning) !important;
   background: var(--ui-bg-amber-50) !important;
 }
 
@@ -246,8 +246,8 @@
   width: 100%;
   padding: 1.25rem;
   border-radius: 16px;
-  background: #0074e0;
-  color: white;
+  background: var(--ui-brand);
+  color: var(--ui-on-solid);
   border: none;
   font-weight: 800;
   font-size: 1.1rem;
@@ -257,7 +257,7 @@
 }
 
 .btn-submit:hover {
-  background: #0062be;
+  background: var(--ui-brand-hover);
   transform: translateY(-2px);
   box-shadow: 0 6px 15px rgba(0, 116, 224, 0.2);
 }
@@ -298,7 +298,7 @@
 .status-badge.rejected { background: var(--ui-bg-red-50); color: var(--ui-fg-red-800); border-color: var(--ui-bd-red-200); }
 .status-badge.accepted { background: var(--ui-bg-green-50); color: var(--ui-fg-green-800); border-color: var(--ui-bd-green-200); }
 
-.decl-header .date { font-size: 0.8rem; color: var(--ui-text-faint); font-weight: 600; }
+.decl-header .date { font-size: 0.8rem; color: var(--ui-text-muted); font-weight: 600; }
 
 .decl-body .main-val { font-size: 1.6rem; font-weight: 800; color: var(--ui-text-primary); }
 .decl-body .details { margin: 4px 0; font-size: 0.95rem; color: var(--ui-text-muted); font-weight: 700; }
@@ -308,11 +308,11 @@
   padding: 12px;
   background: var(--ui-surface);
   border-radius: 12px;
-  border-left: 4px solid #ef4444;
+  border-left: 4px solid var(--ui-status-danger);
   box-shadow: 0 2px 4px rgba(239, 68, 68, 0.05);
 }
 
-.admin-feedback strong { font-size: 0.7rem; color: var(--ui-fg-red-500); text-transform: uppercase; letter-spacing: 0.05em; }
+.admin-feedback strong { font-size: 0.75rem; color: var(--ui-fg-red-600); text-transform: uppercase; letter-spacing: 0.05em; }
 .admin-feedback p { margin: 4px 0 0; font-size: 0.9rem; color: var(--ui-text-primary); font-weight: 500; }
 
 /* Empty States */
@@ -324,14 +324,14 @@
   justify-content: center;
   align-items: center;
   text-align: center;
-  color: var(--ui-text-faint);
+  color: var(--ui-text-muted);
   background: var(--ui-surface-muted);
   border: 2px dashed var(--ui-border);
 }
 
 .empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
 
-.empty-msg { text-align: center; color: var(--ui-text-faint); padding: 2rem; font-style: italic; }
+.empty-msg { text-align: center; color: var(--ui-text-muted); padding: 2rem; font-style: italic; }
 
 @media (max-width: 1024px) {
   .main-layout { grid-template-columns: 1fr; }

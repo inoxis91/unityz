@@ -138,7 +138,7 @@
 
                 <!-- Character Class -->
                 <td class="class-cell text-center">
-                  <div class="class-info-badge">
+                  <div class="class-info-badge inverse-context">
                     <img
                       [src]="getClassIcon(char.class)"
                       [alt]="char.class"
@@ -207,7 +207,7 @@
               <tr>
                 <td colspan="7" class="empty-row text-center">
                   <div class="empty-container">
-                    <span class="empty-icon">👥</span>
+                    <span class="empty-icon" aria-hidden="true">👥</span>
                     <p>{{ i18n.t('admin.characters.no_chars') }}</p>
                   </div>
                 </td>

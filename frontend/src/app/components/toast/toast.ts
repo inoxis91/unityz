@@ -53,17 +53,17 @@ import { ToastService } from '../../services/toast';
         border: 1px solid var(--ui-border-subtle);
       }
       .toast.success {
-        border-left: 6px solid #22c55e;
+        border-left: 6px solid var(--ui-status-success);
         background: var(--ui-bg-green-50);
         color: var(--ui-fg-green-800);
       }
       .toast.error {
-        border-left: 6px solid #ef4444;
+        border-left: 6px solid var(--ui-status-danger);
         background: var(--ui-bg-red-50);
         color: var(--ui-fg-red-800);
       }
       .toast.info {
-        border-left: 6px solid #3b82f6;
+        border-left: 6px solid var(--ui-status-info);
         background: var(--ui-bg-blue-50);
         color: var(--ui-fg-blue-700);
       }

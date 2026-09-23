@@ -1,0 +1,29 @@
+<div class="birthday-card">
+  <div class="birthday-icon" aria-hidden="true">🎂</div>
+  <div class="birthday-messages">
+    <h2>{{ i18n.t('dashboard.birthday.title') }}</h2>
+    <div class="messages-list">
+      @for (bday of birthdays(); track bday.id) {
+        <div class="birthday-item">
+          @if (isBirthdayToday(bday.birthday)) {
+            <span class="special-bday">
+              {{ i18n.t('dashboard.birthday.today_prefix')
+              }}<strong>{{ bday.main_character }}</strong
+              >{{ i18n.t('dashboard.birthday.today_suffix') }}
+            </span>
+          } @else {
+            <span class="month-bday">
+              {{ i18n.t('dashboard.birthday.month_prefix')
+              }}<strong>{{ bday.main_character }}</strong
+              >{{
+                i18n
+                  .t('dashboard.birthday.month_suffix')
+                  .replace('{date}', formatBirthdayDay(bday.birthday))
+              }}
+            </span>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>

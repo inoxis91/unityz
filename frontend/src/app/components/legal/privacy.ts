@@ -243,7 +243,7 @@ import { I18nService } from '../../services/i18n';
         text-align: left;
       }
       .back-link a {
-        color: var(--ui-fg-blue-500);
+        color: var(--ui-fg-blue-600);
         font-weight: 600;
         text-decoration: none;
         font-size: 0.95rem;

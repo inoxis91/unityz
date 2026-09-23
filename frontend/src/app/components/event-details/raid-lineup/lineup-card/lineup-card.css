@@ -1,4 +1,4 @@
-/* La couleur de fond vient des classes globales .class-<classe> (event-details.css). */
+/* Fond et couleur de texte : classes globales .bg-class-<classe> (styles.css). */
 :host {
   position: relative;
   display: flex;
@@ -24,7 +24,7 @@
 }
 
 :host(:focus-visible) {
-  outline: 3px solid #0074e0;
+  outline: 3px solid var(--ui-focus);
   outline-offset: 2px;
 }
 
@@ -34,7 +34,7 @@
 
 :host(.is-pending) {
   border-style: dashed;
-  border-color: rgba(255, 255, 255, 0.85);
+  border-color: currentColor;
 }
 
 :host(.is-benched) {
@@ -44,8 +44,8 @@
 
 :host(.is-me) {
   box-shadow:
-    0 0 0 3px #ffffff,
-    0 0 0 6px #0074e0,
+    0 0 0 3px var(--ui-surface),
+    0 0 0 6px var(--ui-brand),
     0 6px 14px rgba(0, 116, 224, 0.25);
 }
 
@@ -70,8 +70,7 @@
   font-weight: 800;
   font-size: 0.92rem;
   line-height: 1.15;
-  color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  color: inherit;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -88,12 +87,12 @@
 }
 
 .tag {
-  font-size: 0.66rem;
+  font-size: 0.75rem;
   font-weight: 800;
   line-height: 1;
   padding: 3px 6px;
   border-radius: 6px;
-  color: #ffffff;
+  color: var(--ui-on-solid);
   background: rgba(15, 23, 42, 0.5);
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -101,15 +100,16 @@
 }
 
 .tag.me {
-  background: #0074e0;
+  background: var(--ui-brand);
 }
 
 .tag.maybe {
-  background: #d97706;
+  background: var(--ui-warning);
+  color: var(--ui-on-warning);
 }
 
 .tag.forced {
-  background: #7c3aed;
+  background: var(--ui-purple);
 }
 
 .tag.comment {
@@ -126,11 +126,12 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
+  /* stylelint-disable-next-line declaration-property-value-disallowed-list -- glyph only, no text */
   font-size: 0.7rem;
   font-weight: 900;
-  color: #ffffff;
-  background: #16a34a;
-  box-shadow: 0 0 0 2px #ffffff;
+  color: var(--ui-on-solid);
+  background: var(--ui-success);
+  box-shadow: 0 0 0 2px var(--ui-surface);
 }
 
 .quick {
@@ -157,7 +158,7 @@
 }
 
 .quick-btn.select {
-  color: var(--ui-fg-green-600);
+  color: var(--ui-fg-green-700);
 }
 
 .quick-btn:hover {
@@ -173,16 +174,6 @@
 }
 
 .quick-btn:focus-visible {
-  outline: 2px solid #0074e0;
+  outline: 2px solid var(--ui-focus);
   outline-offset: 1px;
-}
-
-/* Prêtre : fond clair, texte sombre (cohérent avec event-details.css) */
-:host(.class-priest) .name {
-  color: var(--ui-text-primary);
-  text-shadow: none;
-}
-
-:host(.class-priest.is-pending) {
-  border-color: #94a3b8;
 }

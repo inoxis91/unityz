@@ -1,1 +1,423 @@
-/* Composition component styles - mostly inherited from event-details global stylesheet */
+/* Moved from event-details.css (component used to be ViewEncapsulation.None) */
+.count-badge.present {
+  background: var(--ui-bg-green-50);
+  color: var(--ui-fg-green-800);
+  border: 1px solid var(--ui-bd-green-200);
+}
+
+.count-badge {
+  background: var(--ui-accent);
+  color: var(--ui-on-solid);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+/* Composition Design */
+
+.composition-layout {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+.column-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+  padding: 10px 16px;
+  background: var(--ui-surface-muted);
+  border-radius: 12px;
+  border: 1px solid var(--ui-border);
+}
+
+.column-header .icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.column-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--ui-text-primary);
+  text-transform: uppercase;
+  flex: 1;
+}
+
+.column-header .count {
+  background: var(--ui-inverse-surface);
+  color: var(--ui-on-solid);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.comp-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dps-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.modern-comp-card {
+  border-radius: 12px;
+  padding: 10px 16px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 45px;
+}
+
+.modern-comp-card.clickable {
+  cursor: pointer;
+}
+
+.modern-comp-card:hover {
+  transform: translateY(-2px) scale(1.03);
+  filter: brightness(1.1);
+}
+
+.modern-comp-card .name {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: inherit;
+}
+
+/* MM+ Composition Mode */
+
+.mm-composition-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.mm-unassigned-panel {
+  background: var(--ui-surface);
+  border-radius: 20px;
+  padding: 1.5rem;
+  border: 1px solid var(--ui-border);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 1rem;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--ui-text-primary);
+  text-transform: uppercase;
+}
+
+.mm-drop-zone {
+  min-height: 100px;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.mm-drop-zone.unassigned {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mm-member-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: var(--ui-surface);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.mm-member-card.can-drag {
+  cursor: grab;
+}
+
+.mm-member-card.can-drag:active {
+  cursor: grabbing;
+}
+
+.mm-member-card .name {
+  font-weight: 800;
+  color: inherit;
+  flex: 1;
+}
+
+.mm-member-card .role-badge {
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+.btn-alts-mini {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+}
+
+.mm-member-card.small {
+  padding: 8px 12px;
+  font-size: 0.9rem;
+}
+
+/* Groups Grid */
+
+.mm-groups-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 1.5rem;
+}
+
+.mm-group-card {
+  background: var(--ui-surface);
+  border-radius: 20px;
+  border: 1px solid var(--ui-border);
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.group-header {
+  padding: 1rem 1.5rem;
+  background: var(--ui-surface-muted);
+  border-bottom: 1px solid var(--ui-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.group-header h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--ui-text-muted);
+  letter-spacing: 1px;
+}
+
+.group-buffs {
+  display: flex;
+  gap: 4px;
+}
+
+.mini-buff {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ui-surface-subtle);
+  border: 1px solid var(--ui-border);
+}
+
+.mini-buff img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.mini-buff.missing {
+  opacity: 0.2;
+  filter: grayscale(1);
+}
+
+.group-zone {
+  padding: 1.5rem;
+  min-height: 150px;
+}
+
+.group-roles {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.role-slot {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.role-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 4px;
+  opacity: 0.8;
+}
+
+.role-label .role-icon-img {
+  width: 24px;
+  height: 24px;
+}
+
+.slot-members {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 40px;
+  background: var(--ui-surface-muted);
+  border-radius: 10px;
+  border: 1px dashed var(--ui-border);
+  padding: 4px;
+}
+
+.slot-members.dps-slots {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.btn-add-group-top {
+  width: 100%;
+  margin-bottom: 1.5rem;
+  padding: 12px;
+  border: 2px solid var(--ui-brand);
+  border-radius: 12px;
+  background: var(--ui-bg-blue-50);
+  color: var(--ui-fg-brand);
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-add-group-top:hover {
+  background: var(--ui-brand);
+  color: var(--ui-on-solid);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 116, 224, 0.2);
+}
+
+.group-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-delete-group {
+  background: var(--ui-bg-red-100);
+  color: var(--ui-fg-red-600);
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.btn-delete-group:hover {
+  background: var(--ui-danger);
+  color: var(--ui-on-solid);
+  transform: scale(1.1);
+}
+
+/* Drag & Drop CDK */
+
+.cdk-drag-preview {
+  box-sizing: border-box;
+  border-radius: 12px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+  opacity: 0.9;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0;
+}
+
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.mm-drop-zone.cdk-drop-list-dragging .mm-member-card:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+@media (max-width: 1200px) {
+  .mm-composition-layout {
+    grid-template-columns: 1fr;
+  }
+  .mm-unassigned-panel {
+    position: static;
+  }
+}
+
+@media (max-width: 1024px) {
+  .composition-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .slot-members.dps-slots {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rio-mini {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--wcl-orange-text);
+  background: var(--ui-surface);
+  padding: 2px 6px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-left: auto;
+}
+
+.rio-micro {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--wcl-orange-text);
+  margin-left: auto;
+  opacity: 0.9;
+  background: rgba(var(--ui-surface-rgb), 0.9);
+  padding: 1px 4px;
+  border-radius: 3px;
+}

@@ -46,7 +46,7 @@ import { ThemeService } from './services/theme';
         <span class="copyright">© 2026 Guild Manager. All rights reserved.</span>
         <div class="footer-links">
           <a routerLink="/terms">{{ i18n.t('footer.terms') }}</a>
-          <span class="dot">•</span>
+          <span class="dot" aria-hidden="true">•</span>
           <a routerLink="/privacy">{{ i18n.t('footer.privacy') }}</a>
         </div>
       </div>
@@ -64,14 +64,14 @@ import { ThemeService } from './services/theme';
       }
 
       .discord-warning-banner {
-        background-color: #ef4444;
-        color: white;
+        background-color: var(--ui-danger);
+        color: var(--ui-on-solid);
         padding: 12px 20px;
         font-size: 0.9rem;
         font-weight: 600;
         width: 100%;
         box-sizing: border-box;
-        border-bottom: 1px solid #dc2626;
+        border-bottom: 1px solid var(--ui-danger-hover);
         z-index: 10;
       }
 
@@ -94,7 +94,7 @@ import { ThemeService } from './services/theme';
       }
 
       .banner-link {
-        color: white;
+        color: inherit;
         text-decoration: underline;
         font-weight: 700;
         transition: opacity 0.2s;
@@ -155,11 +155,11 @@ import { ThemeService } from './services/theme';
       }
 
       .footer-links a:hover {
-        color: var(--ui-fg-blue-500);
+        color: var(--ui-fg-blue-600);
       }
 
       .footer-links .dot {
-        color: rgba(255, 255, 255, 0.08);
+        color: var(--ui-border-strong);
       }
 
       @media (max-width: 600px) {

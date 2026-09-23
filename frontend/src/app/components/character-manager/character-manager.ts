@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, computed, signal, inject } from '@angular/core';
 
 import { CharacterService, Character } from '../../services/character';
 import { FormsModule } from '@angular/forms';
@@ -17,7 +17,13 @@ import { I18nService } from '../../services/i18n';
 export class CharacterManagerComponent implements OnInit {
   public i18n = inject(I18nService);
 
-  bnetCharacters = signal<Character[]>([]);
+  private bnetRoster = signal<Character[]>([]);
+  /** Persos Battle.net pas encore importés (indépendant de l'ordre d'arrivée des deux requêtes). */
+  bnetCharacters = computed(() =>
+    this.bnetRoster().filter(
+      (bc) => !this.myCharacters().some((mc) => mc.name === bc.name && mc.realm === bc.realm),
+    ),
+  );
   myCharacters = signal<Character[]>([]);
   loadingBnet = signal<boolean>(false);
 
@@ -46,12 +52,7 @@ export class CharacterManagerComponent implements OnInit {
     this.loadingBnet.set(true);
     this.characterService.getBnetCharacters().subscribe({
       next: (chars) => {
-        // Filtrer les persos déjà importés
-        const currentMyChars = this.myCharacters();
-        const filtered = chars.filter(
-          (bc) => !currentMyChars.some((mc) => mc.name === bc.name && mc.realm === bc.realm),
-        );
-        this.bnetCharacters.set(filtered);
+        this.bnetRoster.set(chars);
         this.loadingBnet.set(false);
       },
       error: (err) => {
@@ -72,7 +73,7 @@ export class CharacterManagerComponent implements OnInit {
         this.toast.success(
           this.i18n.t('char.manager.toast.add_success').replace('{name}', char.name),
         );
-        this.bnetCharacters.set(this.bnetCharacters().filter((c) => c !== char));
+        this.bnetRoster.update((list) => list.filter((c) => c !== char));
 
         // Rafraîchir l'auth pour débloquer le site si c'est le premier perso
         this.authService.checkAuth().subscribe();

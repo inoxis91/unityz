@@ -18,82 +18,84 @@
     }
 
     @if (myCharacters().length > 0) {
-      <table class="char-table">
-        <thead>
-          <tr>
-            <th>{{ i18n.t('char.manager.th_main') }}</th>
-            <th>{{ i18n.t('char.manager.th_name') }}</th>
-            <th>{{ i18n.t('char.manager.th_realm') }}</th>
-            <th>{{ i18n.t('char.manager.th_level') }}</th>
-            <th>{{ i18n.t('char.manager.th_roles') }}</th>
-            <th>{{ i18n.t('char.manager.th_actions') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (char of myCharacters(); track char) {
-            <tr
-              [class.is-main]="char.is_main"
-              [class]="'border-class-' + getClassCategory(char.class)"
-            >
-              <td class="main-cell">
-                <span
-                  class="main-star"
-                  (click)="setMain(char)"
-                  [title]="
-                    char.is_main
-                      ? i18n.t('char.manager.star_main')
-                      : i18n.t('char.manager.star_set_main')
-                  "
-                >
-                  {{ char.is_main ? '⭐' : '☆' }}
-                </span>
-              </td>
-              <td class="char-name-cell" [class]="'class-' + getClassCategory(char.class)">
-                {{ char.name }}
-              </td>
-              <td>{{ char.realm }}</td>
-              <td>{{ char.level }}</td>
-              <td class="roles-cell">
-                <div class="role-toggles">
-                  <button
-                    class="role-toggle tank"
-                    [class.active]="char.is_tank"
-                    (click)="char.is_tank = !char.is_tank; updateRoles(char)"
-                    [title]="i18n.t('char.role.tooltip.tank')"
-                  >
-                    <img src="assets/icons/tank.png" class="role-icon-img" alt="Tank" />
-                  </button>
-                  <button
-                    class="role-toggle heal"
-                    [class.active]="char.is_heal"
-                    (click)="char.is_heal = !char.is_heal; updateRoles(char)"
-                    [title]="i18n.t('char.role.tooltip.healer')"
-                  >
-                    <img src="assets/icons/heal.png" class="role-icon-img" alt="Heal" />
-                  </button>
-                  <button
-                    class="role-toggle dps"
-                    [class.active]="char.is_dps"
-                    (click)="char.is_dps = !char.is_dps; updateRoles(char)"
-                    [title]="i18n.t('char.role.tooltip.dps')"
-                  >
-                    <img src="assets/icons/dps.png" class="role-icon-img" alt="DPS" />
-                  </button>
-                </div>
-              </td>
-              <td class="actions-cell">
-                <button
-                  (click)="removeCharacter(char)"
-                  class="btn-remove-icon"
-                  [title]="i18n.t('char.manager.delete_btn')"
-                >
-                  🗑️
-                </button>
-              </td>
+      <div class="table-scroll">
+        <table class="char-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('char.manager.th_main') }}</th>
+              <th>{{ i18n.t('char.manager.th_name') }}</th>
+              <th>{{ i18n.t('char.manager.th_realm') }}</th>
+              <th>{{ i18n.t('char.manager.th_level') }}</th>
+              <th>{{ i18n.t('char.manager.th_roles') }}</th>
+              <th>{{ i18n.t('char.manager.th_actions') }}</th>
             </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (char of myCharacters(); track char) {
+              <tr
+                [class.is-main]="char.is_main"
+                [class]="'border-class-' + getClassCategory(char.class)"
+              >
+                <td class="main-cell">
+                  <span
+                    class="main-star"
+                    (click)="setMain(char)"
+                    [title]="
+                      char.is_main
+                        ? i18n.t('char.manager.star_main')
+                        : i18n.t('char.manager.star_set_main')
+                    "
+                  >
+                    {{ char.is_main ? '⭐' : '☆' }}
+                  </span>
+                </td>
+                <td class="char-name-cell" [class]="'class-' + getClassCategory(char.class)">
+                  {{ char.name }}
+                </td>
+                <td>{{ char.realm }}</td>
+                <td>{{ char.level }}</td>
+                <td class="roles-cell">
+                  <div class="role-toggles">
+                    <button
+                      class="role-toggle tank"
+                      [class.active]="char.is_tank"
+                      (click)="char.is_tank = !char.is_tank; updateRoles(char)"
+                      [title]="i18n.t('char.role.tooltip.tank')"
+                    >
+                      <img src="assets/icons/tank.png" class="role-icon-img" alt="Tank" />
+                    </button>
+                    <button
+                      class="role-toggle heal"
+                      [class.active]="char.is_heal"
+                      (click)="char.is_heal = !char.is_heal; updateRoles(char)"
+                      [title]="i18n.t('char.role.tooltip.healer')"
+                    >
+                      <img src="assets/icons/heal.png" class="role-icon-img" alt="Heal" />
+                    </button>
+                    <button
+                      class="role-toggle dps"
+                      [class.active]="char.is_dps"
+                      (click)="char.is_dps = !char.is_dps; updateRoles(char)"
+                      [title]="i18n.t('char.role.tooltip.dps')"
+                    >
+                      <img src="assets/icons/dps.png" class="role-icon-img" alt="DPS" />
+                    </button>
+                  </div>
+                </td>
+                <td class="actions-cell">
+                  <button
+                    (click)="removeCharacter(char)"
+                    class="btn-remove-icon"
+                    [title]="i18n.t('char.manager.delete_btn')"
+                  >
+                    🗑️
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     }
   </section>
 

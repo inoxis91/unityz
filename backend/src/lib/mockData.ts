@@ -66,6 +66,15 @@ export const mockUsers = [
     rank: 4,
     active_guild_id: null,
     label: 'Membre Simple (5 persos) - Guilde Pro'
+  },
+  {
+    id: 'mock_user_6',
+    bnet_id: 9006,
+    battletag: 'ProGuildMaster#2468',
+    role: 'admin',
+    rank: 0,
+    active_guild_id: null,
+    label: 'GM (Maître de Guilde) - Guilde Pro'
   }
 ];
 
@@ -263,6 +272,30 @@ export const mockCharacters = [
     realm: 'Archimonde',
     class: 'Druid',
     level: 64,
+    is_dps: true,
+    is_main: false
+  },
+
+  // User 6 characters (Archimonde, GM of the Pro guild)
+  {
+    id: '88888888-8888-4888-8888-888888888881',
+    user_id: 'mock_user_6',
+    guild_id: '22222222-2222-4222-8222-222222222222',
+    name: 'ProGmShaman',
+    realm: 'Archimonde',
+    class: 'Shaman',
+    level: 70,
+    is_heal: true,
+    is_main: true
+  },
+  {
+    id: '88888888-8888-4888-8888-888888888882',
+    user_id: 'mock_user_6',
+    guild_id: '22222222-2222-4222-8222-222222222222',
+    name: 'ProGmEvoker',
+    realm: 'Archimonde',
+    class: 'Evoker',
+    level: 70,
     is_dps: true,
     is_main: false
   }

@@ -24,7 +24,7 @@
   background: var(--ui-bg-green-50);
   padding: 1rem;
   border-radius: 12px;
-  color: #10b981;
+  color: var(--ui-fg-green-700);
 }
 
 .header-info h1 {
@@ -70,14 +70,14 @@
 }
 
 .tabs button.active {
-  background: #10b981;
-  color: white;
+  background: var(--ui-success);
+  color: var(--ui-on-solid);
 }
 
 /* Red tag for pending requests count in tabs */
 .badge-count-red {
-  background-color: #ef4444;
-  color: white;
+  background-color: var(--ui-danger);
+  color: var(--ui-on-solid);
   font-size: 0.75rem;
   font-weight: 700;
   padding: 2px 8px;
@@ -204,7 +204,7 @@
   cursor: pointer;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #10b981;
+  color: var(--ui-fg-green-700);
   user-select: none;
   background: var(--ui-bg-green-50);
   padding: 6px 12px;
@@ -262,12 +262,12 @@
 }
 
 .custom-select:focus {
-  border-color: #10b981;
+  border-color: var(--ui-status-success);
 }
 
 .btn-primary-craft {
-  background: #10b981;
-  color: white;
+  background: var(--ui-success);
+  color: var(--ui-on-solid);
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
@@ -280,7 +280,7 @@
 }
 
 .btn-primary-craft:hover:not([disabled]) {
-  background: #059669;
+  background: var(--ui-success-hover);
 }
 
 .btn-primary-craft[disabled] {

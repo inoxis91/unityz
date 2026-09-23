@@ -10,25 +10,13 @@ import {
 import { CalendarService, Signup } from '../../../services/calendar';
 import { ToastService } from '../../../services/toast';
 import { I18nService } from '../../../services/i18n';
-import { CLASS_BUFFS, BuffInfo } from '../../../constants/wow';
 import { CharacterService } from '../../../services/character';
-
-export interface Buff extends BuffInfo {
-  present: boolean;
-  count: number;
-}
-
-export function computeBuffs(members: Signup[]): Buff[] {
-  return CLASS_BUFFS.map((baseBuff) => {
-    const count = members.filter((s) => baseBuff.classes.includes(s.character_class || '')).length;
-    return { ...baseBuff, present: count > 0, count };
-  });
-}
+import { Buff, RaidBuffsComponent, computeBuffs } from '../raid-buffs/raid-buffs';
 
 @Component({
   selector: 'app-composition',
   standalone: true,
-  imports: [FormsModule, DragDropModule],
+  imports: [FormsModule, DragDropModule, RaidBuffsComponent],
   templateUrl: './composition.html',
   styleUrl: './composition.css',
 })

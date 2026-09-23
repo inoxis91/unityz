@@ -440,6 +440,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'dashboard.no_linked_chars': 'Aucun personnage lié.',
     'dashboard.import': 'Importer',
     'dashboard.in_progress': 'En cours',
+    'dashboard.directory_cta': "Accéder à l'annuaire",
     'dashboard.days_short': 'j',
 
     // Parses
@@ -1492,6 +1493,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'dashboard.no_linked_chars': 'No linked characters.',
     'dashboard.import': 'Import',
     'dashboard.in_progress': 'In progress',
+    'dashboard.directory_cta': 'Access directory',
     'dashboard.days_short': 'd',
 
     // Parses

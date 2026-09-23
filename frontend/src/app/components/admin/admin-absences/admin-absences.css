@@ -81,7 +81,7 @@
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--ui-text-faint);
+  color: var(--ui-text-muted);
   font-size: 1rem;
   pointer-events: none;
 }
@@ -100,7 +100,7 @@
 }
 
 .search-box input:focus {
-  border-color: #3b82f6;
+  border-color: var(--ui-focus);
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
   background: var(--ui-surface);
 }
@@ -123,7 +123,7 @@
   width: 40px;
   height: 40px;
   border: 4px solid var(--ui-border-subtle);
-  border-top-color: #3b82f6;
+  border-top-color: var(--ui-status-info);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1rem;
@@ -204,11 +204,11 @@
 }
 
 .active-badge {
-  background-color: #22c55e;
-  color: white;
+  background-color: var(--ui-success);
+  color: var(--ui-on-solid);
   padding: 2px 8px;
   border-radius: 9999px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.02em;
@@ -221,31 +221,18 @@
   gap: 0.4rem;
 }
 
-.character-cell .class-warrior { color: #c79c6e !important; }
-.character-cell .class-paladin { color: #ec4899 !important; }
-.character-cell .class-hunter { color: var(--ui-fg-green-700) !important; }
-.character-cell .class-rogue { color: var(--ui-fg-amber-700) !important; }
-.character-cell .class-priest { color: var(--ui-text-tertiary) !important; }
-.character-cell .class-death-knight { color: #c41f3b !important; }
-.character-cell .class-shaman { color: var(--ui-fg-brand) !important; }
-.character-cell .class-mage { color: var(--ui-fg-sky-700) !important; }
-.character-cell .class-warlock { color: var(--ui-fg-purple-700) !important; }
-.character-cell .class-monk { color: var(--ui-fg-teal-700) !important; }
-.character-cell .class-druid { color: var(--ui-fg-amber-600) !important; }
-.character-cell .class-demon-hunter { color: var(--ui-fg-purple-700) !important; }
-.character-cell .class-evoker { color: var(--ui-fg-teal-700) !important; }
 
 .char-name {
   font-weight: 700;
 }
 
 .class-label {
-  color: var(--ui-text-faint);
+  color: var(--ui-text-muted);
   font-size: 0.85rem;
 }
 
 .no-char {
-  color: var(--ui-text-faint);
+  color: var(--ui-text-muted);
   font-size: 0.85rem;
   font-style: italic;
 }
@@ -256,18 +243,18 @@
 }
 
 .date-cell.start-date {
-  color: var(--ui-fg-blue-500);
+  color: var(--ui-fg-blue-600);
 }
 
 .date-cell.end-date {
-  color: #f43f5e;
+  color: var(--ui-fg-red-600);
 }
 
 .reason-cell {
   max-width: 350px;
   color: var(--ui-text-muted);
   white-space: normal;
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .actions-col, .actions-cell {
@@ -276,7 +263,7 @@
 
 .btn-delete {
   background-color: var(--ui-bg-red-50);
-  color: var(--ui-fg-red-500);
+  color: var(--ui-fg-red-600);
   border: 1px solid var(--ui-bd-red-100);
   padding: 0.5rem 1rem;
   border-radius: 8px;
@@ -290,9 +277,9 @@
 }
 
 .btn-delete:hover {
-  background-color: #ef4444;
-  color: white;
-  border-color: #ef4444;
+  background-color: var(--ui-danger);
+  color: var(--ui-on-solid);
+  border-color: var(--ui-status-danger);
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
 }
 
@@ -334,7 +321,7 @@
   .reason-cell {
     max-width: 150px;
     white-space: normal;
-    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 }
 

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -21,7 +21,6 @@ import { LineupStatusComponent } from './raid-lineup/lineup-status/lineup-status
   imports: [CommonModule, RouterModule, FormsModule, LogsDashboardComponent, ParticipantsComponent, CompositionComponent, RaidLineupComponent, LineupStatusComponent],
   templateUrl: './event-details.html',
   styleUrl: './event-details.css',
-  encapsulation: ViewEncapsulation.None
 })
 export class EventDetailsComponent implements OnInit {
   private router = inject(Router);

@@ -7,7 +7,7 @@ export function signupDisplayName(s: Signup): string | null {
 }
 
 export function signupClassCss(s: Signup): string {
-  return 'class-' + CharacterService.getClassId(s.character_class || s.main_character_class);
+  return 'bg-class-' + CharacterService.getClassId(s.character_class || s.main_character_class);
 }
 
 /** Le raid lead a imposé un rôle différent de celui choisi par le joueur. */

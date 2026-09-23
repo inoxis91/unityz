@@ -1,14 +1,4 @@
 :host {
-  --tank: #2563eb;
-  --tank-bg: var(--ui-bg-blue-50);
-  --heal: #16a34a;
-  --heal-bg: var(--ui-bg-green-50);
-  --dps: #dc2626;
-  --dps-bg: var(--ui-bg-red-50);
-  --border: var(--ui-border);
-  --muted: var(--ui-text-muted);
-  --surface-alt: var(--ui-surface-muted);
-  --accent: #0074e0;
   display: block;
 }
 
@@ -32,7 +22,7 @@
 
 .subtitle {
   margin: 0.25rem 0 0;
-  color: var(--muted);
+  color: var(--ui-text-muted);
   font-size: 0.9rem;
 }
 
@@ -46,8 +36,8 @@
 
 /* Pool */
 .character-pool {
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
+  background: var(--ui-surface-muted);
+  border: 1px solid var(--ui-border);
   border-radius: 10px;
   padding: 1rem;
   position: sticky;
@@ -71,8 +61,8 @@
 }
 
 .count-badge {
-  background: var(--accent);
-  color: white;
+  background: var(--ui-brand);
+  color: var(--ui-on-solid);
   font-size: 0.75rem;
   font-weight: 700;
   padding: 2px 8px;
@@ -82,7 +72,7 @@
 .pool-search {
   width: 100%;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-border);
   border-radius: 8px;
   font-size: 0.9rem;
   background: var(--ui-surface);
@@ -90,7 +80,7 @@
 
 .pool-search:focus {
   outline: none;
-  border-color: var(--accent);
+  border-color: var(--ui-brand);
   box-shadow: 0 0 0 3px rgba(0, 116, 224, 0.12);
 }
 
@@ -106,12 +96,12 @@
   justify-content: center;
   gap: 4px;
   padding: 4px 6px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-border);
   border-radius: 999px;
   background: var(--ui-surface);
   font-size: 0.78rem;
   font-weight: 600;
-  color: var(--muted);
+  color: var(--ui-text-muted);
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -122,13 +112,13 @@
 }
 
 .filter-chip:hover {
-  border-color: var(--accent);
+  border-color: var(--ui-brand);
 }
 
 .filter-chip.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: white;
+  background: var(--ui-brand);
+  border-color: var(--ui-brand);
+  color: var(--ui-on-solid);
 }
 
 .pool-list {
@@ -147,7 +137,7 @@
 .roster-card {
   container-type: inline-size;
   background: var(--ui-surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-border);
   border-radius: 10px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
   overflow: hidden;
@@ -159,8 +149,8 @@
   gap: 1rem;
   flex-wrap: wrap;
   padding: 0.85rem 1rem;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-alt);
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-surface-muted);
 }
 
 .roster-title {
@@ -182,11 +172,11 @@
 }
 
 .weight-badge {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  color: var(--muted);
+  color: var(--ui-text-muted);
   background: var(--ui-surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-border);
   padding: 1px 8px;
   border-radius: 999px;
 }
@@ -194,7 +184,7 @@
 .roster-desc {
   margin: 0.2rem 0 0;
   font-size: 0.85rem;
-  color: var(--muted);
+  color: var(--ui-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -221,13 +211,13 @@
   height: 14px;
 }
 
-.summary-pill.role-tank { background: var(--tank-bg); color: var(--tank); }
-.summary-pill.role-heal { background: var(--heal-bg); color: var(--heal); }
-.summary-pill.role-dps { background: var(--dps-bg); color: var(--dps); }
+.summary-pill.role-tank { background: var(--ui-role-tank-bg); color: var(--ui-role-tank-text); }
+.summary-pill.role-heal { background: var(--ui-role-heal-bg); color: var(--ui-role-heal-text); }
+.summary-pill.role-dps { background: var(--ui-role-dps-bg); color: var(--ui-role-dps-text); }
 
 .summary-total {
   font-size: 0.8rem;
-  color: var(--muted);
+  color: var(--ui-text-muted);
   font-weight: 600;
   margin-left: 4px;
   white-space: nowrap;
@@ -240,7 +230,7 @@
 
 .btn-action-icon {
   background: var(--ui-surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-border);
   width: 32px;
   height: 32px;
   display: flex;
@@ -249,18 +239,18 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
-  color: var(--muted);
+  color: var(--ui-text-muted);
 }
 
 .btn-action-icon:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--ui-brand);
+  color: var(--ui-brand);
   background: var(--ui-bg-blue-50);
 }
 
 .btn-action-icon.delete:hover {
-  border-color: #ef4444;
-  color: var(--ui-fg-red-500);
+  border-color: var(--ui-status-danger);
+  color: var(--ui-fg-red-600);
   background: var(--ui-bg-red-50);
 }
 
@@ -274,7 +264,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  border-right: 1px solid var(--border);
+  border-right: 1px solid var(--ui-border);
 }
 
 .role-column:last-child {
@@ -302,9 +292,9 @@
   margin-left: auto;
 }
 
-.role-column.role-tank .role-header { color: var(--tank); background: var(--tank-bg); }
-.role-column.role-heal .role-header { color: var(--heal); background: var(--heal-bg); }
-.role-column.role-dps .role-header { color: var(--dps); background: var(--dps-bg); }
+.role-column.role-tank .role-header { color: var(--ui-role-tank-text); background: var(--ui-role-tank-bg); }
+.role-column.role-heal .role-header { color: var(--ui-role-heal-text); background: var(--ui-role-heal-bg); }
+.role-column.role-dps .role-header { color: var(--ui-role-dps-text); background: var(--ui-role-dps-bg); }
 
 .role-column.role-dps .roster-list {
   display: grid;
@@ -319,7 +309,7 @@
 
   .role-column {
     border-right: none;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--ui-border);
   }
 
   .role-column:last-child {
@@ -348,13 +338,13 @@
 
 .roster-list.cdk-drop-list-dragging {
   background: var(--ui-bg-blue-50);
-  outline: 2px dashed var(--accent);
+  outline: 2px dashed var(--ui-brand);
   outline-offset: -4px;
 }
 
 .character-card {
   background: var(--ui-surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-border);
   border-radius: 6px;
   padding: 0.4rem 0.5rem 0.4rem 0.6rem;
   display: flex;
@@ -373,7 +363,7 @@
 }
 
 .character-card:hover {
-  border-color: var(--accent);
+  border-color: var(--ui-brand);
   box-shadow: 0 2px 6px rgba(0, 116, 224, 0.1);
 }
 
@@ -386,19 +376,8 @@
   min-width: 0;
 }
 
-/* Couleurs de classe claires illisibles sur fond blanc (la bordure garde la vraie couleur) */
-.char-name.class-priest {
-  color: var(--ui-text-muted) !important;
-  text-shadow: none;
-}
-
 .character-card.border-class-priest {
   border-left-color: var(--ui-border-strong) !important;
-}
-
-.char-name.class-rogue {
-  color: #a59400 !important;
-  text-shadow: none;
 }
 
 .char-meta {
@@ -439,7 +418,7 @@
   transform: translateY(-50%);
   border: none;
   background: var(--ui-surface);
-  color: var(--muted);
+  color: var(--ui-text-muted);
   font-size: 1rem;
   line-height: 1;
   width: 22px;
@@ -489,7 +468,7 @@
 .cdk-drag-placeholder {
   opacity: 0.35;
   background: var(--ui-surface-subtle);
-  border: 1px dashed #94a3b8;
+  border: 1px dashed var(--ui-border-hover);
 }
 
 .cdk-drag-animating {
@@ -503,7 +482,7 @@
 .empty-msg,
 .drop-hint {
   text-align: center;
-  color: var(--ui-text-faint);
+  color: var(--ui-text-muted);
   font-size: 0.8rem;
   margin: 0.5rem 0;
 }
@@ -515,8 +494,8 @@
 .no-roster {
   padding: 2rem;
   text-align: center;
-  color: var(--muted);
-  border: 2px dashed var(--border);
+  color: var(--ui-text-muted);
+  border: 2px dashed var(--ui-border);
   border-radius: 10px;
 }
 
@@ -571,7 +550,7 @@
 .form-group textarea {
   width: 100%;
   padding: 0.65rem 0.75rem;
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-border);
   border-radius: 6px;
 }
 
@@ -583,8 +562,8 @@
 }
 
 .btn-primary {
-  background: var(--accent);
-  color: white;
+  background: var(--ui-brand);
+  color: var(--ui-on-solid);
   border: none;
   padding: 0.65rem 1.25rem;
   border-radius: 8px;
@@ -630,21 +609,21 @@
 
 .notice-text strong {
   font-size: 0.95rem;
-  color: #f59e0b;
+  color: var(--ui-fg-amber-700);
   display: block;
   margin-bottom: 0.2rem;
 }
 
 .notice-text p {
   font-size: 0.85rem;
-  color: var(--muted);
+  color: var(--ui-text-muted);
   margin: 0;
   line-height: 1.45;
 }
 
 .btn-upgrade-mini {
-  background: #f59e0b;
-  color: #1e1b4b;
+  background: var(--ui-warning);
+  color: var(--ui-on-warning);
   border: none;
   font-weight: 700;
   padding: 0.5rem 1rem;
@@ -655,7 +634,7 @@
 }
 
 .btn-upgrade-mini:hover {
-  background: #d97706;
+  background: var(--ui-warning-hover);
 }
 
 /* Context Menu */
@@ -663,7 +642,7 @@
   position: fixed;
   z-index: 1100;
   background: var(--ui-surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-border);
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   width: 220px;
@@ -690,14 +669,14 @@
   font-size: 0.85rem;
   color: var(--ui-text-primary);
   border-bottom: 1px solid var(--ui-border-subtle);
-  background: var(--surface-alt);
+  background: var(--ui-surface-muted);
 }
 
 .context-menu-section-title {
   padding: 8px 12px 4px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  color: var(--ui-text-faint);
+  color: var(--ui-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -715,12 +694,12 @@
   align-items: center;
   gap: 2px;
   padding: 6px 2px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-border);
   border-radius: 6px;
   background: var(--ui-surface);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  color: var(--muted);
+  color: var(--ui-text-muted);
   cursor: pointer;
 }
 
@@ -729,9 +708,9 @@
   height: 16px;
 }
 
-.context-menu-roles .role-tank.active { background: var(--tank-bg); border-color: var(--tank); color: var(--tank); }
-.context-menu-roles .role-heal.active { background: var(--heal-bg); border-color: var(--heal); color: var(--heal); }
-.context-menu-roles .role-dps.active { background: var(--dps-bg); border-color: var(--dps); color: var(--dps); }
+.context-menu-roles .role-tank.active { background: var(--ui-role-tank-bg); border-color: var(--ui-role-tank); color: var(--ui-role-tank-text); }
+.context-menu-roles .role-heal.active { background: var(--ui-role-heal-bg); border-color: var(--ui-role-heal); color: var(--ui-role-heal-text); }
+.context-menu-roles .role-dps.active { background: var(--ui-role-dps-bg); border-color: var(--ui-role-dps); color: var(--ui-role-dps-text); }
 
 .context-menu-list {
   list-style: none;
@@ -750,5 +729,5 @@
 
 .context-menu-list li:hover {
   background-color: var(--ui-bg-blue-50);
-  color: var(--accent);
+  color: var(--ui-brand);
 }

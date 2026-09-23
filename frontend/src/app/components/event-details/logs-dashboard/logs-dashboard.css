@@ -1,3 +1,7 @@
+/* Moved from event-details.css (component used to be ViewEncapsulation.None) */
+.modern-select, textarea { width: 100%; padding: 12px; border: 2px solid var(--ui-border-subtle); border-radius: 12px; background: var(--ui-surface-muted); font-size: 1rem; outline: none; }
+.modern-select:focus, textarea:focus { border-color: var(--ui-focus); }
+
 /* ==========================================================================
    Warcraft Logs Dashboard Styling
    ========================================================================== */
@@ -86,7 +90,7 @@
   width: 40px;
   height: 40px;
   border: 4px solid var(--ui-border);
-  border-top-color: #0074e0;
+  border-top-color: var(--ui-brand);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -102,7 +106,7 @@
   justify-content: center;
   padding: 4rem 2rem;
   gap: 1rem;
-  color: var(--ui-fg-red-500);
+  color: var(--ui-fg-red-600);
   font-weight: 600;
   background: var(--ui-bg-red-50);
   border-radius: 16px;
@@ -160,7 +164,7 @@
 }
 
 .damage-text { color: var(--ui-fg-red-600) !important; }
-.heal-text { color: var(--ui-fg-green-600) !important; }
+.heal-text { color: var(--ui-fg-green-700) !important; }
 .duration-text { color: var(--ui-fg-indigo-600) !important; }
 
 .kill-tag {
@@ -179,6 +183,78 @@
   border-radius: 6px;
   font-size: 0.9rem;
   font-weight: 800;
+}
+
+.metric-tag {
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.metric-tag.dps {
+  background: var(--ui-bg-red-100);
+  color: var(--ui-fg-red-600);
+}
+
+.metric-tag.hps {
+  background: var(--ui-bg-green-100);
+  color: var(--ui-fg-green-700);
+}
+
+.tags-row {
+  gap: 8px;
+}
+
+.power-row {
+  font-size: 1.45rem;
+}
+
+.stat-card .deaths-value {
+  color: var(--ui-fg-red-600);
+}
+
+.stat-card.spread {
+  justify-content: space-between;
+}
+
+.survival-info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.survival-row {
+  justify-content: space-between;
+  width: 100%;
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.lbl-survival {
+  font-weight: 800;
+}
+
+.lbl-survival.survivor {
+  color: var(--ui-fg-green-700);
+}
+
+.lbl-survival.victim {
+  color: var(--ui-fg-red-600);
+}
+
+.val-player {
+  font-weight: 850;
+}
+
+.leaderboard-card {
+  margin-top: 2rem;
+}
+
+.score-cell {
+  color: var(--ui-fg-brand);
 }
 
 /* Secondary Stats Cards Row */
@@ -259,17 +335,17 @@
   padding: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
-  border-left: 4px solid #ef4444;
+  border-left: 4px solid var(--ui-status-danger);
 }
 
 .timeline-item.is-kill {
-  border-left-color: #10b981;
+  border-left-color: var(--ui-status-success);
 }
 
 .timeline-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
-  border-color: #94a3b8;
+  border-color: var(--ui-border-hover);
 }
 
 .timeline-item .item-header {
@@ -290,7 +366,7 @@
 }
 
 .status-badge {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 850;
   padding: 2px 6px;
   border-radius: 4px;
@@ -316,7 +392,7 @@
 }
 
 .timeline-item .percent {
-  color: var(--ui-fg-red-500);
+  color: var(--ui-fg-red-600);
   font-weight: 750;
 }
 
@@ -345,11 +421,11 @@
   text-align: left;
   cursor: pointer;
   transition: all 0.2s ease;
-  border-left: 4px solid #ef4444;
+  border-left: 4px solid var(--ui-status-danger);
 }
 
 .boss-select-btn.kill {
-  border-left-color: #10b981;
+  border-left-color: var(--ui-status-success);
 }
 
 .boss-select-btn:hover {
@@ -359,7 +435,7 @@
 
 .boss-select-btn.active {
   background: var(--ui-bg-blue-50);
-  border-color: #0074e0;
+  border-color: var(--ui-brand);
   border-left-width: 5px;
 }
 
@@ -377,7 +453,7 @@
 }
 
 .boss-btn-top .badge {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 800;
   padding: 2px 4px;
   border-radius: 4px;
@@ -502,7 +578,7 @@
 }
 
 .rank-num {
-  color: var(--ui-text-faint);
+  color: var(--ui-text-muted);
   font-size: 0.75rem;
 }
 
@@ -527,11 +603,11 @@
 }
 
 .dps-fill {
-  background: #dc2626;
+  background: var(--ui-danger-hover);
 }
 
 .heal-fill {
-  background: #16a34a;
+  background: var(--ui-success);
 }
 
 .value-label {
@@ -585,7 +661,7 @@
 
 .logs-table th.active-sort {
   color: var(--ui-fg-brand);
-  border-bottom-color: #0074e0;
+  border-bottom-color: var(--ui-brand);
   background: var(--ui-bg-blue-50);
 }
 
@@ -621,33 +697,44 @@
 
 
 
-/* Parse Percentile Pills */
-.parse-pill { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 24px; padding: 0 6px; border-radius: 6px; font-weight: 850; font-size: 0.85rem; color: white !important; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); }
-.parse-legendary { background-color: #f58cba; }
-.parse-epic { background-color: #ff8000; }
-.parse-heroic { background-color: #a335ee; }
-.parse-rare { background-color: #0070dd; }
-.parse-uncommon { background-color: #1eff00; color: #111827 !important; text-shadow: none; }
-.parse-common { background-color: #9d9d9d; }
+/* Parse Percentile Pills (WCL palette tokens in styles.css) */
+.parse-pill { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 24px; padding: 0 6px; border-radius: 6px; font-weight: 850; font-size: 0.85rem; }
+.parse-legendary { background-color: var(--wcl-pink); color: var(--wcl-pink-on); }
+.parse-epic { background-color: var(--wcl-orange); color: var(--wcl-orange-on); }
+.parse-heroic { background-color: var(--wcl-purple); color: var(--wcl-purple-on); }
+.parse-rare { background-color: var(--wcl-blue); color: var(--wcl-blue-on); }
+.parse-uncommon { background-color: var(--wcl-green); color: var(--wcl-green-on); }
+.parse-common { background-color: var(--wcl-gray); color: var(--wcl-gray-on); }
 
-/* High contrast class colors for log player names and texts */
-.text-class-warrior, .text-class-paladin, .text-class-hunter, .text-class-rogue, .text-class-priest, .text-class-deathknight, .text-class-shaman, .text-class-mage, .text-class-warlock, .text-class-monk, .text-class-druid, .text-class-demonhunter, .text-class-evoker { background: transparent !important; }
-.text-class-warrior { color: var(--color-warrior) !important; } .text-class-paladin { color: var(--color-paladin) !important; } .text-class-hunter { color: var(--color-hunter) !important; } .text-class-rogue { color: var(--color-rogue) !important; text-shadow: -1px -1px 0 #1e293b, 1px -1px 0 #1e293b, -1px 1px 0 #1e293b, 1px 1px 0 #1e293b !important; } .text-class-priest { color: var(--color-priest) !important; text-shadow: -1px -1px 0 #1e293b, 1px -1px 0 #1e293b, -1px 1px 0 #1e293b, 1px 1px 0 #1e293b !important; } .text-class-deathknight { color: var(--color-dk) !important; } .text-class-shaman { color: var(--color-shaman) !important; } .text-class-mage { color: var(--color-mage) !important; } .text-class-warlock { color: var(--color-warlock) !important; } .text-class-monk { color: var(--color-monk) !important; text-shadow: -1px -1px 0 #1e293b, 1px -1px 0 #1e293b, -1px 1px 0 #1e293b, 1px 1px 0 #1e293b !important; } .text-class-druid { color: var(--color-druid) !important; } .text-class-demonhunter { color: var(--color-dh) !important; } .text-class-evoker { color: var(--color-evoker) !important; }
+/* Class colors for player names, tuned for AA on the current theme */
+.text-class-warrior { color: var(--color-warrior-text) !important; }
+.text-class-paladin { color: var(--color-paladin-text) !important; }
+.text-class-hunter { color: var(--color-hunter-text) !important; }
+.text-class-rogue { color: var(--color-rogue-text) !important; }
+.text-class-priest { color: var(--color-priest-text) !important; }
+.text-class-deathknight { color: var(--color-death-knight-text) !important; }
+.text-class-shaman { color: var(--color-shaman-text) !important; }
+.text-class-mage { color: var(--color-mage-text) !important; }
+.text-class-warlock { color: var(--color-warlock-text) !important; }
+.text-class-monk { color: var(--color-monk-text) !important; }
+.text-class-druid { color: var(--color-druid-text) !important; }
+.text-class-demonhunter { color: var(--color-demon-hunter-text) !important; }
+.text-class-evoker { color: var(--color-evoker-text) !important; }
 
 /* Card specific backgrounds (soft/low opacity class colors) */
-.card-class-warrior { background: rgba(198, 155, 109, 0.42) !important; border: 1px solid rgba(198, 155, 109, 0.2) !important; }
-.card-class-paladin { background: rgba(244, 140, 186, 0.42) !important; border: 1px solid rgba(244, 140, 186, 0.2) !important; }
-.card-class-hunter { background: rgba(170, 211, 114, 0.42) !important; border: 1px solid rgba(170, 211, 114, 0.2) !important; }
-.card-class-rogue { background: rgba(255, 244, 104, 0.42) !important; border: 1px solid rgba(255, 244, 104, 0.2) !important; }
+.card-class-warrior { background: rgba(198, 155, 109, 0.14) !important; border: 1px solid rgba(198, 155, 109, 0.2) !important; }
+.card-class-paladin { background: rgba(244, 140, 186, 0.14) !important; border: 1px solid rgba(244, 140, 186, 0.2) !important; }
+.card-class-hunter { background: rgba(170, 211, 114, 0.14) !important; border: 1px solid rgba(170, 211, 114, 0.2) !important; }
+.card-class-rogue { background: rgba(255, 244, 104, 0.14) !important; border: 1px solid rgba(255, 244, 104, 0.2) !important; }
 .card-class-priest { background: rgba(var(--ui-surface-rgb), 0.42) !important; border: 1.5px solid var(--ui-border-strong) !important; box-shadow: 0 4px 12px rgba(30, 41, 59, 0.08) !important; }
-.card-class-deathknight, .card-class-dk { background: rgba(196, 30, 58, 0.42) !important; border: 1px solid rgba(196, 30, 58, 0.2) !important; }
-.card-class-shaman { background: rgba(0, 112, 221, 0.42) !important; border: 1px solid rgba(0, 112, 221, 0.2) !important; }
-.card-class-mage { background: rgba(63, 199, 235, 0.42) !important; border: 1px solid rgba(63, 199, 235, 0.2) !important; }
-.card-class-warlock { background: rgba(135, 136, 238, 0.42) !important; border: 1px solid rgba(135, 136, 238, 0.2) !important; }
-.card-class-monk { background: rgba(0, 255, 152, 0.42) !important; border: 1px solid rgba(0, 255, 152, 0.2) !important; }
-.card-class-druid { background: rgba(255, 124, 10, 0.42) !important; border: 1px solid rgba(255, 124, 10, 0.2) !important; }
-.card-class-demonhunter, .card-class-dh { background: rgba(163, 48, 201, 0.42) !important; border: 1px solid rgba(163, 48, 201, 0.2) !important; }
-.card-class-evoker { background: rgba(51, 147, 127, 0.42) !important; border: 1px solid rgba(51, 147, 127, 0.2) !important; }
+.card-class-deathknight, .card-class-dk { background: rgba(196, 30, 58, 0.14) !important; border: 1px solid rgba(196, 30, 58, 0.2) !important; }
+.card-class-shaman { background: rgba(0, 112, 221, 0.14) !important; border: 1px solid rgba(0, 112, 221, 0.2) !important; }
+.card-class-mage { background: rgba(63, 199, 235, 0.14) !important; border: 1px solid rgba(63, 199, 235, 0.2) !important; }
+.card-class-warlock { background: rgba(135, 136, 238, 0.14) !important; border: 1px solid rgba(135, 136, 238, 0.2) !important; }
+.card-class-monk { background: rgba(0, 255, 152, 0.14) !important; border: 1px solid rgba(0, 255, 152, 0.2) !important; }
+.card-class-druid { background: rgba(255, 124, 10, 0.14) !important; border: 1px solid rgba(255, 124, 10, 0.2) !important; }
+.card-class-demonhunter, .card-class-dh { background: rgba(163, 48, 201, 0.14) !important; border: 1px solid rgba(163, 48, 201, 0.2) !important; }
+.card-class-evoker { background: rgba(51, 147, 127, 0.14) !important; border: 1px solid rgba(51, 147, 127, 0.2) !important; }
 
 /* MVP Podium & Leaderboard Styling */
 .mvp-podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 3.5rem; margin: 3rem 0; flex-wrap: wrap; }
@@ -657,11 +744,11 @@
 
 /* Giant numeric watermarks in background of cards */
 .podium-item-box::before { font-family: 'Impact', 'Arial Black', sans-serif; font-weight: 900; position: absolute; bottom: -20px; right: 8px; font-size: 7rem; line-height: 1; pointer-events: none; opacity: 0.15; z-index: 1; }
-.place-1 .podium-item-box::before { content: "1"; color: var(--ui-fg-amber-600); }
+.place-1 .podium-item-box::before { content: "1"; color: var(--ui-fg-amber-700); }
 .place-2 .podium-item-box::before { content: "2"; color: var(--ui-text-tertiary); }
 .place-3 .podium-item-box::before { content: "3"; color: var(--ui-fg-orange-700); }
 
-.place-1 .podium-item-box { height: 250px; border: 3px solid #fbbf24; background: linear-gradient(135deg, var(--ui-bg-amber-50) 0%, var(--ui-bg-amber-100) 50%, var(--ui-surface) 100%); box-shadow: 0 12px 30px -5px rgba(251, 191, 36, 0.25); }
+.place-1 .podium-item-box { height: 250px; border: 3px solid var(--ui-status-warning); background: linear-gradient(135deg, var(--ui-bg-amber-50) 0%, var(--ui-bg-amber-100) 50%, var(--ui-surface) 100%); box-shadow: 0 12px 30px -5px rgba(251, 191, 36, 0.25); }
 .place-1:hover .podium-item-box { box-shadow: 0 16px 35px -3px rgba(251, 191, 36, 0.35); }
 
 .place-2 .podium-item-box { height: 200px; border: 2.5px solid var(--ui-border-strong); background: linear-gradient(135deg, var(--ui-surface-subtle) 0%, var(--ui-surface-strong) 50%, var(--ui-surface) 100%); box-shadow: 0 8px 20px -5px rgba(100, 116, 139, 0.15); }
@@ -682,7 +769,7 @@
 .highlight-top-3 { background-color: var(--ui-bg-amber-50) !important; }
 .highlight-top-3:hover { background-color: var(--ui-bg-amber-100) !important; }
 .rank-badge-row { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; font-size: 0.85rem; font-weight: 850; }
-.rank-badge-row.gold { background-color: #fbbf24; color: #78350f !important; }
+.rank-badge-row.gold { background-color: var(--ui-warning); color: var(--ui-on-warning) !important; }
 .rank-badge-row.silver { background-color: var(--ui-surface-stronger); color: var(--ui-text-secondary) !important; }
 .rank-badge-row.bronze { background-color: var(--ui-bg-orange-200); color: var(--ui-fg-orange-700) !important; }
 
@@ -697,7 +784,7 @@
 
 .death-pill.dead {
   background: var(--ui-bg-red-100);
-  color: var(--ui-fg-red-500);
+  color: var(--ui-fg-red-600);
 }
 
 .potion-pill {
@@ -714,7 +801,7 @@
 
 .potion-pill.used {
   background: var(--ui-bg-purple-100);
-  color: #8b5cf6;
+  color: var(--ui-fg-purple-700);
 }
 
 /* Responsive Overrides */

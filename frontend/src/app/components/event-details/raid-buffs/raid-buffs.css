@@ -1,0 +1,82 @@
+:host {
+  display: block;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  border: 1px solid var(--ui-border);
+  border-radius: 20px;
+  background: var(--ui-surface);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+h3 {
+  margin: 0 0 1.25rem;
+  font-size: 1.1rem;
+  color: var(--ui-text-primary);
+}
+
+.buffs-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.buff-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 140px;
+  padding: 8px 14px;
+  border: 1px solid var(--ui-bd-green-200);
+  border-radius: 12px;
+  background: var(--ui-bg-green-50);
+}
+
+.buff-card.missing {
+  border-color: var(--ui-border);
+  border-style: dashed;
+  background: var(--ui-surface-muted);
+}
+
+/* Missing buffs are dimmed through the icon only, so labels keep AA contrast */
+.buff-card.missing .buff-icon {
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+
+.buff-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.buff-icon img {
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  object-fit: contain;
+}
+
+.buff-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.buff-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ui-text-tertiary);
+  text-transform: uppercase;
+}
+
+.buff-card.missing .buff-label,
+.buff-status {
+  color: var(--ui-text-muted);
+}
+
+.buff-count {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--ui-fg-green-800);
+}

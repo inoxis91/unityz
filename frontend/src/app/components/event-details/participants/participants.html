@@ -5,13 +5,13 @@
       <h3>{{ i18n.t('event.details.your_signup') }}</h3>
       <!-- Past Event Warning -->
       @if (isEventPast()) {
-        <div class="warning-box" style="margin-bottom: 1rem">
+        <div class="warning-box spaced">
           <p>⚠️ {{ i18n.t('event.details.event_past_warning') }}</p>
         </div>
       }
       <!-- Locked Event Warning -->
       @if (event?.registrations_locked && !isEventPast()) {
-        <div class="warning-box locked-warning animate-fade-in" style="margin-bottom: 1rem">
+        <div class="warning-box locked-warning spaced animated-fade-in">
           <p>🔒 {{ i18n.t('event.details.registrations_locked_warning') }}</p>
         </div>
       }
@@ -164,11 +164,13 @@
                 : i18n.t('event.details.sort_by_date_asc')
               : i18n.t('event.details.sort_by_date')
           "
-          style="width: auto; min-width: 32px; padding: 0 6px; display: flex; gap: 4px"
+          class="sort-date"
         >
           🕒
           @if (sortMethod() === 'date') {
-            <span style="font-size: 0.75rem">{{ sortDirection() === 'asc' ? '▲' : '▼' }}</span>
+            <span class="sort-arrow" aria-hidden="true">{{
+              sortDirection() === 'asc' ? '▲' : '▼'
+            }}</span>
           }
         </button>
         <button
@@ -188,7 +190,7 @@
           [ngClass]="[
             s.status,
             s.status === 'absent' ? 'is-absent' : '',
-            'class-' +
+            'bg-class-' +
               getClassCategory(
                 s.status === 'absent'
                   ? s.main_character_class
@@ -258,7 +260,7 @@
 
       @if (signupsSig().length === 0) {
         <div class="empty-state">
-          <div class="empty-icon">👥</div>
+          <div class="empty-icon" aria-hidden="true">👥</div>
           <p>{{ i18n.t('event.details.no_signups') }}</p>
         </div>
       }

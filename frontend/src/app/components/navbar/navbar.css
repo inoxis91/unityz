@@ -76,7 +76,7 @@
 }
 
 .nav-lang-selector button.active {
-  background: #3b82f6;
+  background: #2563eb;
   color: #ffffff;
 }
 
@@ -166,7 +166,7 @@
 }
 
 .nav-links a.active {
-  color: #3b82f6;
+  color: #60a5fa;
   background-color: rgba(59, 130, 246, 0.1);
 }
 
@@ -217,7 +217,7 @@
 
 .profile-dropdown.open .dropdown-arrow {
   transform: rotate(180deg);
-  color: #3b82f6;
+  color: #60a5fa;
 }
 
 .profile-dropdown.open .profile-toggle {
@@ -227,7 +227,7 @@
 }
 
 .profile-dropdown.open .profile-user-icon {
-  color: #3b82f6;
+  color: #60a5fa;
 }
 
 .profile-menu {
@@ -284,7 +284,7 @@
 }
 
 .profile-menu a.active {
-  color: #3b82f6;
+  color: #60a5fa;
   background-color: rgba(59, 130, 246, 0.08);
 }
 
@@ -436,7 +436,7 @@
 .badge-count-navbar {
   background-color: #ef4444;
   color: white;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 9999px;

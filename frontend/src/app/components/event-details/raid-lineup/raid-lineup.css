@@ -1,13 +1,4 @@
 :host {
-  --lu-surface: var(--ui-surface);
-  --lu-surface-muted: var(--ui-surface-muted);
-  --lu-border: var(--ui-border);
-  --lu-text: var(--ui-text-strong);
-  --lu-text-muted: var(--ui-text-muted);
-  --lu-accent: #0074e0;
-  --lu-selected: #16a34a;
-  --lu-pending: #d97706;
-  --lu-benched: #475569;
   display: block;
 }
 
@@ -20,8 +11,8 @@
   gap: 1rem 1.5rem;
   padding: 1.25rem 1.5rem;
   margin-bottom: 1.5rem;
-  background: var(--lu-surface);
-  border: 1px solid var(--lu-border);
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
   border-radius: 20px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
@@ -39,8 +30,8 @@
   gap: 6px;
   padding: 8px 14px;
   border-radius: 12px;
-  background: var(--lu-surface-muted);
-  border: 1px solid var(--lu-border);
+  background: var(--ui-surface-muted);
+  border: 1px solid var(--ui-border);
 }
 
 .lu-stat strong {
@@ -52,16 +43,16 @@
 .lu-stat span {
   font-size: 0.78rem;
   font-weight: 700;
-  color: var(--lu-text-muted);
+  color: var(--ui-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
 
 .lu-stat.selected strong {
-  color: var(--ui-fg-green-600);
+  color: var(--ui-fg-green-700);
 }
 .lu-stat.pending strong {
-  color: var(--ui-fg-amber-600);
+  color: var(--ui-fg-amber-700);
 }
 .lu-stat.benched strong {
   color: var(--ui-text-tertiary);
@@ -98,7 +89,7 @@
   flex-basis: 100%;
   margin: 0;
   font-size: 0.82rem;
-  color: var(--lu-text-muted);
+  color: var(--ui-text-muted);
 }
 
 /* ---------- Boutons ---------- */
@@ -121,25 +112,25 @@
 
 .lu-btn.primary {
   border: none;
-  color: #ffffff;
-  background: var(--lu-accent);
+  color: var(--ui-on-solid);
+  background: var(--ui-brand);
   box-shadow: 0 4px 10px rgba(0, 116, 224, 0.2);
 }
 
 .lu-btn.primary:hover:not(:disabled) {
-  background: #0056a3;
+  background: var(--ui-brand-hover);
   transform: translateY(-1px);
 }
 
 .lu-btn.ghost {
-  color: var(--lu-text-muted);
-  background: var(--lu-surface);
-  border: 1px solid var(--lu-border);
+  color: var(--ui-text-muted);
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
 }
 
 .lu-btn.ghost:hover:not(:disabled) {
-  color: var(--lu-text);
-  background: var(--lu-surface-muted);
+  color: var(--ui-text-strong);
+  background: var(--ui-surface-muted);
 }
 
 .lu-btn:disabled {
@@ -149,7 +140,7 @@
 }
 
 .lu-btn:focus-visible {
-  outline: 3px solid var(--lu-accent);
+  outline: 3px solid var(--ui-brand);
   outline-offset: 2px;
 }
 
@@ -191,8 +182,8 @@
   min-height: 140px;
   padding: 1rem;
   border-radius: 18px;
-  background: var(--lu-surface);
-  border: 2px solid var(--lu-border);
+  background: var(--ui-surface);
+  border: 2px solid var(--ui-border);
   transition:
     border-color 0.15s ease,
     background 0.15s ease;
@@ -205,13 +196,13 @@
 }
 
 .lu-zone.role.tank {
-  border-top: 5px solid #3b82f6;
+  border-top: 5px solid var(--ui-role-tank);
 }
 .lu-zone.role.heal {
-  border-top: 5px solid #22c55e;
+  border-top: 5px solid var(--ui-role-heal);
 }
 .lu-zone.role.dps {
-  border-top: 5px solid #ef4444;
+  border-top: 5px solid var(--ui-role-dps);
 }
 
 .lu-zone.bench {
@@ -223,13 +214,13 @@
 
 /* Zones pouvant accueillir la carte en cours de drag / survolées */
 .lu-zone.cdk-drop-list-receiving {
-  border-color: var(--lu-accent);
+  border-color: var(--ui-brand);
   border-style: dashed;
 }
 
 .lu-zone.cdk-drop-list-dragging {
   background: var(--ui-bg-blue-50);
-  border-color: var(--lu-accent);
+  border-color: var(--ui-brand);
 }
 
 .lu-zone-header {
@@ -244,7 +235,7 @@
   margin: 0;
   font-size: 0.9rem;
   font-weight: 800;
-  color: var(--lu-text);
+  color: var(--ui-text-strong);
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
@@ -262,7 +253,7 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--lu-pending);
+  background: var(--ui-status-warning);
   box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.18);
 }
 
@@ -299,7 +290,7 @@
   font-size: 0.85rem;
   font-weight: 600;
   text-align: center;
-  color: var(--ui-text-faint);
+  color: var(--ui-text-muted);
 }
 
 /* ---------- Drag & drop ---------- */
@@ -338,7 +329,7 @@
   max-height: calc(100dvh - 2rem);
   overflow: hidden;
   border-radius: 22px;
-  background: var(--lu-surface);
+  background: var(--ui-surface);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
   animation: lu-pop 0.18s ease-out;
 }
@@ -368,21 +359,13 @@
 .lu-sheet-title .name {
   font-size: 1.15rem;
   font-weight: 900;
-  color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  color: inherit;
 }
 
 .lu-sheet-sub {
   font-size: 0.8rem;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.92);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-}
-
-.lu-sheet-header.class-priest .lu-sheet-sub,
-.lu-sheet-header.class-priest .lu-sheet-close {
-  color: var(--ui-text-secondary);
-  text-shadow: none;
+  color: inherit;
 }
 
 .lu-sheet-close {
@@ -392,8 +375,8 @@
   border-radius: 10px;
   font-size: 1.5rem;
   line-height: 1;
-  color: #ffffff;
-  background: rgba(15, 23, 42, 0.25);
+  color: inherit;
+  background: rgba(0, 0, 0, 0.12);
   cursor: pointer;
 }
 
@@ -406,7 +389,7 @@
   margin: 0 0 0.6rem;
   font-size: 0.78rem;
   font-weight: 800;
-  color: var(--lu-text-muted);
+  color: var(--ui-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
@@ -414,11 +397,11 @@
 .lu-sheet-comment {
   margin: 0 0 1.25rem;
   padding: 0.75rem 1rem;
-  border-left: 4px solid var(--lu-border);
+  border-left: 4px solid var(--ui-border);
   border-radius: 8px;
   font-style: italic;
   color: var(--ui-text-secondary);
-  background: var(--lu-surface-muted);
+  background: var(--ui-surface-muted);
 }
 
 .lu-segmented {
@@ -436,12 +419,12 @@
   gap: 4px;
   min-height: 64px;
   padding: 8px 6px;
-  border: 2px solid var(--lu-border);
+  border: 2px solid var(--ui-border);
   border-radius: 14px;
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--lu-text);
-  background: var(--lu-surface-muted);
+  color: var(--ui-text-strong);
+  background: var(--ui-surface-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -452,7 +435,7 @@
 }
 
 .lu-segmented button:focus-visible {
-  outline: 3px solid var(--lu-accent);
+  outline: 3px solid var(--ui-brand);
   outline-offset: 2px;
 }
 
@@ -462,25 +445,25 @@
 }
 
 .lu-segmented.decision .selected.active {
-  border-color: var(--lu-selected);
+  border-color: var(--ui-status-success);
   background: var(--ui-bg-green-50);
   color: var(--ui-fg-green-800);
 }
 .lu-segmented.decision .benched.active {
-  border-color: var(--lu-benched);
+  border-color: var(--ui-neutral);
   background: var(--ui-surface-subtle);
   color: var(--ui-text-primary);
 }
 .lu-segmented.decision .pending.active {
-  border-color: var(--lu-pending);
+  border-color: var(--ui-status-warning);
   background: var(--ui-bg-amber-50);
   color: var(--ui-fg-amber-800);
 }
 
 .lu-segmented.roles button.active {
-  border-color: var(--lu-accent);
-  background: var(--lu-accent);
-  color: #ffffff;
+  border-color: var(--ui-brand);
+  background: var(--ui-brand);
+  color: var(--ui-on-solid);
   box-shadow: 0 4px 10px rgba(0, 116, 224, 0.25);
 }
 
@@ -490,7 +473,7 @@
 }
 
 .lu-segmented.roles small {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 700;
   opacity: 0.75;
 }
@@ -498,7 +481,7 @@
 .lu-sheet-note {
   margin: 0;
   font-size: 0.8rem;
-  color: var(--lu-text-muted);
+  color: var(--ui-text-muted);
 }
 
 .lu-sheet-footer {
@@ -506,8 +489,8 @@
   justify-content: space-between;
   gap: 0.75rem;
   padding: 1rem 1.25rem;
-  border-top: 1px solid var(--lu-border);
-  background: var(--lu-surface-muted);
+  border-top: 1px solid var(--ui-border);
+  background: var(--ui-surface-muted);
 }
 
 @keyframes lu-fade {

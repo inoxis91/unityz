@@ -101,9 +101,9 @@
 }
 
 :host ::ng-deep .fc .fc-button-primary:not(:disabled).fc-button-active {
-  background-color: #0074e0 !important;
-  color: #ffffff !important;
-  border-color: #0074e0 !important;
+  background-color: var(--ui-brand) !important;
+  color: var(--ui-on-solid) !important;
+  border-color: var(--ui-brand) !important;
 }
 
 /* Event Styling - Larger and more Visual */
@@ -127,7 +127,7 @@
   padding: 10px;
   border-radius: 10px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  border-left: 5px solid #0074e0;
+  border-left: 5px solid var(--ui-brand);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -161,11 +161,17 @@
   display: block !important; /* Changed from -webkit-box to block to ensure wrapping */
   overflow: visible !important;
   text-overflow: clip !important;
-  word-break: break-word;
+  overflow-wrap: anywhere;
   white-space: normal !important;
 }
 
+:host ::ng-deep .custom-event-card.type-raid { border-left-color: var(--ui-event-raid); }
+:host ::ng-deep .custom-event-card.type-mm { border-left-color: var(--ui-event-mm); }
+:host ::ng-deep .custom-event-card.type-reunion { border-left-color: var(--ui-event-reunion); }
+:host ::ng-deep .custom-event-card.type-custom { border-left-color: var(--ui-event-custom); }
+
 :host ::ng-deep .custom-event-card.canceled-event {
+  border-left-color: var(--ui-border-hover);
   background: var(--ui-surface-subtle) !important;
   opacity: 0.65;
 }
@@ -176,7 +182,7 @@
 }
 
 :host ::ng-deep .custom-event-card.canceled-event .canceled-tag {
-  color: var(--ui-fg-red-500);
+  color: var(--ui-fg-red-600);
   font-weight: 800;
 }
 
@@ -190,11 +196,11 @@
   display: inline-block !important; /* Changed to inline-block for better wrapping */
   padding: 3px 8px;
   border-radius: 6px;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 800;
   width: auto;
   max-width: 100%;
-  word-break: break-word;
+  overflow-wrap: anywhere;
   white-space: normal !important;
   letter-spacing: 0.5px;
   line-height: 1.1;
@@ -329,7 +335,7 @@
 .modern-form textarea:focus,
 .modern-form select:focus {
   outline: none;
-  border-color: #0074e0;
+  border-color: var(--ui-focus);
   box-shadow: 0 0 0 4px rgba(0, 116, 224, 0.1);
 }
 
@@ -349,8 +355,8 @@
 }
 
 .btn-primary {
-  background-color: #0074e0;
-  color: #ffffff;
+  background-color: var(--ui-brand);
+  color: var(--ui-on-solid);
   padding: 0.8rem 1.5rem;
   border-radius: 12px;
   font-weight: 700;
@@ -360,7 +366,7 @@
 }
 
 .btn-primary:hover {
-  background-color: #0056a3;
+  background-color: var(--ui-brand-hover);
   transform: translateY(-1px);
   box-shadow: 0 4px 6px rgba(0, 116, 224, 0.2);
 }
@@ -489,8 +495,8 @@
 
 /* Modern add event button on mobile */
 .add-event-btn {
-  background-color: #0074e0;
-  color: #ffffff;
+  background-color: var(--ui-brand);
+  color: var(--ui-on-solid);
   border: none;
   padding: 0.6rem 1.2rem;
   border-radius: 12px;
@@ -505,7 +511,7 @@
 }
 
 .add-event-btn:hover {
-  background-color: #0056a3;
+  background-color: var(--ui-brand-hover);
   transform: translateY(-1px);
 }
 
@@ -554,7 +560,7 @@
 }
 
 .mobile-event-card:hover {
-  border-color: #0074e0;
+  border-color: var(--ui-brand);
   transform: translateY(-2px);
   box-shadow: 0 8px 16px rgba(0, 116, 224, 0.06);
 }
@@ -603,7 +609,7 @@
 }
 
 .event-type-tag, .roster-tag, .all-tag {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 800;
   text-transform: uppercase;
   padding: 2px 8px;
@@ -658,7 +664,7 @@
 }
 
 .arrow-indicator {
-  color: var(--ui-text-faint);
+  color: var(--ui-text-muted);
   font-size: 1.1rem;
   transition: transform 0.2s ease;
   padding-left: 0.5rem;
@@ -715,6 +721,12 @@
   border: 1px solid var(--ui-bd-red-100);
 }
 
+.mobile-status-badge.canceled {
+  background-color: var(--ui-neutral);
+  color: var(--ui-on-solid);
+  border: 1px solid var(--ui-neutral);
+}
+
 .mobile-status-badge.none {
   background-color: var(--ui-surface-subtle);
   color: var(--ui-text-tertiary);
@@ -724,12 +736,12 @@
 /* Reunion Specific styling */
 .event-type-tag.reunion {
   background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  color: var(--ui-fg-green-700);
 }
 
 :host ::ng-deep .tag-reunion {
   background: rgba(16, 185, 129, 0.1) !important;
-  color: #10b981 !important;
+  color: var(--ui-fg-green-700) !important;
 }
 
 .invited-groups-checkboxes {

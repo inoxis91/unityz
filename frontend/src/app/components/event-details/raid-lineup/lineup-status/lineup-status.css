@@ -4,7 +4,7 @@
 }
 
 .banner {
-  --tone: #d97706;
+  --tone: var(--ui-status-warning);
   --tone-bg: var(--ui-bg-amber-50);
   --tone-text: var(--ui-fg-amber-800);
   display: flex;
@@ -19,13 +19,13 @@
 }
 
 .banner.selected {
-  --tone: #16a34a;
+  --tone: var(--ui-status-success);
   --tone-bg: var(--ui-bg-green-50);
   --tone-text: var(--ui-fg-green-800);
 }
 
 .banner.benched {
-  --tone: #475569;
+  --tone: var(--ui-neutral);
   --tone-bg: var(--ui-surface-subtle);
   --tone-text: var(--ui-text-primary);
 }
@@ -70,7 +70,7 @@
 }
 
 .role-label {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 800;
   color: var(--ui-text-tertiary);
   text-transform: uppercase;
@@ -84,8 +84,8 @@
   padding: 4px 12px 4px 6px;
   border-radius: 999px;
   font-weight: 800;
-  color: #ffffff;
-  background: #0f172a;
+  color: var(--ui-on-solid);
+  background: var(--ui-inverse-surface-strong);
 }
 
 .role-value img {
