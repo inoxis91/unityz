@@ -2,7 +2,7 @@ import { Component, OnInit, signal, computed, inject, ViewEncapsulation } from '
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { CalendarService, CalendarEvent, Signup } from '../../services/calendar';
+import { CalendarService, CalendarEvent, LineupEntry, Signup } from '../../services/calendar';
 import { CharacterService, Character } from '../../services/character';
 import { RosterService, Roster } from '../../services/roster';
 import { AuthService } from '../../services/auth';
@@ -12,11 +12,13 @@ import { I18nService } from '../../services/i18n';
 import { ParticipantsComponent } from './participants/participants';
 import { CompositionComponent } from './composition/composition';
 import { LogsDashboardComponent } from './logs-dashboard/logs-dashboard';
+import { RaidLineupComponent } from './raid-lineup/raid-lineup';
+import { LineupStatusComponent } from './raid-lineup/lineup-status/lineup-status';
 
 @Component({
   selector: 'app-event-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, LogsDashboardComponent, ParticipantsComponent, CompositionComponent],
+  imports: [CommonModule, RouterModule, FormsModule, LogsDashboardComponent, ParticipantsComponent, CompositionComponent, RaidLineupComponent, LineupStatusComponent],
   templateUrl: './event-details.html',
   styleUrl: './event-details.css',
   encapsulation: ViewEncapsulation.None
@@ -66,6 +68,18 @@ export class EventDetailsComponent implements OnInit {
   };
 
   canManageEvents = computed(() => this.authService.canManageEvents());
+  canManageLineup = computed(() => this.authService.canManageLineup());
+  currentUserId = computed(() => this.authService.currentUser()?.id ?? null);
+
+  isRaid = computed(() => this.event()?.type?.toLowerCase() === 'raid');
+
+  /** Inscription du joueur connecté, si elle est concernée par le line-up (raid actif, non absent). */
+  myLineupSignup = computed(() => {
+    const evt = this.event();
+    if (!this.isRaid() || evt?.is_canceled) return null;
+    const mine = this.signups().find((s) => s.user_id === this.currentUserId());
+    return mine && mine.status !== 'absent' ? mine : null;
+  });
 
   constructor(
     private route: ActivatedRoute,
@@ -324,6 +338,16 @@ export class EventDetailsComponent implements OnInit {
       this.loadSignups(evt.id);
       this.loadEvent(evt.id);
     }
+  }
+
+  onLineupEntriesChange(entries: LineupEntry[]) {
+    const byUser = new Map(entries.map((e) => [e.user_id, e]));
+    this.signups.update((list) =>
+      list.map((s) => {
+        const entry = byUser.get(s.user_id);
+        return entry ? { ...s, selection: entry.selection, assigned_role: entry.assigned_role } : s;
+      }),
+    );
   }
 
   onOpenAltsModal(signup: Signup) {

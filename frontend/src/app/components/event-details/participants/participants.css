@@ -1,1 +1,19 @@
 /* Participants component styles - mostly inherited from event-details global stylesheet */
+
+/* Statut de line-up raid sur la carte participant */
+.lineup-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #ffffff;
+  text-shadow: none;
+}
+.lineup-chip.selected { background: #16a34a; }
+.lineup-chip.benched { background: #475569; }

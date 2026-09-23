@@ -60,4 +60,6 @@ export const hasRole = (roles: UserRole[]) => {
 export const isAdmin = hasRole(['admin']);
 export const canManageRosters = hasRole(['admin', 'raid_leader']);
 export const canManageEvents = hasRole(['admin', 'raid_leader', 'event_manager']);
+// Sélection du line-up raid (validé / banc, rôle imposé) : réservé au raid lead
+export const canManageLineup = hasRole(['admin', 'raid_leader']);
 export const canManageFees = hasRole(['admin', 'treasurer']);

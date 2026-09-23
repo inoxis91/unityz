@@ -1,10 +1,11 @@
 import express from 'express';
 import pool from '../lib/db';
 import { EventService } from '../services/eventService';
+import { LineupService } from '../services/lineupService';
 import { WclService } from '../services/wclService';
-import { isAuthenticated, canManageEvents, requireActiveGuild, requirePaidGuild } from '../middlewares/auth';
+import { isAuthenticated, canManageEvents, canManageLineup, requireActiveGuild, requirePaidGuild } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
-import { createEventSchema, updateEventSchema, signupSchema, updateSignupGroupSchema, updateGroupsCountSchema, updateSignupSchema } from '../schemas/eventSchemas';
+import { createEventSchema, updateEventSchema, signupSchema, updateSignupGroupSchema, updateGroupsCountSchema, updateSignupSchema, updateLineupEntrySchema, bulkUpdateLineupSchema } from '../schemas/eventSchemas';
 
 const router = express.Router();
 
@@ -199,6 +200,36 @@ router.patch('/:id/signups/:userId', canManageEvents, validate(updateSignupSchem
       return res.status(404).json({ status: 'error', message: 'Signup not found' });
     }
     res.json({ status: 'success', message: 'Signup updated successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PATCH /api/events/:id/lineup : Sélection groupée (validé / banc / en attente) pour un raid (Admin/Raid Leader)
+router.patch('/:id/lineup', canManageLineup, validate(bulkUpdateLineupSchema), async (req, res, next) => {
+  try {
+    const entries = await LineupService.bulkUpdateSelection(
+      req.user!.active_guild_id!,
+      req.params.id as string,
+      req.body.user_ids,
+      req.body.selection,
+    );
+    res.json(entries);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PATCH /api/events/:id/lineup/:userId : Sélection et/ou rôle imposé d'un joueur pour un raid (Admin/Raid Leader)
+router.patch('/:id/lineup/:userId', canManageLineup, validate(updateLineupEntrySchema), async (req, res, next) => {
+  try {
+    const entry = await LineupService.updateEntry(
+      req.user!.active_guild_id!,
+      req.params.id as string,
+      req.params.userId as string,
+      req.body,
+    );
+    res.json(entry);
   } catch (error) {
     next(error);
   }

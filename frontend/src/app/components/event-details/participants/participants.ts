@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, signal, computed, inject, effec
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { CalendarService, Signup } from '../../../services/calendar';
+import { CalendarService, Signup, effectiveRole } from '../../../services/calendar';
 import { Character } from '../../../services/character';
 import { Roster } from '../../../services/roster';
 import { ToastService } from '../../../services/toast';
@@ -38,6 +38,9 @@ export class ParticipantsComponent {
   signupsSig = signal<any[]>([]);
   myCharactersSig = signal<any[]>([]);
   rostersSig = signal<any[]>([]);
+
+  readonly effectiveRole = effectiveRole;
+  isRaid = computed(() => this.eventSig()?.type?.toLowerCase() === 'raid');
 
   // Sorting
   sortMethod = signal<'date' | 'status'>('date');

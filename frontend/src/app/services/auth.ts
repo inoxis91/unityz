@@ -49,6 +49,8 @@ export class AuthService {
 
   canManageRosters = computed(() => this.isAdmin() || this.isRaidLeader());
   canManageEvents = computed(() => this.isAdmin() || this.isRaidLeader() || this.isEventManager());
+  // Miroir de canManageLineup (backend/src/middlewares/auth.ts) : sélection validé / banc des raids
+  canManageLineup = computed(() => this.isAdmin() || this.isRaidLeader());
   canManageFees = computed(() => this.isAdmin() || this.isTreasurer());
   canAccessAdmin = computed(() => this.isAdmin() || this.canManageRosters() || this.canManageFees());
 

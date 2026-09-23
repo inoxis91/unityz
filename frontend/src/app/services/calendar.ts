@@ -23,6 +23,22 @@ export interface CalendarEvent {
   creator_name?: string;
 }
 
+export type RaidRole = 'tank' | 'heal' | 'dps';
+/** null = en attente de décision du raid lead. */
+export type LineupSelection = 'selected' | 'benched' | null;
+
+export interface LineupEntry {
+  user_id: string;
+  role: RaidRole;
+  selection: LineupSelection;
+  assigned_role: RaidRole | null;
+}
+
+export interface LineupPatch {
+  selection?: LineupSelection;
+  assigned_role?: RaidRole | null;
+}
+
 export interface Signup {
   id: string;
   event_id: string;
@@ -32,6 +48,8 @@ export interface Signup {
   status: string;
   group_index: number;
   comment: string | null;
+  selection?: LineupSelection;
+  assigned_role?: RaidRole | null;
   created_at: string;
   updated_at: string;
   character_name?: string;
@@ -105,6 +123,21 @@ export interface WclReportMetrics {
   wclKeysMissing?: boolean;
 }
 
+/** Rôle réellement joué : celui imposé par le raid lead, sinon celui choisi par le joueur. */
+export function effectiveRole(signup: Pick<Signup, 'role' | 'assigned_role'>): RaidRole {
+  return (signup.assigned_role ?? signup.role) as RaidRole;
+}
+
+/** Rôles jouables : ceux du personnage inscrit, plus le rôle déclaré par le joueur (miroir du backend). */
+export function playableRoles(signup: Signup): Set<RaidRole> {
+  const roles = new Set<RaidRole>([signup.role as RaidRole]);
+  const character = signup.user_characters?.find((c) => c.id === signup.character_id);
+  if (character?.is_tank) roles.add('tank');
+  if (character?.is_heal) roles.add('heal');
+  if (character?.is_dps) roles.add('dps');
+  return roles;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -159,6 +192,14 @@ export class CalendarService {
 
   updateSignup(eventId: string, userId: string, data: { character_id?: string | null, role?: string, status?: string }): Observable<any> {
     return this.http.patch(`${this.apiUrl}/${eventId}/signups/${userId}`, data, { withCredentials: true });
+  }
+
+  updateLineupEntry(eventId: string, userId: string, patch: LineupPatch): Observable<LineupEntry> {
+    return this.http.patch<LineupEntry>(`${this.apiUrl}/${eventId}/lineup/${userId}`, patch, { withCredentials: true });
+  }
+
+  bulkUpdateLineup(eventId: string, userIds: string[], selection: LineupSelection): Observable<LineupEntry[]> {
+    return this.http.patch<LineupEntry[]>(`${this.apiUrl}/${eventId}/lineup`, { user_ids: userIds, selection }, { withCredentials: true });
   }
 
   getSignups(eventId: string): Observable<Signup[]> {

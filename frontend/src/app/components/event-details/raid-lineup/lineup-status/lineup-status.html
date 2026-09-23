@@ -1,0 +1,17 @@
+<div class="banner" [class]="state()" role="status">
+  <span class="icon" aria-hidden="true">{{ icons[state()] }}</span>
+  <div class="content">
+    <strong class="title">{{ i18n.t('event.lineup.my_status_' + state() + '_title') }}</strong>
+    <span class="desc">{{ i18n.t('event.lineup.my_status_' + state() + '_desc') }}</span>
+  </div>
+  <div class="role">
+    <span class="role-label">{{ i18n.t('event.lineup.my_status_role') }}</span>
+    <span class="role-value">
+      <img [src]="'assets/icons/' + role() + '.png'" alt="" />
+      {{ i18n.t('event.details.role_' + role()) }}
+    </span>
+    @if (forcedRoleNote(); as note) {
+      <span class="forced">↻ {{ note }}</span>
+    }
+  </div>
+</div>

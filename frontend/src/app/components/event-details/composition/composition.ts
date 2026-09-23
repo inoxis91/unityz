@@ -18,6 +18,13 @@ export interface Buff extends BuffInfo {
   count: number;
 }
 
+export function computeBuffs(members: Signup[]): Buff[] {
+  return CLASS_BUFFS.map((baseBuff) => {
+    const count = members.filter((s) => baseBuff.classes.includes(s.character_class || '')).length;
+    return { ...baseBuff, present: count > 0, count };
+  });
+}
+
 @Component({
   selector: 'app-composition',
   standalone: true,
@@ -83,16 +90,7 @@ export class CompositionComponent {
   });
 
   calculateBuffs(members: Signup[]): Buff[] {
-    return CLASS_BUFFS.map((baseBuff) => {
-      const count = members.filter((s) =>
-        baseBuff.classes.includes(s.character_class || ''),
-      ).length;
-      return {
-        ...baseBuff,
-        present: count > 0,
-        count: count,
-      } as Buff;
-    });
+    return computeBuffs(members);
   }
 
   // MM+ Group Management

@@ -28,6 +28,20 @@ const TRANSLATIONS: Record<SupportedDiscordLocale, Record<string, string>> = {
     'discord.event.canceled_body': 'L\'événement **{eventTitle}** prévu le {date} à {time} a été annulé.',
     'discord.event.canceled_reason': '• **Motif d\'annulation :** {reason}',
 
+    // Raid line-up (MP au joueur)
+    'discord.lineup.selected': '✅ **Tu es validé(e) pour le raid !**',
+    'discord.lineup.benched': '🪑 **Tu es sur le banc pour ce raid.**',
+    'discord.lineup.pending': '⏳ **Ta sélection pour ce raid est de nouveau en attente.**',
+    'discord.lineup.role_changed': '🔄 **Ton rôle pour ce raid a été modifié.**',
+    'discord.lineup.event_line': '⚔️ **{eventTitle}** — {date} à {time}',
+    'discord.lineup.character_role_line': '🎯 Personnage : **{character}** · Rôle : **{role}**',
+    'discord.lineup.role_line': '🎯 Rôle : **{role}**',
+    'discord.lineup.benched_outro': 'Reste disponible : tu peux être appelé(e) en renfort à tout moment. 🙏',
+    'discord.lineup.link': '🔗 Détails : {link}',
+    'discord.lineup.role.tank': 'Tank',
+    'discord.lineup.role.heal': 'Heal',
+    'discord.lineup.role.dps': 'DPS',
+
     // Craft Service
     'discord.craft.title': '🛠️ **NOUVELLE DEMANDE DE CRAFT !**',
     'discord.craft.body': '**{requesterText}** a besoin d\'un artisan ! 🚀',
@@ -106,6 +120,20 @@ const TRANSLATIONS: Record<SupportedDiscordLocale, Record<string, string>> = {
     'discord.event.canceled_title': '🚨 **EVENT CANCELED** 🚨',
     'discord.event.canceled_body': 'The event **{eventTitle}** scheduled for {date} at {time} has been canceled.',
     'discord.event.canceled_reason': '• **Reason for cancellation:** {reason}',
+
+    // Raid line-up (DM to the player)
+    'discord.lineup.selected': '✅ **You have been selected for the raid!**',
+    'discord.lineup.benched': '🪑 **You are on the bench for this raid.**',
+    'discord.lineup.pending': '⏳ **Your raid selection is pending again.**',
+    'discord.lineup.role_changed': '🔄 **Your role for this raid has changed.**',
+    'discord.lineup.event_line': '⚔️ **{eventTitle}** — {date} at {time}',
+    'discord.lineup.character_role_line': '🎯 Character: **{character}** · Role: **{role}**',
+    'discord.lineup.role_line': '🎯 Role: **{role}**',
+    'discord.lineup.benched_outro': 'Please stay available: you may be called in as a replacement at any time. 🙏',
+    'discord.lineup.link': '🔗 Details: {link}',
+    'discord.lineup.role.tank': 'Tank',
+    'discord.lineup.role.heal': 'Healer',
+    'discord.lineup.role.dps': 'DPS',
 
     // Craft Service
     'discord.craft.title': '🛠️ **NEW CRAFT REQUEST!**',

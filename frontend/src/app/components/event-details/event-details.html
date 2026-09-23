@@ -138,6 +138,9 @@
         }
       </div>
     </div>
+    @if (myLineupSignup(); as mine) {
+      <app-lineup-status [signup]="mine" />
+    }
     <div class="tabs">
       <button
         [class.active]="activeTab() === 'participants'"
@@ -146,7 +149,7 @@
         {{ i18n.t('event.details.tab_participants') }}
       </button>
       <button [class.active]="activeTab() === 'composition'" (click)="activeTab.set('composition')">
-        {{ i18n.t('event.details.tab_composition') }}
+        {{ i18n.t(isRaid() ? 'event.lineup.tab' : 'event.details.tab_composition') }}
       </button>
       @if (event()?.type?.toLowerCase() === 'raid' && event()?.logs) {
         <button [class.active]="activeTab() === 'logs'" (click)="activeTab.set('logs')">
@@ -172,6 +175,16 @@
     <!-- TAB: Composition -->
     @if (activeTab() === 'composition') {
       <div class="tab-content">
+        @if (isRaid()) {
+          <app-raid-lineup
+            [event]="event()!"
+            [signups]="signups()"
+            [canManage]="canManageLineup() && !event()!.is_canceled"
+            [currentUserId]="currentUserId()"
+            (entriesChange)="onLineupEntriesChange($event)"
+            (openAlts)="onOpenAltsModal($event)"
+          />
+        } @else {
         <app-composition
           [event]="event()"
           [signups]="signups()"
@@ -180,6 +193,7 @@
           (openAlts)="onOpenAltsModal($event)"
           (compositionChanged)="onReloadSignups()"
         ></app-composition>
+        }
       </div>
     }
     <!-- TAB: Logs & Stats -->

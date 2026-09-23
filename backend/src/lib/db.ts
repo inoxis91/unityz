@@ -390,6 +390,8 @@ export const initDb = async (retries = 5, delay = 3000): Promise<void> => {
         status VARCHAR(50) DEFAULT 'signed_up', -- 'signed_up', 'confirmed', 'standby', 'declined'
         group_index INTEGER DEFAULT 0,
         comment TEXT,
+        selection VARCHAR(10) CHECK (selection IN ('selected', 'benched')), -- NULL = en attente de décision du raid lead
+        assigned_role VARCHAR(10) CHECK (assigned_role IN ('tank', 'heal', 'dps')), -- NULL = rôle choisi par le joueur
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(event_id, user_id) -- One character per user per event
@@ -419,6 +421,13 @@ export const initDb = async (retries = 5, delay = 3000): Promise<void> => {
         END IF;
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='event_signups' AND column_name='group_index') THEN
           ALTER TABLE event_signups ADD COLUMN group_index INTEGER DEFAULT 0;
+        END IF;
+        -- Line-up raid : sélection (validé / banc) et rôle imposé par le raid lead
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='event_signups' AND column_name='selection') THEN
+          ALTER TABLE event_signups ADD COLUMN selection VARCHAR(10) CHECK (selection IN ('selected', 'benched'));
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='event_signups' AND column_name='assigned_role') THEN
+          ALTER TABLE event_signups ADD COLUMN assigned_role VARCHAR(10) CHECK (assigned_role IN ('tank', 'heal', 'dps'));
         END IF;
       END $$;
     `);

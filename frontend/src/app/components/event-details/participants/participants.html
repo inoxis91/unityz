@@ -201,8 +201,8 @@
           <div class="participant-main">
             @if (s.status !== 'absent') {
               <div class="role-icon-box">
-                <span class="role-icon" [class]="s.role">
-                  @switch (s.role) {
+                <span class="role-icon" [class]="effectiveRole(s)">
+                  @switch (effectiveRole(s)) {
                     @case ('tank') {
                       <img src="assets/icons/tank.png" class="role-icon-img" alt="Tank" />
                     }
@@ -236,6 +236,12 @@
               </span>
               @if (s.status === 'absent') {
                 <span class="absent-label">{{ i18n.t('event.details.label_absent') }}</span>
+              }
+              @if (isRaid() && s.status !== 'absent' && s.selection) {
+                <span class="lineup-chip" [class]="s.selection">
+                  {{ s.selection === 'selected' ? '✓' : '🪑' }}
+                  {{ i18n.t('event.lineup.chip_' + s.selection) }}
+                </span>
               }
               <span class="signup-time">{{
                 s.updated_at || s.signup_date || s.created_at | date: 'dd/MM HH:mm'

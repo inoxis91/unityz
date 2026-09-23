@@ -73,3 +73,31 @@ export const updateSignupSchema = z.object({
     status: z.enum(['signed_up', 'standby', 'absent']).optional(),
   }),
 });
+
+const raidRole = z.enum(['tank', 'heal', 'dps']);
+const lineupSelection = z.enum(['selected', 'benched']).nullable(); // null = remettre en attente
+
+export const updateLineupEntrySchema = z.object({
+  params: z.object({
+    id: z.string().uuid(),
+    userId: z.string().min(1),
+  }),
+  body: z
+    .object({
+      selection: lineupSelection.optional(),
+      assigned_role: raidRole.nullable().optional(), // null = revenir au rôle choisi par le joueur
+    })
+    .refine((b) => b.selection !== undefined || b.assigned_role !== undefined, {
+      message: 'At least one of selection or assigned_role is required',
+    }),
+});
+
+export const bulkUpdateLineupSchema = z.object({
+  params: z.object({
+    id: z.string().uuid(),
+  }),
+  body: z.object({
+    user_ids: z.array(z.string().min(1)).min(1).max(200),
+    selection: lineupSelection,
+  }),
+});

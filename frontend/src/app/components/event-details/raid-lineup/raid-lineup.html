@@ -1,0 +1,325 @@
+<section class="lineup">
+  <!-- Synthèse + actions groupées -->
+  <header class="lu-toolbar">
+    <div class="lu-stats">
+      <div class="lu-stat selected">
+        <strong>{{ selectedCount() }}</strong>
+        <span>{{ i18n.t('event.lineup.stat_selected') }}</span>
+      </div>
+      <div class="lu-stat pending">
+        <strong>{{ pool().length }}</strong>
+        <span>{{ i18n.t('event.lineup.stat_pending') }}</span>
+      </div>
+      <div class="lu-stat benched">
+        <strong>{{ bench().length }}</strong>
+        <span>{{ i18n.t('event.lineup.stat_benched') }}</span>
+      </div>
+      <div class="lu-role-split" [attr.aria-label]="i18n.t('event.lineup.stat_selected')">
+        @for (role of roles; track role) {
+          <span class="lu-role-count" [title]="roleLabel(role)">
+            <img [src]="'assets/icons/' + role + '.png'" [alt]="roleLabel(role)" />
+            {{ selectedByRole()[role].length }}
+          </span>
+        }
+      </div>
+    </div>
+
+    @if (canManage()) {
+      <div class="lu-bulk">
+        <button
+          type="button"
+          class="lu-btn primary"
+          (click)="selectAllPending()"
+          [disabled]="pool().length === 0"
+        >
+          ✓ {{ i18n.t('event.lineup.btn_select_pending') }}
+          @if (pool().length) {
+            <span class="lu-btn-badge">{{ pool().length }}</span>
+          }
+        </button>
+        <button
+          type="button"
+          class="lu-btn ghost"
+          (click)="resetAll()"
+          [disabled]="decidedUserIds().length === 0"
+        >
+          ↺ {{ i18n.t('event.lineup.btn_reset') }}
+        </button>
+      </div>
+      <p class="lu-hint">💡 {{ i18n.t('event.lineup.hint_manager') }}</p>
+    }
+  </header>
+
+  <!-- Buffs des joueurs hors banc -->
+  <div class="buffs-container lu-buffs">
+    <h3>{{ i18n.t('event.details.raid_buffs') }}</h3>
+    <div class="buffs-grid">
+      @for (buff of buffs(); track buff.id) {
+        <div
+          class="buff-card"
+          [class.missing]="!buff.present"
+          [title]="i18n.t('buff.label.' + buff.id)"
+        >
+          <div class="buff-icon">
+            @if (buff.icon.includes('/')) {
+              <img [src]="buff.icon" [alt]="i18n.t('buff.label.' + buff.id)" />
+            } @else {
+              <span>{{ buff.icon }}</span>
+            }
+          </div>
+          <div class="buff-info">
+            <span class="buff-label">{{ i18n.t('buff.desc.' + buff.id) }}</span>
+            @if (buff.present) {
+              <span class="buff-count">x{{ buff.count }}</span>
+            } @else {
+              <span class="buff-status">{{ i18n.t('event.details.buff_missing') }}</span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="lu-board" cdkDropListGroup>
+    <div class="lu-main">
+      <!-- En attente de décision -->
+      @if (canManage() || pool().length) {
+        <section
+          class="lu-zone pool"
+          cdkDropList
+          cdkDropListSortingDisabled
+          [cdkDropListData]="'pool'"
+          [cdkDropListDisabled]="!canManage()"
+          (cdkDropListDropped)="onDrop($event)"
+        >
+          <header class="lu-zone-header">
+            <span class="lu-dot"></span>
+            <h4>{{ i18n.t('event.lineup.zone_pool') }}</h4>
+            <span class="lu-count">{{ pool().length }}</span>
+          </header>
+          <div class="lu-cards">
+            @for (s of pool(); track s.user_id) {
+              <app-lineup-card
+                cdkDrag
+                [cdkDragData]="s"
+                [cdkDragDisabled]="!canManage()"
+                [cdkDragStartDelay]="dragStartDelay"
+                [signup]="s"
+                [canManage]="canManage()"
+                [isMe]="isMe(s)"
+                (select)="setSelection(s, 'selected')"
+                (bench)="setSelection(s, 'benched')"
+                (cdkDragEnded)="onDragEnded()"
+                (click)="onCardActivate(s)"
+                (keydown.enter)="onCardActivate(s)"
+                (keydown.space)="$event.preventDefault(); onCardActivate(s)"
+              />
+            } @empty {
+              <p class="lu-empty">{{ i18n.t('event.lineup.empty_pool') }}</p>
+            }
+          </div>
+        </section>
+      }
+
+      <!-- Validés, par rôle -->
+      <div class="lu-roles">
+        @for (role of roles; track role) {
+          <section
+            class="lu-zone role"
+            [class]="role"
+            cdkDropList
+            cdkDropListSortingDisabled
+            [cdkDropListData]="role"
+            [cdkDropListDisabled]="!canManage()"
+            [cdkDropListEnterPredicate]="canEnter"
+            (cdkDropListDropped)="onDrop($event)"
+          >
+            <header class="lu-zone-header">
+              <img
+                class="lu-zone-icon"
+                [src]="'assets/icons/' + role + '.png'"
+                [alt]="roleLabel(role)"
+              />
+              <h4>{{ i18n.t(roleHeaderKeys[role]) }}</h4>
+              <span class="lu-count">{{ selectedByRole()[role].length }}</span>
+            </header>
+            <div class="lu-cards">
+              @for (s of selectedByRole()[role]; track s.user_id) {
+                <app-lineup-card
+                  cdkDrag
+                  [cdkDragData]="s"
+                  [cdkDragDisabled]="!canManage()"
+                  [cdkDragStartDelay]="dragStartDelay"
+                  [signup]="s"
+                  [canManage]="canManage()"
+                  [isMe]="isMe(s)"
+                  (select)="setSelection(s, 'selected')"
+                  (bench)="setSelection(s, 'benched')"
+                  (cdkDragEnded)="onDragEnded()"
+                  (click)="onCardActivate(s)"
+                  (keydown.enter)="onCardActivate(s)"
+                  (keydown.space)="$event.preventDefault(); onCardActivate(s)"
+                />
+              } @empty {
+                <p class="lu-empty">
+                  {{
+                    i18n.t(
+                      canManage() ? 'event.lineup.empty_role_manager' : 'event.lineup.empty_role'
+                    )
+                  }}
+                </p>
+              }
+            </div>
+          </section>
+        }
+      </div>
+    </div>
+
+    <!-- Banc -->
+    <aside
+      class="lu-zone bench"
+      cdkDropList
+      cdkDropListSortingDisabled
+      [cdkDropListData]="'bench'"
+      [cdkDropListDisabled]="!canManage()"
+      (cdkDropListDropped)="onDrop($event)"
+    >
+      <header class="lu-zone-header">
+        <span class="lu-zone-emoji" aria-hidden="true">🪑</span>
+        <h4>{{ i18n.t('event.lineup.zone_bench') }}</h4>
+        <span class="lu-count">{{ bench().length }}</span>
+      </header>
+      <div class="lu-cards">
+        @for (s of bench(); track s.user_id) {
+          <app-lineup-card
+            cdkDrag
+            [cdkDragData]="s"
+            [cdkDragDisabled]="!canManage()"
+            [cdkDragStartDelay]="dragStartDelay"
+            [signup]="s"
+            [canManage]="canManage()"
+            [isMe]="isMe(s)"
+            (select)="setSelection(s, 'selected')"
+            (bench)="setSelection(s, 'benched')"
+            (cdkDragEnded)="onDragEnded()"
+            (click)="onCardActivate(s)"
+            (keydown.enter)="onCardActivate(s)"
+            (keydown.space)="$event.preventDefault(); onCardActivate(s)"
+          />
+        } @empty {
+          <p class="lu-empty">{{ i18n.t('event.lineup.empty_bench') }}</p>
+        }
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- Panneau de décision (raid lead) : bottom-sheet sur mobile, modale sur desktop -->
+@if (sheetSignup(); as s) {
+  <div class="lu-sheet-overlay" (click)="closeSheet()">
+    <div
+      class="lu-sheet"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="displayName(s)"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="lu-sheet-header" [class]="classCss(s)">
+        <img
+          class="lu-sheet-role"
+          [src]="'assets/icons/' + effectiveRole(s) + '.png'"
+          [alt]="roleLabel(effectiveRole(s))"
+        />
+        <div class="lu-sheet-title">
+          <span class="name">{{ displayName(s) }}</span>
+          <span class="lu-sheet-sub">
+            {{ signedAsLabel(s) }}
+            @if (s.status === 'standby') {
+              · {{ i18n.t('event.details.status_maybe') }}
+            }
+          </span>
+        </div>
+        <button
+          type="button"
+          class="lu-sheet-close"
+          (click)="closeSheet()"
+          [attr.aria-label]="i18n.t('event.details.btn_close')"
+        >
+          ×
+        </button>
+      </header>
+
+      <div class="lu-sheet-body">
+        @if (s.comment) {
+          <blockquote class="lu-sheet-comment">“{{ s.comment }}”</blockquote>
+        }
+
+        <h5>{{ i18n.t('event.lineup.sheet_decision') }}</h5>
+        <div class="lu-segmented decision">
+          <button
+            type="button"
+            class="selected"
+            [class.active]="s.selection === 'selected'"
+            [attr.aria-pressed]="s.selection === 'selected'"
+            (click)="setSelection(s, 'selected')"
+          >
+            <span aria-hidden="true">✓</span> {{ i18n.t('event.lineup.action_select') }}
+          </button>
+          <button
+            type="button"
+            class="benched"
+            [class.active]="s.selection === 'benched'"
+            [attr.aria-pressed]="s.selection === 'benched'"
+            (click)="setSelection(s, 'benched')"
+          >
+            <span aria-hidden="true">🪑</span> {{ i18n.t('event.lineup.stat_benched') }}
+          </button>
+          <button
+            type="button"
+            class="pending"
+            [class.active]="!s.selection"
+            [attr.aria-pressed]="!s.selection"
+            (click)="setSelection(s, null)"
+          >
+            <span aria-hidden="true">⏳</span> {{ i18n.t('event.lineup.stat_pending') }}
+          </button>
+        </div>
+
+        <h5>{{ i18n.t('event.lineup.sheet_role') }}</h5>
+        <div class="lu-segmented roles">
+          @for (role of roles; track role) {
+            <button
+              type="button"
+              [class.active]="effectiveRole(s) === role"
+              [attr.aria-pressed]="effectiveRole(s) === role"
+              [disabled]="!sheetPlayableRoles().has(role)"
+              [title]="
+                sheetPlayableRoles().has(role)
+                  ? roleLabel(role)
+                  : i18n.t('event.lineup.sheet_not_playable')
+              "
+              (click)="assignRole(s, role)"
+            >
+              <img [src]="'assets/icons/' + role + '.png'" alt="" />
+              <span>{{ roleLabel(role) }}</span>
+              @if (role === s.role) {
+                <small>{{ i18n.t('event.lineup.sheet_player_choice') }}</small>
+              }
+            </button>
+          }
+        </div>
+
+        <p class="lu-sheet-note">📨 {{ i18n.t('event.lineup.sheet_notify_note') }}</p>
+      </div>
+
+      <footer class="lu-sheet-footer">
+        <button type="button" class="lu-btn ghost" (click)="viewCharacters(s)">
+          {{ i18n.t('event.lineup.sheet_view_characters') }}
+        </button>
+        <button type="button" class="lu-btn primary" (click)="closeSheet()">
+          {{ i18n.t('event.lineup.sheet_done') }}
+        </button>
+      </footer>
+    </div>
+  </div>
+}

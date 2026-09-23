@@ -1,0 +1,607 @@
+:host {
+  --lu-surface: #ffffff;
+  --lu-surface-muted: #f8fafc;
+  --lu-border: #e2e8f0;
+  --lu-text: #0f172a;
+  --lu-text-muted: #64748b;
+  --lu-accent: #0074e0;
+  --lu-selected: #16a34a;
+  --lu-pending: #d97706;
+  --lu-benched: #475569;
+  display: block;
+}
+
+/* ---------- Barre de synthèse ---------- */
+.lu-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  background: var(--lu-surface);
+  border: 1px solid var(--lu-border);
+  border-radius: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.lu-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.lu-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: var(--lu-surface-muted);
+  border: 1px solid var(--lu-border);
+}
+
+.lu-stat strong {
+  font-size: 1.35rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.lu-stat span {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--lu-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.lu-stat.selected strong {
+  color: var(--lu-selected);
+}
+.lu-stat.pending strong {
+  color: var(--lu-pending);
+}
+.lu-stat.benched strong {
+  color: var(--lu-benched);
+}
+
+.lu-role-split {
+  display: flex;
+  gap: 10px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: var(--lu-text);
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.lu-role-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lu-role-count img {
+  width: 20px;
+  height: 20px;
+}
+
+.lu-bulk {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.lu-hint {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--lu-text-muted);
+}
+
+/* ---------- Boutons ---------- */
+.lu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.lu-btn.primary {
+  border: none;
+  color: #ffffff;
+  background: var(--lu-accent);
+  box-shadow: 0 4px 10px rgba(0, 116, 224, 0.2);
+}
+
+.lu-btn.primary:hover:not(:disabled) {
+  background: #0056a3;
+  transform: translateY(-1px);
+}
+
+.lu-btn.ghost {
+  color: var(--lu-text-muted);
+  background: var(--lu-surface);
+  border: 1px solid var(--lu-border);
+}
+
+.lu-btn.ghost:hover:not(:disabled) {
+  color: var(--lu-text);
+  background: var(--lu-surface-muted);
+}
+
+.lu-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.lu-btn:focus-visible {
+  outline: 3px solid var(--lu-accent);
+  outline-offset: 2px;
+}
+
+.lu-btn-badge {
+  min-width: 22px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.lu-buffs {
+  margin-bottom: 1.5rem;
+}
+
+/* ---------- Tableau ---------- */
+.lu-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.lu-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.lu-roles {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.lu-zone {
+  min-height: 140px;
+  padding: 1rem;
+  border-radius: 18px;
+  background: var(--lu-surface);
+  border: 2px solid var(--lu-border);
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.lu-zone.pool {
+  min-height: 0;
+  background: #fffbeb;
+  border: 2px dashed #fcd34d;
+}
+
+.lu-zone.role.tank {
+  border-top: 5px solid #3b82f6;
+}
+.lu-zone.role.heal {
+  border-top: 5px solid #22c55e;
+}
+.lu-zone.role.dps {
+  border-top: 5px solid #ef4444;
+}
+
+.lu-zone.bench {
+  position: sticky;
+  top: 1rem;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+/* Zones pouvant accueillir la carte en cours de drag / survolées */
+.lu-zone.cdk-drop-list-receiving {
+  border-color: var(--lu-accent);
+  border-style: dashed;
+}
+
+.lu-zone.cdk-drop-list-dragging {
+  background: #eff6ff;
+  border-color: var(--lu-accent);
+}
+
+.lu-zone-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0.85rem;
+}
+
+.lu-zone-header h4 {
+  flex: 1;
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--lu-text);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.lu-zone-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.lu-zone-emoji {
+  font-size: 1.15rem;
+}
+
+.lu-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--lu-pending);
+  box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.18);
+}
+
+.lu-count {
+  min-width: 26px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: center;
+  color: #ffffff;
+  background: var(--lu-text);
+}
+
+.lu-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.lu-zone.bench .lu-cards {
+  grid-template-columns: 1fr;
+}
+
+/* Cartes avec boutons rapides : plus larges pour garder le nom lisible */
+.lu-zone.pool .lu-cards {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+.lu-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 1.25rem 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  color: #94a3b8;
+}
+
+/* ---------- Drag & drop ---------- */
+.cdk-drag-preview {
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.3) !important;
+  transform: rotate(-1.5deg);
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.3;
+}
+
+.cdk-drag-animating {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* ---------- Panneau de décision ---------- */
+.lu-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(3px);
+  animation: lu-fade 0.15s ease-out;
+}
+
+.lu-sheet {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 460px;
+  max-height: calc(100dvh - 2rem);
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--lu-surface);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  animation: lu-pop 0.18s ease-out;
+}
+
+.lu-sheet-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1rem 1.25rem;
+}
+
+.lu-sheet-role {
+  width: 40px;
+  height: 40px;
+  padding: 4px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.lu-sheet-title {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.lu-sheet-title .name {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.lu-sheet-sub {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.lu-sheet-header.class-priest .lu-sheet-sub,
+.lu-sheet-header.class-priest .lu-sheet-close {
+  color: #334155;
+  text-shadow: none;
+}
+
+.lu-sheet-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #ffffff;
+  background: rgba(15, 23, 42, 0.25);
+  cursor: pointer;
+}
+
+.lu-sheet-body {
+  padding: 1.25rem;
+  overflow-y: auto;
+}
+
+.lu-sheet-body h5 {
+  margin: 0 0 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--lu-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.lu-sheet-comment {
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--lu-border);
+  border-radius: 8px;
+  font-style: italic;
+  color: #334155;
+  background: var(--lu-surface-muted);
+}
+
+.lu-segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 1.25rem;
+}
+
+.lu-segmented button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 64px;
+  padding: 8px 6px;
+  border: 2px solid var(--lu-border);
+  border-radius: 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--lu-text);
+  background: var(--lu-surface-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.lu-segmented button:hover:not(:disabled):not(.active) {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+}
+
+.lu-segmented button:focus-visible {
+  outline: 3px solid var(--lu-accent);
+  outline-offset: 2px;
+}
+
+.lu-segmented button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.lu-segmented.decision .selected.active {
+  border-color: var(--lu-selected);
+  background: #f0fdf4;
+  color: #166534;
+}
+.lu-segmented.decision .benched.active {
+  border-color: var(--lu-benched);
+  background: #f1f5f9;
+  color: #1e293b;
+}
+.lu-segmented.decision .pending.active {
+  border-color: var(--lu-pending);
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.lu-segmented.roles button.active {
+  border-color: var(--lu-accent);
+  background: var(--lu-accent);
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 116, 224, 0.25);
+}
+
+.lu-segmented.roles img {
+  width: 26px;
+  height: 26px;
+}
+
+.lu-segmented.roles small {
+  font-size: 0.65rem;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.lu-sheet-note {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--lu-text-muted);
+}
+
+.lu-sheet-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--lu-border);
+  background: var(--lu-surface-muted);
+}
+
+@keyframes lu-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes lu-pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1100px) {
+  .lu-board {
+    grid-template-columns: 1fr;
+  }
+
+  .lu-zone.bench {
+    position: static;
+    min-height: 0;
+  }
+
+  .lu-zone.bench .lu-cards {
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .lu-roles {
+    grid-template-columns: 1fr;
+  }
+
+  .lu-zone {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .lu-toolbar {
+    padding: 1rem;
+  }
+
+  .lu-stats,
+  .lu-bulk {
+    width: 100%;
+  }
+
+  .lu-stat {
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px;
+  }
+
+  .lu-role-split {
+    width: 100%;
+    justify-content: space-around;
+  }
+
+  .lu-bulk .lu-btn {
+    flex: 1;
+  }
+
+  .lu-cards {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+
+  /* Bottom-sheet sur mobile */
+  .lu-sheet-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .lu-sheet {
+    max-width: none;
+    max-height: 90dvh;
+    border-radius: 22px 22px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .lu-sheet-footer .lu-btn {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lu-sheet,
+  .lu-sheet-overlay,
+  .cdk-drag-animating {
+    animation: none;
+    transition: none;
+  }
+}

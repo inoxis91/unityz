@@ -4,7 +4,7 @@
   padding: 2rem;
 }
 
-app-participants, app-composition, app-logs-dashboard {
+app-participants, app-composition, app-raid-lineup, app-logs-dashboard {
   display: block;
   width: 100%;
 }

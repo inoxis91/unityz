@@ -3,6 +3,19 @@ import axios from 'axios';
 
 export interface AppError extends Error {
   statusCode?: number;
+  code?: string;
+}
+
+/** Erreur métier transportant un statut HTTP et un code stable exploitable par le frontend. */
+export class HttpError extends Error implements AppError {
+  constructor(
+    public readonly statusCode: number,
+    message: string,
+    public readonly code?: string,
+  ) {
+    super(message);
+    this.name = 'HttpError';
+  }
 }
 
 export const errorHandler = (
@@ -28,6 +41,7 @@ export const errorHandler = (
     status: 'error',
     statusCode,
     message,
+    ...(err instanceof HttpError && err.code && { code: err.code }),
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 };

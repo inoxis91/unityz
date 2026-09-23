@@ -33,6 +33,8 @@ export interface Signup {
   status: string;
   group_index: number;
   comment: string | null;
+  selection: 'selected' | 'benched' | null;
+  assigned_role: 'tank' | 'heal' | 'dps' | null;
   created_at: Date;
   updated_at: Date;
   character_name?: string;
@@ -387,6 +389,12 @@ export class EventService {
         role = EXCLUDED.role, 
         comment = EXCLUDED.comment, 
         status = EXCLUDED.status,
+        -- Line-up raid : un absent sort de la sélection ; un changement de personnage invalide le rôle imposé
+        selection = CASE WHEN EXCLUDED.status = 'absent' THEN NULL ELSE event_signups.selection END,
+        assigned_role = CASE
+          WHEN EXCLUDED.status = 'absent' OR EXCLUDED.character_id IS DISTINCT FROM event_signups.character_id THEN NULL
+          ELSE event_signups.assigned_role
+        END,
         updated_at = CURRENT_TIMESTAMP
       RETURNING *
     `;
@@ -441,9 +449,15 @@ export class EventService {
       fields.push(`status = $${paramIndex}`);
       values.push(data.status);
       paramIndex++;
+      if (data.status === 'absent') fields.push('selection = NULL');
     }
 
     if (fields.length === 0) return false;
+
+    // Le rôle / personnage choisi ici par un manager devient le rôle effectif du line-up raid
+    if (data.role !== undefined || data.character_id !== undefined || data.status === 'absent') {
+      fields.push('assigned_role = NULL');
+    }
 
     values.push(eventId, userId);
     const query = `
