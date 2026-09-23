@@ -43,29 +43,29 @@ import { ToastService } from '../../services/toast';
         max-width: 450px;
         padding: 16px;
         border-radius: 16px;
-        background: white;
+        background: var(--ui-surface);
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         display: flex;
         align-items: center;
         gap: 12px;
         cursor: pointer;
         animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        border: 1px solid #f1f5f9;
+        border: 1px solid var(--ui-border-subtle);
       }
       .toast.success {
         border-left: 6px solid #22c55e;
-        background: #f0fdf4;
-        color: #166534;
+        background: var(--ui-bg-green-50);
+        color: var(--ui-fg-green-800);
       }
       .toast.error {
         border-left: 6px solid #ef4444;
-        background: #fef2f2;
-        color: #991b1b;
+        background: var(--ui-bg-red-50);
+        color: var(--ui-fg-red-800);
       }
       .toast.info {
         border-left: 6px solid #3b82f6;
-        background: #eff6ff;
-        color: #1d4ed8;
+        background: var(--ui-bg-blue-50);
+        color: var(--ui-fg-blue-700);
       }
 
       .icon {

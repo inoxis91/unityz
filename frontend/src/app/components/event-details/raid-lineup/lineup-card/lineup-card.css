@@ -113,7 +113,7 @@
 }
 
 .tag.comment {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(var(--ui-surface-rgb), 0.85);
   text-transform: none;
 }
 
@@ -149,7 +149,7 @@
   font-size: 0.95rem;
   font-weight: 900;
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(var(--ui-surface-rgb), 0.92);
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2);
   transition:
     transform 0.12s ease,
@@ -157,7 +157,7 @@
 }
 
 .quick-btn.select {
-  color: #16a34a;
+  color: var(--ui-fg-green-600);
 }
 
 .quick-btn:hover {
@@ -165,11 +165,11 @@
 }
 
 .quick-btn.select:hover {
-  background: #dcfce7;
+  background: var(--ui-bg-green-100);
 }
 
 .quick-btn.bench:hover {
-  background: #e2e8f0;
+  background: var(--ui-surface-strong);
 }
 
 .quick-btn:focus-visible {
@@ -179,7 +179,7 @@
 
 /* Prêtre : fond clair, texte sombre (cohérent avec event-details.css) */
 :host(.class-priest) .name {
-  color: #1e293b;
+  color: var(--ui-text-primary);
   text-shadow: none;
 }
 

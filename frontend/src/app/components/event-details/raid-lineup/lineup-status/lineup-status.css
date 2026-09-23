@@ -5,8 +5,8 @@
 
 .banner {
   --tone: #d97706;
-  --tone-bg: #fffbeb;
-  --tone-text: #92400e;
+  --tone-bg: var(--ui-bg-amber-50);
+  --tone-text: var(--ui-fg-amber-800);
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -20,14 +20,14 @@
 
 .banner.selected {
   --tone: #16a34a;
-  --tone-bg: #f0fdf4;
-  --tone-text: #166534;
+  --tone-bg: var(--ui-bg-green-50);
+  --tone-text: var(--ui-fg-green-800);
 }
 
 .banner.benched {
   --tone: #475569;
-  --tone-bg: #f1f5f9;
-  --tone-text: #1e293b;
+  --tone-bg: var(--ui-surface-subtle);
+  --tone-text: var(--ui-text-primary);
 }
 
 .icon {
@@ -38,7 +38,7 @@
   height: 48px;
   border-radius: 14px;
   font-size: 1.5rem;
-  background: #ffffff;
+  background: var(--ui-surface);
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
 }
 
@@ -58,7 +58,7 @@
 
 .desc {
   font-size: 0.88rem;
-  color: #475569;
+  color: var(--ui-text-tertiary);
 }
 
 .role {
@@ -72,7 +72,7 @@
 .role-label {
   font-size: 0.7rem;
   font-weight: 800;
-  color: #64748b;
+  color: var(--ui-text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
@@ -97,7 +97,7 @@
   max-width: 260px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #6d28d9;
+  color: var(--ui-fg-purple-700);
 }
 
 @media (max-width: 640px) {

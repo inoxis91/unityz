@@ -14,12 +14,12 @@
   margin: 0 0 0.5rem 0;
   font-size: 1.5rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--ui-text-strong);
 }
 
 .absences-header-row .subtitle {
   margin: 0;
-  color: #64748b;
+  color: var(--ui-text-muted);
   font-size: 0.95rem;
   line-height: 1.5;
 }
@@ -28,9 +28,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: white;
-  color: #475569;
-  border: 1px solid #e2e8f0;
+  background: var(--ui-surface);
+  color: var(--ui-text-tertiary);
+  border: 1px solid var(--ui-border);
   padding: 0.6rem 1.25rem;
   border-radius: 12px;
   font-weight: 700;
@@ -41,9 +41,9 @@
 }
 
 .btn-refresh:hover:not(:disabled) {
-  background: #f8fafc;
-  color: #0f172a;
-  border-color: #cbd5e1;
+  background: var(--ui-surface-muted);
+  color: var(--ui-text-strong);
+  border-color: var(--ui-border-strong);
   transform: translateY(-1px);
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
@@ -81,7 +81,7 @@
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: var(--ui-text-faint);
   font-size: 1rem;
   pointer-events: none;
 }
@@ -90,10 +90,10 @@
   width: 100%;
   padding: 0.75rem 1rem 0.75rem 2.5rem;
   border-radius: 14px;
-  border: 1px solid #e2e8f0;
-  background: white;
+  border: 1px solid var(--ui-border);
+  background: var(--ui-surface);
   font-size: 0.95rem;
-  color: #0f172a;
+  color: var(--ui-text-strong);
   outline: none;
   transition: all 0.2s;
   box-sizing: border-box;
@@ -102,7 +102,7 @@
 .search-box input:focus {
   border-color: #3b82f6;
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-  background: white;
+  background: var(--ui-surface);
 }
 
 /* Loading and Empty States */
@@ -113,16 +113,16 @@
   justify-content: center;
   padding: 4rem 2rem;
   text-align: center;
-  background: white;
+  background: var(--ui-surface);
   border-radius: 20px;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--ui-border-subtle);
   box-shadow: 0 10px 15px -3px rgba(0,0,0,0.02);
 }
 
 .loading-state .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #f1f5f9;
+  border: 4px solid var(--ui-border-subtle);
   border-top-color: #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -130,23 +130,23 @@
 }
 
 .loading-state p {
-  color: #64748b;
+  color: var(--ui-text-muted);
   font-weight: 600;
   margin: 0;
 }
 
 .empty-state p {
-  color: #64748b;
+  color: var(--ui-text-muted);
   font-size: 1rem;
   margin: 0;
 }
 
 /* Absences Table */
 .absences-table-wrapper {
-  background: white;
+  background: var(--ui-surface);
   border-radius: 20px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--ui-border);
   overflow-x: auto;
 }
 
@@ -157,21 +157,21 @@
 }
 
 .absences-table th {
-  background-color: #f8fafc;
+  background-color: var(--ui-surface-muted);
   padding: 1.1rem 1.5rem;
   font-weight: 700;
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #64748b;
-  border-bottom: 1px solid #e2e8f0;
+  color: var(--ui-text-muted);
+  border-bottom: 1px solid var(--ui-border);
 }
 
 .absences-table td {
   padding: 1.1rem 1.5rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--ui-border-subtle);
   font-size: 0.95rem;
-  color: #334155;
+  color: var(--ui-text-secondary);
   vertical-align: middle;
 }
 
@@ -180,16 +180,16 @@
 }
 
 .absences-table tr:hover td {
-  background-color: #f8fafc;
+  background-color: var(--ui-surface-muted);
 }
 
 /* Active/Ongoing Absence Row Highlighting */
 .absences-table tr.active-absence-row td {
-  background-color: #f0fdf4 !important;
+  background-color: var(--ui-bg-green-50) !important;
 }
 
 .absences-table tr.active-absence-row:hover td {
-  background-color: #dcfce7 !important;
+  background-color: var(--ui-bg-green-100) !important;
 }
 
 .member-cell {
@@ -200,7 +200,7 @@
 
 .member-cell .battletag {
   font-weight: 700;
-  color: #0f172a;
+  color: var(--ui-text-strong);
 }
 
 .active-badge {
@@ -223,29 +223,29 @@
 
 .character-cell .class-warrior { color: #c79c6e !important; }
 .character-cell .class-paladin { color: #ec4899 !important; }
-.character-cell .class-hunter { color: #15803d !important; }
-.character-cell .class-rogue { color: #a16207 !important; }
-.character-cell .class-priest { color: #475569 !important; }
+.character-cell .class-hunter { color: var(--ui-fg-green-700) !important; }
+.character-cell .class-rogue { color: var(--ui-fg-amber-700) !important; }
+.character-cell .class-priest { color: var(--ui-text-tertiary) !important; }
 .character-cell .class-death-knight { color: #c41f3b !important; }
-.character-cell .class-shaman { color: #0070de !important; }
-.character-cell .class-mage { color: #0284c7 !important; }
-.character-cell .class-warlock { color: #6d28d9 !important; }
-.character-cell .class-monk { color: #0f766e !important; }
-.character-cell .class-druid { color: #d97706 !important; }
-.character-cell .class-demon-hunter { color: #a21caf !important; }
-.character-cell .class-evoker { color: #115e59 !important; }
+.character-cell .class-shaman { color: var(--ui-fg-brand) !important; }
+.character-cell .class-mage { color: var(--ui-fg-sky-700) !important; }
+.character-cell .class-warlock { color: var(--ui-fg-purple-700) !important; }
+.character-cell .class-monk { color: var(--ui-fg-teal-700) !important; }
+.character-cell .class-druid { color: var(--ui-fg-amber-600) !important; }
+.character-cell .class-demon-hunter { color: var(--ui-fg-purple-700) !important; }
+.character-cell .class-evoker { color: var(--ui-fg-teal-700) !important; }
 
 .char-name {
   font-weight: 700;
 }
 
 .class-label {
-  color: #94a3b8;
+  color: var(--ui-text-faint);
   font-size: 0.85rem;
 }
 
 .no-char {
-  color: #94a3b8;
+  color: var(--ui-text-faint);
   font-size: 0.85rem;
   font-style: italic;
 }
@@ -256,7 +256,7 @@
 }
 
 .date-cell.start-date {
-  color: #3b82f6;
+  color: var(--ui-fg-blue-500);
 }
 
 .date-cell.end-date {
@@ -265,7 +265,7 @@
 
 .reason-cell {
   max-width: 350px;
-  color: #64748b;
+  color: var(--ui-text-muted);
   white-space: normal;
   word-break: break-word;
 }
@@ -275,9 +275,9 @@
 }
 
 .btn-delete {
-  background-color: #fef2f2;
-  color: #ef4444;
-  border: 1px solid #fee2e2;
+  background-color: var(--ui-bg-red-50);
+  color: var(--ui-fg-red-500);
+  border: 1px solid var(--ui-bd-red-100);
   padding: 0.5rem 1rem;
   border-radius: 8px;
   cursor: pointer;
@@ -340,11 +340,11 @@
 
 .indefinite-badge {
   display: inline-block;
-  background-color: #f1f5f9;
-  color: #64748b;
+  background-color: var(--ui-surface-subtle);
+  color: var(--ui-text-muted);
   padding: 0.25rem 0.6rem;
   border-radius: 8px;
   font-size: 0.8rem;
   font-weight: 600;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--ui-border);
 }

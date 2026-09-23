@@ -5,12 +5,12 @@
 }
 
 .crafts-header {
-  background: white;
+  background: var(--ui-surface);
   border-radius: 16px;
   padding: 2rem;
   margin-bottom: 2rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--ui-border-subtle);
 }
 
 .header-info {
@@ -21,7 +21,7 @@
 
 .header-info .icon {
   font-size: 2.5rem;
-  background: #f0fdf4;
+  background: var(--ui-bg-green-50);
   padding: 1rem;
   border-radius: 12px;
   color: #10b981;
@@ -30,13 +30,13 @@
 .header-info h1 {
   margin: 0;
   font-size: 1.85rem;
-  color: #1e293b;
+  color: var(--ui-text-primary);
   font-weight: 800;
 }
 
 .header-info .subtitle {
   margin: 0.25rem 0 0;
-  color: #64748b;
+  color: var(--ui-text-muted);
   font-size: 0.95rem;
 }
 
@@ -45,7 +45,7 @@
   display: flex;
   gap: 1rem;
   margin-bottom: 2rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--ui-border);
   padding-bottom: 0.5rem;
 }
 
@@ -54,7 +54,7 @@
   border: none;
   font-size: 1rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--ui-text-muted);
   padding: 0.75rem 1.25rem;
   cursor: pointer;
   border-radius: 8px;
@@ -65,8 +65,8 @@
 }
 
 .tabs button:hover {
-  background: #f1f5f9;
-  color: #1e293b;
+  background: var(--ui-surface-subtle);
+  color: var(--ui-text-primary);
 }
 
 .tabs button.active {
@@ -88,11 +88,11 @@
 /* Card layout */
 .requests-card,
 .form-card {
-  background: white;
+  background: var(--ui-surface);
   border-radius: 16px;
   padding: 2rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--ui-border-subtle);
 }
 
 .requests-card h2,
@@ -100,7 +100,7 @@
   margin-top: 0;
   margin-bottom: 1.5rem;
   font-size: 1.35rem;
-  color: #1e293b;
+  color: var(--ui-text-primary);
   font-weight: 700;
 }
 
@@ -108,7 +108,7 @@
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
-  color: #64748b;
+  color: var(--ui-text-muted);
 }
 
 .empty-icon {
@@ -132,25 +132,25 @@
 .requests-table th {
   padding: 1rem;
   font-weight: 600;
-  color: #475569;
-  border-bottom: 2px solid #edf2f7;
+  color: var(--ui-text-tertiary);
+  border-bottom: 2px solid var(--ui-border-subtle);
   font-size: 0.9rem;
 }
 
 .requests-table td {
   padding: 1.25rem 1rem;
-  border-bottom: 1px solid #edf2f7;
+  border-bottom: 1px solid var(--ui-border-subtle);
   vertical-align: middle;
 }
 
 .request-row:hover {
-  background: #f8fafc;
+  background: var(--ui-surface-muted);
 }
 
 /* Badges */
 .slot-badge {
-  background: #f1f5f9;
-  color: #334155;
+  background: var(--ui-surface-subtle);
+  color: var(--ui-text-secondary);
   padding: 4px 10px;
   border-radius: 6px;
   font-size: 0.85rem;
@@ -165,11 +165,11 @@
   text-transform: capitalize;
 }
 
-.armor-badge.cloth { background: #fef2f2; color: #b91c1c; }
-.armor-badge.leather { background: #fff7ed; color: #c2410c; }
-.armor-badge.mail { background: #f0fdf4; color: #15803d; }
-.armor-badge.plate { background: #f0f9ff; color: #1d4ed8; }
-.armor-badge.other { background: #faf5ff; color: #6b21a8; }
+.armor-badge.cloth { background: var(--ui-bg-red-50); color: var(--ui-fg-red-700); }
+.armor-badge.leather { background: var(--ui-bg-orange-50); color: var(--ui-fg-orange-700); }
+.armor-badge.mail { background: var(--ui-bg-green-50); color: var(--ui-fg-green-700); }
+.armor-badge.plate { background: var(--ui-bg-blue-50); color: var(--ui-fg-blue-700); }
+.armor-badge.other { background: var(--ui-bg-purple-50); color: var(--ui-fg-purple-700); }
 
 .user-cell {
   display: flex;
@@ -177,17 +177,17 @@
 }
 
 .char-name {
-  color: #1e293b;
+  color: var(--ui-text-primary);
   font-size: 0.95rem;
 }
 
 .btag {
-  color: #64748b;
+  color: var(--ui-text-muted);
   font-size: 0.8rem;
 }
 
 .date {
-  color: #64748b;
+  color: var(--ui-text-muted);
   font-size: 0.85rem;
 }
 
@@ -206,15 +206,15 @@
   font-weight: 600;
   color: #10b981;
   user-select: none;
-  background: #ecfdf5;
+  background: var(--ui-bg-green-50);
   padding: 6px 12px;
   border-radius: 8px;
-  border: 1px solid #a7f3d0;
+  border: 1px solid var(--ui-bd-green-200);
   transition: all 0.2s;
 }
 
 .complete-checkbox-label:hover {
-  background: #d1fae5;
+  background: var(--ui-bg-green-100);
 }
 
 .complete-checkbox {
@@ -224,7 +224,7 @@
 
 /* Request Form */
 .form-help {
-  color: #64748b;
+  color: var(--ui-text-muted);
   margin-top: 0;
   margin-bottom: 2rem;
   font-size: 0.95rem;
@@ -245,17 +245,17 @@
 
 .form-group label {
   font-weight: 600;
-  color: #334155;
+  color: var(--ui-text-secondary);
   font-size: 0.9rem;
 }
 
 .custom-select {
   padding: 0.75rem 1rem;
   border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  background-color: white;
+  border: 1px solid var(--ui-border-strong);
+  background-color: var(--ui-surface);
   font-size: 0.95rem;
-  color: #1e293b;
+  color: var(--ui-text-primary);
   outline: none;
   cursor: pointer;
   transition: border-color 0.2s;

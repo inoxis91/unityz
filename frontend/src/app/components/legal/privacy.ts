@@ -232,18 +232,18 @@ import { I18nService } from '../../services/i18n';
         max-width: 800px;
         margin: 40px auto;
         padding: 2rem;
-        background: #ffffff;
+        background: var(--ui-surface);
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 24px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-        color: #1e293b;
+        color: var(--ui-text-primary);
       }
       .back-link {
         margin-bottom: 2rem;
         text-align: left;
       }
       .back-link a {
-        color: #3b82f6;
+        color: var(--ui-fg-blue-500);
         font-weight: 600;
         text-decoration: none;
         font-size: 0.95rem;
@@ -254,14 +254,14 @@ import { I18nService } from '../../services/i18n';
       .legal-content h1 {
         font-size: 2rem;
         font-weight: 800;
-        color: #0f172a;
+        color: var(--ui-text-strong);
         margin: 0 0 0.5rem 0;
       }
       .last-update {
-        color: #64748b;
+        color: var(--ui-text-muted);
         font-size: 0.9rem;
         margin-bottom: 2.5rem;
-        border-bottom: 1px solid #f1f5f9;
+        border-bottom: 1px solid var(--ui-border-subtle);
         padding-bottom: 1rem;
       }
       section {
@@ -270,20 +270,20 @@ import { I18nService } from '../../services/i18n';
       section h2 {
         font-size: 1.25rem;
         font-weight: 700;
-        color: #1e293b;
+        color: var(--ui-text-primary);
         margin-top: 0;
         margin-bottom: 0.75rem;
       }
       section p {
         font-size: 0.95rem;
         line-height: 1.6;
-        color: #475569;
+        color: var(--ui-text-tertiary);
         margin: 0 0 1rem 0;
       }
       ul {
         margin: 0 0 1rem 0;
         padding-left: 1.5rem;
-        color: #475569;
+        color: var(--ui-text-tertiary);
         font-size: 0.95rem;
         line-height: 1.6;
       }

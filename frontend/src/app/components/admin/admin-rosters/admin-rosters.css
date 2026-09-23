@@ -1,13 +1,13 @@
 :host {
   --tank: #2563eb;
-  --tank-bg: #eff6ff;
+  --tank-bg: var(--ui-bg-blue-50);
   --heal: #16a34a;
-  --heal-bg: #f0fdf4;
+  --heal-bg: var(--ui-bg-green-50);
   --dps: #dc2626;
-  --dps-bg: #fef2f2;
-  --border: #e2e8f0;
-  --muted: #64748b;
-  --surface-alt: #f8fafc;
+  --dps-bg: var(--ui-bg-red-50);
+  --border: var(--ui-border);
+  --muted: var(--ui-text-muted);
+  --surface-alt: var(--ui-surface-muted);
   --accent: #0074e0;
   display: block;
 }
@@ -67,7 +67,7 @@
 .pool-header h3 {
   margin: 0;
   font-size: 1rem;
-  color: #334155;
+  color: var(--ui-text-secondary);
 }
 
 .count-badge {
@@ -85,7 +85,7 @@
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 0.9rem;
-  background: white;
+  background: var(--ui-surface);
 }
 
 .pool-search:focus {
@@ -108,7 +108,7 @@
   padding: 4px 6px;
   border: 1px solid var(--border);
   border-radius: 999px;
-  background: white;
+  background: var(--ui-surface);
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--muted);
@@ -146,7 +146,7 @@
 
 .roster-card {
   container-type: inline-size;
-  background: white;
+  background: var(--ui-surface);
   border: 1px solid var(--border);
   border-radius: 10px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
@@ -178,14 +178,14 @@
 .title-line h4 {
   margin: 0;
   font-size: 1.1rem;
-  color: #0f172a;
+  color: var(--ui-text-strong);
 }
 
 .weight-badge {
   font-size: 0.72rem;
   font-weight: 700;
   color: var(--muted);
-  background: white;
+  background: var(--ui-surface);
   border: 1px solid var(--border);
   padding: 1px 8px;
   border-radius: 999px;
@@ -239,7 +239,7 @@
 }
 
 .btn-action-icon {
-  background: white;
+  background: var(--ui-surface);
   border: 1px solid var(--border);
   width: 32px;
   height: 32px;
@@ -255,13 +255,13 @@
 .btn-action-icon:hover {
   border-color: var(--accent);
   color: var(--accent);
-  background: #f0f7ff;
+  background: var(--ui-bg-blue-50);
 }
 
 .btn-action-icon.delete:hover {
   border-color: #ef4444;
-  color: #ef4444;
-  background: #fef2f2;
+  color: var(--ui-fg-red-500);
+  background: var(--ui-bg-red-50);
 }
 
 /* Colonnes par rôle : DPS plus large car plus nombreux */
@@ -343,17 +343,17 @@
 }
 
 .roster-list.cdk-drop-list-receiving {
-  background: #f0f7ff;
+  background: var(--ui-bg-blue-50);
 }
 
 .roster-list.cdk-drop-list-dragging {
-  background: #e6f1fd;
+  background: var(--ui-bg-blue-50);
   outline: 2px dashed var(--accent);
   outline-offset: -4px;
 }
 
 .character-card {
-  background: white;
+  background: var(--ui-surface);
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 0.4rem 0.5rem 0.4rem 0.6rem;
@@ -388,12 +388,12 @@
 
 /* Couleurs de classe claires illisibles sur fond blanc (la bordure garde la vraie couleur) */
 .char-name.class-priest {
-  color: #64748b !important;
+  color: var(--ui-text-muted) !important;
   text-shadow: none;
 }
 
 .character-card.border-class-priest {
-  border-left-color: #cbd5e1 !important;
+  border-left-color: var(--ui-border-strong) !important;
 }
 
 .char-name.class-rogue {
@@ -438,7 +438,7 @@
   top: 50%;
   transform: translateY(-50%);
   border: none;
-  background: white;
+  background: var(--ui-surface);
   color: var(--muted);
   font-size: 1rem;
   line-height: 1;
@@ -456,8 +456,8 @@
 }
 
 .btn-more:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--ui-surface-subtle);
+  color: var(--ui-text-strong);
 }
 
 /* Écrans tactiles : pas de hover, le bouton reste visible */
@@ -474,7 +474,7 @@
   box-sizing: border-box;
   border-radius: 6px;
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
-  background: white;
+  background: var(--ui-surface);
   padding: 0.4rem 0.6rem;
   display: flex;
   justify-content: space-between;
@@ -488,7 +488,7 @@
 
 .cdk-drag-placeholder {
   opacity: 0.35;
-  background: #e9ecef;
+  background: var(--ui-surface-subtle);
   border: 1px dashed #94a3b8;
 }
 
@@ -503,7 +503,7 @@
 .empty-msg,
 .drop-hint {
   text-align: center;
-  color: #94a3b8;
+  color: var(--ui-text-faint);
   font-size: 0.8rem;
   margin: 0.5rem 0;
 }
@@ -549,7 +549,7 @@
 }
 
 .modal {
-  background: white;
+  background: var(--ui-surface);
   padding: 1.75rem;
   border-radius: 12px;
   width: 100%;
@@ -598,8 +598,8 @@
 }
 
 .btn-secondary {
-  background: #e9ecef;
-  color: #495057;
+  background: var(--ui-surface-subtle);
+  color: var(--ui-text-secondary);
   border: none;
   padding: 0.65rem 1.25rem;
   border-radius: 8px;
@@ -662,7 +662,7 @@
 .context-menu {
   position: fixed;
   z-index: 1100;
-  background: white;
+  background: var(--ui-surface);
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
@@ -688,8 +688,8 @@
   padding: 8px 12px;
   font-weight: 800;
   font-size: 0.85rem;
-  color: #1e293b;
-  border-bottom: 1px solid #f1f5f9;
+  color: var(--ui-text-primary);
+  border-bottom: 1px solid var(--ui-border-subtle);
   background: var(--surface-alt);
 }
 
@@ -697,7 +697,7 @@
   padding: 8px 12px 4px;
   font-size: 0.7rem;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--ui-text-faint);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -717,7 +717,7 @@
   padding: 6px 2px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: white;
+  background: var(--ui-surface);
   font-size: 0.7rem;
   font-weight: 700;
   color: var(--muted);
@@ -743,12 +743,12 @@
   padding: 8px 12px;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--ui-text-secondary);
   cursor: pointer;
   transition: background-color 0.15s, color 0.15s;
 }
 
 .context-menu-list li:hover {
-  background-color: #f0f7ff;
+  background-color: var(--ui-bg-blue-50);
   color: var(--accent);
 }

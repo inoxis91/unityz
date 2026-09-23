@@ -17,6 +17,8 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'nav.profile': 'Profil',
     'nav.absences': 'Absences',
     'nav.guild_characters': 'Annuaire de Guilde',
+    'nav.theme_dark': 'Activer le mode nuit',
+    'nav.theme_light': 'Activer le mode jour',
 
     // Guild Characters Grid
     'guild_chars.title': 'Annuaire des Personnages de Guilde',
@@ -1067,6 +1069,8 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'nav.profile': 'Profile',
     'nav.absences': 'Absences',
     'nav.guild_characters': 'Guild Directory',
+    'nav.theme_dark': 'Switch to dark mode',
+    'nav.theme_light': 'Switch to light mode',
 
     // Guild Characters Grid
     'guild_chars.title': 'Guild Character Directory',

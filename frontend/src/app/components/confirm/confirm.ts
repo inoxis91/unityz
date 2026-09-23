@@ -40,7 +40,7 @@ import { ConfirmService } from '../../services/confirm';
         backdrop-filter: blur(4px);
       }
       .confirm-modal {
-        background: white;
+        background: var(--ui-surface);
         padding: 2rem;
         border-radius: 24px;
         width: 100%;
@@ -51,11 +51,11 @@ import { ConfirmService } from '../../services/confirm';
         margin: 0 0 1rem 0;
         font-size: 1.25rem;
         font-weight: 800;
-        color: #1e293b;
+        color: var(--ui-text-primary);
       }
       p {
         margin: 0 0 2rem 0;
-        color: #64748b;
+        color: var(--ui-text-muted);
         line-height: 1.5;
         font-weight: 500;
       }
@@ -82,11 +82,11 @@ import { ConfirmService } from '../../services/confirm';
         transform: translateY(-2px);
       }
       .btn-secondary {
-        background: #f1f5f9;
-        color: #64748b;
+        background: var(--ui-surface-subtle);
+        color: var(--ui-text-muted);
       }
       .btn-secondary:hover {
-        background: #e2e8f0;
+        background: var(--ui-surface-strong);
       }
     `,
   ],

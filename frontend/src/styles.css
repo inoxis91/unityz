@@ -1,9 +1,190 @@
-/* You can add global styles to this file, and also import other style files */
+/*
+ * Design tokens (--ui-*)
+ * Components must use these instead of hard-coded neutrals/tints so they follow the active theme.
+ * The theme is set on <html data-theme="light|dark"> by ThemeService (and by the inline boot
+ * script in index.html to avoid a flash of the wrong theme).
+ */
+:root {
+  color-scheme: light;
+  --ui-text-body: #333333;
+  /* RGB triplets for translucent overlays: rgba(var(--ui-ink-rgb), 0.1) */
+  --ui-shade-rgb: 0, 0, 0;
+  --ui-ink-rgb: 15, 23, 42;
+  --ui-surface-rgb: 255, 255, 255;
+  --ui-highlight-rgb: 254, 243, 199;
+  /* Solid neutral pill (counters): high-contrast in light, subdued in dark */
+  --ui-badge-bg: #0f172a;
+  --ui-badge-fg: #ffffff;
+  --ui-placeholder: #64748b;
+  --ui-scrollbar-track: #f1f1f1;
+  --ui-scrollbar-thumb: #cccccc;
+  --ui-scrollbar-thumb-hover: #bbbbbb;
+  /* Surfaces */
+  --ui-bg-page: #f4f7f6;
+  --ui-surface: #ffffff;
+  --ui-surface-muted: #f8fafc;
+  --ui-surface-subtle: #f1f5f9;
+  --ui-surface-strong: #e2e8f0;
+  --ui-surface-stronger: #cbd5e1;
+  /* Borders */
+  --ui-border-subtle: #f1f5f9;
+  --ui-border: #e2e8f0;
+  --ui-border-strong: #cbd5e1;
+  /* Text */
+  --ui-text-strong: #0f172a;
+  --ui-text-primary: #1e293b;
+  --ui-text-secondary: #334155;
+  --ui-text-tertiary: #475569;
+  --ui-text-muted: #64748b;
+  --ui-text-faint: #94a3b8;
+  --ui-text-disabled: #cbd5e1;
+  /* Foreground hues */
+  --ui-fg-brand: #0074e0;
+  --ui-fg-brand-strong: #005bb5;
+  --ui-fg-blue-500: #3b82f6;
+  --ui-fg-blue-600: #2563eb;
+  --ui-fg-blue-700: #1d4ed8;
+  --ui-fg-blue-800: #1e40af;
+  --ui-fg-sky-700: #0369a1;
+  --ui-fg-indigo-600: #4f46e5;
+  --ui-fg-indigo-950: #1e1b4b;
+  --ui-fg-purple-700: #7e22ce;
+  --ui-fg-red-500: #ef4444;
+  --ui-fg-red-600: #dc2626;
+  --ui-fg-red-700: #b91c1c;
+  --ui-fg-red-800: #991b1b;
+  --ui-fg-green-600: #16a34a;
+  --ui-fg-green-700: #15803d;
+  --ui-fg-green-800: #166534;
+  --ui-fg-teal-700: #0f766e;
+  --ui-fg-amber-600: #d97706;
+  --ui-fg-amber-700: #b45309;
+  --ui-fg-amber-800: #92400e;
+  --ui-fg-orange-700: #c2410c;
+  /* Tinted backgrounds */
+  --ui-bg-red-50: #fef2f2;
+  --ui-bg-red-100: #fee2e2;
+  --ui-bg-green-50: #f0fdf4;
+  --ui-bg-green-100: #dcfce7;
+  --ui-bg-amber-50: #fffbeb;
+  --ui-bg-amber-100: #fef3c7;
+  --ui-bg-amber-200: #fde68a;
+  --ui-bg-orange-50: #fff7ed;
+  --ui-bg-orange-100: #ffedd5;
+  --ui-bg-orange-200: #fed7aa;
+  --ui-bg-blue-50: #eff6ff;
+  --ui-bg-blue-100: #dbeafe;
+  --ui-bg-indigo-100: #e0e7ff;
+  --ui-bg-purple-50: #faf5ff;
+  --ui-bg-purple-100: #f3e8ff;
+  /* Tinted borders */
+  --ui-bd-red-100: #fee2e2;
+  --ui-bd-red-200: #fecaca;
+  --ui-bd-red-300: #fca5a5;
+  --ui-bd-green-200: #bbf7d0;
+  --ui-bd-green-300: #86efac;
+  --ui-bd-amber-100: #fef3c7;
+  --ui-bd-amber-200: #fde68a;
+  --ui-bd-amber-300: #fcd34d;
+  --ui-bd-orange-200: #fed7aa;
+  --ui-bd-blue-100: #dbeafe;
+  --ui-bd-blue-200: #bfdbfe;
+  --ui-bd-indigo-200: #c7d2fe;
+  --ui-bd-purple-100: #f3e8ff;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --ui-text-body: #e2e8f0;
+  --ui-shade-rgb: 255, 255, 255;
+  --ui-ink-rgb: 226, 232, 240;
+  --ui-surface-rgb: 21, 29, 46;
+  --ui-highlight-rgb: 245, 158, 11;
+  --ui-badge-bg: #3a4763;
+  --ui-badge-fg: #f8fafc;
+  --ui-placeholder: #97a4b8;
+  --ui-scrollbar-track: #0f1626;
+  --ui-scrollbar-thumb: #334155;
+  --ui-scrollbar-thumb-hover: #475569;
+  /* Surfaces */
+  --ui-bg-page: #0b1120;
+  --ui-surface: #151d2e;
+  --ui-surface-muted: #1a2335;
+  --ui-surface-subtle: #1f2a3e;
+  --ui-surface-strong: #2a3650;
+  --ui-surface-stronger: #3a4763;
+  /* Borders */
+  --ui-border-subtle: #222d42;
+  --ui-border: #2c3852;
+  --ui-border-strong: #3d4a66;
+  /* Text */
+  --ui-text-strong: #f8fafc;
+  --ui-text-primary: #e2e8f0;
+  --ui-text-secondary: #cbd5e1;
+  --ui-text-tertiary: #b3bfd1;
+  --ui-text-muted: #97a4b8;
+  --ui-text-faint: #8794aa;
+  --ui-text-disabled: #56637d;
+  /* Foreground hues */
+  --ui-fg-brand: #5aa9ff;
+  --ui-fg-brand-strong: #8cc4ff;
+  --ui-fg-blue-500: #60a5fa;
+  --ui-fg-blue-600: #7fb0fb;
+  --ui-fg-blue-700: #93c5fd;
+  --ui-fg-blue-800: #bfdbfe;
+  --ui-fg-sky-700: #7dd3fc;
+  --ui-fg-indigo-600: #a5b4fc;
+  --ui-fg-indigo-950: #c7d2fe;
+  --ui-fg-purple-700: #d8b4fe;
+  --ui-fg-red-500: #f87171;
+  --ui-fg-red-600: #f87171;
+  --ui-fg-red-700: #fca5a5;
+  --ui-fg-red-800: #fca5a5;
+  --ui-fg-green-600: #4ade80;
+  --ui-fg-green-700: #4ade80;
+  --ui-fg-green-800: #86efac;
+  --ui-fg-teal-700: #5eead4;
+  --ui-fg-amber-600: #fbbf24;
+  --ui-fg-amber-700: #fcd34d;
+  --ui-fg-amber-800: #fcd34d;
+  --ui-fg-orange-700: #fdba74;
+  /* Tinted backgrounds */
+  --ui-bg-red-50: #2b2130;
+  --ui-bg-red-100: #3c2432;
+  --ui-bg-green-50: #162e33;
+  --ui-bg-green-100: #173b37;
+  --ui-bg-amber-50: #2b2a2b;
+  --ui-bg-amber-100: #3d3428;
+  --ui-bg-amber-200: #584423;
+  --ui-bg-orange-50: #2c262c;
+  --ui-bg-orange-100: #3e2c2a;
+  --ui-bg-orange-200: #553527;
+  --ui-bg-blue-50: #192742;
+  --ui-bg-blue-100: #1d3156;
+  --ui-bg-indigo-100: #252c55;
+  --ui-bg-purple-50: #242342;
+  --ui-bg-purple-100: #322856;
+  /* Tinted borders */
+  --ui-bd-red-100: rgba(239, 68, 68, 0.25);
+  --ui-bd-red-200: rgba(239, 68, 68, 0.35);
+  --ui-bd-red-300: rgba(239, 68, 68, 0.5);
+  --ui-bd-green-200: rgba(34, 197, 94, 0.35);
+  --ui-bd-green-300: rgba(34, 197, 94, 0.5);
+  --ui-bd-amber-100: rgba(245, 158, 11, 0.25);
+  --ui-bd-amber-200: rgba(245, 158, 11, 0.35);
+  --ui-bd-amber-300: rgba(245, 158, 11, 0.5);
+  --ui-bd-orange-200: rgba(249, 115, 22, 0.35);
+  --ui-bd-blue-100: rgba(59, 130, 246, 0.25);
+  --ui-bd-blue-200: rgba(59, 130, 246, 0.35);
+  --ui-bd-indigo-200: rgba(99, 102, 241, 0.35);
+  --ui-bd-purple-100: rgba(168, 85, 247, 0.25);
+}
+
 body {
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f4f7f6;
-  color: #333;
+  background-color: var(--ui-bg-page);
+  color: var(--ui-text-body);
 }
 
 /* WOW Class Colors Variables */
@@ -48,16 +229,16 @@ body {
 .class-priest .name,
 .class-priest .participant-name,
 .class-priest .alt-name {
-  color: #1e293b !important;
+  color: var(--ui-text-primary) !important;
   text-shadow: none !important;
 }
 
 .class-priest .participant-comment p {
-  color: #1e293b !important;
+  color: var(--ui-text-primary) !important;
 }
 
 .class-priest .participant-comment {
-  background: rgba(0, 0, 0, 0.05) !important;
+  background: rgba(var(--ui-shade-rgb), 0.05) !important;
 }
 
 /* Background variants */
@@ -89,6 +270,13 @@ body {
 .border-class-shaman { border-left: 4px solid var(--color-shaman) !important; }
 .border-class-warlock { border-left: 4px solid var(--color-warlock) !important; }
 .border-class-warrior { border-left: 4px solid var(--color-warrior) !important; }
+
+/* Form placeholders: browser defaults are too faint on themed surfaces */
+input::placeholder,
+textarea::placeholder {
+  color: var(--ui-placeholder);
+  opacity: 1;
+}
 
 /* Common UI Elements */
 .btn {
@@ -140,12 +328,12 @@ body {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--ui-scrollbar-track);
 }
 ::-webkit-scrollbar-thumb {
-  background: #ccc;
+  background: var(--ui-scrollbar-thumb);
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #bbb;
+  background: var(--ui-scrollbar-thumb-hover);
 }

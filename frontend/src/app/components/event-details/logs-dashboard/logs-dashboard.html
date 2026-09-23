@@ -43,7 +43,7 @@
         <div class="logs-stats-grid">
           <div class="stat-card">
             <span class="label">{{ i18n.t('event.details.logs_total_deaths') }}</span>
-            <span class="value duration-text" style="color: #dc2626 !important"
+            <span class="value duration-text" style="color: var(--ui-fg-red-600) !important"
               >☠️ {{ logsMetrics()!.totalDeaths }}</span
             >
             <span class="sub-label">{{ i18n.t('event.details.logs_on_all_logs') }}</span>
@@ -63,7 +63,7 @@
                   font-weight: 750;
                 "
               >
-                <span class="lbl-survival" style="color: #16a34a; font-weight: 800">{{
+                <span class="lbl-survival" style="color: var(--ui-fg-green-600); font-weight: 800">{{
                   i18n.t('event.details.logs_survivor')
                 }}</span>
                 <span class="val-player" style="font-weight: 850">
@@ -88,7 +88,7 @@
                   font-weight: 750;
                 "
               >
-                <span class="lbl-survival" style="color: #dc2626; font-weight: 800">{{
+                <span class="lbl-survival" style="color: var(--ui-fg-red-600); font-weight: 800">{{
                   i18n.t('event.details.logs_died_most')
                 }}</span>
                 <span class="val-player" style="font-weight: 850">
@@ -111,12 +111,12 @@
             <span class="value flex-row" style="gap: 8px; font-size: 1.45rem">
               <span
                 class="kill-tag"
-                style="background: #fee2e2; color: #dc2626; font-size: 1.15rem; font-weight: 800"
+                style="background: var(--ui-bg-red-100); color: var(--ui-fg-red-600); font-size: 1.15rem; font-weight: 800"
                 >{{ formatBigNumber(logsMetrics()!.raidAvgDps) }} DPS</span
               >
               <span
                 class="wipe-tag"
-                style="background: #dcfce7; color: #16a34a; font-size: 1.15rem; font-weight: 800"
+                style="background: var(--ui-bg-green-100); color: var(--ui-fg-green-600); font-size: 1.15rem; font-weight: 800"
                 >{{ formatBigNumber(logsMetrics()!.raidAvgHps) }} HPS</span
               >
             </span>
@@ -513,7 +513,7 @@
                       }}</span>
                     </div>
                   </td>
-                  <td class="font-bold" style="color: #0074e0">{{ entry.score }} pts</td>
+                  <td class="font-bold" style="color: var(--ui-fg-brand)">{{ entry.score }} pts</td>
                   <td class="damage-text font-bold">{{ formatNumberWithSpaces(entry.dpsTotal) }}</td>
                   <td class="heal-text font-bold">{{ formatNumberWithSpaces(entry.hpsTotal) }}</td>
                   <td class="text-slate-600 font-bold">

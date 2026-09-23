@@ -14,12 +14,12 @@
   margin: 0 0 0.5rem 0;
   font-size: 1.5rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--ui-text-strong);
 }
 
 .attendance-header-row .subtitle {
   margin: 0;
-  color: #64748b;
+  color: var(--ui-text-muted);
   font-size: 0.95rem;
   line-height: 1.5;
 }
@@ -28,9 +28,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: white;
-  color: #475569;
-  border: 1px solid #e2e8f0;
+  background: var(--ui-surface);
+  color: var(--ui-text-tertiary);
+  border: 1px solid var(--ui-border);
   padding: 0.6rem 1.25rem;
   border-radius: 12px;
   font-weight: 700;
@@ -41,9 +41,9 @@
 }
 
 .btn-refresh:hover:not(:disabled) {
-  background: #f8fafc;
-  color: #0f172a;
-  border-color: #cbd5e1;
+  background: var(--ui-surface-muted);
+  color: var(--ui-text-strong);
+  border-color: var(--ui-border-strong);
   transform: translateY(-1px);
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
@@ -81,7 +81,7 @@
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: var(--ui-text-faint);
   font-size: 1rem;
   pointer-events: none;
 }
@@ -90,10 +90,10 @@
   width: 100%;
   padding: 0.75rem 1rem 0.75rem 2.5rem;
   border-radius: 14px;
-  border: 1px solid #e2e8f0;
-  background: white;
+  border: 1px solid var(--ui-border);
+  background: var(--ui-surface);
   font-size: 0.95rem;
-  color: #0f172a;
+  color: var(--ui-text-strong);
   outline: none;
   transition: all 0.2s;
 }
@@ -101,7 +101,7 @@
 .search-box input:focus {
   border-color: #3b82f6;
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-  background: white;
+  background: var(--ui-surface);
 }
 
 /* Loading and Empty States */
@@ -112,16 +112,16 @@
   justify-content: center;
   padding: 4rem 2rem;
   text-align: center;
-  background: white;
+  background: var(--ui-surface);
   border-radius: 20px;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--ui-border-subtle);
   box-shadow: 0 10px 15px -3px rgba(0,0,0,0.02);
 }
 
 .loading-state .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #f1f5f9;
+  border: 4px solid var(--ui-border-subtle);
   border-top-color: #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -129,23 +129,23 @@
 }
 
 .loading-state p {
-  color: #64748b;
+  color: var(--ui-text-muted);
   font-weight: 600;
   margin: 0;
 }
 
 .empty-state p {
-  color: #64748b;
+  color: var(--ui-text-muted);
   font-size: 1rem;
   margin: 0;
 }
 
 /* Attendance Table */
 .attendance-table-wrapper {
-  background: white;
+  background: var(--ui-surface);
   border-radius: 20px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--ui-border);
   overflow: hidden;
 }
 
@@ -157,19 +157,19 @@
 
 .attendance-table th {
   padding: 1rem 1.5rem;
-  background: #f8fafc;
-  color: #475569;
+  background: var(--ui-surface-muted);
+  color: var(--ui-text-tertiary);
   font-weight: 700;
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--ui-border);
 }
 
 .attendance-table td {
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #f1f5f9;
-  color: #334155;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  color: var(--ui-text-secondary);
   vertical-align: middle;
 }
 
@@ -178,12 +178,12 @@
 }
 
 .attendance-table tr:hover td {
-  background: #f8fafc;
+  background: var(--ui-surface-muted);
 }
 
 .member-cell .battletag {
   font-weight: 700;
-  color: #0f172a;
+  color: var(--ui-text-strong);
 }
 
 .character-cell {
@@ -198,7 +198,7 @@
 
 .no-char {
   font-size: 0.9rem;
-  color: #94a3b8;
+  color: var(--ui-text-faint);
   font-style: italic;
 }
 
@@ -210,12 +210,12 @@
 .stats-cell .stats-value {
   font-size: 1.05rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--ui-text-strong);
 }
 
 .stats-cell .stats-sub {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--ui-text-muted);
   font-weight: 600;
 }
 
@@ -230,23 +230,23 @@
 }
 
 .percentage-badge.excellent {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--ui-bg-green-100);
+  color: var(--ui-fg-green-700);
 }
 
 .percentage-badge.good {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: var(--ui-bg-blue-100);
+  color: var(--ui-fg-sky-700);
 }
 
 .percentage-badge.average {
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--ui-bg-amber-100);
+  color: var(--ui-fg-amber-700);
 }
 
 .percentage-badge.warning {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--ui-bg-red-100);
+  color: var(--ui-fg-red-700);
 }
 
 /* Progress Column */
@@ -257,7 +257,7 @@
 .progress-bar-container {
   width: 100%;
   height: 8px;
-  background: #e2e8f0;
+  background: var(--ui-surface-strong);
   border-radius: 9999px;
   overflow: hidden;
 }

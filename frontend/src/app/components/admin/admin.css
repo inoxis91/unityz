@@ -9,7 +9,7 @@
   flex-wrap: wrap;
   gap: 1rem;
   margin-bottom: 2rem;
-  border-bottom: 2px solid #eee;
+  border-bottom: 2px solid var(--ui-border-subtle);
   padding-bottom: 1rem;
 }
 
@@ -18,7 +18,7 @@
   border: none;
   font-size: 1.1rem;
   font-weight: 600;
-  color: #6c757d;
+  color: var(--ui-text-muted);
   cursor: pointer;
   padding: 0.5rem 1rem;
   border-radius: 6px;
@@ -26,8 +26,8 @@
 }
 
 .admin-tabs button:hover {
-  background: #f8f9fa;
-  color: #0074e0;
+  background: var(--ui-surface-muted);
+  color: var(--ui-fg-brand);
 }
 
 .admin-tabs button.active {

@@ -194,7 +194,7 @@
                 margin: 0 0 0.5rem 0;
                 font-size: 1.25rem;
                 font-weight: 800;
-                color: #b45309;
+                color: var(--ui-fg-amber-700);
                 display: flex;
                 align-items: center;
                 gap: 0.5rem;
@@ -206,7 +206,7 @@
               @for (bday of birthdays(); track bday.id) {
                 <div
                   class="birthday-item"
-                  style="font-size: 1.05rem; color: #78350f; font-weight: 600"
+                  style="font-size: 1.05rem; color: var(--ui-fg-amber-800); font-weight: 600"
                 >
                   @if (isBirthdayToday(bday.birthday)) {
                     <span
@@ -633,7 +633,7 @@
                 <span class="val">{{ att.total_eligible }}</span>
               </div>
             </div>
-            <h3 style="margin-bottom: 1rem; color: #1e293b">
+            <h3 style="margin-bottom: 1rem; color: var(--ui-text-primary)">
               {{ i18n.t('dashboard.attendance.history_title') }}
             </h3>
             <div class="attendance-events-list">
@@ -644,7 +644,7 @@
                     <div class="meta">
                       <span>📅 {{ evt.start_time | date: 'dd MMM yyyy, HH:mm' }}</span>
                       @if (evt.roster_name) {
-                        <span style="color: #3b82f6; font-weight: 600"
+                        <span style="color: var(--ui-fg-blue-500); font-weight: 600"
                           >🔴 {{ evt.roster_name }}</span
                         >
                       }
@@ -672,7 +672,7 @@
                 </div>
               }
               @if (att.events.length === 0) {
-                <p style="text-align: center; color: #64748b; margin-top: 2rem">
+                <p style="text-align: center; color: var(--ui-text-muted); margin-top: 2rem">
                   {{ i18n.t('dashboard.attendance.no_events') }}
                 </p>
               }

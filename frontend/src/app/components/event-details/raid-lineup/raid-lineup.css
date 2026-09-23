@@ -1,9 +1,9 @@
 :host {
-  --lu-surface: #ffffff;
-  --lu-surface-muted: #f8fafc;
-  --lu-border: #e2e8f0;
-  --lu-text: #0f172a;
-  --lu-text-muted: #64748b;
+  --lu-surface: var(--ui-surface);
+  --lu-surface-muted: var(--ui-surface-muted);
+  --lu-border: var(--ui-border);
+  --lu-text: var(--ui-text-strong);
+  --lu-text-muted: var(--ui-text-muted);
   --lu-accent: #0074e0;
   --lu-selected: #16a34a;
   --lu-pending: #d97706;
@@ -58,13 +58,13 @@
 }
 
 .lu-stat.selected strong {
-  color: var(--lu-selected);
+  color: var(--ui-fg-green-600);
 }
 .lu-stat.pending strong {
-  color: var(--lu-pending);
+  color: var(--ui-fg-amber-600);
 }
 .lu-stat.benched strong {
-  color: var(--lu-benched);
+  color: var(--ui-text-tertiary);
 }
 
 .lu-role-split {
@@ -72,8 +72,8 @@
   gap: 10px;
   padding: 6px 12px;
   border-radius: 12px;
-  background: var(--lu-text);
-  color: #ffffff;
+  background: var(--ui-badge-bg);
+  color: var(--ui-badge-fg);
   font-weight: 800;
 }
 
@@ -200,8 +200,8 @@
 
 .lu-zone.pool {
   min-height: 0;
-  background: #fffbeb;
-  border: 2px dashed #fcd34d;
+  background: var(--ui-bg-amber-50);
+  border: 2px dashed var(--ui-bd-amber-300);
 }
 
 .lu-zone.role.tank {
@@ -217,8 +217,8 @@
 .lu-zone.bench {
   position: sticky;
   top: 1rem;
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  background: var(--ui-surface-subtle);
+  border-color: var(--ui-border-strong);
 }
 
 /* Zones pouvant accueillir la carte en cours de drag / survolées */
@@ -228,7 +228,7 @@
 }
 
 .lu-zone.cdk-drop-list-dragging {
-  background: #eff6ff;
+  background: var(--ui-bg-blue-50);
   border-color: var(--lu-accent);
 }
 
@@ -273,8 +273,8 @@
   font-size: 0.78rem;
   font-weight: 800;
   text-align: center;
-  color: #ffffff;
-  background: var(--lu-text);
+  color: var(--ui-badge-fg);
+  background: var(--ui-badge-bg);
 }
 
 .lu-cards {
@@ -299,7 +299,7 @@
   font-size: 0.85rem;
   font-weight: 600;
   text-align: center;
-  color: #94a3b8;
+  color: var(--ui-text-faint);
 }
 
 /* ---------- Drag & drop ---------- */
@@ -381,7 +381,7 @@
 
 .lu-sheet-header.class-priest .lu-sheet-sub,
 .lu-sheet-header.class-priest .lu-sheet-close {
-  color: #334155;
+  color: var(--ui-text-secondary);
   text-shadow: none;
 }
 
@@ -417,7 +417,7 @@
   border-left: 4px solid var(--lu-border);
   border-radius: 8px;
   font-style: italic;
-  color: #334155;
+  color: var(--ui-text-secondary);
   background: var(--lu-surface-muted);
 }
 
@@ -447,8 +447,8 @@
 }
 
 .lu-segmented button:hover:not(:disabled):not(.active) {
-  border-color: #cbd5e1;
-  background: #f1f5f9;
+  border-color: var(--ui-border-strong);
+  background: var(--ui-surface-subtle);
 }
 
 .lu-segmented button:focus-visible {
@@ -463,18 +463,18 @@
 
 .lu-segmented.decision .selected.active {
   border-color: var(--lu-selected);
-  background: #f0fdf4;
-  color: #166534;
+  background: var(--ui-bg-green-50);
+  color: var(--ui-fg-green-800);
 }
 .lu-segmented.decision .benched.active {
   border-color: var(--lu-benched);
-  background: #f1f5f9;
-  color: #1e293b;
+  background: var(--ui-surface-subtle);
+  color: var(--ui-text-primary);
 }
 .lu-segmented.decision .pending.active {
   border-color: var(--lu-pending);
-  background: #fffbeb;
-  color: #92400e;
+  background: var(--ui-bg-amber-50);
+  color: var(--ui-fg-amber-800);
 }
 
 .lu-segmented.roles button.active {

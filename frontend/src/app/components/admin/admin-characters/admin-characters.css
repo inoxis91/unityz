@@ -9,23 +9,23 @@
 .overview-header h2 {
   margin: 0;
   font-size: 1.8rem;
-  color: #1e293b;
+  color: var(--ui-text-primary);
   font-weight: 700;
 }
 
 .overview-header .subtitle {
   margin: 0.25rem 0 0 0;
   font-size: 0.95rem;
-  color: #64748b;
+  color: var(--ui-text-muted);
 }
 
 /* Filters Card */
 .filters-card {
-  background: white;
+  background: var(--ui-surface);
   border-radius: 12px;
   padding: 1.25rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--ui-border);
 }
 
 .filters-grid {
@@ -49,7 +49,7 @@
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: var(--ui-text-faint);
   font-size: 0.95rem;
   pointer-events: none;
 }
@@ -59,10 +59,10 @@
   height: 42px;
   padding: 0.5rem 1rem;
   border-radius: 8px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--ui-border-strong);
   font-size: 0.9rem;
-  color: #1e293b;
-  background-color: #f8fafc;
+  color: var(--ui-text-primary);
+  background-color: var(--ui-surface-muted);
   transition: all 0.2s ease-in-out;
   box-sizing: border-box;
 }
@@ -70,7 +70,7 @@
 .form-control:focus {
   outline: none;
   border-color: #3b82f6;
-  background-color: white;
+  background-color: var(--ui-surface);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
@@ -95,23 +95,23 @@
   width: 18px;
   height: 18px;
   border-radius: 4px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--ui-border-strong);
   cursor: pointer;
   accent-color: #3b82f6;
 }
 
 .checkbox-text {
   font-size: 0.9rem;
-  color: #475569;
+  color: var(--ui-text-tertiary);
   font-weight: 500;
 }
 
 /* Table Card */
 .table-card {
-  background: white;
+  background: var(--ui-surface);
   border-radius: 12px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--ui-border);
   overflow: hidden;
 }
 
@@ -131,13 +131,13 @@
 .characters-table th,
 .characters-table td {
   padding: 0.9rem 1.25rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--ui-border-subtle);
   vertical-align: middle;
 }
 
 .characters-table th {
-  background-color: #f8fafc;
-  color: #475569;
+  background-color: var(--ui-surface-muted);
+  color: var(--ui-text-tertiary);
   font-weight: 600;
   font-size: 0.85rem;
   text-transform: uppercase;
@@ -152,14 +152,14 @@
 }
 
 .characters-table th.sortable:hover {
-  background-color: #e2e8f0;
-  color: #1e293b;
+  background-color: var(--ui-surface-strong);
+  color: var(--ui-text-primary);
 }
 
 .sort-indicator {
   margin-left: 0.25rem;
   font-size: 0.75rem;
-  color: #3b82f6;
+  color: var(--ui-fg-blue-500);
 }
 
 .characters-table tbody tr {
@@ -167,15 +167,15 @@
 }
 
 .characters-table tbody tr:hover {
-  background-color: #f8fafc;
+  background-color: var(--ui-surface-muted);
 }
 
 .is-main-row {
-  background-color: rgba(254, 243, 199, 0.15);
+  background-color: rgba(var(--ui-highlight-rgb), 0.15);
 }
 
 .is-main-row:hover {
-  background-color: rgba(254, 243, 199, 0.25) !important;
+  background-color: rgba(var(--ui-highlight-rgb), 0.25) !important;
 }
 
 .text-center {
@@ -196,29 +196,29 @@
 }
 
 .main-badge {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  color: #92400e;
-  border: 1px solid #fcd34d;
+  background: linear-gradient(135deg, var(--ui-bg-amber-100) 0%, var(--ui-bg-amber-200) 100%);
+  color: var(--ui-fg-amber-800);
+  border: 1px solid var(--ui-bd-amber-300);
 }
 
 .alt-badge {
-  background-color: #f1f5f9;
-  color: #475569;
-  border: 1px solid #e2e8f0;
+  background-color: var(--ui-surface-subtle);
+  color: var(--ui-text-tertiary);
+  border: 1px solid var(--ui-border);
 }
 
 .roster-badge {
-  background-color: #e0f2fe;
-  color: #0369a1;
-  border: 1px solid #bae6fd;
+  background-color: var(--ui-bg-blue-100);
+  color: var(--ui-fg-sky-700);
+  border: 1px solid var(--ui-bd-blue-200);
   font-weight: 600;
   text-transform: none;
 }
 
 .unassigned-badge {
-  background-color: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #fee2e2;
+  background-color: var(--ui-bg-red-50);
+  color: var(--ui-fg-red-800);
+  border: 1px solid var(--ui-bd-red-100);
   font-weight: 500;
   text-transform: none;
 }
@@ -232,7 +232,7 @@
 
 .realm-name {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--ui-text-muted);
   display: block;
   margin-top: 0.1rem;
 }
@@ -264,17 +264,17 @@
   display: inline-block;
   font-weight: 700;
   font-size: 0.85rem;
-  background-color: #e2e8f0;
-  color: #475569;
+  background-color: var(--ui-surface-strong);
+  color: var(--ui-text-tertiary);
   padding: 0.15rem 0.45rem;
   border-radius: 4px;
   min-width: 20px;
 }
 
 .level-badge.max-level {
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: linear-gradient(135deg, var(--ui-bg-blue-50) 0%, var(--ui-bg-blue-100) 100%);
+  color: var(--ui-fg-blue-700);
+  border: 1px solid var(--ui-bd-blue-200);
 }
 
 /* Roles */
@@ -292,9 +292,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f8fafc;
+  background: var(--ui-surface-muted);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--ui-border-strong);
 }
 
 .role-badge.tank {
@@ -319,7 +319,7 @@
 }
 
 .no-role-indicator {
-  color: #cbd5e1;
+  color: var(--ui-text-disabled);
   font-weight: bold;
 }
 
@@ -336,12 +336,12 @@
 }
 
 .owner-name {
-  color: #334155;
+  color: var(--ui-text-secondary);
   font-weight: 600;
 }
 
 .battletag-suffix {
-  color: #94a3b8;
+  color: var(--ui-text-faint);
   font-size: 0.75rem;
   margin-left: 0.1rem;
 }
@@ -353,16 +353,16 @@
   align-items: center;
   justify-content: center;
   padding: 4rem 2rem;
-  background: white;
+  background: var(--ui-surface);
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--ui-border);
   gap: 1rem;
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #f3f3f3;
+  border: 4px solid var(--ui-border-subtle);
   border-top: 4px solid #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -374,7 +374,7 @@
 }
 
 .loading-state p {
-  color: #64748b;
+  color: var(--ui-text-muted);
   font-size: 0.95rem;
   margin: 0;
 }
@@ -390,7 +390,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  color: #94a3b8;
+  color: var(--ui-text-faint);
 }
 
 .empty-icon {

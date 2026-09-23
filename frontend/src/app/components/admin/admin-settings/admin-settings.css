@@ -44,7 +44,7 @@
 }
 
 .section-desc {
-  color: #94a3b8;
+  color: var(--ui-text-faint);
   font-size: 0.88rem;
   line-height: 1.5;
   margin-bottom: 2rem;
@@ -94,7 +94,7 @@
   width: 18px;
   left: 4px;
   bottom: 4px;
-  background-color: white;
+  background-color: var(--ui-surface);
   transition: .3s;
   border-radius: 50%;
 }
@@ -120,7 +120,7 @@ input:checked + .slider:before {
 
 .switch-desc {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--ui-text-muted);
   margin-top: 0.15rem;
 }
 
@@ -140,7 +140,7 @@ input:checked + .slider:before {
 .form-group label {
   font-size: 0.8rem;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--ui-text-faint);
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
@@ -161,8 +161,8 @@ input:checked + .slider:before {
 }
 
 .form-group input:disabled {
-  background: rgba(15, 23, 42, 0.1);
-  color: #475569;
+  background: rgba(var(--ui-ink-rgb), 0.1);
+  color: var(--ui-text-tertiary);
   border-color: rgba(255, 255, 255, 0.03);
   cursor: not-allowed;
 }
@@ -231,7 +231,7 @@ input:checked + .slider:before {
 }
 
 .guide-subtitle {
-  color: #94a3b8;
+  color: var(--ui-text-faint);
   font-size: 0.85rem;
   margin: 0;
 }
@@ -303,7 +303,7 @@ input:checked + .slider:before {
 }
 
 .step-right p {
-  color: #94a3b8;
+  color: var(--ui-text-faint);
   font-size: 0.85rem;
   line-height: 1.5;
   margin: 0 0 0.75rem 0;
@@ -381,7 +381,7 @@ input:checked + .slider:before {
 }
 
 .pro-locked-banner p {
-  color: #cbd5e1;
+  color: var(--ui-text-disabled);
   font-size: 0.9rem;
   max-width: 400px;
   line-height: 1.5;
@@ -461,7 +461,7 @@ input:checked + .slider:before {
 }
 
 .pro-locked-banner-guide p {
-  color: #cbd5e1;
+  color: var(--ui-text-disabled);
   font-size: 0.85rem;
   max-width: 320px;
   line-height: 1.5;

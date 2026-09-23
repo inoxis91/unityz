@@ -10,6 +10,7 @@ import { filter, map } from 'rxjs';
 import { NavigationEnd } from '@angular/router';
 import { I18nService } from './services/i18n';
 import { AuthService } from './services/auth';
+import { ThemeService } from './services/theme';
 
 @Component({
   selector: 'app-root',
@@ -125,7 +126,7 @@ import { AuthService } from './services/auth';
         background: transparent;
         border-top: 1px solid rgba(255, 255, 255, 0.04);
         font-size: 0.825rem;
-        color: #64748b;
+        color: var(--ui-text-muted);
         width: 100%;
         box-sizing: border-box;
       }
@@ -147,14 +148,14 @@ import { AuthService } from './services/auth';
       }
 
       .footer-links a {
-        color: #64748b;
+        color: var(--ui-text-muted);
         text-decoration: none;
         transition: color 0.2s;
         font-weight: 500;
       }
 
       .footer-links a:hover {
-        color: #3b82f6;
+        color: var(--ui-fg-blue-500);
       }
 
       .footer-links .dot {
@@ -174,6 +175,8 @@ export class AppComponent {
   private router = inject(Router);
   public i18n = inject(I18nService);
   private authService = inject(AuthService);
+  // Eager injection keeps <html data-theme> in sync (incl. OS changes) on every page
+  private theme = inject(ThemeService);
 
   showDiscordWarning = computed(() => {
     const user = this.authService.currentUser();

@@ -10,6 +10,7 @@ import {
 import { AuthService } from '../../services/auth';
 import { I18nService } from '../../services/i18n';
 import { CraftService } from '../../services/craft';
+import { ThemeService } from '../../services/theme';
 
 import { RouterModule } from '@angular/router';
 
@@ -26,6 +27,7 @@ export class NavbarComponent implements OnInit {
 
   public i18n = inject(I18nService);
   public craftService = inject(CraftService);
+  public theme = inject(ThemeService);
   private elementRef = inject(ElementRef);
 
   isAdmin = computed(() => {

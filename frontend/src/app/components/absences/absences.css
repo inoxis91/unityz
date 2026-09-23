@@ -11,13 +11,13 @@
 .header-section h1 {
   font-size: 2.5rem;
   font-weight: 800;
-  color: #1e293b;
+  color: var(--ui-text-primary);
   margin: 0;
   letter-spacing: -0.02em;
 }
 
 .subtitle {
-  color: #64748b;
+  color: var(--ui-text-muted);
   font-size: 1.1rem;
   font-weight: 500;
   margin-top: 0.5rem;
@@ -35,10 +35,10 @@
 }
 
 .card {
-  background: white;
+  background: var(--ui-surface);
   border-radius: 24px;
   padding: 2rem;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--ui-border-subtle);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
 }
 
@@ -47,8 +47,8 @@
   font-weight: 800;
   margin-top: 0;
   margin-bottom: 1.5rem;
-  color: #1e293b;
-  border-bottom: 1px solid #f1f5f9;
+  color: var(--ui-text-primary);
+  border-bottom: 1px solid var(--ui-border-subtle);
   padding-bottom: 0.75rem;
 }
 
@@ -67,15 +67,15 @@
 .form-group label {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--ui-text-muted);
 }
 
 .form-control {
-  background-color: white;
-  border: 1px solid #cbd5e1;
+  background-color: var(--ui-surface);
+  border: 1px solid var(--ui-border-strong);
   border-radius: 12px;
   padding: 0.75rem 1rem;
-  color: #1e293b;
+  color: var(--ui-text-primary);
   font-size: 0.95rem;
   font-family: inherit;
   transition: all 0.2s ease;
@@ -129,7 +129,7 @@ textarea.form-control {
   gap: 0.5rem;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--ui-text-tertiary);
   cursor: pointer;
   user-select: none;
 }
@@ -138,33 +138,33 @@ textarea.form-control {
   width: 18px;
   height: 18px;
   border-radius: 4px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--ui-border-strong);
   cursor: pointer;
 }
 
 .indefinite-badge {
   display: inline-block;
-  background-color: #f1f5f9;
-  color: #64748b;
+  background-color: var(--ui-surface-subtle);
+  color: var(--ui-text-muted);
   padding: 0.25rem 0.6rem;
   border-radius: 8px;
   font-size: 0.8rem;
   font-weight: 600;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--ui-border);
 }
 
 /* List Card and Table styling */
 .loading-state, .empty-state {
   text-align: center;
   padding: 3rem 1rem;
-  color: #64748b;
+  color: var(--ui-text-muted);
   font-size: 1rem;
 }
 
 .table-wrapper {
   overflow-x: auto;
   border-radius: 16px;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--ui-border-subtle);
 }
 
 .absences-table {
@@ -174,21 +174,21 @@ textarea.form-control {
 }
 
 .absences-table th {
-  background-color: #f8fafc;
+  background-color: var(--ui-surface-muted);
   padding: 1rem 1.25rem;
   font-weight: 700;
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #64748b;
-  border-bottom: 1px solid #e2e8f0;
+  color: var(--ui-text-muted);
+  border-bottom: 1px solid var(--ui-border);
 }
 
 .absences-table td {
   padding: 1rem 1.25rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--ui-border-subtle);
   font-size: 0.95rem;
-  color: #334155;
+  color: var(--ui-text-secondary);
 }
 
 .absences-table tr:last-child td {
@@ -196,18 +196,18 @@ textarea.form-control {
 }
 
 .absences-table tr:hover td {
-  background-color: #f8fafc;
+  background-color: var(--ui-surface-muted);
 }
 
 .date-cell {
   font-weight: 700;
-  color: #0074e0;
+  color: var(--ui-fg-brand);
   white-space: nowrap;
 }
 
 .reason-cell {
   max-width: 250px;
-  color: #64748b;
+  color: var(--ui-text-muted);
   white-space: normal;
   word-break: break-word;
 }
@@ -229,9 +229,9 @@ textarea.form-control {
 }
 
 .btn-delete {
-  background-color: #fef2f2;
-  color: #ef4444;
-  border: 1px solid #fee2e2;
+  background-color: var(--ui-bg-red-50);
+  color: var(--ui-fg-red-500);
+  border: 1px solid var(--ui-bd-red-100);
   padding: 0.5rem 1rem;
   border-radius: 8px;
   cursor: pointer;
