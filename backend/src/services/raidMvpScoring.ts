@@ -8,7 +8,8 @@ import type { MvpBreakdown, RaidRole, ReportPull } from './wclReportService';
  *   même spécialisation (DPS pour les DPS et les tanks, HPS pour les soigneurs).
  * - Apport : sur chaque pull (wipes compris), DPS ou HPS rapporté à la médiane de son rôle dans le
  *   pull. La médiane vaut 50, le double de la médiane 100.
- * - Survie : morts pénalisantes par pull. Sur un wipe, les morts de fin de wipe ne comptent pas.
+ * - Survie : morts pénalisantes par pull. Sur un wipe, les morts de fin de wipe ne comptent pas. Une
+ *   mort sans pierre de soins ni potion de soins utilisée avant, sur ce pull, pèse plus lourd.
  * - Préparation : potion de combat sur les pulls significatifs, flacon et nourriture au pull.
  * - Utilité : interruptions + dissipations, rapportées au meilleur de son rôle.
  */
@@ -24,8 +25,10 @@ export const MVP_WEIGHTS: Readonly<MvpBreakdown> = {
 export const MVP_RULES = {
   /** Part minimale des pulls pour être éligible au titre de MVP. */
   minAttendance: 0.5,
-  /** Survie = 100 × (1 − deathPenalty × morts pénalisantes / pulls joués). */
+  /** Survie = 100 × (1 − deathPenalty × morts pondérées / pulls joués). */
   deathPenalty: 1.5,
+  /** Poids d'une mort pénalisante sans soin d'urgence utilisé avant (1 sinon). */
+  noHealthstoneDeathWeight: 1.5,
   /** Sur un wipe, seules les morts survenues avant que cette part du raid soit tombée comptent. */
   wipeCutoffRatio: 0.25,
   /** En dessous, un wipe n'exige pas de potion de combat (reset rapide). */
@@ -127,8 +130,13 @@ export function scorePlayers(
       ? parses.reduce((sum, v) => sum + v, 0) / parses.length
       : output;
 
-    const premature = played.filter(({ me }) => me.prematureDeath).length;
-    const survival = clamp(100 * (1 - (MVP_RULES.deathPenalty * premature) / played.length));
+    const weightedDeaths = played.reduce(
+      (sum, { me }) =>
+        sum +
+        (!me.prematureDeath ? 0 : me.healthstoneBeforeDeath ? 1 : MVP_RULES.noHealthstoneDeathWeight),
+      0,
+    );
+    const survival = clamp(100 * (1 - (MVP_RULES.deathPenalty * weightedDeaths) / played.length));
 
     const rules = MVP_RULES.preparation;
     const eligiblePotion = played.filter(

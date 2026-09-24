@@ -74,7 +74,7 @@ export class LogsRankingComponent {
           ? `${formatCompact(p.hps, locale)} ${t('logs.unit.hps')} · ${t('logs.evidence.vs_healers')}`
           : `${formatCompact(p.dps, locale)} ${t('logs.unit.dps')} · ${t(p.role === 'tank' ? 'logs.evidence.vs_tanks' : 'logs.evidence.vs_dps')}`;
       case 'survival':
-        return `${p.prematureDeaths} ${t('logs.unit.premature_deaths')} · ${p.deaths} ${t('logs.kpi.deaths_total')} · ${p.pulls} ${t('logs.pulls')}`;
+        return `${p.prematureDeaths} ${t('logs.unit.premature_deaths')} (${p.deathsWithoutHealthstone} ${t('logs.evidence.without_healthstone')}) · ${p.deaths} ${t('logs.kpi.deaths_total')} · ${p.pulls} ${t('logs.pulls')}`;
       case 'preparation':
         return `${t('logs.stat.potions')} ${p.potionPulls}/${p.potionEligiblePulls} · ${t('logs.stat.flask')} ${p.flaskPulls}/${p.pulls} · ${t('logs.stat.food')} ${p.foodPulls}/${p.pulls}`;
       case 'utility':

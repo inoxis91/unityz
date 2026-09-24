@@ -35,6 +35,7 @@ function player(overrides: Partial<ReportPlayer>): ReportPlayer {
     flaskPulls: 10,
     foodPulls: 10,
     healthstones: 0,
+    deathsWithoutHealthstone: 0,
     interrupts: 0,
     dispels: 0,
     score: 50,

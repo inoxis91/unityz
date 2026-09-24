@@ -45,6 +45,8 @@ export interface ReportPullPlayer {
   died: boolean;
   prematureDeath: boolean;
   combatPotions: number;
+  healthstones: number;
+  healthstoneBeforeDeath: boolean;
   flask: boolean;
   food: boolean;
 }
@@ -102,6 +104,7 @@ export interface ReportPlayer {
   flaskPulls: number;
   foodPulls: number;
   healthstones: number;
+  deathsWithoutHealthstone: number;
   interrupts: number;
   dispels: number;
   score: number;

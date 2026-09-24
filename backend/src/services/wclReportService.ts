@@ -43,6 +43,10 @@ export interface ReportPullPlayer {
   died: boolean;
   prematureDeath: boolean;
   combatPotions: number;
+  /** Pierres de soins et potions de soins utilisées pendant le pull. */
+  healthstones: number;
+  /** Soin d'urgence utilisé sur ce pull avant la mort (faux si le joueur n'est pas mort). */
+  healthstoneBeforeDeath: boolean;
   flask: boolean;
   food: boolean;
 }
@@ -104,6 +108,8 @@ export interface ReportPlayer {
   flaskPulls: number;
   foodPulls: number;
   healthstones: number;
+  /** Morts pénalisantes sans soin d'urgence utilisé avant, sur le même pull. */
+  deathsWithoutHealthstone: number;
   interrupts: number;
   dispels: number;
   score: number;
@@ -624,6 +630,9 @@ export class WclReportService {
           const activeMs = Math.max(dmg?.activeTime ?? 0, heal?.activeTime ?? 0);
           const parse = parses.get(fight.id)?.get(characterKey(actor.name, actor.server));
           const death = deaths.find((d) => d.actorId === detail.id);
+          const healthstoneCasts = healthstoneEvents.filter(
+            (e) => e.fight === fight.id && e.sourceID === detail.id,
+          );
           players.push({
             actorId: detail.id,
             role,
@@ -636,6 +645,10 @@ export class WclReportService {
             died: !!death,
             prematureDeath: !!death?.premature,
             combatPotions: usesDuringPull(aurasFor(potionIds, detail.id), fight),
+            healthstones: healthstoneCasts.length,
+            healthstoneBeforeDeath:
+              !!death &&
+              healthstoneCasts.some((e) => e.timestamp - fight.startTime <= death.timeMs),
             flask: activeAtPull(aurasFor(flaskIds, detail.id), fight),
             food: activeAtPull(aurasFor(foodIds, detail.id), fight),
           });
@@ -685,11 +698,6 @@ export class WclReportService {
     }
 
     /* ---------- Joueurs ---------- */
-    const healthstones = new Map<number, number>();
-    for (const e of healthstoneEvents) {
-      if (e.sourceID !== undefined) healthstones.set(e.sourceID, (healthstones.get(e.sourceID) ?? 0) + 1);
-    }
-
     const playerIds = [...new Set(pulls.flatMap((p) => p.players.map((pp) => pp.actorId)))];
     const drafts = playerIds.map((actorId) => {
       const actor = actors.get(actorId)!;
@@ -745,7 +753,10 @@ export class WclReportService {
         potionEligiblePulls: eligiblePotion.length,
         flaskPulls: played.filter(({ me }) => me.flask).length,
         foodPulls: played.filter(({ me }) => me.food).length,
-        healthstones: healthstones.get(actorId) ?? 0,
+        healthstones: played.reduce((sum, { me }) => sum + me.healthstones, 0),
+        deathsWithoutHealthstone: played.filter(
+          ({ me }) => me.prematureDeath && !me.healthstoneBeforeDeath,
+        ).length,
         interrupts: reportTables?.interrupts.get(actorId) ?? 0,
         dispels: reportTables?.dispels.get(actorId) ?? 0,
       };
