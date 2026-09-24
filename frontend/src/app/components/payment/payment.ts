@@ -96,7 +96,7 @@ export class PaymentComponent implements OnInit {
 
     if (selected === 'free') {
       // Free activation (trial)
-      this.http.post(`${this.apiUrl}/stripe/mock-payment-success`, { tier: 'free' }, { withCredentials: true }).subscribe({
+      this.http.post(`${this.apiUrl}/stripe/activate-free`, {}, { withCredentials: true }).subscribe({
         next: () => {
           this.toast.success(this.i18n.t('payment.success'));
           
@@ -112,8 +112,10 @@ export class PaymentComponent implements OnInit {
           });
         },
         error: (err) => {
-          console.error('Error activating free tier', err);
-          this.toast.error(this.i18n.t('payment.error'));
+          console.error('[Payment] Error activating free tier', err);
+          this.toast.error(
+            this.i18n.t(err?.error?.code === 'ACTIVE_SUBSCRIPTION' ? 'payment.error_active_sub' : 'payment.error'),
+          );
           this.isProcessing.set(false);
         }
       });

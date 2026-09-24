@@ -16,7 +16,6 @@ import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-navbar',
-  standalone: true,
   imports: [RouterModule],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css',
@@ -69,6 +68,11 @@ export class NavbarComponent implements OnInit {
   logout() {
     this.closeMenu();
     this.authService.logout();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape() {
+    this.closeMenu();
   }
 
   @HostListener('document:click', ['$event'])

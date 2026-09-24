@@ -1,269 +1,310 @@
-<div class="content-grid">
-  <!-- Signup Form -->
-  @if (!event?.is_canceled) {
-    <div class="form-card">
-      <h3>{{ i18n.t('event.details.your_signup') }}</h3>
-      <!-- Past Event Warning -->
-      @if (isEventPast()) {
-        <div class="warning-box spaced">
-          <p>⚠️ {{ i18n.t('event.details.event_past_warning') }}</p>
-        </div>
+<div class="grid" [class.single]="event()?.is_canceled">
+  <!-- Mon inscription -->
+  @if (!event()?.is_canceled) {
+    <section class="ui-card signup" style="--i: 0" aria-labelledby="signup-title">
+      <header class="ui-card-head">
+        <h3 id="signup-title">
+          <span class="ui-card-icon" aria-hidden="true">📝</span>
+          {{ i18n.t('event.details.your_signup') }}
+        </h3>
+        @if (mySignup(); as mine) {
+          <span class="ui-badge" [class]="'st-' + mine.status">
+            <span class="ui-dot" aria-hidden="true"></span>
+            {{ statusLabel(mine.status) }}
+          </span>
+        }
+      </header>
+
+      @if (isPast()) {
+        <p class="ui-alert warning">⏱️ {{ i18n.t('event.details.event_past_warning') }}</p>
+      } @else if (event()?.registrations_locked) {
+        <p class="ui-alert warning">
+          🔒 {{ i18n.t('event.details.registrations_locked_warning') }}
+        </p>
       }
-      <!-- Locked Event Warning -->
-      @if (event?.registrations_locked && !isEventPast()) {
-        <div class="warning-box locked-warning spaced animated-fade-in">
-          <p>🔒 {{ i18n.t('event.details.registrations_locked_warning') }}</p>
-        </div>
-      }
-      <div class="status-selector">
-        <button
-          [class.active]="signupStatus() === 'signed_up'"
-          (click)="setStatus('signed_up')"
-          class="status-btn present"
-          [disabled]="isEventPast() || event?.registrations_locked"
-        >
-          <span class="dot"></span> {{ i18n.t('event.details.status_present') }}
-        </button>
-        <button
-          [class.active]="signupStatus() === 'standby'"
-          (click)="setStatus('standby')"
-          class="status-btn standby"
-          [disabled]="isEventPast() || event?.registrations_locked"
-        >
-          <span class="dot"></span> {{ i18n.t('event.details.status_maybe') }}
-        </button>
-        <button
-          [class.active]="signupStatus() === 'absent'"
-          (click)="setStatus('absent')"
-          class="status-btn absent"
-          [disabled]="isEventPast() || event?.registrations_locked"
-        >
-          <span class="dot"></span> {{ i18n.t('event.details.status_absent') }}
-        </button>
+
+      <!-- Statut -->
+      <div
+        class="status-picker"
+        role="radiogroup"
+        [attr.aria-label]="i18n.t('event.details.your_signup')"
+      >
+        @for (st of statuses; track st) {
+          <button
+            type="button"
+            role="radio"
+            class="status-btn"
+            [class]="'st-' + st"
+            [class.active]="status() === st"
+            [attr.aria-checked]="status() === st"
+            [disabled]="readOnly()"
+            (click)="setStatus(st)"
+          >
+            <span class="status-emoji" aria-hidden="true">{{
+              st === 'signed_up' ? '✅' : st === 'standby' ? '🤔' : '🚫'
+            }}</span>
+            {{ statusLabel(st) }}
+          </button>
+        }
       </div>
-      @if (signupStatus() !== 'absent') {
-        <div class="signup-fields animated-fade-in">
-          @if (myCharactersSig().length > 0) {
-            <div class="form-group">
-              <label>{{ i18n.t('event.details.select_character') }}</label>
-              <select
-                [ngModel]="selectedCharacterId()"
-                (ngModelChange)="selectedCharacterId.set($event)"
-                (change)="onCharacterChange()"
-                class="modern-select"
-                [disabled]="isEventPast() || event?.registrations_locked"
-              >
-                @for (char of myCharactersSig(); track char) {
-                  <option [value]="char.id" [disabled]="!isCharacterAllowed(char)">
-                    {{ char.name }} ({{ i18n.t('class.' + getClassCategory(char.class)) }})
-                    {{
-                      !isCharacterAllowed(char)
-                        ? ' — [' + i18n.t('event.details.roster_not_allowed') + ']'
-                        : ''
-                    }}
-                  </option>
-                }
-              </select>
-            </div>
+
+      @if (status() !== 'absent') {
+        <div class="reveal">
+          @if (myCharacters().length === 0) {
+            <p class="ui-alert warning">
+              {{ i18n.t('event.details.no_characters') }}
+              <a [routerLink]="['/options']" [queryParams]="{ tab: 'characters' }">{{
+                i18n.t('event.details.import_characters')
+              }}</a
+              >{{ i18n.t('event.details.to_signup') }}
+            </p>
           } @else {
-            <div class="warning-box">
-              <p>
-                ⚠️ {{ i18n.t('event.details.no_characters') }}
-                <a [routerLink]="['/options']" [queryParams]="{ tab: 'characters' }">{{
-                  i18n.t('event.details.import_characters')
-                }}</a
-                >{{ i18n.t('event.details.to_signup') }}
-              </p>
+            <p class="ui-label field-label" id="char-label">
+              {{ i18n.t('event.details.select_character') }}
+            </p>
+            <div class="char-picker" role="radiogroup" aria-labelledby="char-label">
+              @for (char of myCharacters(); track char.id) {
+                <button
+                  type="button"
+                  role="radio"
+                  class="char-option"
+                  [class.active]="char.id === characterId()"
+                  [attr.aria-checked]="char.id === characterId()"
+                  [disabled]="readOnly() || !isAllowed(char)"
+                  [style.--class-color]="'var(--color-' + classId(char.class) + ')'"
+                  [title]="isAllowed(char) ? '' : i18n.t('event.details.roster_not_allowed')"
+                  (click)="selectCharacter(char)"
+                >
+                  <img [src]="classIcon(char.class)" alt="" width="32" height="32" />
+                  <span class="char-text">
+                    <span class="char-name" [class]="'class-' + classId(char.class)">
+                      {{ char.name }}
+                      @if (char.is_main) {
+                        <span class="star" aria-hidden="true">★</span>
+                      }
+                    </span>
+                    <span class="char-sub">
+                      @if (isAllowed(char)) {
+                        {{ i18n.t('class.' + classId(char.class)) }}
+                      } @else {
+                        🔒 {{ char.roster_name || i18n.t('event.details.roster_not_allowed') }}
+                      }
+                    </span>
+                  </span>
+                </button>
+              }
             </div>
-          }
-          @if (myCharactersSig().length > 0 && allowedCharacters().length === 0) {
-            <div class="warning-box">
-              <p>
-                ⚠️ {{ i18n.t('event.details.no_allowed_characters') }}
+
+            @if (allowedCharacters().length === 0) {
+              <p class="ui-alert warning">
+                {{ i18n.t('event.details.no_allowed_characters') }}
                 {{ i18n.t('event.details.restricted_to_roster') }}
-                <strong>{{ event?.roster_name }}</strong> {{ i18n.t('event.details.or_higher') }}
+                <strong>{{ event()?.roster_name }}</strong> {{ i18n.t('event.details.or_higher') }}
               </p>
-            </div>
-          }
-          @if (allowedCharacters().length > 0) {
-            <div class="form-group">
-              <label>{{ i18n.t('event.details.your_role') }}</label>
-              <div class="role-selector">
-                <button
-                  [class.active]="selectedRole() === 'tank'"
-                  (click)="selectedRole.set('tank')"
-                  [disabled]="isEventPast() || event?.registrations_locked"
-                >
-                  <img src="assets/icons/tank.png" class="role-icon-img" alt="Tank" />
-                  {{ i18n.t('event.details.role_tank') }}
-                </button>
-                <button
-                  [class.active]="selectedRole() === 'heal'"
-                  (click)="selectedRole.set('heal')"
-                  [disabled]="isEventPast() || event?.registrations_locked"
-                >
-                  <img src="assets/icons/heal.png" class="role-icon-img" alt="Heal" />
-                  {{ i18n.t('event.details.role_heal') }}
-                </button>
-                <button
-                  [class.active]="selectedRole() === 'dps'"
-                  (click)="selectedRole.set('dps')"
-                  [disabled]="isEventPast() || event?.registrations_locked"
-                >
-                  <img src="assets/icons/dps.png" class="role-icon-img" alt="DPS" />
-                  {{ i18n.t('event.details.role_dps') }}
-                </button>
+            } @else {
+              <p class="ui-label field-label" id="role-label">
+                {{ i18n.t('event.details.your_role') }}
+              </p>
+              <div class="role-picker" role="radiogroup" aria-labelledby="role-label">
+                @for (r of roles; track r) {
+                  <button
+                    type="button"
+                    role="radio"
+                    class="role-btn"
+                    [class]="'role-' + r"
+                    [class.active]="role() === r"
+                    [class.off-spec]="!canPlay(r)"
+                    [attr.aria-checked]="role() === r"
+                    [disabled]="readOnly()"
+                    (click)="role.set(r)"
+                  >
+                    <img [src]="'assets/icons/' + r + '.png'" alt="" />
+                    {{ roleLabel(r) }}
+                  </button>
+                }
               </div>
-            </div>
+            }
           }
         </div>
       }
-      <div class="form-group">
-        <label>{{ i18n.t('event.details.comment_label') }}</label>
+
+      <div class="ui-field comment-field">
+        <label for="signup-comment">{{ i18n.t('event.details.comment_label') }}</label>
         <textarea
+          id="signup-comment"
+          rows="2"
+          maxlength="500"
           [ngModel]="comment()"
           (ngModelChange)="comment.set($event)"
           [placeholder]="i18n.t('event.details.comment_placeholder')"
-          rows="3"
-          [disabled]="isEventPast() || event?.registrations_locked"
+          [disabled]="readOnly()"
         ></textarea>
       </div>
-      <div class="actions">
-        <button class="btn-action confirm" (click)="onSignup()" [disabled]="isSignupDisabled()">
-          <span class="icon">💾</span> {{ i18n.t('event.details.btn_save_choice') }}
+
+      <div class="signup-actions">
+        <button
+          type="button"
+          class="ui-btn primary"
+          [class.loading]="saving()"
+          [disabled]="isSignupDisabled() || !isDirty()"
+          (click)="onSignup()"
+        >
+          {{
+            mySignup()
+              ? i18n.t('event.details.btn_update_choice')
+              : i18n.t('event.details.btn_save_choice')
+          }}
         </button>
+        @if (mySignup() && !readOnly()) {
+          <button type="button" class="ui-btn ghost" [disabled]="saving()" (click)="onUnsignup()">
+            {{ i18n.t('event.details.btn_unsignup') }}
+          </button>
+        }
       </div>
-    </div>
+    </section>
   }
 
-  <!-- List of signups -->
-  <div class="list-card">
-    <div class="list-header">
-      <div class="list-title-group">
-        <h3>{{ i18n.t('event.details.participants_list') }}</h3>
-        <div class="status-counts">
-          <span class="count-badge present" [title]="i18n.t('event.details.tooltip_present')"
-            >✅ {{ presentCount() }}</span
-          >
-          <span class="count-badge standby" [title]="i18n.t('event.details.tooltip_maybe')"
-            >❓ {{ standbyCount() }}</span
-          >
-          <span class="count-badge absent" [title]="i18n.t('event.details.tooltip_absent')"
-            >❌ {{ absentCount() }}</span
-          >
-        </div>
-      </div>
-      <div class="sort-controls">
+  <!-- Participants -->
+  <section class="ui-card roster" style="--i: 1" aria-labelledby="participants-title">
+    <header class="ui-card-head">
+      <h3 id="participants-title">
+        <span class="ui-card-icon" aria-hidden="true">👥</span>
+        {{ i18n.t('event.details.participants_list') }}
+        <span class="total">{{ signups().length }}</span>
+      </h3>
+      <div class="sort" role="group" [attr.aria-label]="i18n.t('event.details.sort_by_date')">
         <button
-          [class.active]="sortMethod() === 'date'"
-          (click)="toggleDateSort()"
-          [title]="
+          type="button"
+          class="ui-btn ghost icon sm"
+          [class.on]="sortMethod() === 'date'"
+          [attr.aria-pressed]="sortMethod() === 'date'"
+          [attr.aria-label]="
             sortMethod() === 'date'
               ? sortDirection() === 'asc'
                 ? i18n.t('event.details.sort_by_date_desc')
                 : i18n.t('event.details.sort_by_date_asc')
               : i18n.t('event.details.sort_by_date')
           "
-          class="sort-date"
+          [title]="i18n.t('event.details.sort_by_date')"
+          (click)="toggleDateSort()"
         >
           🕒
           @if (sortMethod() === 'date') {
-            <span class="sort-arrow" aria-hidden="true">{{
-              sortDirection() === 'asc' ? '▲' : '▼'
+            <span class="arrow" aria-hidden="true">{{
+              sortDirection() === 'asc' ? '↑' : '↓'
             }}</span>
           }
         </button>
         <button
-          [class.active]="sortMethod() === 'status'"
-          (click)="sortMethod.set('status')"
+          type="button"
+          class="ui-btn ghost icon sm"
+          [class.on]="sortMethod() === 'status'"
+          [attr.aria-pressed]="sortMethod() === 'status'"
+          [attr.aria-label]="i18n.t('event.details.sort_by_status')"
           [title]="i18n.t('event.details.sort_by_status')"
+          (click)="sortMethod.set('status')"
         >
           📊
         </button>
       </div>
-    </div>
+    </header>
 
-    <div class="participants-grid">
-      @for (s of sortedSignups(); track s) {
-        <div
-          class="participant-card"
-          [ngClass]="[
-            s.status,
-            s.status === 'absent' ? 'is-absent' : '',
-            'bg-class-' +
-              getClassCategory(
-                s.status === 'absent'
-                  ? s.main_character_class
-                  : s.character_class || s.main_character_class
-              ),
-          ]"
-          (click)="s.status !== 'absent' ? onOpenAltsModal(s) : null"
-          [class.clickable]="s.status !== 'absent'"
+    <!-- Filtres par statut + répartition des rôles -->
+    <div class="summary">
+      <div class="filters" role="group" [attr.aria-label]="i18n.t('event.details.filter_label')">
+        <button
+          type="button"
+          class="filter"
+          [class.active]="statusFilter() === 'all'"
+          [attr.aria-pressed]="statusFilter() === 'all'"
+          (click)="statusFilter.set('all')"
         >
-          <div class="participant-main">
-            @if (s.status !== 'absent') {
-              <div class="role-icon-box">
-                <span class="role-icon" [class]="effectiveRole(s)">
-                  @switch (effectiveRole(s)) {
-                    @case ('tank') {
-                      <img src="assets/icons/tank.png" class="role-icon-img" alt="Tank" />
-                    }
-                    @case ('heal') {
-                      <img src="assets/icons/heal.png" class="role-icon-img" alt="Heal" />
-                    }
-                    @case ('dps') {
-                      <img src="assets/icons/dps.png" class="role-icon-img" alt="DPS" />
-                    }
-                  }
-                </span>
-              </div>
-            }
-            @if (s.status === 'absent') {
-              <div class="role-icon-box absent">
-                <span class="role-icon">❌</span>
-              </div>
-            }
-            <div class="char-info">
-              <span class="participant-name">
-                {{
-                  s.status === 'absent'
-                    ? s.main_character_name ||
-                      s.battletag?.split('#')?.[0] ||
-                      i18n.t('event.details.unknown_user')
-                    : s.character_name ||
-                      s.main_character_name ||
-                      s.battletag?.split('#')?.[0] ||
-                      i18n.t('event.details.unknown_user')
-                }}
-              </span>
-              @if (s.status === 'absent') {
-                <span class="absent-label">{{ i18n.t('event.details.label_absent') }}</span>
-              }
-              @if (isRaid() && s.status !== 'absent' && s.selection) {
-                <span class="lineup-chip" [class]="s.selection">
-                  {{ s.selection === 'selected' ? '✓' : '🪑' }}
-                  {{ i18n.t('event.lineup.chip_' + s.selection) }}
-                </span>
-              }
-              <span class="signup-time">{{
-                s.updated_at || s.signup_date || s.created_at | date: 'dd/MM HH:mm'
-              }}</span>
-            </div>
-          </div>
-          @if (s.comment) {
-            <div class="participant-comment">
-              <p>"{{ s.comment }}"</p>
-            </div>
-          }
-        </div>
-      }
-
-      @if (signupsSig().length === 0) {
-        <div class="empty-state">
-          <div class="empty-icon" aria-hidden="true">👥</div>
-          <p>{{ i18n.t('event.details.no_signups') }}</p>
-        </div>
-      }
+          {{ i18n.t('event.mplus.filter_all') }} <b>{{ signups().length }}</b>
+        </button>
+        @for (st of statuses; track st) {
+          <button
+            type="button"
+            class="filter"
+            [class]="'st-' + st"
+            [class.active]="statusFilter() === st"
+            [attr.aria-pressed]="statusFilter() === st"
+            (click)="statusFilter.set(statusFilter() === st ? 'all' : st)"
+          >
+            <span class="ui-dot" aria-hidden="true"></span>
+            {{ statusLabel(st) }} <b>{{ counts()[st] }}</b>
+          </button>
+        }
+      </div>
+      <div class="role-counts" [attr.aria-label]="i18n.t('event.details.role_split')">
+        @for (r of roles; track r) {
+          <span class="role-count" [class]="'role-' + r" [title]="roleLabel(r)">
+            <img [src]="'assets/icons/' + r + '.png'" [alt]="roleLabel(r)" />
+            {{ counts()[r] }}
+          </span>
+        }
+      </div>
     </div>
-  </div>
+
+    <ul class="people">
+      @for (s of sortedSignups(); track s.user_id; let i = $index) {
+        <li [style.--i]="i" animate.leave="ui-leave">
+          <button
+            type="button"
+            class="person"
+            [class]="'st-' + s.status"
+            [class.me]="s.user_id === currentUserId()"
+            [style.--class-color]="'var(--color-' + signupClassId(s) + ')'"
+            [disabled]="s.status === 'absent'"
+            [attr.aria-label]="displayName(s) + ' – ' + statusLabel(s.status)"
+            (click)="openAlts.emit(s)"
+          >
+            <span class="avatar">
+              <img [src]="signupIcon(s)" alt="" width="40" height="40" />
+              @if (s.status !== 'absent') {
+                <img
+                  class="role-badge"
+                  [src]="'assets/icons/' + effectiveRole(s) + '.png'"
+                  [alt]="roleLabel(effectiveRole(s))"
+                />
+              }
+            </span>
+            <span class="person-main">
+              <span class="person-name" [class]="'class-' + signupClassId(s)">
+                {{ displayName(s) }}
+              </span>
+              <span class="person-meta">
+                <span class="st-label">
+                  <span class="ui-dot" aria-hidden="true"></span>{{ statusLabel(s.status) }}
+                </span>
+                @if (rioOf(s); as rio) {
+                  <span class="rio">{{ rio }}</span>
+                }
+                @if (isRaid() && s.status !== 'absent' && s.selection) {
+                  <span class="lineup-chip" [class]="s.selection">
+                    {{ s.selection === 'selected' ? '✓' : '🪑' }}
+                    {{ i18n.t('event.lineup.chip_' + s.selection) }}
+                  </span>
+                }
+              </span>
+              @if (s.comment) {
+                <span class="person-comment">“{{ s.comment }}”</span>
+              }
+            </span>
+            <time class="person-time" [attr.datetime]="s.updated_at || s.created_at">
+              {{ s.updated_at || s.signup_date || s.created_at | date: 'dd/MM HH:mm' }}
+            </time>
+          </button>
+        </li>
+      } @empty {
+        <li class="ui-empty">
+          <span class="emoji" aria-hidden="true">👥</span>
+          <strong>{{
+            statusFilter() === 'all'
+              ? i18n.t('event.details.no_signups')
+              : i18n.t('event.details.filter_empty')
+          }}</strong>
+        </li>
+      }
+    </ul>
+  </section>
 </div>

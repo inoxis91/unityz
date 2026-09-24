@@ -71,7 +71,7 @@ export class MplusGroupsComponent {
 
   event = input.required<CalendarEvent>();
   signups = input<Signup[]>([]);
-  rioScores = input<Map<string, number>>(new Map());
+  rioScores = input<ReadonlyMap<string, number>>(new Map());
   canManage = input(false);
   currentUserId = input<string | null>(null);
 

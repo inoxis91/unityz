@@ -1,107 +1,187 @@
-<div class="users-admin">
-  <div class="section-header">
-    <h3>{{ i18n.t('admin.users.title') }}</h3>
+<section class="ui-card" aria-labelledby="users-title">
+  <header class="ui-card-head">
+    <h2 id="users-title">
+      <span class="ui-card-icon" aria-hidden="true">👥</span>
+      {{ i18n.t('admin.users.title') }}
+      <span class="total">{{ users().length }}</span>
+    </h2>
     <p>{{ i18n.t('admin.users.subtitle') }}</p>
-  </div>
+  </header>
 
-  <div class="users-list-card">
-    <div class="table-container">
-      <table class="users-table">
-        <thead>
-          <tr>
-            <th>{{ i18n.t('admin.users.th_member') }}</th>
-            <th>{{ i18n.t('admin.users.th_battletag') }}</th>
-            <th>{{ i18n.t('admin.users.th_role') }}</th>
-            <th>{{ i18n.t('admin.users.th_joined') }}</th>
-            <th>{{ i18n.t('admin.users.th_discord') }}</th>
-            <th class="actions-header">{{ i18n.t('admin.users.th_actions') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (user of users(); track user.id) {
-            <tr>
-              <td class="user-cell clickable" (click)="openCharactersModal(user)">
-                <div class="user-avatar">
-                  {{ user.battletag.charAt(0).toUpperCase() }}
-                </div>
-                <span class="user-name">{{ user.battletag.split('#')[0] }}</span>
-              </td>
-              <td class="btag-cell clickable" (click)="openCharactersModal(user)">
-                {{ user.battletag }}
-              </td>
-              <td class="role-cell">
-                <select
-                  [ngModel]="user.role"
-                  (ngModelChange)="onRoleChange(user, $event)"
-                  class="role-select"
-                >
-                  @for (role of roles; track role.value) {
-                    <option [value]="role.value">{{ role.label }}</option>
-                  }
-                </select>
-              </td>
-              <td class="date-cell">{{ user.created_at | date: 'dd/MM/yyyy' }}</td>
-              <td class="discord-cell">
-                <span
-                  class="discord-badge"
-                  [class.linked]="user.discord_id"
-                  [title]="
-                    user.discord_id
-                      ? i18n.t('admin.users.tooltip_linked')
-                      : i18n.t('admin.users.tooltip_unlinked')
-                  "
-                >
-                  {{
-                    user.discord_id
-                      ? i18n.t('admin.users.discord_linked')
-                      : i18n.t('admin.users.discord_unlinked')
-                  }}
-                </span>
-              </td>
-              <td class="actions-cell">
-                <button
-                  class="btn-delete-user"
-                  (click)="onDeleteUser(user)"
-                  [disabled]="user.id === authService.currentUser()?.id"
-                  [title]="
-                    user.id === authService.currentUser()?.id
-                      ? i18n.t('admin.users.tooltip_self_delete')
-                      : i18n.t('admin.users.btn_delete')
-                  "
-                >
-                  🗑️
-                </button>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+  <div class="toolbar">
+    <input
+      type="search"
+      class="ui-input"
+      [value]="query()"
+      (input)="query.set($any($event.target).value)"
+      [placeholder]="i18n.t('admin.users.search')"
+      [attr.aria-label]="i18n.t('admin.users.search')"
+    />
+    <div class="role-chips" role="group" [attr.aria-label]="i18n.t('admin.users.th_role')">
+      @for (role of roles; track role) {
+        <button
+          type="button"
+          class="chip"
+          [class]="'r-' + role"
+          [class.active]="roleFilter() === role"
+          [attr.aria-pressed]="roleFilter() === role"
+          (click)="toggleRoleFilter(role)"
+        >
+          {{ i18n.t('role.' + role) }} <b>{{ roleCounts().get(role) ?? 0 }}</b>
+        </button>
+      }
+      <span class="discord-stat" [title]="i18n.t('admin.users.th_discord')">
+        <span class="ui-dot" aria-hidden="true"></span>
+        Discord {{ discordLinked() }}/{{ users().length }}
+      </span>
     </div>
   </div>
-</div>
 
-<!-- Characters List Modal -->
-@if (showCharactersModal()) {
-  <div class="modal-backdrop">
-    <div class="modal">
-      <h3>Personnages de {{ modalUser()?.battletag }}</h3>
-      @if (modalUser()?.characters?.length) {
-        <div class="characters-list">
-          @for (char of modalUser()?.characters; track char.name) {
-            <div class="character-item">
-              <span class="char-name" [class.is-main]="char.is_main">{{ char.name }}</span>
-              <span class="char-details">{{ char.class }} - {{ char.realm }}</span>
-              @if (char.is_main) {
-                <span class="main-badge">Main</span>
+  @if (!loaded()) {
+    <div class="skeletons" aria-hidden="true">
+      <span class="ui-skeleton"></span><span class="ui-skeleton"></span
+      ><span class="ui-skeleton"></span>
+    </div>
+  } @else {
+    <ul class="members">
+      @for (user of filtered(); track user.id; let i = $index) {
+        <li
+          class="member"
+          [style.--i]="i"
+          [class.me]="user.id === currentUserId()"
+          animate.leave="ui-leave"
+        >
+          <button type="button" class="identity" (click)="modalUser.set(user)">
+            @if (mainOf(user); as main) {
+              <img class="avatar-img" [src]="classIcon(main.class)" alt="" width="40" height="40" />
+            } @else {
+              <span class="avatar" aria-hidden="true">{{ user.battletag.charAt(0) }}</span>
+            }
+            <span class="who">
+              <span class="name">{{ user.battletag.split('#')[0] }}</span>
+              <span class="sub">
+                @if (mainOf(user); as main) {
+                  <span [class]="'class-' + classId(main.class)">{{ main.name }}</span> ·
+                }
+                <span class="mono">#{{ user.battletag.split('#')[1] }}</span>
+              </span>
+            </span>
+          </button>
+
+          <label class="role-select" [class]="'r-' + user.role">
+            <span class="visually-hidden">{{ i18n.t('admin.users.th_role') }}</span>
+            <select
+              [value]="user.role"
+              (change)="onRoleChange(user, $any($event.target).value)"
+              [disabled]="user.id === currentUserId()"
+            >
+              @for (role of roles; track role) {
+                <option [value]="role" [selected]="role === user.role">
+                  {{ i18n.t('role.' + role) }}
+                </option>
               }
-            </div>
-          }
-        </div>
-      } @else {
-        <p>Aucun personnage synchronisé pour ce joueur.</p>
+            </select>
+          </label>
+
+          <span class="meta">
+            <span
+              class="discord"
+              [class.linked]="user.discord_id"
+              [title]="
+                user.discord_id
+                  ? i18n.t('admin.users.tooltip_linked')
+                  : i18n.t('admin.users.tooltip_unlinked')
+              "
+            >
+              <span class="ui-dot" aria-hidden="true"></span>
+              {{
+                user.discord_id
+                  ? i18n.t('admin.users.discord_linked')
+                  : i18n.t('admin.users.discord_unlinked')
+              }}
+            </span>
+            <time [attr.datetime]="user.created_at">{{
+              user.created_at | date: 'dd/MM/yyyy'
+            }}</time>
+          </span>
+
+          <button
+            type="button"
+            class="ui-btn ghost icon sm delete"
+            (click)="onDeleteUser(user)"
+            [disabled]="user.id === currentUserId()"
+            [attr.aria-label]="i18n.t('admin.users.btn_delete') + ' – ' + user.battletag"
+            [title]="
+              user.id === currentUserId()
+                ? i18n.t('admin.users.tooltip_self_delete')
+                : i18n.t('admin.users.btn_delete')
+            "
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M9 3h6a1 1 0 0 1 1 1v1h4v2H4V5h4V4a1 1 0 0 1 1-1Zm-3 6h12l-.8 11.1A2 2 0 0 1 15.2 22H8.8a2 2 0 0 1-2-1.9L6 9Zm4 2v8h2v-8h-2Zm4 0v8h2v-8h-2Z"
+              />
+            </svg>
+          </button>
+        </li>
+      } @empty {
+        <li class="ui-empty">
+          <span class="emoji" aria-hidden="true">🔍</span>
+          <strong>{{ i18n.t('admin.users.empty') }}</strong>
+        </li>
       }
-      <div class="modal-footer">
-        <button class="btn-primary" (click)="closeCharactersModal()">Fermer</button>
+    </ul>
+  }
+</section>
+
+@if (modalUser(); as user) {
+  <div class="ui-overlay" (click)="modalUser.set(null)">
+    <div
+      class="ui-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="member-title"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="ui-modal-head">
+        <span class="avatar" aria-hidden="true">{{ user.battletag.charAt(0) }}</span>
+        <h2 id="member-title">
+          {{ i18n.t('admin.users.characters_of').replace('{member}', user.battletag) }}
+        </h2>
+        <button
+          type="button"
+          class="ui-close"
+          (click)="modalUser.set(null)"
+          [attr.aria-label]="i18n.t('event.details.btn_close')"
+        >
+          ×
+        </button>
+      </header>
+      <div class="ui-modal-body">
+        <ul class="chars">
+          @for (char of user.characters ?? []; track char.name + char.realm; let i = $index) {
+            <li
+              class="char"
+              [style.--i]="i"
+              [style.--class-color]="'var(--color-' + classId(char.class) + ')'"
+            >
+              <img [src]="classIcon(char.class)" alt="" width="34" height="34" />
+              <span class="who">
+                <span class="name" [class]="'class-' + classId(char.class)">{{ char.name }}</span>
+                <span class="sub"
+                  >{{ i18n.t('class.' + classId(char.class)) }} · {{ char.realm }}</span
+                >
+              </span>
+              @if (char.is_main) {
+                <span class="ui-badge warning">★ Main</span>
+              }
+            </li>
+          } @empty {
+            <li class="ui-empty">
+              <p>{{ i18n.t('admin.users.no_characters') }}</p>
+            </li>
+          }
+        </ul>
       </div>
     </div>
   </div>

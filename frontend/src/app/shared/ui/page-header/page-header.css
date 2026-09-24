@@ -1,0 +1,134 @@
+:host {
+  --tone: var(--ui-brand);
+  --tone-2: var(--ui-purple);
+  display: block;
+}
+
+:host(.tone-purple) {
+  --tone: var(--ui-purple);
+  --tone-2: var(--ui-brand);
+}
+:host(.tone-green) {
+  --tone: var(--ui-success);
+  --tone-2: var(--ui-event-reunion);
+}
+:host(.tone-amber) {
+  --tone: var(--ui-warning);
+  --tone-2: var(--ui-danger);
+}
+:host(.tone-red) {
+  --tone: var(--ui-danger);
+  --tone-2: var(--ui-purple);
+}
+:host(.tone-teal) {
+  --tone: var(--ui-event-reunion);
+  --tone-2: var(--ui-brand);
+}
+:host(.tone-pink) {
+  --tone: var(--ui-event-mm);
+  --tone-2: var(--ui-danger);
+}
+
+.ph {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 1.35rem 1.5rem;
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: 22px;
+  background:
+    radial-gradient(
+      90% 140% at 0% 0%,
+      color-mix(in srgb, var(--tone) 20%, transparent),
+      transparent 55%
+    ),
+    radial-gradient(
+      60% 120% at 100% 100%,
+      color-mix(in srgb, var(--tone-2) 10%, transparent),
+      transparent 60%
+    ),
+    var(--ui-surface);
+  box-shadow: 0 4px 12px -6px rgba(15, 23, 42, 0.12);
+  animation: ui-rise 0.45s var(--ui-ease-out) backwards;
+}
+
+.ph-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 16px;
+}
+
+.ph-icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  font-size: 1.6rem;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--tone), var(--tone-2));
+  box-shadow: 0 10px 22px -10px var(--tone);
+  animation: ui-float 5s ease-in-out infinite;
+}
+
+.ph-text {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.ph-text h1 {
+  margin: 0;
+  font-size: clamp(1.35rem, 1.1rem + 1vw, 1.75rem);
+  font-weight: 900;
+  letter-spacing: -0.3px;
+  line-height: 1.15;
+  color: var(--ui-text-strong);
+}
+
+.ph-text p {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--ui-text-muted);
+}
+
+.ph-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ph-actions:empty {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .ph {
+    padding: 1rem;
+    border-radius: 18px;
+  }
+
+  .ph-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    font-size: 1.35rem;
+  }
+
+  .ph-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ph,
+  .ph-icon {
+    animation: none;
+  }
+}

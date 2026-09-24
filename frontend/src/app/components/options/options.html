@@ -1,294 +1,278 @@
 @if (authService.currentUser(); as user) {
-  <div class="options-container animated-fade-in">
-    <div class="header-section">
-      <h1>
-        {{
-          activeTab() === 'characters'
-            ? i18n.t('options.tabs.characters')
-            : i18n.t('options.tabs.settings')
-        }}
-      </h1>
-      <p class="subtitle">{{ i18n.t('options.subtitle') }}</p>
-    </div>
-    <div class="options-tabs">
-      <button [class.active]="activeTab() === 'characters'" (click)="activeTab.set('characters')">
-        {{ i18n.t('options.tabs.characters') }}
-      </button>
-      <button [class.active]="activeTab() === 'settings'" (click)="activeTab.set('settings')">
-        {{ i18n.t('options.tabs.settings') }}
-      </button>
-    </div>
+  <div class="ui-page">
+    <app-page-header
+      icon="⚙️"
+      tone="brand"
+      [title]="i18n.t('options.title')"
+      [subtitle]="i18n.t('options.subtitle')"
+    >
+      <nav pageActions class="ui-tabs" [attr.aria-label]="i18n.t('options.title')">
+        <button
+          type="button"
+          [class.active]="activeTab() === 'characters'"
+          [attr.aria-pressed]="activeTab() === 'characters'"
+          (click)="selectTab('characters')"
+        >
+          🛡️ {{ i18n.t('options.tabs.characters') }}
+        </button>
+        <button
+          type="button"
+          [class.active]="activeTab() === 'settings'"
+          [attr.aria-pressed]="activeTab() === 'settings'"
+          (click)="selectTab('settings')"
+        >
+          👤 {{ i18n.t('options.tabs.settings') }}
+        </button>
+      </nav>
+    </app-page-header>
+
     @if (isSetupMode() && !user.has_characters) {
-      <div class="setup-warning animated-fade-in">
-        <div class="warning-content">
-          <span class="icon">⚠️</span>
-          <div class="text">
-            <h3>{{ i18n.t('options.warning.title') }}</h3>
-            <p>{{ i18n.t('options.warning.desc') }}</p>
-          </div>
+      <div class="ui-alert warning setup" role="status">
+        <span class="setup-icon" aria-hidden="true">⚠️</span>
+        <div>
+          <strong>{{ i18n.t('options.warning.title') }}</strong>
+          <p>{{ i18n.t('options.warning.desc') }}</p>
         </div>
       </div>
     }
+
     @if (activeTab() === 'characters') {
-      <div class="tab-content">
-        <app-character-manager></app-character-manager>
-      </div>
-    }
-    @if (activeTab() === 'settings') {
-      <div class="tab-content">
-        <section class="settings-grid">
-          <!-- Discord Card -->
-          <div
-            class="card settings-card discord-highlight pro-locked-box-discord"
-            [class.linked]="user.discord_id"
-          >
-            <!-- Locked Overlay Banner -->
+      <app-character-manager class="tab" />
+    } @else {
+      <div class="settings tab">
+        <!-- Compte -->
+        <section class="ui-card account" style="--i: 1" aria-labelledby="acc-title">
+          <div class="account-hero">
+            <span class="avatar" aria-hidden="true">{{ user.battletag.charAt(0) }}</span>
+            <div class="account-id">
+              <h2 id="acc-title">{{ user.battletag }}</h2>
+              <span class="ui-badge" [class.purple]="authService.isAdmin()">
+                {{ i18n.t('role.' + user.role) }}
+              </span>
+            </div>
+          </div>
+          <dl class="facts">
+            <div>
+              <dt>{{ i18n.t('options.account.bnet_id') }}</dt>
+              <dd class="mono">{{ user.bnet_id }}</dd>
+            </div>
+            <div>
+              <dt>{{ i18n.t('options.sub.guild') }}</dt>
+              <dd>{{ authService.currentGuild()?.name || i18n.t('options.sub.no_guild') }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <!-- Discord -->
+        <section
+          class="ui-card discord"
+          [class.linked]="user.discord_id"
+          [class.locked]="!isPro()"
+          style="--i: 2"
+          aria-labelledby="discord-title"
+        >
+          <header class="ui-card-head">
+            <h2 id="discord-title">
+              <span class="ui-card-icon discord-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M20.3 4.4A19.6 19.6 0 0 0 15.4 3l-.6 1.3a18.2 18.2 0 0 0-5.6 0L8.6 3a19.5 19.5 0 0 0-4.9 1.5C.6 9.1-.3 13.6.1 18.1a19.8 19.8 0 0 0 6 3l1.3-2.1a12.8 12.8 0 0 1-2-1l.5-.4a14 14 0 0 0 12.1 0l.5.4c-.6.4-1.3.7-2 1l1.3 2.1a19.7 19.7 0 0 0 6-3c.5-5.2-.9-9.7-3.5-13.7ZM8 15.3c-1.2 0-2.2-1.1-2.2-2.4S6.8 10.5 8 10.5s2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Zm8 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Z"
+                  />
+                </svg>
+              </span>
+              {{ i18n.t('options.discord.title') }}
+            </h2>
             @if (!isPro()) {
-              <div class="pro-locked-banner-discord animated-fade-in">
-                <span class="lock-icon-discord">🔒</span>
-                <span class="banner-badge-discord">PRO</span>
-                <h4>{{ i18n.t('options.discord.locked_title') }}</h4>
-                <p>{{ i18n.t('options.discord.locked_desc') }}</p>
-                <button class="btn-upgrade-discord" routerLink="/payment">
-                  {{ i18n.t('admin.discord.btn_unlock') }}
-                </button>
+              <span class="ui-badge warning">🔒 PRO</span>
+            } @else if (user.discord_id) {
+              <span class="ui-badge success">✓ {{ i18n.t('options.discord.linked') }}</span>
+            }
+          </header>
+
+          @if (!isPro()) {
+            <p class="desc">{{ i18n.t('options.discord.locked_desc') }}</p>
+            <a class="ui-btn accent" routerLink="/payment">{{
+              i18n.t('admin.discord.btn_unlock')
+            }}</a>
+          } @else if (user.discord_id) {
+            <p class="desc">{{ i18n.t('options.discord.success_desc') }}</p>
+            <p class="mono small">ID : {{ user.discord_id }}</p>
+            <button
+              type="button"
+              class="ui-btn subtle-danger sm"
+              [class.loading]="unlinkingDiscord()"
+              [disabled]="unlinkingDiscord()"
+              (click)="unlinkDiscord()"
+            >
+              {{ i18n.t('options.discord.btn_unlink') }}
+            </button>
+          } @else {
+            <p class="desc">{{ i18n.t('options.discord.desc') }}</p>
+            <button type="button" class="ui-btn discord" (click)="linkDiscord()">
+              {{ i18n.t('options.discord.btn_link') }}
+            </button>
+            <p class="hint">🔐 {{ i18n.t('options.discord.secure') }}</p>
+          }
+        </section>
+
+        <!-- Anniversaire -->
+        <section class="ui-card" style="--i: 3" aria-labelledby="bday-title">
+          <header class="ui-card-head">
+            <h2 id="bday-title">
+              <span class="ui-card-icon" aria-hidden="true">🎂</span>
+              {{ i18n.t('options.birthday.title') }}
+            </h2>
+            <p>{{ i18n.t('options.birthday.desc') }}</p>
+          </header>
+          <div class="inline-form">
+            <input
+              type="date"
+              class="ui-input"
+              [ngModel]="birthdayValue()"
+              (ngModelChange)="birthdayValue.set($event)"
+              [attr.aria-label]="i18n.t('options.birthday.title')"
+            />
+            <button
+              type="button"
+              class="ui-btn primary"
+              [class.loading]="savingBirthday()"
+              [disabled]="savingBirthday() || !birthdayDirty()"
+              (click)="saveBirthday()"
+            >
+              {{ i18n.t('options.birthday.save') }}
+            </button>
+          </div>
+        </section>
+
+        <!-- Métiers -->
+        <section class="ui-card professions" style="--i: 4" aria-labelledby="prof-title">
+          <header class="ui-card-head">
+            <h2 id="prof-title">
+              <span class="ui-card-icon" aria-hidden="true">⚒️</span>
+              {{ i18n.t('options.professions.title') }}
+            </h2>
+            <p>{{ i18n.t('options.professions.desc') }}</p>
+          </header>
+          <div class="prof-grid" role="group" [attr.aria-labelledby]="'prof-title'">
+            @for (prof of professionsList; track prof.id) {
+              <button
+                type="button"
+                class="prof"
+                [class.on]="hasProfession(prof.id)"
+                [attr.aria-pressed]="hasProfession(prof.id)"
+                (click)="toggleProfession(prof.id)"
+              >
+                <span class="prof-emoji" aria-hidden="true">{{ prof.emoji }}</span>
+                {{ i18n.t('profession.' + prof.id) }}
+                <span class="prof-check" aria-hidden="true">✓</span>
+              </button>
+            }
+          </div>
+          <div class="card-actions">
+            <button
+              type="button"
+              class="ui-btn primary"
+              [class.loading]="savingProfessions()"
+              [disabled]="savingProfessions() || !professionsDirty()"
+              (click)="saveProfessions()"
+            >
+              {{ i18n.t('options.professions.save') }}
+            </button>
+          </div>
+        </section>
+
+        <!-- Abonnement -->
+        <section
+          class="ui-card subscription"
+          [class]="'tier-' + (user.subscription_tier || 'none')"
+          style="--i: 5"
+          aria-labelledby="sub-title"
+        >
+          <header class="ui-card-head">
+            <h2 id="sub-title">
+              <span class="ui-card-icon" aria-hidden="true">👑</span>
+              {{ i18n.t('options.sub.title') }}
+            </h2>
+            <span class="tier-badge">{{ getTierLabel(user.subscription_tier) }}</span>
+          </header>
+
+          <dl class="facts">
+            <div>
+              <dt>{{ i18n.t('options.sub.status') }}</dt>
+              <dd>
+                @if (user.subscription_status === 'canceled') {
+                  <span class="ui-badge warning">{{
+                    i18n
+                      .t('options.sub.status_canceled')
+                      .replace('{date}', formatDate(user.subscription_expires_at))
+                  }}</span>
+                } @else if (user.active_guild_is_paid) {
+                  <span class="ui-badge success"
+                    ><span class="ui-dot live" aria-hidden="true"></span
+                    >{{ i18n.t('options.sub.status_active') }}</span
+                  >
+                } @else {
+                  <span class="ui-badge danger">{{ i18n.t('options.sub.status_expired') }}</span>
+                }
+              </dd>
+            </div>
+            @if (user.subscription_expires_at) {
+              <div>
+                <dt>{{ i18n.t('options.sub.expires') }}</dt>
+                <dd>{{ user.subscription_expires_at | date: 'dd/MM/yyyy' }}</dd>
               </div>
             }
-            <div class="discord-card-content" [class.muted-opacity-discord]="!isPro()">
-              <div class="card-icon">📱</div>
-              <div class="card-body">
-                <h3>{{ i18n.t('options.discord.title') }}</h3>
-                @if (!user.discord_id) {
-                  <div>
-                    <p>{{ i18n.t('options.discord.desc') }}</p>
-                    <div class="action-box">
-                      <button
-                        class="btn-discord-login"
-                        (click)="linkDiscord()"
-                        [disabled]="!isPro()"
-                      >
-                        <span class="icon">💬</span> {{ i18n.t('options.discord.btn_link') }}
-                      </button>
-                    </div>
-                    <p class="help-text">{{ i18n.t('options.discord.secure') }}</p>
-                  </div>
-                }
-                @if (user.discord_id) {
-                  <div class="linked-success animated-fade-in">
-                    <div class="success-header">
-                      <span class="status-icon">✅</span>
-                      <strong>{{ i18n.t('options.discord.success_title') }}</strong>
-                    </div>
-                    <p>{{ i18n.t('options.discord.success_desc') }} (ID: {{ user.discord_id }})</p>
-                    <button
-                      class="btn-unlink"
-                      (click)="authService.updateDiscordId(null).subscribe()"
-                      [disabled]="!isPro()"
-                    >
-                      {{ i18n.t('options.discord.btn_unlink') }}
-                    </button>
-                  </div>
-                }
-              </div>
+          </dl>
+
+          @if (user.subscription_tier === 'free' && user.subscription_expires_at) {
+            <div class="remaining">
+              <span>{{
+                i18n.t('options.sub.remaining_days').replace('{days}', remainingDays().toString())
+              }}</span>
+              <span class="remaining-bar" aria-hidden="true">
+                <span [style.width.%]="(remainingDays() / 30) * 100"></span>
+              </span>
             </div>
-          </div>
-          <!-- Account Info Card -->
-          <div class="card settings-card">
-            <div class="card-icon">
-              <img src="assets/icons/tank.png" class="role-icon-img" alt="Account" />
-            </div>
-            <div class="card-body">
-              <h3>{{ i18n.t('options.account.title') }}</h3>
-              <div class="info-list">
-                <div class="info-item">
-                  <span class="label">{{ i18n.t('options.account.btag') }}</span>
-                  <span class="value">{{ user.battletag }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="label">{{ i18n.t('options.account.bnet_id') }}</span>
-                  <span class="value">{{ user.bnet_id }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="label">{{ i18n.t('options.account.status') }}</span>
-                  <span class="value status-badge" [class.admin]="authService.isAdmin()">
-                    {{ user.role.toUpperCase() }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- Birthday Card -->
-          <div class="card settings-card">
-            <div class="card-icon">🎂</div>
-            <div class="card-body">
-              <h3>{{ i18n.t('options.birthday.title') }}</h3>
-              <p class="card-desc">
-                {{ i18n.t('options.birthday.desc') }}
-              </p>
-              <div class="birthday-form">
-                <input
-                  type="date"
-                  [ngModel]="birthdayValue()"
-                  (ngModelChange)="birthdayValue.set($event)"
-                  class="modern-input birthday-input"
-                  [attr.aria-label]="i18n.t('options.birthday.title')"
-                />
-                <button class="btn-primary btn-card-action" (click)="saveBirthday()">
-                  {{ i18n.t('options.birthday.save') }}
-                </button>
-              </div>
-            </div>
-          </div>
-          <!-- Professions Card -->
-          <div class="card settings-card professions-card-box">
-            <div class="card-icon">⚒️</div>
-            <div class="card-body">
-              <h3>{{ i18n.t('options.professions.title') }}</h3>
-              <p class="card-desc">
-                {{ i18n.t('options.professions.desc') }}
-              </p>
-              <div class="professions-checkbox-grid">
-                @for (prof of professionsList; track prof) {
-                  <div class="profession-checkbox-item">
-                    <label class="modern-checkbox-label">
-                      <input
-                        type="checkbox"
-                        [checked]="hasProfession(prof.id)"
-                        (change)="toggleProfession(prof.id)"
-                      />
-                      <span class="checkbox-custom"></span>
-                      <span class="profession-name">{{ i18n.t('profession.' + prof.id) }}</span>
-                    </label>
-                  </div>
-                }
-              </div>
-              <div class="card-actions">
-                <button class="btn-primary btn-card-action" (click)="saveProfessions()">
-                  {{ i18n.t('options.professions.save') }}
-                </button>
-              </div>
-            </div>
-          </div>
-          <!-- Guild Subscription Card -->
-          <div class="card settings-card subscription-highlight">
-            <div class="card-icon">👑</div>
-            <div class="card-body">
-              <h3>{{ i18n.t('options.sub.title') }}</h3>
-              <div class="info-list">
-                <div class="info-item">
-                  <span class="label">{{ i18n.t('options.sub.guild') }}</span>
-                  <span class="value">{{
-                    authService.currentGuild()?.name || i18n.t('options.sub.no_guild')
-                  }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="label">{{ i18n.t('options.sub.plan') }}</span>
-                  <span class="value tier-badge" [class]="user.subscription_tier || 'none'">
-                    {{ getTierLabel(user.subscription_tier) }}
-                  </span>
-                </div>
-                @if (user.subscription_expires_at) {
-                  <div class="info-item">
-                    <span class="label">{{ i18n.t('options.sub.expires') }}</span>
-                    <span class="value">{{
-                      user.subscription_expires_at | date: 'dd/MM/yyyy'
-                    }}</span>
-                  </div>
-                }
-                @if (user.subscription_tier === 'free' && user.subscription_expires_at) {
-                  <div class="info-item">
-                    <span class="label">Durée restante</span>
-                    <span class="value remaining-duration-text">{{
-                      i18n
-                        .t('options.sub.remaining_days')
-                        .replace(
-                          '{days}',
-                          getRemainingDays(user.subscription_expires_at).toString()
-                        )
-                    }}</span>
-                  </div>
-                }
-                <div class="info-item">
-                  <span class="label">{{ i18n.t('options.sub.status') }}</span>
-                  <span
-                    class="value status-badge-sub"
-                    [class.active]="
-                      user.active_guild_is_paid && user.subscription_status !== 'canceled'
-                    "
-                    [class.canceled]="user.subscription_status === 'canceled'"
-                    [class.expired]="!user.active_guild_is_paid"
+          }
+
+          @if (authService.isGMOrOfficer()) {
+            <div class="sub-actions">
+              @if (user.subscription_tier !== 'pro') {
+                @if (user.subscription_tier !== 'medium') {
+                  <button
+                    type="button"
+                    class="ui-btn ghost"
+                    [disabled]="isProcessingSub()"
+                    (click)="upgradeSubscription('medium')"
                   >
-                    @if (user.subscription_status === 'canceled') {
-                      {{
-                        i18n
-                          .t('options.sub.status_canceled')
-                          .replace('{date}', formatDate(user.subscription_expires_at))
-                      }}
-                    }
-                    @if (user.subscription_status !== 'canceled') {
-                      {{
-                        user.active_guild_is_paid
-                          ? i18n.t('options.sub.status_active')
-                          : i18n.t('options.sub.status_expired')
-                      }}
-                    }
-                  </span>
-                </div>
-              </div>
-              @if (authService.isGMOrOfficer()) {
-                <div class="action-box-sub">
-                  <!-- Free Tier / None Tier -->
-                  @if (user.subscription_tier === 'free' || !user.subscription_tier) {
-                    <button
-                      class="btn-sub-action standard-btn"
-                      [disabled]="isProcessingSub()"
-                      (click)="upgradeSubscription('medium')"
-                    >
-                      {{ i18n.t('options.sub.upgrade_medium') }}
-                    </button>
-                    <button
-                      class="btn-sub-action pro-btn"
-                      [disabled]="isProcessingSub()"
-                      (click)="upgradeSubscription('pro')"
-                    >
-                      {{ i18n.t('options.sub.upgrade_pro') }}
-                    </button>
-                  }
-                  <!-- Standard (Medium) Tier -->
-                  @if (user.subscription_tier === 'medium') {
-                    <button
-                      class="btn-sub-action pro-btn"
-                      [disabled]="isProcessingSub()"
-                      (click)="upgradeSubscription('pro')"
-                    >
-                      {{ i18n.t('options.sub.upgrade_pro') }}
-                    </button>
-                    @if (user.subscription_status !== 'canceled') {
-                      <button
-                        class="btn-sub-action cancel-btn"
-                        [disabled]="isProcessingSub()"
-                        (click)="cancelSubscription()"
-                      >
-                        {{ i18n.t('options.sub.unsubscribe') }}
-                      </button>
-                    }
-                  }
-                  <!-- Pro Tier -->
-                  @if (user.subscription_tier === 'pro') {
-                    @if (user.subscription_status !== 'canceled') {
-                      <button
-                        class="btn-sub-action cancel-btn"
-                        [disabled]="isProcessingSub()"
-                        (click)="cancelSubscription()"
-                      >
-                        {{ i18n.t('options.sub.unsubscribe') }}
-                      </button>
-                    }
-                  }
-                </div>
+                    {{ i18n.t('options.sub.upgrade_medium') }}
+                  </button>
+                }
+                <button
+                  type="button"
+                  class="ui-btn accent"
+                  [class.loading]="isProcessingSub()"
+                  [disabled]="isProcessingSub()"
+                  (click)="upgradeSubscription('pro')"
+                >
+                  {{ i18n.t('options.sub.upgrade_pro') }}
+                </button>
+              }
+              @if (
+                (user.subscription_tier === 'medium' || user.subscription_tier === 'pro') &&
+                user.subscription_status !== 'canceled'
+              ) {
+                <button
+                  type="button"
+                  class="ui-btn subtle-danger"
+                  [disabled]="isProcessingSub()"
+                  (click)="cancelSubscription()"
+                >
+                  {{ i18n.t('options.sub.unsubscribe') }}
+                </button>
               }
             </div>
-          </div>
+          }
         </section>
       </div>
     }

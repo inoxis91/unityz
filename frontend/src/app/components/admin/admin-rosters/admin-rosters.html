@@ -1,36 +1,40 @@
 <div class="roster-manager">
-  <header class="header">
-    <div class="header-text">
-      <h2>{{ i18n.t('admin.rosters.title') }}</h2>
-      <p class="subtitle">{{ i18n.t('admin.rosters.subtitle') }}</p>
-    </div>
-    <button
-      class="btn-primary"
-      [disabled]="limitReached()"
-      [title]="
-        limitReached()
-          ? i18n.t('admin.rosters.tooltip_limit')
-          : i18n.t('admin.rosters.tooltip_create')
-      "
-      (click)="showCreateModal.set(true)"
-    >
-      {{ i18n.t('admin.rosters.btn_create') }}
-    </button>
-  </header>
-
-  <!-- Quota Limit Notice -->
-  @if (limitReached()) {
-    <div class="quota-locked-notice animated-fade-in">
-      <span class="notice-icon">⚠️</span>
-      <div class="notice-text">
-        <strong>{{ i18n.t('admin.rosters.quota_title') }}</strong>
-        <p>{{ i18n.t('admin.rosters.quota_desc').replace('{pro_badge}', 'Pro') }}</p>
-      </div>
-      <button class="btn-upgrade-mini" routerLink="/payment">
-        {{ i18n.t('admin.rosters.btn_upgrade') }}
+  <header class="ui-card board-head">
+    <div class="ui-card-head">
+      <h2>
+        <span class="ui-card-icon" aria-hidden="true">🛡️</span>
+        {{ i18n.t('admin.rosters.title') }}
+        <span class="total">{{ rosterService.rosters().length }}</span>
+      </h2>
+      <button
+        type="button"
+        class="ui-btn primary"
+        [disabled]="limitReached()"
+        [title]="
+          limitReached()
+            ? i18n.t('admin.rosters.tooltip_limit')
+            : i18n.t('admin.rosters.tooltip_create')
+        "
+        (click)="openCreateModal()"
+      >
+        {{ i18n.t('admin.rosters.btn_create') }}
       </button>
+      <p>{{ i18n.t('admin.rosters.subtitle') }}</p>
     </div>
-  }
+
+    @if (limitReached()) {
+      <div class="ui-alert warning quota">
+        <span aria-hidden="true">⚠️</span>
+        <div class="quota-text">
+          <strong>{{ i18n.t('admin.rosters.quota_title').replace('{count}', rosterLimit().toString()) }}</strong>
+          <p>{{ i18n.t('admin.rosters.quota_desc').replace('{pro_badge}', 'Pro') }}</p>
+        </div>
+        <a class="ui-btn accent sm" routerLink="/payment">{{
+          i18n.t('admin.rosters.btn_upgrade')
+        }}</a>
+      </div>
+    }
+  </header>
 
   <div class="manager-layout" cdkDropListGroup>
     <!-- Pool de personnages non assignés -->
@@ -88,8 +92,8 @@
 
     <!-- Liste des rosters -->
     <section class="rosters">
-      @for (roster of rosterService.rosters(); track roster.id) {
-        <article class="roster-card">
+      @for (roster of rosterService.rosters(); track roster.id; let ri = $index) {
+        <article class="roster-card" [style.--i]="ri" animate.leave="ui-leave">
           <header class="roster-header">
             <div class="roster-title">
               <div class="title-line">
@@ -248,68 +252,90 @@
   </span>
 </ng-template>
 
-<!-- Modal de création -->
-@if (showCreateModal()) {
-  <div class="modal-backdrop">
-    <div class="modal">
-      <h3>{{ i18n.t('admin.rosters.modal_create_title') }}</h3>
-      <div class="form-group">
-        <label>{{ i18n.t('admin.rosters.label_name') }}</label>
-        <input
-          type="text"
-          [(ngModel)]="newRoster.name"
-          [placeholder]="i18n.t('admin.rosters.placeholder_name')"
-        />
+<!-- Création / modification d'un roster -->
+@if (rosterForm(); as form) {
+  <div class="ui-overlay" (click)="closeRosterForm()">
+    <form
+      class="ui-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="roster-form-title"
+      (click)="$event.stopPropagation()"
+      (ngSubmit)="submitRosterForm()"
+    >
+      <header class="ui-modal-head">
+        <span class="modal-emoji" aria-hidden="true">{{ form.id ? '✏️' : '🛡️' }}</span>
+        <h2 id="roster-form-title">
+          {{
+            form.id
+              ? i18n.t('admin.rosters.modal_edit_title')
+              : i18n.t('admin.rosters.modal_create_title')
+          }}
+        </h2>
+        <button
+          type="button"
+          class="ui-close"
+          (click)="closeRosterForm()"
+          [attr.aria-label]="i18n.t('event.details.btn_close')"
+        >
+          ×
+        </button>
+      </header>
+      <div class="ui-modal-body">
+        <div class="ui-field">
+          <label for="roster-name">{{ i18n.t('admin.rosters.label_name') }}</label>
+          <input
+            id="roster-name"
+            type="text"
+            name="name"
+            required
+            maxlength="100"
+            [(ngModel)]="form.name"
+            [placeholder]="i18n.t('admin.rosters.placeholder_name')"
+          />
+        </div>
+        <div class="ui-field">
+          <label for="roster-weight">{{ i18n.t('admin.rosters.label_weight') }}</label>
+          <input
+            id="roster-weight"
+            type="number"
+            name="weight"
+            min="1"
+            required
+            [(ngModel)]="form.weight"
+          />
+          <span class="hint">{{ i18n.t('admin.rosters.weight_hint') }}</span>
+        </div>
+        <div class="ui-field">
+          <label for="roster-desc">{{ i18n.t('admin.rosters.label_description') }}</label>
+          <textarea
+            id="roster-desc"
+            name="description"
+            rows="3"
+            maxlength="500"
+            [(ngModel)]="form.description"
+            [placeholder]="i18n.t('admin.rosters.placeholder_description')"
+          ></textarea>
+        </div>
       </div>
-      <div class="form-group">
-        <label>{{ i18n.t('admin.rosters.label_weight') }}</label>
-        <input type="number" [(ngModel)]="newRoster.weight" min="1" />
-      </div>
-      <div class="form-group">
-        <label>{{ i18n.t('admin.rosters.label_description') }}</label>
-        <textarea
-          [(ngModel)]="newRoster.description"
-          [placeholder]="i18n.t('admin.rosters.placeholder_description')"
-        ></textarea>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-secondary" (click)="closeModal()">
+      <footer class="ui-modal-foot">
+        <button type="button" class="ui-btn ghost" (click)="closeRosterForm()">
           {{ i18n.t('admin.rosters.btn_cancel') }}
         </button>
-        <button class="btn-primary" (click)="onCreateRoster()">
-          {{ i18n.t('admin.rosters.btn_submit_create') }}
+        <button
+          type="submit"
+          class="ui-btn primary"
+          [class.loading]="savingRoster()"
+          [disabled]="savingRoster() || !form.name.trim()"
+        >
+          {{
+            form.id
+              ? i18n.t('admin.rosters.btn_submit_edit')
+              : i18n.t('admin.rosters.btn_submit_create')
+          }}
         </button>
-      </div>
-    </div>
-  </div>
-}
-
-<!-- Modal d'édition -->
-@if (showEditModal() && editingRoster) {
-  <div class="modal-backdrop">
-    <div class="modal">
-      <h3>{{ i18n.t('admin.rosters.modal_edit_title') }}</h3>
-      <div class="form-group">
-        <label>{{ i18n.t('admin.rosters.label_name') }}</label>
-        <input type="text" [(ngModel)]="editingRoster.name" />
-      </div>
-      <div class="form-group">
-        <label>{{ i18n.t('admin.rosters.label_weight') }}</label>
-        <input type="number" [(ngModel)]="editingRoster.weight" min="1" />
-      </div>
-      <div class="form-group">
-        <label>{{ i18n.t('admin.rosters.label_description') }}</label>
-        <textarea [(ngModel)]="editingRoster.description"></textarea>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-secondary" (click)="closeEditModal()">
-          {{ i18n.t('admin.rosters.btn_cancel') }}
-        </button>
-        <button class="btn-primary" (click)="onUpdateRoster()">
-          {{ i18n.t('admin.rosters.btn_submit_edit') }}
-        </button>
-      </div>
-    </div>
+      </footer>
+    </form>
   </div>
 }
 

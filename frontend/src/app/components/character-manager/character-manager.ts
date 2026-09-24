@@ -1,50 +1,75 @@
-import { Component, OnInit, computed, signal, inject } from '@angular/core';
-
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { CharacterService, Character } from '../../services/character';
-import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth';
 import { ConfirmService } from '../../services/confirm';
 import { ToastService } from '../../services/toast';
 import { I18nService } from '../../services/i18n';
 
+type RoleFlag = 'is_tank' | 'is_heal' | 'is_dps';
+
 @Component({
   selector: 'app-character-manager',
-  standalone: true,
-  imports: [FormsModule],
   templateUrl: './character-manager.html',
   styleUrl: './character-manager.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CharacterManagerComponent implements OnInit {
-  public i18n = inject(I18nService);
+export class CharacterManagerComponent {
+  readonly i18n = inject(I18nService);
+  readonly authService = inject(AuthService);
+  private readonly characterService = inject(CharacterService);
+  private readonly confirm = inject(ConfirmService);
+  private readonly toast = inject(ToastService);
 
-  private bnetRoster = signal<Character[]>([]);
+  readonly roleFlags: { flag: RoleFlag; icon: string; tooltip: string }[] = [
+    { flag: 'is_tank', icon: 'tank', tooltip: 'char.role.tooltip.tank' },
+    { flag: 'is_heal', icon: 'heal', tooltip: 'char.role.tooltip.healer' },
+    { flag: 'is_dps', icon: 'dps', tooltip: 'char.role.tooltip.dps' },
+  ];
+
+  readonly myCharacters = signal<Character[]>([]);
+  readonly loaded = signal(false);
+  readonly loadingBnet = signal(false);
+  readonly importing = signal<ReadonlySet<string>>(new Set());
+  readonly bnetQuery = signal('');
+  private readonly bnetRoster = signal<Character[]>([]);
+
   /** Persos Battle.net pas encore importés (indépendant de l'ordre d'arrivée des deux requêtes). */
-  bnetCharacters = computed(() =>
-    this.bnetRoster().filter(
-      (bc) => !this.myCharacters().some((mc) => mc.name === bc.name && mc.realm === bc.realm),
-    ),
-  );
-  myCharacters = signal<Character[]>([]);
-  loadingBnet = signal<boolean>(false);
+  readonly bnetCharacters = computed(() => {
+    const mine = new Set(this.myCharacters().map((c) => this.key(c)));
+    const query = this.bnetQuery().trim().toLowerCase();
+    return this.bnetRoster()
+      .filter((c) => !mine.has(this.key(c)))
+      .filter(
+        (c) =>
+          !query ||
+          c.name.toLowerCase().includes(query) ||
+          c.realm.toLowerCase().includes(query) ||
+          (c.guild?.name ?? '').toLowerCase().includes(query),
+      )
+      .sort((a, b) => b.level - a.level || a.name.localeCompare(b.name));
+  });
 
-  constructor(
-    private characterService: CharacterService,
-    public authService: AuthService,
-    private confirm: ConfirmService,
-    private toast: ToastService,
-  ) {}
+  readonly guildName = computed(() => this.authService.currentGuild()?.name || '');
 
-  ngOnInit() {
+  constructor() {
     this.loadMyCharacters();
     this.fetchBnetCharacters();
   }
 
-  loadMyCharacters() {
+  private key(c: Pick<Character, 'name' | 'realm'>) {
+    return `${c.name}-${c.realm}`.toLowerCase();
+  }
+
+  private loadMyCharacters() {
     this.characterService.getMyCharacters().subscribe({
       next: (chars) => {
         this.myCharacters.set(chars);
+        this.loaded.set(true);
       },
-      error: (err) => console.error('Error loading my characters', err),
+      error: (err) => {
+        this.loaded.set(true);
+        console.error('[CharacterManager] Error loading my characters', err);
+      },
     });
   }
 
@@ -56,7 +81,7 @@ export class CharacterManagerComponent implements OnInit {
         this.loadingBnet.set(false);
       },
       error: (err) => {
-        console.error('Error fetching Bnet characters', err);
+        console.error('[CharacterManager] Error fetching Bnet characters', err);
         this.loadingBnet.set(false);
         if (err.status === 401) {
           this.toast.error(this.i18n.t('char.manager.toast.bnet_session_expired'));
@@ -67,52 +92,73 @@ export class CharacterManagerComponent implements OnInit {
   }
 
   importCharacter(char: Character) {
+    const key = this.key(char);
+    if (this.importing().has(key)) return;
+    this.importing.update((set) => new Set(set).add(key));
     this.characterService.importCharacters([char]).subscribe({
       next: () => {
+        this.importing.update((set) => {
+          const next = new Set(set);
+          next.delete(key);
+          return next;
+        });
         this.loadMyCharacters();
         this.toast.success(
           this.i18n.t('char.manager.toast.add_success').replace('{name}', char.name),
         );
-        this.bnetRoster.update((list) => list.filter((c) => c !== char));
-
         // Rafraîchir l'auth pour débloquer le site si c'est le premier perso
         this.authService.checkAuth().subscribe();
       },
       error: (err) => {
-        console.error('Error importing character', err);
+        this.importing.update((set) => {
+          const next = new Set(set);
+          next.delete(key);
+          return next;
+        });
+        console.error('[CharacterManager] Error importing character', err);
         this.toast.error(this.i18n.t('char.manager.toast.add_error'));
       },
     });
   }
 
-  updateRoles(char: Character) {
+  isImporting(char: Character): boolean {
+    return this.importing().has(this.key(char));
+  }
+
+  private patch(id: string, changes: Partial<Character>) {
+    this.myCharacters.update((list) => list.map((c) => (c.id === id ? { ...c, ...changes } : c)));
+  }
+
+  /** Bascule optimiste d'un rôle, annulée si l'API refuse. */
+  toggleRole(char: Character, flag: RoleFlag) {
     if (!char.id) return;
+    const previous = { is_tank: !!char.is_tank, is_heal: !!char.is_heal, is_dps: !!char.is_dps };
+    const next = { ...previous, [flag]: !previous[flag] };
+    this.patch(char.id, next);
     this.characterService
-      .updateRoles(char.id, {
-        isTank: char.is_tank || false,
-        isHeal: char.is_heal || false,
-        isDPS: char.is_dps || false,
-      })
+      .updateRoles(char.id, { isTank: next.is_tank, isHeal: next.is_heal, isDPS: next.is_dps })
       .subscribe({
         next: () => this.toast.success(this.i18n.t('char.manager.toast.roles_success')),
         error: (err) => {
-          console.error('Error updating roles', err);
+          console.error('[CharacterManager] Error updating roles', err);
+          this.patch(char.id!, previous);
           this.toast.error(this.i18n.t('char.manager.toast.roles_error'));
         },
       });
   }
 
   setMain(char: Character) {
-    if (!char.id) return;
+    if (!char.id || char.is_main) return;
+    const previous = this.myCharacters();
+    this.myCharacters.set(previous.map((c) => ({ ...c, is_main: c.id === char.id })));
     this.characterService.setMainCharacter(char.id).subscribe({
-      next: () => {
-        this.loadMyCharacters();
+      next: () =>
         this.toast.success(
           this.i18n.t('char.manager.toast.main_success').replace('{name}', char.name),
-        );
-      },
+        ),
       error: (err) => {
-        console.error('Error setting main character', err);
+        console.error('[CharacterManager] Error setting main character', err);
+        this.myCharacters.set(previous);
         this.toast.error(this.i18n.t('char.manager.toast.main_error'));
       },
     });
@@ -123,25 +169,32 @@ export class CharacterManagerComponent implements OnInit {
     const ok = await this.confirm.ask(
       this.i18n.t('char.manager.confirm.delete_title'),
       this.i18n.t('char.manager.confirm.delete_desc').replace('{name}', char.name),
+      undefined,
+      undefined,
+      true,
     );
+    if (!ok) return;
 
-    if (ok) {
-      this.characterService.removeCharacter(char.id).subscribe({
-        next: () => {
-          this.loadMyCharacters();
-          this.toast.success(
-            this.i18n.t('char.manager.toast.delete_success').replace('{name}', char.name),
-          );
-        },
-        error: (err) => {
-          console.error('Error removing character', err);
-          this.toast.error(this.i18n.t('char.manager.toast.delete_error'));
-        },
-      });
-    }
+    const previous = this.myCharacters();
+    this.myCharacters.set(previous.filter((c) => c.id !== char.id));
+    this.characterService.removeCharacter(char.id).subscribe({
+      next: () =>
+        this.toast.success(
+          this.i18n.t('char.manager.toast.delete_success').replace('{name}', char.name),
+        ),
+      error: (err) => {
+        console.error('[CharacterManager] Error removing character', err);
+        this.myCharacters.set(previous);
+        this.toast.error(this.i18n.t('char.manager.toast.delete_error'));
+      },
+    });
   }
 
-  getClassCategory(className: string | undefined): string {
+  classId(className: string | undefined): string {
     return CharacterService.getClassId(className);
+  }
+
+  classIcon(className: string | undefined): string {
+    return CharacterService.getClassIcon(className);
   }
 }

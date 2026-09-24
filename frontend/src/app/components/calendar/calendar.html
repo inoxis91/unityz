@@ -1,319 +1,215 @@
-<div class="calendar-container">
-  <div class="calendar-header">
-    <h1>{{ i18n.t('calendar.title') }}</h1>
-    <p class="subtitle">{{ i18n.t('calendar.subtitle') }}</p>
-  </div>
+<div class="ui-page">
+  <app-page-header
+    icon="📅"
+    tone="brand"
+    [title]="i18n.t('calendar.title')"
+    [subtitle]="i18n.t('calendar.subtitle')"
+  >
+    @if (canManageEvents()) {
+      <button pageActions type="button" class="ui-btn primary" (click)="openCreate()">
+        <span aria-hidden="true">＋</span> {{ i18n.t('calendar.new_event_long') }}
+      </button>
+    }
+    <dl pageStats class="ui-kpis">
+      <div class="ui-kpi" style="--i: 0">
+        <dt>{{ i18n.t('calendar.stat_month') }}</dt>
+        <dd>
+          {{ stats().thisMonth }}
+          @if (hasMonthlyLimit()) {
+            <small>/{{ monthlyLimit() }}</small>
+          }
+        </dd>
+      </div>
+      <div class="ui-kpi brand" style="--i: 1">
+        <dt>{{ i18n.t('calendar.stat_upcoming') }}</dt>
+        <dd>{{ stats().upcoming }}</dd>
+      </div>
+      <div class="ui-kpi success" style="--i: 2">
+        <dt>{{ i18n.t('calendar.stat_answered') }}</dt>
+        <dd>{{ stats().answered }}</dd>
+      </div>
+      <div class="ui-kpi" [class.warning]="stats().toAnswer > 0" style="--i: 3">
+        <dt>{{ i18n.t('calendar.stat_to_answer') }}</dt>
+        <dd>{{ stats().toAnswer }}</dd>
+      </div>
+    </dl>
+  </app-page-header>
 
-  <div class="calendar-card">
-    <full-calendar [options]="calendarOptions()"></full-calendar>
-  </div>
-
-  <!-- Mobile-only list view of upcoming events -->
-  <div class="mobile-events-view">
-    <div class="mobile-header">
-      <h2>{{ i18n.t('calendar.upcoming_events') }}</h2>
-      <!-- "+" Button for authorized users -->
+  <div class="layout">
+    <!-- Grille FullCalendar (masquée sur mobile) -->
+    <section class="ui-card cal-card" style="--i: 1">
+      <ul class="legend" [attr.aria-label]="i18n.t('calendar.legend')">
+        <li class="tone-raid">{{ i18n.t('calendar.form.type_raid') }}</li>
+        <li class="tone-mm">{{ i18n.t('calendar.form.type_mm') }}</li>
+        <li class="tone-reunion">{{ i18n.t('calendar.form.type_reunion') }}</li>
+        <li class="tone-custom">{{ i18n.t('calendar.form.type_custom') }}</li>
+        <li class="status-legend">
+          <span class="dot status-signed_up" aria-hidden="true"></span>
+          {{ i18n.t('calendar.tooltip.present') }}
+          <span class="dot status-standby" aria-hidden="true"></span>
+          {{ i18n.t('calendar.tooltip.maybe') }}
+          <span class="dot status-absent" aria-hidden="true"></span>
+          {{ i18n.t('calendar.tooltip.absent') }}
+        </li>
+      </ul>
+      <full-calendar [options]="calendarOptions()" />
       @if (canManageEvents()) {
-        <button
-          class="add-event-btn"
-          (click)="onCreateEventMobile()"
-          [title]="i18n.t('calendar.context.create')"
-        >
-          <span>➕</span> {{ i18n.t('calendar.new_event') }}
-        </button>
+        <p class="cal-hint">{{ i18n.t('calendar.manager_hint') }}</p>
       }
-    </div>
+    </section>
 
-    <div class="mobile-events-list">
-      @if (upcomingEvents().length === 0) {
-        <div class="no-events-card">
-          <p>{{ i18n.t('calendar.no_events') }}</p>
-        </div>
-      } @else {
-        @for (event of upcomingEvents(); track event.id) {
-          <div
-            class="mobile-event-card"
-            [class.is-canceled]="event.is_canceled"
-            [routerLink]="['/events', event.id]"
+    <!-- Agenda : liste accessible au clavier et au tactile -->
+    <aside class="ui-card agenda" style="--i: 2" aria-labelledby="agenda-title">
+      <header class="ui-card-head">
+        <h2 id="agenda-title">
+          <span class="ui-card-icon" aria-hidden="true">🗓️</span>
+          {{ i18n.t('calendar.upcoming_events') }}
+        </h2>
+        @if (canManageEvents()) {
+          <button
+            type="button"
+            class="ui-btn primary sm agenda-add"
+            (click)="openCreate()"
+            [attr.aria-label]="i18n.t('calendar.context.create')"
           >
-            <div class="event-date-badge">
-              <span class="day">{{ event.start_time | date: 'dd' }}</span>
-              <span class="month">{{ event.start_time | date: 'MMM' }}</span>
-            </div>
-            <div class="event-details-content">
-              <div class="event-type-tags">
-                <span class="event-type-tag" [class]="event.type.toLowerCase()">{{
-                  event.type === 'reunion' ? i18n.t('calendar.form.type_reunion') : event.type
-                }}</span>
-                @if (event.roster_name && event.type !== 'reunion') {
-                  <span class="roster-tag">{{ event.roster_name }}</span>
-                }
-                @if (!event.roster_name && event.type !== 'reunion') {
-                  <span class="all-tag">{{ i18n.t('calendar.tag_all') }}</span>
-                }
-                @if (event.type === 'reunion' && event.invited_groups?.includes('all')) {
-                  <span class="all-tag">{{ i18n.t('calendar.tag_all') }}</span>
-                }
-                @if (event.type === 'reunion' && !event.invited_groups?.includes('all')) {
-                  <span class="roster-tag">
-                    {{ getInvitedGroupsLabel(event.invited_groups) }}
-                  </span>
-                }
-              </div>
-              <h3 class="event-title" [class.is-canceled]="event.is_canceled">
-                {{ event.is_canceled ? '[' + i18n.t('event.details.canceled') + '] ' : ''
-                }}{{ event.title }}
-              </h3>
-              <div class="event-time-row">
-                <span class="time-icon">🕒</span>
-                <span class="time-text">{{ event.start_time | date: 'HH:mm' }}</span>
-
-                <!-- Status Badge -->
-                @if (event.is_canceled) {
-                  <span class="mobile-status-badge canceled"
-                    >🚫 {{ i18n.t('event.details.canceled') }}</span
-                  >
-                }
-                @if (!event.is_canceled) {
-                  @if (getEventSignupStatus(event.id) === 'signed_up') {
-                    <span
-                      class="mobile-status-badge present"
-                      [title]="i18n.t('calendar.tooltip.present')"
-                      >{{ i18n.t('calendar.status.responded') }}</span
-                    >
-                  }
-                  @if (getEventSignupStatus(event.id) === 'standby') {
-                    <span
-                      class="mobile-status-badge standby"
-                      [title]="i18n.t('calendar.tooltip.maybe')"
-                      >{{ i18n.t('calendar.status.pending') }}</span
-                    >
-                  }
-                  @if (getEventSignupStatus(event.id) === 'absent') {
-                    <span
-                      class="mobile-status-badge absent"
-                      [title]="i18n.t('calendar.tooltip.absent')"
-                      >{{ i18n.t('calendar.status.absent') }}</span
-                    >
-                  }
-                  @if (!getEventSignupStatus(event.id)) {
-                    <span
-                      class="mobile-status-badge none"
-                      [title]="i18n.t('calendar.tooltip.none')"
-                      >{{ i18n.t('calendar.status.unanswered') }}</span
-                    >
-                  }
-                }
-              </div>
-            </div>
-            <div class="arrow-indicator">
-              <span>➔</span>
-            </div>
-          </div>
-        }
-      }
-    </div>
-  </div>
-
-  <!-- Context Menu -->
-  @if (contextMenu()) {
-    <div
-      class="context-menu"
-      [style.left.px]="contextMenu()!.x"
-      [style.top.px]="contextMenu()!.y"
-      (click)="$event.stopPropagation()"
-    >
-      @if (contextMenu()!.type === 'event') {
-        <button (click)="onEditEvent(contextMenu()!.data)">
-          <span>📝</span> {{ i18n.t('calendar.context.edit') }}
-        </button>
-        <button (click)="onCopyEvent(contextMenu()!.data)">
-          <span>📋</span> {{ i18n.t('calendar.context.copy') }}
-        </button>
-        <button class="delete" (click)="onDeleteEvent(contextMenu()!.data)">
-          <span>🗑️</span> {{ i18n.t('calendar.context.delete') }}
-        </button>
-      }
-      @if (contextMenu()!.type === 'cell') {
-        <button (click)="onCreateEventFromCell(contextMenu()!.data)">
-          <span>➕</span> {{ i18n.t('calendar.context.create') }}
-        </button>
-        @if (copiedEvent()) {
-          <button (click)="onPasteEvent(contextMenu()!.data)">
-            <span>📥</span> {{ i18n.t('calendar.context.paste') }}
+            ＋ {{ i18n.t('calendar.new_event') }}
           </button>
         }
-      }
-    </div>
-  }
+      </header>
 
-  <!-- Create/Edit Event Modal (Admin Only) -->
-  @if (showModal() && canManageEvents()) {
-    <div class="modal-overlay" (click)="closeModal()">
-      <div class="modal-card" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <div class="header-title">
-            <span class="icon">📅</span>
-            <h2>
-              {{
-                isEditing()
-                  ? i18n.t('calendar.modal.edit_title')
-                  : i18n.t('calendar.modal.create_title')
-              }}
-            </h2>
-          </div>
-          <button class="close-btn" (click)="closeModal()">&times;</button>
+      @if (!loaded()) {
+        <div class="agenda-skeletons" aria-hidden="true">
+          <span class="ui-skeleton"></span>
+          <span class="ui-skeleton"></span>
+          <span class="ui-skeleton"></span>
         </div>
-        <form (ngSubmit)="onSubmitEvent()" class="modern-form">
-          <div class="modal-body">
-            <div class="form-section">
-              <label>{{ i18n.t('calendar.form.title') }}</label>
-              <input
-                type="text"
-                [(ngModel)]="eventForm.title"
-                name="title"
-                required
-                [placeholder]="i18n.t('calendar.form.title_placeholder')"
-              />
-            </div>
-            <div class="form-section">
-              <label>{{ i18n.t('calendar.form.desc') }}</label>
-              <textarea
-                [(ngModel)]="eventForm.description"
-                name="description"
-                rows="3"
-                [placeholder]="i18n.t('calendar.form.desc_placeholder')"
-              ></textarea>
-            </div>
-            <div class="form-grid">
-              <div class="form-section">
-                <label>{{ i18n.t('calendar.form.type') }}</label>
-                <select [(ngModel)]="eventForm.type" name="type" class="custom-select">
-                  <option value="raid">{{ i18n.t('calendar.form.type_raid') }}</option>
-                  <option value="mm+">{{ i18n.t('calendar.form.type_mm') }}</option>
-                  <option value="reunion">{{ i18n.t('calendar.form.type_reunion') }}</option>
-                  <option value="custom">{{ i18n.t('calendar.form.type_custom') }}</option>
-                </select>
-              </div>
-              @if (eventForm.type !== 'reunion') {
-                <div class="form-section">
-                  <label>{{ i18n.t('calendar.form.roster') }}</label>
-                  <select [(ngModel)]="eventForm.roster_id" name="roster_id" class="custom-select">
-                    <option value="">{{ i18n.t('calendar.form.roster_all') }}</option>
-                    @for (roster of rosterService.rosters(); track roster.id) {
-                      <option [value]="roster.id">{{ roster.name }}</option>
+      } @else {
+        <ol class="agenda-days">
+          @for (day of agenda(); track day.key; let d = $index) {
+            <li class="agenda-day" [style.--i]="d">
+              <h3 class="day-label">{{ day.date | date: 'EEEE d MMMM' }}</h3>
+              <ul class="day-events">
+                @for (event of day.events; track event.id) {
+                  <li
+                    class="agenda-event"
+                    [class]="'tone-' + typeKey(event.type)"
+                    [class.is-canceled]="event.is_canceled"
+                  >
+                    <a class="agenda-link" [routerLink]="['/events', event.id]">
+                      <span class="agenda-time">{{ event.start_time | date: 'HH:mm' }}</span>
+                      <span class="agenda-main">
+                        <span class="agenda-title">
+                          @if (event.is_canceled) {
+                            <span class="ui-badge danger">{{
+                              i18n.t('event.details.canceled')
+                            }}</span>
+                          }
+                          {{ event.title }}
+                        </span>
+                        <span class="agenda-tags">
+                          <span class="type-tag">{{ typeLabel(event.type) }}</span>
+                          <span class="audience">{{ audienceLabel(event) }}</span>
+                        </span>
+                      </span>
+                      @if (!event.is_canceled) {
+                        @switch (signupStatus(event.id)) {
+                          @case ('signed_up') {
+                            <span class="ui-badge success">{{
+                              i18n.t('calendar.status.responded')
+                            }}</span>
+                          }
+                          @case ('standby') {
+                            <span class="ui-badge warning">{{
+                              i18n.t('calendar.status.pending')
+                            }}</span>
+                          }
+                          @case ('absent') {
+                            <span class="ui-badge danger">{{
+                              i18n.t('calendar.status.absent')
+                            }}</span>
+                          }
+                          @default {
+                            <span class="ui-badge info">{{
+                              i18n.t('calendar.status.unanswered')
+                            }}</span>
+                          }
+                        }
+                      }
+                    </a>
+                    @if (canManageEvents()) {
+                      <button
+                        type="button"
+                        class="ui-btn ghost icon sm agenda-menu"
+                        aria-haspopup="menu"
+                        [attr.aria-label]="i18n.t('calendar.actions_for') + ' ' + event.title"
+                        (click)="openEventMenu($event, event)"
+                      >
+                        ⋯
+                      </button>
                     }
-                  </select>
-                </div>
+                  </li>
+                }
+              </ul>
+            </li>
+          } @empty {
+            <li class="ui-empty">
+              <span class="emoji" aria-hidden="true">🌙</span>
+              <strong>{{ i18n.t('calendar.no_events') }}</strong>
+              @if (canManageEvents()) {
+                <button type="button" class="ui-btn primary sm" (click)="openCreate()">
+                  ＋ {{ i18n.t('calendar.context.create') }}
+                </button>
               }
-              @if (eventForm.type === 'reunion') {
-                <div class="form-section">
-                  <label>{{ i18n.t('calendar.form.invited_group') }}</label>
-                  <div class="invited-groups-checkboxes">
-                    <label class="checkbox-label">
-                      <input
-                        type="checkbox"
-                        [checked]="isGroupChecked('all')"
-                        (change)="toggleGroup('all')"
-                      />
-                      {{ i18n.t('calendar.form.all_members') }}
-                    </label>
-                    <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
-                      <input
-                        type="checkbox"
-                        [checked]="isGroupChecked('admin')"
-                        (change)="toggleGroup('admin')"
-                        [disabled]="isGroupChecked('all')"
-                      />
-                      {{ i18n.t('calendar.form.role_admin') }}
-                    </label>
-                    <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
-                      <input
-                        type="checkbox"
-                        [checked]="isGroupChecked('raid_leader')"
-                        (change)="toggleGroup('raid_leader')"
-                        [disabled]="isGroupChecked('all')"
-                      />
-                      {{ i18n.t('calendar.form.role_raid_leader') }}
-                    </label>
-                    <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
-                      <input
-                        type="checkbox"
-                        [checked]="isGroupChecked('treasurer')"
-                        (change)="toggleGroup('treasurer')"
-                        [disabled]="isGroupChecked('all')"
-                      />
-                      {{ i18n.t('calendar.form.role_treasurer') }}
-                    </label>
-                    <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
-                      <input
-                        type="checkbox"
-                        [checked]="isGroupChecked('event_manager')"
-                        (change)="toggleGroup('event_manager')"
-                        [disabled]="isGroupChecked('all')"
-                      />
-                      {{ i18n.t('calendar.form.role_event_manager') }}
-                    </label>
-                  </div>
-                </div>
-              }
-            </div>
-            <div class="form-section">
-              <label>{{ i18n.t('calendar.form.date') }}</label>
-              <input
-                type="date"
-                [(ngModel)]="eventForm.start_date"
-                name="start_date"
-                (change)="onDateChange()"
-                required
-              />
-            </div>
-            <div class="form-grid">
-              <div class="form-section">
-                <label>{{ i18n.t('calendar.form.start_time') }}</label>
-                <input type="time" [(ngModel)]="eventForm.start_time" name="start_time" required />
-              </div>
-              <div class="form-section">
-                <label>{{ i18n.t('calendar.form.end_time') }}</label>
-                <input type="time" [(ngModel)]="eventForm.end_time" name="end_time" required />
-              </div>
-            </div>
-            @if (eventForm.type === 'custom') {
-              <div class="form-section animated-fade-in">
-                <label>{{ i18n.t('calendar.form.custom_type') }}</label>
-                <input
-                  type="text"
-                  [(ngModel)]="eventForm.customType"
-                  name="customType"
-                  required
-                  [placeholder]="i18n.t('calendar.form.custom_type_placeholder')"
-                />
-              </div>
-            }
-            @if (eventForm.type === 'raid') {
-              <div class="form-section animated-fade-in">
-                <label>{{ i18n.t('calendar.form.logs') }}</label>
-                <input
-                  type="text"
-                  [(ngModel)]="eventForm.logs"
-                  name="logs"
-                  [placeholder]="i18n.t('calendar.form.logs_placeholder')"
-                />
-              </div>
-            }
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn-secondary" (click)="closeModal()">
-              {{ i18n.t('calendar.form.btn_cancel') }}
-            </button>
-            <button type="submit" class="btn-primary">
-              {{
-                isEditing() ? i18n.t('calendar.form.btn_save') : i18n.t('calendar.form.btn_create')
-              }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  }
+            </li>
+          }
+        </ol>
+      }
+    </aside>
+  </div>
 </div>
+
+<!-- Menu contextuel -->
+@if (contextMenu(); as menu) {
+  <div
+    class="context-menu"
+    role="menu"
+    [style.left.px]="menu.x"
+    [style.top.px]="menu.y"
+    (click)="$event.stopPropagation()"
+  >
+    @if (menu.type === 'event') {
+      <p class="menu-title">{{ menu.event.title }}</p>
+      <button type="button" role="menuitem" (click)="onEditEvent(menu.event)">
+        <span aria-hidden="true">✏️</span> {{ i18n.t('calendar.context.edit') }}
+      </button>
+      <button type="button" role="menuitem" (click)="onCopyEvent(menu.event)">
+        <span aria-hidden="true">📋</span> {{ i18n.t('calendar.context.copy') }}
+      </button>
+      <button type="button" role="menuitem" class="danger" (click)="onDeleteEvent(menu.event)">
+        <span aria-hidden="true">🗑️</span> {{ i18n.t('calendar.context.delete') }}
+      </button>
+    } @else {
+      <p class="menu-title">{{ menu.date | date: 'EEEE d MMMM' }}</p>
+      <button type="button" role="menuitem" (click)="openCreate(toDateStr(menu.date))">
+        <span aria-hidden="true">＋</span> {{ i18n.t('calendar.context.create') }}
+      </button>
+      @if (copiedEvent(); as copied) {
+        <button type="button" role="menuitem" (click)="onPasteEvent(menu.date)">
+          <span aria-hidden="true">📥</span> {{ i18n.t('calendar.context.paste') }}
+          <small>« {{ copied.title }} »</small>
+        </button>
+      }
+    }
+  </div>
+}
+
+<!-- Création / édition -->
+@if (showModal() && canManageEvents()) {
+  <app-event-form-modal
+    [event]="editingEvent()"
+    [date]="createDate()"
+    [saving]="saving()"
+    (submitted)="onSubmitEvent($event)"
+    (closed)="closeModal()"
+  />
+}

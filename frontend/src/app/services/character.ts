@@ -85,13 +85,13 @@ export class CharacterService {
   getWarcraftLogsUrl(name: string | undefined, realm: string | undefined): string {
     if (!name || !realm) return '#';
     const slugRealm = realm.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
-    return `https://www.warcraftlogs.com/character/eu/${slugRealm}/${name.toLowerCase()}`;
+    return `https://www.warcraftlogs.com/character/eu/${encodeURIComponent(slugRealm)}/${encodeURIComponent(name.toLowerCase())}`;
   }
 
   getRaiderIoUrl(name: string | undefined, realm: string | undefined): string {
     if (!name || !realm) return '#';
     const slugRealm = realm.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
-    return `https://raider.io/characters/eu/${slugRealm}/${name.toLowerCase()}`;
+    return `https://raider.io/characters/eu/${encodeURIComponent(slugRealm)}/${encodeURIComponent(name.toLowerCase())}`;
   }
 
   getRioScore(name: string, realm: string): Observable<number> {
@@ -102,9 +102,14 @@ export class CharacterService {
     }
 
     const slugRealm = realm.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
-    const url = `https://raider.io/api/v1/characters/profile?region=eu&realm=${slugRealm}&name=${name.toLowerCase()}&fields=mythic_plus_scores_by_season:current`;
+    const params = {
+      region: 'eu',
+      realm: slugRealm,
+      name: name.toLowerCase(),
+      fields: 'mythic_plus_scores_by_season:current',
+    };
 
-    const obs = this.http.get<any>(url).pipe(
+    const obs = this.http.get<any>('https://raider.io/api/v1/characters/profile', { params }).pipe(
       map(res => {
         const score = res?.mythic_plus_scores_by_season?.[0]?.scores?.all || 0;
         return Math.round(score);
@@ -151,7 +156,7 @@ export class CharacterService {
 
   // Récupère les détails (image, stuff) d'un personnage via Blizzard
   getCharacterDetails(realm: string, name: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/details/${realm}/${name}`, { withCredentials: true });
+    return this.http.get<any>(`${this.apiUrl}/details/${encodeURIComponent(realm)}/${encodeURIComponent(name)}`, { withCredentials: true });
   }
 
   // Récupère l'ensemble des personnages de la guilde active (Vue admin)

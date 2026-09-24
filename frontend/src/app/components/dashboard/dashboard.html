@@ -1,393 +1,426 @@
 @if (authService.currentUser(); as user) {
-  <div class="dashboard-wrapper animated-fade-in">
-    <!-- Hero Section: Welcome & Roster -->
-    <section class="hero-section">
-      <div class="welcome-box">
-        <div class="user-main-info">
-          <span class="greeting">{{ i18n.t('dashboard.welcome') }}</span>
-          <h1>{{ mainCharacter()?.name || user.battletag }}</h1>
+  <div class="dash ui-page">
+    <!-- Héros : accueil + indicateurs | personnage principal -->
+    <section class="hero">
+      <div class="welcome">
+        <div class="welcome-head">
+          <p class="today">{{ todayLabel() }}</p>
+          <h1>
+            <span class="greeting">{{ greeting() }}</span>
+            <span class="name">{{ mainCharacter()?.name || user.battletag }}</span>
+          </h1>
+          @if (myRoster(); as roster) {
+            <span class="roster-chip" [title]="roster.description || ''">
+              <span class="ui-dot live" aria-hidden="true"></span>
+              {{ i18n.t('dashboard.current_roster') }} · <strong>{{ roster.name }}</strong>
+            </span>
+          } @else {
+            <span class="roster-chip muted">{{ i18n.t('dashboard.no_roster') }}</span>
+          }
         </div>
-        @if (myRoster(); as roster) {
-          <div class="roster-info-card">
-            <span class="label">{{ i18n.t('dashboard.current_roster') }}</span>
-            <div class="roster-details">
-              <span class="roster-icon">
-                <img src="assets/icons/tank.png" class="role-icon-img" alt="Roster" />
-              </span>
-              <div class="roster-text">
-                <h3>{{ roster.name }}</h3>
-                <p>{{ roster.description }}</p>
-              </div>
+
+        <div class="tiles">
+          <!-- Prochain événement -->
+          @if (nextEvent(); as next) {
+            <a
+              class="tile tile-next"
+              [class]="'tone-' + next.tone"
+              [routerLink]="['/events', next.event.id]"
+              style="--i: 0"
+            >
+              <span class="tile-label">{{ i18n.t('dashboard.next_event') }}</span>
+              <strong class="tile-value countdown" [class.soon]="next.countdown.soon">
+                {{ next.countdown.label ?? i18n.t('dashboard.in_progress') }}
+              </strong>
+              <span class="tile-sub">{{ next.event.title }}</span>
+            </a>
+          } @else {
+            <div class="tile tile-next empty" style="--i: 0">
+              <span class="tile-label">{{ i18n.t('dashboard.next_event') }}</span>
+              <strong class="tile-value">—</strong>
+              <span class="tile-sub">{{ i18n.t('dashboard.no_events') }}</span>
             </div>
-          </div>
-        } @else {
-          <div class="roster-info-card unassigned">
-            <p>{{ i18n.t('dashboard.no_roster') }}</p>
-          </div>
-        }
-        <!-- Dashboard Cotisation Summary -->
-        <div class="dashboard-fee-card">
-          <div class="fee-header">
-            <h3>{{ i18n.t('dashboard.fee_status') }}</h3>
-            <a routerLink="/fees" class="view-all">{{ i18n.t('dashboard.details') }}</a>
-          </div>
-          <div class="fee-months">
-            @for (m of feeSummary(); track m.name) {
-              <div class="fee-month-mini" [class]="m.status.class">
-                <span class="m-name">{{ m.name }}</span>
-                <div class="m-status">
-                  <span class="icon">{{ m.status.icon }}</span>
-                  <span class="val">{{ m.status.label }}</span>
-                </div>
-              </div>
-            }
-          </div>
-        </div>
-        <!-- Dashboard Attendance Summary -->
-        @if (myAttendance(); as att) {
-          <div class="dashboard-attendance-card">
-            <div class="attendance-header">
-              <h3>{{ i18n.t('dashboard.attendance.title') }}</h3>
-              <a
-                href="javascript:void(0)"
-                (click)="showAttendanceModal.set(true)"
-                class="view-all"
-                >{{ i18n.t('dashboard.attendance.details') }}</a
-              >
-            </div>
-            <div class="attendance-body">
-              <div class="attendance-circular" [style.--progress]="att.percentage + '%'">
-                <span class="attendance-value">{{ att.percentage }}%</span>
-              </div>
-              <div class="attendance-details">
-                <span class="label">{{ i18n.t('dashboard.attendance.current_month') }}</span>
-                <span class="stats">{{
-                  i18n
-                    .t('dashboard.attendance.events_count')
-                    .split('{attended}')
-                    .join(att.attended.toString())
-                    .split('{eligible}')
-                    .join(att.total_eligible.toString())
-                }}</span>
-                <span class="help-text">{{ i18n.t('dashboard.attendance.help_text') }}</span>
-              </div>
-            </div>
-          </div>
-        }
-      </div>
-      <!-- Main Character Display -->
-      @if (mainCharacter(); as char) {
-        <div class="main-char-display" [class]="'bg-class-' + getClassCategory(char.class)">
-          @if (getCharacterImage(); as imageUrl) {
-            <div class="char-image-container">
-              <img
-                [src]="imageUrl"
-                alt="Character Render"
-                class="char-render"
-                referrerpolicy="no-referrer"
+          }
+
+          <!-- Assiduité -->
+          <button
+            type="button"
+            class="tile tile-attendance"
+            [class]="'att-' + attendanceTone()"
+            (click)="showAttendanceModal.set(true)"
+            [disabled]="!myAttendance()"
+            [attr.aria-label]="i18n.t('dashboard.attendance.title')"
+            style="--i: 1"
+          >
+            <svg class="ring" viewBox="0 0 72 72" aria-hidden="true">
+              <circle class="ring-track" cx="36" cy="36" [attr.r]="ringRadius" />
+              <circle
+                class="ring-value"
+                cx="36"
+                cy="36"
+                [attr.r]="ringRadius"
+                [attr.stroke-dasharray]="ringCircumference"
+                [attr.stroke-dashoffset]="attendanceOffset()"
               />
-            </div>
-          }
-          <div class="char-content">
-            <div class="char-top">
-              <span class="level">{{
-                i18n.t('char.level').split('{level}').join(char.level.toString())
-              }}</span>
-              <div class="char-badges">
-                @if (charDetails()?.summary; as sum) {
-                  <span class="ilvl-badge">{{ sum.equipped_item_level }} iLvl</span>
-                }
-                @if (mainCharacterRioScore()) {
-                  <span class="rio-badge">{{ mainCharacterRioScore() }} RIO</span>
-                }
-                <span class="main-badge">MAIN</span>
-              </div>
-            </div>
-            <div class="char-body">
-              <h2>{{ char.name }}</h2>
-              <span class="realm">{{ char.realm }}</span>
-            </div>
-            <div class="char-footer">
-              <div class="roles">
-                @if (char.is_tank) {
-                  <img
-                    src="assets/icons/tank.png"
-                    class="role-icon-img large"
-                    title="Tank"
-                    alt="Tank"
-                  />
-                }
-                @if (char.is_heal) {
-                  <img
-                    src="assets/icons/heal.png"
-                    class="role-icon-img large"
-                    title="Healer"
-                    alt="Heal"
-                  />
-                }
-                @if (char.is_dps) {
-                  <img
-                    src="assets/icons/dps.png"
-                    class="role-icon-img large"
-                    title="DPS"
-                    alt="DPS"
-                  />
-                }
-              </div>
-              <div class="footer-links">
-                <a
-                  [href]="characterService.getRaiderIoUrl(char.name, char.realm)"
-                  target="_blank"
-                  class="logs-link"
-                  (click)="$event.stopPropagation()"
-                >
-                  <img
-                    src="assets/icons/raiderio.webp"
-                    alt="Raider.IO"
-                    [title]="i18n.t('dashboard.tooltip.rio')"
-                  />
-                </a>
-                <a
-                  [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)"
-                  target="_blank"
-                  class="logs-link"
-                  (click)="$event.stopPropagation()"
-                >
-                  <img
-                    src="assets/icons/warcraftlogs.png"
-                    alt="Warcraft Logs"
-                    [title]="i18n.t('dashboard.tooltip.logs')"
-                  />
-                </a>
-              </div>
-            </div>
-          </div>
-          <!-- Loading Overlay -->
-          @if (loadingDetails()) {
-            <div class="char-loading">
-              <div class="spinner"></div>
-            </div>
-          }
+            </svg>
+            <span class="ring-text">
+              <span [appCountUp]="myAttendance()?.percentage ?? null"></span><small>%</small>
+            </span>
+            <span class="tile-body">
+              <span class="tile-label">{{ i18n.t('dashboard.attendance.title') }}</span>
+              @if (myAttendance(); as att) {
+                <span class="tile-sub">{{ attendanceLabel(att) }}</span>
+              }
+              <span class="tile-link">{{ i18n.t('dashboard.attendance.details') }} →</span>
+            </span>
+          </button>
+
+          <!-- Cotisations -->
+          <a class="tile tile-fees" routerLink="/fees" style="--i: 2">
+            <span class="tile-label">{{ i18n.t('dashboard.fee_status') }}</span>
+            <ol class="fee-months">
+              @for (m of feeSummary(); track m.key; let i = $index) {
+                <li [class]="'fee-' + m.state" [style.--i]="i">
+                  <span class="fee-name">{{ m.name }}</span>
+                  <span class="fee-bar" aria-hidden="true">
+                    <span [style.width.%]="m.progress"></span>
+                  </span>
+                  <span class="fee-amount">
+                    {{ m.amount }} PO
+                    <span class="visually-hidden">
+                      – {{ i18n.t('dashboard.fee_state.' + m.state) }}</span
+                    >
+                  </span>
+                </li>
+              }
+            </ol>
+          </a>
         </div>
+      </div>
+
+      <!-- Personnage principal -->
+      @if (mainCharacter(); as char) {
+        <article class="main-char" [class]="'bg-class-' + classId(char.class)">
+          @if (mainImage(); as imageUrl) {
+            <img
+              class="char-render"
+              [src]="imageUrl"
+              alt=""
+              referrerpolicy="no-referrer"
+              loading="lazy"
+            />
+          } @else {
+            <img class="char-crest" [src]="classIcon(char.class)" alt="" />
+          }
+          <div class="char-top">
+            <span class="char-chip">{{
+              i18n.t('char.level').split('{level}').join(char.level.toString())
+            }}</span>
+            <span class="char-badges">
+              @if (charDetails()?.summary?.equipped_item_level; as ilvl) {
+                <span class="char-chip">{{ ilvl }} iLvl</span>
+              }
+              @if (mainRio(); as rio) {
+                <span class="char-chip">{{ rio }} RIO</span>
+              }
+              <span class="char-chip strong">★ MAIN</span>
+            </span>
+          </div>
+          <div class="char-body">
+            <h2>{{ char.name }}</h2>
+            <span class="realm">{{ char.realm }}</span>
+          </div>
+          <div class="char-foot">
+            <span class="roles">
+              @if (char.is_tank) {
+                <img src="assets/icons/tank.png" alt="Tank" title="Tank" />
+              }
+              @if (char.is_heal) {
+                <img src="assets/icons/heal.png" alt="Heal" title="Heal" />
+              }
+              @if (char.is_dps) {
+                <img src="assets/icons/dps.png" alt="DPS" title="DPS" />
+              }
+            </span>
+            <span class="char-links">
+              <a
+                [href]="characterService.getRaiderIoUrl(char.name, char.realm)"
+                target="_blank"
+                rel="noopener noreferrer"
+                [attr.aria-label]="i18n.t('dashboard.tooltip.rio')"
+                [title]="i18n.t('dashboard.tooltip.rio')"
+              >
+                <img src="assets/icons/raiderio.webp" alt="" />
+              </a>
+              <a
+                [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)"
+                target="_blank"
+                rel="noopener noreferrer"
+                [attr.aria-label]="i18n.t('dashboard.tooltip.logs')"
+                [title]="i18n.t('dashboard.tooltip.logs')"
+              >
+                <img src="assets/icons/warcraftlogs.png" alt="" />
+              </a>
+            </span>
+          </div>
+          @if (loadingDetails()) {
+            <span class="char-loading" aria-hidden="true"></span>
+          }
+        </article>
+      } @else if (charactersLoaded()) {
+        <a
+          class="main-char placeholder"
+          [routerLink]="['/options']"
+          [queryParams]="{ tab: 'characters' }"
+        >
+          <span class="placeholder-plus" aria-hidden="true">＋</span>
+          <strong>{{ i18n.t('dashboard.no_main_title') }}</strong>
+          <span>{{ i18n.t('dashboard.no_main_hint') }}</span>
+        </a>
+      } @else {
+        <div class="main-char skeleton ui-skeleton" aria-hidden="true"></div>
       }
     </section>
+
     @if (birthdays().length > 0) {
-      <app-dashboard-birthdays class="animated-fade-in" [birthdays]="birthdays()" />
+      <app-dashboard-birthdays [birthdays]="birthdays()" />
     }
-    <div class="dashboard-grid">
-      <!-- Upcoming Events Column -->
-      <section class="events-column">
-        <div class="section-header">
-          <h2>{{ i18n.t('dashboard.upcoming_events') }}</h2>
-          <a routerLink="/calendar" class="view-all">{{ i18n.t('dashboard.view_all') }}</a>
-        </div>
-        <div class="events-list">
-          @for (event of upcomingEvents(); track event.id) {
-            <div class="event-card" [routerLink]="['/events', event.id]">
-              <div class="event-date">
-                <span class="day">{{ event.start_time | date: 'dd' }}</span>
-                <span class="month">{{ event.start_time | date: 'MMM' }}</span>
-              </div>
-              <div class="event-main">
-                <div class="event-type" [class]="event.type.toLowerCase()">{{ event.type }}</div>
-                <h3>{{ event.title }}</h3>
-                <div class="event-status-row">
-                  <span class="time">{{ event.start_time | date: 'HH:mm' }}</span>
-                  @if (getSignupStatus(event.id); as signup) {
-                    <span class="status-indicator" [class]="signup.status">
-                      @switch (signup.status) {
-                        @case ('signed_up') {
-                          <span>{{ i18n.t('dashboard.signed_up') }}</span>
-                        }
-                        @case ('standby') {
-                          <span>{{ i18n.t('dashboard.standby') }}</span>
-                        }
-                        @case ('absent') {
-                          <span>{{ i18n.t('dashboard.absent') }}</span>
-                        }
-                        @default {
-                          <span>{{ i18n.t('dashboard.signed_up') }}</span>
-                        }
+
+    <div class="grid">
+      <!-- Événements à venir -->
+      <section class="ui-card panel" style="--i: 3" aria-labelledby="dash-events">
+        <header class="ui-card-head">
+          <h2 id="dash-events">
+            <span class="ui-card-icon" aria-hidden="true">📅</span>
+            {{ i18n.t('dashboard.upcoming_events') }}
+          </h2>
+          <a routerLink="/calendar" class="ui-btn ghost sm">{{ i18n.t('dashboard.view_all') }}</a>
+        </header>
+
+        @if (!eventsLoaded()) {
+          <div class="event-skeletons" aria-hidden="true">
+            <span class="ui-skeleton"></span>
+            <span class="ui-skeleton"></span>
+            <span class="ui-skeleton"></span>
+          </div>
+        } @else {
+          <ul class="events">
+            @for (item of upcoming(); track item.event.id; let i = $index) {
+              <li [style.--i]="i">
+                <a
+                  class="event"
+                  [class]="'tone-' + item.tone"
+                  [routerLink]="['/events', item.event.id]"
+                >
+                  <span class="event-date">
+                    <span class="day">{{ item.event.start_time | date: 'dd' }}</span>
+                    <span class="month">{{ item.event.start_time | date: 'MMM' }}</span>
+                  </span>
+                  <span class="event-main">
+                    <span class="event-meta">
+                      <span class="event-type">{{ item.event.type }}</span>
+                      <span class="event-time">
+                        {{ item.event.start_time | date: 'EEE HH:mm' }}
+                      </span>
+                      @if (item.event.roster_name) {
+                        <span class="event-roster">{{ item.event.roster_name }}</span>
                       }
                     </span>
-                  } @else {
-                    <span class="status-indicator none">{{
-                      i18n.t('dashboard.unregistered')
-                    }}</span>
-                  }
-                </div>
-              </div>
-              <div class="event-countdown">
-                <span class="timer-icon">⏳</span>
-                <span class="timer-text">{{ getCountdown(event.start_time) }}</span>
-              </div>
-            </div>
-          }
-          @if (upcomingEvents().length === 0) {
-            <div class="empty-state">
-              <p>{{ i18n.t('dashboard.no_events') }}</p>
-            </div>
-          }
-        </div>
-      </section>
-      <!-- My Characters Column -->
-      <section class="chars-column">
-        <div class="section-header">
-          <h2>{{ i18n.t('dashboard.my_characters') }}</h2>
-          <a [routerLink]="['/options']" [queryParams]="{ tab: 'characters' }" class="view-all">{{
-            i18n.t('dashboard.manage')
-          }}</a>
-        </div>
-        <div class="chars-grid">
-          @for (char of myCharacters(); track char.id) {
-            <div class="simple-char-card" [class]="'border-class-' + getClassCategory(char.class)">
-              <div class="char-info">
-                <span class="name" [class]="'class-' + getClassCategory(char.class)">{{
-                  char.name
-                }}</span>
-                <span class="realm">{{ char.realm }}</span>
-                @if (char.roster_name) {
-                  <span class="roster-badge-dashboard">
-                    <span class="badge-icon">👥</span>{{ char.roster_name }}
+                    <span class="event-title">{{ item.event.title }}</span>
                   </span>
-                }
-              </div>
-              <div class="char-meta">
-                <span class="lvl">{{ char.level }}</span>
-                @if (getRioScoreForKey(char.name, char.realm)) {
-                  <span class="rio-mini">{{ getRioScoreForKey(char.name, char.realm) }}</span>
-                }
-                @if (char.is_main) {
-                  <span class="main-star">⭐</span>
-                }
+                  <span class="event-side">
+                    <span class="ui-badge" [class]="item.signup.tone">{{ item.signup.label }}</span>
+                    <span class="countdown-chip" [class.soon]="item.countdown.soon">
+                      <span aria-hidden="true">⏳</span>
+                      {{ item.countdown.label ?? i18n.t('dashboard.in_progress') }}
+                    </span>
+                  </span>
+                </a>
+              </li>
+            } @empty {
+              <li class="ui-empty">
+                <span class="emoji" aria-hidden="true">🗓️</span>
+                <strong>{{ i18n.t('dashboard.no_events') }}</strong>
+                <a routerLink="/calendar" class="ui-btn primary sm">{{
+                  i18n.t('dashboard.open_calendar')
+                }}</a>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <!-- Mes personnages -->
+      <section class="ui-card panel" style="--i: 4" aria-labelledby="dash-chars">
+        <header class="ui-card-head">
+          <h2 id="dash-chars">
+            <span class="ui-card-icon" aria-hidden="true">🛡️</span>
+            {{ i18n.t('dashboard.my_characters') }}
+          </h2>
+          <a
+            [routerLink]="['/options']"
+            [queryParams]="{ tab: 'characters' }"
+            class="ui-btn ghost sm"
+            >{{ i18n.t('dashboard.manage') }}</a
+          >
+        </header>
+
+        <ul class="chars">
+          @for (char of myCharacters(); track char.id; let i = $index) {
+            <li
+              class="char"
+              [style.--i]="i"
+              [style.--class-color]="'var(--color-' + classId(char.class) + ')'"
+            >
+              <img class="char-icon" [src]="classIcon(char.class)" alt="" width="36" height="36" />
+              <span class="char-info">
+                <span class="char-name" [class]="'class-' + classId(char.class)">
+                  {{ char.name }}
+                  @if (char.is_main) {
+                    <span class="star" [title]="i18n.t('wcl.main')">★</span>
+                  }
+                </span>
+                <span class="char-sub">
+                  {{ char.realm }} · {{ char.level }}
+                  @if (char.roster_name) {
+                    · <span class="char-roster">{{ char.roster_name }}</span>
+                  }
+                </span>
+              </span>
+              @if (rioOf(char); as rio) {
+                <span class="rio" [title]="'Raider.IO'">{{ rio }}</span>
+              }
+              <span class="char-actions">
                 <a
                   [href]="characterService.getRaiderIoUrl(char.name, char.realm)"
                   target="_blank"
-                  class="logs-link-mini"
-                  (click)="$event.stopPropagation()"
+                  rel="noopener noreferrer"
+                  [attr.aria-label]="i18n.t('dashboard.tooltip.rio') + ' – ' + char.name"
+                  [title]="i18n.t('dashboard.tooltip.rio')"
                 >
-                  <img
-                    src="assets/icons/raiderio.webp"
-                    alt="Raider.IO"
-                    [title]="i18n.t('dashboard.tooltip.rio')"
-                  />
+                  <img src="assets/icons/raiderio.webp" alt="" />
                 </a>
                 <a
                   [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)"
                   target="_blank"
-                  class="logs-link-mini"
-                  (click)="$event.stopPropagation()"
+                  rel="noopener noreferrer"
+                  [attr.aria-label]="i18n.t('dashboard.tooltip.logs') + ' – ' + char.name"
+                  [title]="i18n.t('dashboard.tooltip.logs')"
                 >
-                  <img
-                    src="assets/icons/warcraftlogs.png"
-                    alt="Warcraft Logs"
-                    [title]="i18n.t('dashboard.tooltip.logs')"
-                  />
+                  <img src="assets/icons/warcraftlogs.png" alt="" />
                 </a>
-              </div>
-            </div>
+              </span>
+            </li>
+          } @empty {
+            @if (charactersLoaded()) {
+              <li class="ui-empty">
+                <span class="emoji" aria-hidden="true">🧙</span>
+                <strong>{{ i18n.t('dashboard.no_linked_chars') }}</strong>
+                <a
+                  class="ui-btn primary sm"
+                  [routerLink]="['/options']"
+                  [queryParams]="{ tab: 'characters' }"
+                  >{{ i18n.t('dashboard.import') }}</a
+                >
+              </li>
+            }
           }
-          @if (myCharacters().length === 0) {
-            <div class="empty-state">
-              <p>{{ i18n.t('dashboard.no_linked_chars') }}</p>
-              <button
-                class="btn-import"
-                [routerLink]="['/options']"
-                [queryParams]="{ tab: 'characters' }"
-              >
-                {{ i18n.t('dashboard.import') }}
-              </button>
-            </div>
-          }
-        </div>
+        </ul>
       </section>
     </div>
+
     <!-- Sous la ligne de flottaison : chunk et appels Warcraft Logs chargés à l'approche -->
     @defer (on viewport) {
-      <app-dashboard-parses class="animated-fade-in" [characters]="myCharacters()" />
+      <app-dashboard-parses [characters]="myCharacters()" />
     } @placeholder {
-      <div class="parses-placeholder" aria-hidden="true"></div>
+      <div class="parses-placeholder ui-skeleton" aria-hidden="true"></div>
     }
 
-    <!-- Bottom Guild Directory Link Button -->
-    <div class="dashboard-bottom-directory-banner" routerLink="/guild-characters">
-      <div class="banner-content">
-        <span class="banner-icon">🔎</span>
-        <div class="banner-text">
-          <h3>{{ i18n.t('guild_chars.title') }}</h3>
-          <p>{{ i18n.t('guild_chars.subtitle') }}</p>
-        </div>
-      </div>
-      <button class="banner-btn">
+    <!-- Annuaire de la guilde -->
+    <a class="directory" routerLink="/guild-characters">
+      <span class="directory-icon" aria-hidden="true">🔎</span>
+      <span class="directory-text">
+        <strong>{{ i18n.t('guild_chars.title') }}</strong>
+        <span>{{ i18n.t('guild_chars.subtitle') }}</span>
+      </span>
+      <span class="ui-btn primary directory-cta">
         {{ i18n.t('dashboard.directory_cta') }} <span class="arrow" aria-hidden="true">→</span>
-      </button>
-    </div>
+      </span>
+    </a>
 
-    <!-- Attendance Details Modal -->
+    <!-- Détail de l'assiduité -->
     @if (showAttendanceModal() && myAttendance(); as att) {
-      <div class="modal-overlay" (click)="showAttendanceModal.set(false)">
-        <div class="modal-container" (click)="$event.stopPropagation()">
-          <div class="modal-header">
-            <h2>{{ i18n.t('dashboard.attendance.title') }}</h2>
-            <button class="modal-close" (click)="showAttendanceModal.set(false)">×</button>
-          </div>
-          <div class="modal-content">
-            <div class="attendance-modal-summary">
-              <div class="summary-stat">
-                <span class="label">{{ i18n.t('dashboard.attendance.rate') }}</span>
-                <span class="val">{{ att.percentage }}%</span>
+      <div class="ui-overlay" (click)="showAttendanceModal.set(false)">
+        <div
+          class="ui-modal wide"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="att-title"
+          (click)="$event.stopPropagation()"
+        >
+          <header class="ui-modal-head">
+            <h2 id="att-title">{{ i18n.t('dashboard.attendance.title') }}</h2>
+            <button
+              type="button"
+              class="ui-close"
+              (click)="showAttendanceModal.set(false)"
+              [attr.aria-label]="i18n.t('event.details.btn_close')"
+            >
+              ×
+            </button>
+          </header>
+          <div class="ui-modal-body">
+            <dl class="ui-kpis">
+              <div class="ui-kpi brand" style="--i: 0">
+                <dt>{{ i18n.t('dashboard.attendance.rate') }}</dt>
+                <dd>{{ att.percentage }}<small>%</small></dd>
               </div>
-              <div class="summary-stat">
-                <span class="label">{{ i18n.t('dashboard.attendance.presences') }}</span>
-                <span class="val">{{ att.attended }}</span>
+              <div class="ui-kpi success" style="--i: 1">
+                <dt>{{ i18n.t('dashboard.attendance.presences') }}</dt>
+                <dd>{{ att.attended }}</dd>
               </div>
-              <div class="summary-stat">
-                <span class="label">{{ i18n.t('dashboard.attendance.eligible_events') }}</span>
-                <span class="val">{{ att.total_eligible }}</span>
+              <div class="ui-kpi" style="--i: 2">
+                <dt>{{ i18n.t('dashboard.attendance.eligible_events') }}</dt>
+                <dd>{{ att.total_eligible }}</dd>
               </div>
-            </div>
-            <h3 class="attendance-history-title">
-              {{ i18n.t('dashboard.attendance.history_title') }}
-            </h3>
-            <div class="attendance-events-list">
-              @for (evt of att.events; track evt.id) {
-                <div class="attendance-event-row">
-                  <div class="event-row-info">
-                    <h4>{{ evt.title }}</h4>
-                    <div class="meta">
-                      <span>📅 {{ evt.start_time | date: 'dd MMM yyyy, HH:mm' }}</span>
+            </dl>
+
+            <h3 class="history-title">{{ i18n.t('dashboard.attendance.history_title') }}</h3>
+            <ul class="history">
+              @for (evt of att.events; track evt.id; let i = $index) {
+                <li [style.--i]="i">
+                  <span class="history-info">
+                    <strong>{{ evt.title }}</strong>
+                    <span class="history-meta">
+                      <span>{{ evt.start_time | date: 'EEE dd MMM, HH:mm' }}</span>
                       @if (evt.roster_name) {
-                        <span class="roster-tag">🔴 {{ evt.roster_name }}</span>
+                        <span>· {{ evt.roster_name }}</span>
                       }
                       @if (evt.character_name) {
-                        <span class="character-tag"> 🛡️ {{ evt.character_name }} </span>
-                      }
-                    </div>
-                  </div>
-                  <div class="event-row-status">
-                    <span
-                      class="status-badge"
-                      [class.attended]="evt.status === 'signed_up' || evt.status === 'standby'"
-                      [class.absent]="evt.status === 'absent'"
-                      [class.unregistered]="!evt.status"
-                    >
-                      @if (evt.status === 'signed_up' || evt.status === 'standby') {
-                        {{ i18n.t('dashboard.attendance.status_present') }}
-                      } @else if (evt.status === 'absent') {
-                        {{ i18n.t('dashboard.attendance.status_absent') }}
-                      } @else {
-                        {{ i18n.t('dashboard.attendance.status_unregistered') }}
+                        <span>· {{ evt.character_name }}</span>
                       }
                     </span>
-                  </div>
-                </div>
+                  </span>
+                  @if (isPresent(evt.status)) {
+                    <span class="ui-badge success">{{
+                      i18n.t('dashboard.attendance.status_present')
+                    }}</span>
+                  } @else if (evt.status === 'absent') {
+                    <span class="ui-badge danger">{{
+                      i18n.t('dashboard.attendance.status_absent')
+                    }}</span>
+                  } @else {
+                    <span class="ui-badge">{{
+                      i18n.t('dashboard.attendance.status_unregistered')
+                    }}</span>
+                  }
+                </li>
+              } @empty {
+                <li class="ui-empty">
+                  <p>{{ i18n.t('dashboard.attendance.no_events') }}</p>
+                </li>
               }
-              @if (att.events.length === 0) {
-                <p class="attendance-empty">
-                  {{ i18n.t('dashboard.attendance.no_events') }}
-                </p>
-              }
-            </div>
+            </ul>
           </div>
         </div>
       </div>

@@ -1,224 +1,187 @@
-<div class="directory-container animated-fade-in">
-  <!-- Header Section -->
-  <header class="directory-header">
-    <div class="header-navigation">
-      <a routerLink="/dashboard" class="back-link">
-        <span class="arrow">←</span> {{ i18n.currentLocale() === 'fr' ? 'Retour' : 'Back to Dashboard' }}
-      </a>
-    </div>
-    
-    <div class="header-main">
-      <div class="title-block">
-        <h1>{{ i18n.t('guild_chars.title') }}</h1>
-        <p class="subtitle">{{ i18n.t('guild_chars.subtitle') }}</p>
+<div class="ui-page">
+  <app-page-header
+    icon="🔎"
+    tone="purple"
+    [title]="i18n.t('guild_chars.title')"
+    [subtitle]="i18n.t('guild_chars.subtitle')"
+  >
+    <dl pageStats class="ui-kpis">
+      <div class="ui-kpi" style="--i: 0">
+        <dt>{{ i18n.t('guild_chars.stat_characters') }}</dt>
+        <dd>{{ allCharacters().length }}</dd>
       </div>
-      
-      <!-- Stats Cards -->
-      <div class="stats-cards">
-        <div class="stat-card">
-          <span class="stat-icon">👥</span>
-          <div class="stat-info">
-            <span class="stat-value">{{ allCharacters().length }}</span>
-            <span class="stat-label">{{ i18n.currentLocale() === 'fr' ? 'Personnages' : 'Characters' }}</span>
-          </div>
-        </div>
-        <div class="stat-card">
-          <span class="stat-icon">⭐</span>
-          <div class="stat-info">
-            <span class="stat-value">{{ mains().length }}</span>
-            <span class="stat-label">Mains</span>
-          </div>
-        </div>
-        <div class="stat-card">
-          <span class="stat-icon">🔄</span>
-          <div class="stat-info">
-            <span class="stat-value">{{ alts().length }}</span>
-            <span class="stat-label">Rerolls</span>
-          </div>
-        </div>
+      <div class="ui-kpi warning" style="--i: 1">
+        <dt>{{ i18n.t('guild_chars.stat_mains') }}</dt>
+        <dd>{{ mains().length }}</dd>
       </div>
-    </div>
-  </header>
+      <div class="ui-kpi purple" style="--i: 2">
+        <dt>{{ i18n.t('guild_chars.stat_alts') }}</dt>
+        <dd>{{ alts().length }}</dd>
+      </div>
+      <div class="ui-kpi brand" style="--i: 3">
+        <dt>{{ i18n.t('guild_chars.stat_players') }}</dt>
+        <dd>{{ players() }}</dd>
+      </div>
+    </dl>
+  </app-page-header>
 
-  <!-- Loading State -->
+  <!-- Filtres -->
+  <section class="ui-card toolbar" style="--i: 1" [attr.aria-label]="i18n.t('guild_chars.filters')">
+    <div class="toolbar-row">
+      <div class="ui-tabs" role="group" [attr.aria-label]="i18n.t('guild_chars.filters')">
+        @for (s of scopes; track s) {
+          <button
+            type="button"
+            [class.active]="scope() === s"
+            [attr.aria-pressed]="scope() === s"
+            (click)="scope.set(s)"
+          >
+            {{ i18n.t('guild_chars.scope.' + s) }}
+            <span class="count">{{
+              s === 'mains' ? mains().length : s === 'alts' ? alts().length : allCharacters().length
+            }}</span>
+          </button>
+        }
+      </div>
+      <label class="search">
+        <span class="visually-hidden">{{ i18n.t('guild_chars.search') }}</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M10 4a6 6 0 1 0 3.7 10.7l4.8 4.8 1.4-1.4-4.8-4.8A6 6 0 0 0 10 4Zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z"
+          />
+        </svg>
+        <input
+          type="search"
+          class="ui-input"
+          [value]="query()"
+          (input)="query.set($any($event.target).value)"
+          [placeholder]="i18n.t('guild_chars.search')"
+        />
+      </label>
+    </div>
+
+    <!-- Répartition des classes : barre empilée + filtres -->
+    @if (distribution().length) {
+      <div class="distribution">
+        <div class="dist-bar" aria-hidden="true">
+          @for (d of distribution(); track d.classId) {
+            <span
+              [style.flex-grow]="d.count"
+              [style.background]="'var(--color-' + d.classId + ')'"
+              [class.dim]="classFilter() && classFilter() !== d.classId"
+            ></span>
+          }
+        </div>
+        <div
+          class="class-chips"
+          role="group"
+          [attr.aria-label]="i18n.t('guild_chars.class_filter')"
+        >
+          @for (d of distribution(); track d.classId; let i = $index) {
+            <button
+              type="button"
+              class="class-chip"
+              [class.active]="classFilter() === d.classId"
+              [attr.aria-pressed]="classFilter() === d.classId"
+              [style.--class-color]="'var(--color-' + d.classId + ')'"
+              [style.--i]="i"
+              [title]="i18n.t('class.' + d.classId)"
+              (click)="toggleClass(d.classId)"
+            >
+              <img [src]="classIconById(d.classId)" alt="" width="22" height="22" />
+              <span class="chip-label">{{ i18n.t('class.' + d.classId) }}</span>
+              <b>{{ d.count }}</b>
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </section>
+
   @if (loading()) {
-    <div class="directory-loading">
-      <div class="spinner"></div>
-      <p>{{ i18n.currentLocale() === 'fr' ? 'Chargement de l\'annuaire...' : 'Loading character directory...' }}</p>
+    <div class="columns" aria-busy="true">
+      @for (r of roles(); track r) {
+        <div class="ui-skeleton column-skeleton"></div>
+      }
+    </div>
+  } @else if (!filtered().length) {
+    <div class="ui-empty">
+      <span class="emoji" aria-hidden="true">🕵️</span>
+      <strong>{{
+        allCharacters().length ? i18n.t('guild_chars.no_match') : i18n.t('guild_chars.empty_cell')
+      }}</strong>
+      @if (query() || classFilter()) {
+        <button type="button" class="ui-btn ghost sm" (click)="resetFilters()">
+          {{ i18n.t('guild_chars.reset') }}
+        </button>
+      }
     </div>
   } @else {
-    <div class="roster-grid-wrapper">
-      
-      <!-- SECTION 1: MAINS -->
-      <section class="roster-section">
-        <div class="section-title-bar">
-          <h2>⭐ {{ i18n.t('guild_chars.mains') }}</h2>
-          <span class="section-badge">{{ mains().length }}</span>
-        </div>
-        
-        <div class="roles-table-grid">
-          <!-- COLUMN 1: TANKS -->
-          <div class="role-column border-tank">
-            <div class="role-column-header bg-tank">
-              <img src="assets/icons/tank.png" class="role-icon-img large" alt="Tank" />
-              <h3>{{ i18n.t('guild_chars.tanks') }}</h3>
-              <span class="count-badge">{{ mainTanks().length }}</span>
-            </div>
-            <div class="role-column-body">
-              <div class="char-names-grid">
-                @for (char of mainTanks(); track char.id) {
-                  <div class="char-pill-card" [class]="'border-class-' + getClassCategory(char.class)">
-                    <span class="char-name-text" [class]="'class-' + getClassCategory(char.class)">
-                      {{ char.name }}
-                    </span>
-                  </div>
-                }
-              </div>
-              @if (mainTanks().length === 0) {
-                <div class="empty-column-state">
-                  <p>{{ i18n.t('guild_chars.empty_cell') }}</p>
-                </div>
-              }
-            </div>
-          </div>
-
-          <!-- COLUMN 2: HEALERS -->
-          <div class="role-column border-heal">
-            <div class="role-column-header bg-heal">
-              <img src="assets/icons/heal.png" class="role-icon-img large" alt="Healer" />
-              <h3>{{ i18n.t('guild_chars.heals') }}</h3>
-              <span class="count-badge">{{ mainHealers().length }}</span>
-            </div>
-            <div class="role-column-body">
-              <div class="char-names-grid">
-                @for (char of mainHealers(); track char.id) {
-                  <div class="char-pill-card" [class]="'border-class-' + getClassCategory(char.class)">
-                    <span class="char-name-text" [class]="'class-' + getClassCategory(char.class)">
-                      {{ char.name }}
-                    </span>
-                  </div>
-                }
-              </div>
-              @if (mainHealers().length === 0) {
-                <div class="empty-column-state">
-                  <p>{{ i18n.t('guild_chars.empty_cell') }}</p>
-                </div>
-              }
-            </div>
-          </div>
-
-          <!-- COLUMN 3: DPS -->
-          <div class="role-column border-dps">
-            <div class="role-column-header bg-dps">
-              <img src="assets/icons/dps.png" class="role-icon-img large" alt="DPS" />
-              <h3>{{ i18n.t('guild_chars.dps') }}</h3>
-              <span class="count-badge">{{ mainDps().length }}</span>
-            </div>
-            <div class="role-column-body">
-              <div class="char-names-grid">
-                @for (char of mainDps(); track char.id) {
-                  <div class="char-pill-card" [class]="'border-class-' + getClassCategory(char.class)">
-                    <span class="char-name-text" [class]="'class-' + getClassCategory(char.class)">
-                      {{ char.name }}
-                    </span>
-                  </div>
-                }
-              </div>
-              @if (mainDps().length === 0) {
-                <div class="empty-column-state">
-                  <p>{{ i18n.t('guild_chars.empty_cell') }}</p>
-                </div>
-              }
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- SECTION 2: ALTS -->
-      <section class="roster-section secondary-section">
-        <div class="section-title-bar">
-          <h2>🔄 {{ i18n.t('guild_chars.alts') }}</h2>
-          <span class="section-badge alt-badge-count">{{ alts().length }}</span>
-        </div>
-        
-        <div class="roles-table-grid">
-          <!-- COLUMN 1: TANKS -->
-          <div class="role-column border-tank alt-column">
-            <div class="role-column-header bg-tank">
-              <img src="assets/icons/tank.png" class="role-icon-img large" alt="Tank" />
-              <h3>{{ i18n.t('guild_chars.tanks') }}</h3>
-              <span class="count-badge">{{ altTanks().length }}</span>
-            </div>
-            <div class="role-column-body">
-              <div class="char-names-grid">
-                @for (char of altTanks(); track char.id) {
-                  <div class="char-pill-card" [class]="'border-class-' + getClassCategory(char.class)">
-                    <span class="char-name-text" [class]="'class-' + getClassCategory(char.class)">
-                      {{ char.name }}
-                    </span>
-                  </div>
-                }
-              </div>
-              @if (altTanks().length === 0) {
-                <div class="empty-column-state">
-                  <p>{{ i18n.t('guild_chars.empty_cell') }}</p>
-                </div>
-              }
-            </div>
-          </div>
-
-          <!-- COLUMN 2: HEALERS -->
-          <div class="role-column border-heal alt-column">
-            <div class="role-column-header bg-heal">
-              <img src="assets/icons/heal.png" class="role-icon-img large" alt="Healer" />
-              <h3>{{ i18n.t('guild_chars.heals') }}</h3>
-              <span class="count-badge">{{ altHealers().length }}</span>
-            </div>
-            <div class="role-column-body">
-              <div class="char-names-grid">
-                @for (char of altHealers(); track char.id) {
-                  <div class="char-pill-card" [class]="'border-class-' + getClassCategory(char.class)">
-                    <span class="char-name-text" [class]="'class-' + getClassCategory(char.class)">
-                      {{ char.name }}
-                    </span>
-                  </div>
-                }
-              </div>
-              @if (altHealers().length === 0) {
-                <div class="empty-column-state">
-                  <p>{{ i18n.t('guild_chars.empty_cell') }}</p>
-                </div>
-              }
-            </div>
-          </div>
-
-          <!-- COLUMN 3: DPS -->
-          <div class="role-column border-dps alt-column">
-            <div class="role-column-header bg-dps">
-              <img src="assets/icons/dps.png" class="role-icon-img large" alt="DPS" />
-              <h3>{{ i18n.t('guild_chars.dps') }}</h3>
-              <span class="count-badge">{{ altDps().length }}</span>
-            </div>
-            <div class="role-column-body">
-              <div class="char-names-grid">
-                @for (char of altDps(); track char.id) {
-                  <div class="char-pill-card" [class]="'border-class-' + getClassCategory(char.class)">
-                    <span class="char-name-text" [class]="'class-' + getClassCategory(char.class)">
-                      {{ char.name }}
-                    </span>
-                  </div>
-                }
-              </div>
-              @if (altDps().length === 0) {
-                <div class="empty-column-state">
-                  <p>{{ i18n.t('guild_chars.empty_cell') }}</p>
-                </div>
-              }
-            </div>
-          </div>
-        </div>
-      </section>
-
+    <div class="columns">
+      @for (r of roles(); track r; let ci = $index) {
+        <section
+          class="column"
+          [class]="'role-' + r"
+          [style.--i]="ci"
+          [attr.aria-labelledby]="'col-' + r"
+        >
+          <header class="column-head">
+            @if (r === 'none') {
+              <span class="none-icon" aria-hidden="true">❔</span>
+            } @else {
+              <img [src]="'assets/icons/' + r + '.png'" alt="" width="26" height="26" />
+            }
+            <h2 [id]="'col-' + r">{{ i18n.t('guild_chars.role.' + r) }}</h2>
+            <span class="column-count">{{ columns()[r].length }}</span>
+          </header>
+          <ul class="chars">
+            @for (c of columns()[r]; track c.id; let i = $index) {
+              <li
+                class="char"
+                [class.alt]="!c.is_main"
+                [style.--i]="i"
+                [style.--class-color]="'var(--color-' + getClassCategory(c.class) + ')'"
+              >
+                <img class="char-icon" [src]="classIcon(c.class)" alt="" width="34" height="34" />
+                <span class="char-main">
+                  <span class="char-name" [class]="'class-' + getClassCategory(c.class)">
+                    {{ c.name }}
+                    @if (c.is_main && scope() !== 'mains') {
+                      <span class="star" [title]="i18n.t('wcl.main')">★</span>
+                    }
+                  </span>
+                  <span class="char-sub">
+                    {{ c.owner_battletag.split('#')[0] }}
+                    @if (c.roster_name) {
+                      · <span class="roster">{{ c.roster_name }}</span>
+                    }
+                  </span>
+                </span>
+                <span class="char-links">
+                  <a
+                    [href]="raiderIoUrl(c)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    [attr.aria-label]="'Raider.IO – ' + c.name"
+                  >
+                    <img src="assets/icons/raiderio.webp" alt="" />
+                  </a>
+                  <a
+                    [href]="warcraftLogsUrl(c)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    [attr.aria-label]="'Warcraft Logs – ' + c.name"
+                  >
+                    <img src="assets/icons/warcraftlogs.png" alt="" />
+                  </a>
+                </span>
+              </li>
+            } @empty {
+              <li class="column-empty">{{ i18n.t('guild_chars.empty_cell') }}</li>
+            }
+          </ul>
+        </section>
+      }
     </div>
   }
 </div>

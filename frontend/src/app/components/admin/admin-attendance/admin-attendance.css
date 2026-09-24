@@ -1,284 +1,192 @@
-.admin-attendance-container {
-  padding: 1rem;
+:host {
+  display: block;
 }
 
-.attendance-header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 2rem;
-  gap: 1.5rem;
-}
-
-.attendance-header-row h2 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--ui-text-strong);
-}
-
-.attendance-header-row .subtitle {
-  margin: 0;
-  color: var(--ui-text-muted);
-  font-size: 0.95rem;
-  line-height: 1.5;
-}
-
-.btn-refresh {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--ui-surface);
-  color: var(--ui-text-tertiary);
-  border: 1px solid var(--ui-border);
-  padding: 0.6rem 1.25rem;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-}
-
-.btn-refresh:hover:not(:disabled) {
-  background: var(--ui-surface-muted);
-  color: var(--ui-text-strong);
-  border-color: var(--ui-border-strong);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-}
-
-.btn-refresh:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.refresh-icon {
-  font-size: 1rem;
-  display: inline-block;
-}
-
-.refresh-icon.spinning {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.filters-row {
-  margin-bottom: 1.5rem;
-}
-
-.search-box {
-  position: relative;
-  max-width: 400px;
-}
-
-.search-box .search-icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--ui-text-muted);
-  font-size: 1rem;
-  pointer-events: none;
-}
-
-.search-box input {
-  width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.5rem;
-  border-radius: 14px;
-  border: 1px solid var(--ui-border);
-  background: var(--ui-surface);
-  font-size: 0.95rem;
-  color: var(--ui-text-strong);
-  outline: none;
-  transition: all 0.2s;
-}
-
-.search-box input:focus {
-  border-color: var(--ui-focus);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-  background: var(--ui-surface);
-}
-
-/* Loading and Empty States */
-.loading-state, .empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  text-align: center;
-  background: var(--ui-surface);
-  border-radius: 20px;
-  border: 1px solid var(--ui-border-subtle);
-  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.02);
-}
-
-.loading-state .spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid var(--ui-border-subtle);
-  border-top-color: var(--ui-status-info);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+.kpis {
   margin-bottom: 1rem;
 }
 
-.loading-state p {
-  color: var(--ui-text-muted);
-  font-weight: 600;
-  margin: 0;
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+  margin-bottom: 1rem;
 }
 
-.empty-state p {
-  color: var(--ui-text-muted);
-  font-size: 1rem;
-  margin: 0;
+.toolbar .ui-input {
+  flex: 0 1 360px;
 }
 
-/* Attendance Table */
-.attendance-table-wrapper {
-  background: var(--ui-surface);
-  border-radius: 20px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+.sort {
+  box-shadow: none;
+}
+
+.sort button {
+  min-height: 34px;
+  font-size: 0.82rem;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  --t: var(--ui-status-danger);
+  --t-text: var(--ui-fg-red-600);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1.2fr) 120px minmax(80px, 1fr) 56px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
   border: 1px solid var(--ui-border);
-  overflow: hidden;
-}
-
-.attendance-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-}
-
-.attendance-table th {
-  padding: 1rem 1.5rem;
+  border-radius: 14px;
   background: var(--ui-surface-muted);
-  color: var(--ui-text-tertiary);
-  font-weight: 700;
-  font-size: 0.85rem;
+  animation: ui-rise 0.35s var(--ui-ease-out) backwards;
+  animation-delay: calc(min(var(--i, 0), 20) * 30ms);
+}
+
+.row.t-excellent {
+  --t: var(--ui-status-success);
+  --t-text: var(--ui-fg-green-700);
+}
+.row.t-good {
+  --t: var(--ui-status-info);
+  --t-text: var(--ui-fg-blue-700);
+}
+.row.t-average {
+  --t: var(--ui-status-warning);
+  --t-text: var(--ui-fg-amber-700);
+}
+
+.icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+
+.icon.placeholder {
+  display: grid;
+  place-items: center;
+  font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid var(--ui-border);
+  color: var(--ui-on-solid);
+  background: var(--ui-neutral);
 }
 
-.attendance-table td {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--ui-border-subtle);
-  color: var(--ui-text-secondary);
-  vertical-align: middle;
+.who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
-.attendance-table tr:last-child td {
-  border-bottom: none;
-}
-
-.attendance-table tr:hover td {
-  background: var(--ui-surface-muted);
-}
-
-.member-cell .battletag {
-  font-weight: 700;
+.name {
+  overflow: hidden;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--ui-text-strong);
 }
 
-.character-cell {
+.sub {
+  overflow: hidden;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ui-text-muted);
+}
+
+.count {
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ui-text-muted);
+}
+
+.count strong {
+  font-size: 1rem;
+  color: var(--ui-text-strong);
+}
+
+.count small {
+  display: block;
+  font-size: 0.75rem;
+}
+
+.bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--ui-surface-strong);
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--t);
+  animation: grow 0.9s var(--ui-ease-out) backwards;
+  animation-delay: calc(150ms + min(var(--i, 0), 20) * 30ms);
+  transform-origin: left;
+}
+
+.pct {
+  font-size: 1rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--t-text);
+}
+
+.skeletons {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
 }
 
-.character-cell .char-name {
-  font-weight: 800;
+.skeletons span {
+  height: 56px;
+  border-radius: 14px;
 }
 
-.no-char {
-  font-size: 0.9rem;
-  color: var(--ui-text-muted);
-  font-style: italic;
-}
-
-.stats-cell {
-  display: flex;
-  flex-direction: column;
-}
-
-.stats-cell .stats-value {
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: var(--ui-text-strong);
-}
-
-.stats-cell .stats-sub {
-  font-size: 0.75rem;
-  color: var(--ui-text-muted);
-  font-weight: 600;
-}
-
-/* Percentage Badges */
-.percentage-badge {
-  display: inline-block;
-  padding: 6px 12px;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  font-weight: 800;
-  text-align: center;
-}
-
-.percentage-badge.excellent {
-  background: var(--ui-bg-green-100);
-  color: var(--ui-fg-green-700);
-}
-
-.percentage-badge.good {
-  background: var(--ui-bg-blue-100);
-  color: var(--ui-fg-sky-700);
-}
-
-.percentage-badge.average {
-  background: var(--ui-bg-amber-100);
-  color: var(--ui-fg-amber-700);
-}
-
-.percentage-badge.warning {
-  background: var(--ui-bg-red-100);
-  color: var(--ui-fg-red-700);
-}
-
-/* Progress Column */
-.progress-col {
-  width: 250px;
-}
-
-.progress-bar-container {
-  width: 100%;
-  height: 8px;
-  background: var(--ui-surface-strong);
-  border-radius: 9999px;
-  overflow: hidden;
-}
-
-.progress-bar-fill {
-  height: 100%;
-  border-radius: 9999px;
-  transition: width 0.4s ease-out;
-}
-
-.progress-bar-fill.excellent { background: var(--ui-status-success); }
-.progress-bar-fill.good { background: var(--ui-status-info); }
-.progress-bar-fill.average { background: var(--ui-status-warning); }
-.progress-bar-fill.warning { background: var(--ui-status-danger); }
-
-@media (max-width: 768px) {
-  .attendance-header-row {
-    flex-direction: column;
-    align-items: stretch;
+@keyframes grow {
+  from {
+    transform: scaleX(0);
   }
-  .progress-col {
+}
+
+@media (max-width: 640px) {
+  .row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .count {
     display: none;
+  }
+
+  .bar {
+    grid-row: 2;
+    grid-column: 1 / -1;
+  }
+
+  .toolbar .ui-input,
+  .sort {
+    flex: 1 1 100%;
+  }
+
+  .sort button {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row,
+  .bar span {
+    animation: none;
   }
 }

@@ -14,6 +14,7 @@ describe('OptionsComponent', () => {
 
   const stableUser = {
     id: 1,
+    battletag: 'Tester#1234',
     role: 'member',
     subscription_tier: 'free',
     subscription_expires_at: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),

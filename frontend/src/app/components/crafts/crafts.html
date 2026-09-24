@@ -1,165 +1,193 @@
-<div class="crafts-container">
-  <div class="crafts-header">
-    <div class="header-info">
-      <span class="icon">⚒️</span>
-      <div>
-        <h1>{{ i18n.t('crafts.title') }}</h1>
-        <p class="subtitle">{{ i18n.t('crafts.subtitle') }}</p>
+<div class="ui-page">
+  <app-page-header
+    icon="⚒️"
+    tone="teal"
+    [title]="i18n.t('crafts.title')"
+    [subtitle]="i18n.t('crafts.subtitle')"
+  >
+    <dl pageStats class="ui-kpis">
+      <div class="ui-kpi warning" style="--i: 0">
+        <dt>{{ i18n.t('crafts.tabs.pending') }}</dt>
+        <dd>{{ craftService.pendingRequestsCount() }}</dd>
       </div>
-    </div>
-  </div>
-
-  <div class="tabs">
-    <button
-      [class.active]="activeTab() === 'pending_requests'"
-      (click)="activeTab.set('pending_requests')"
-    >
-      {{ i18n.t('crafts.tabs.pending') }}
-      @if (craftService.pendingRequestsCount() > 0) {
-        <span class="badge-count-red">
-          {{ craftService.pendingRequestsCount() }}
-        </span>
-      }
-    </button>
-    <button [class.active]="activeTab() === 'make_request'" (click)="activeTab.set('make_request')">
-      {{ i18n.t('crafts.tabs.request') }}
-    </button>
-  </div>
-
-  <!-- TAB: Pending Requests -->
-  @if (activeTab() === 'pending_requests') {
-    <div class="tab-content">
-      <div class="requests-card">
-        <h2>{{ i18n.t('crafts.pending_title') }}</h2>
-        @if (craftService.pendingRequests().length === 0) {
-          <div class="empty-state">
-            <span class="empty-icon" aria-hidden="true">🎉</span>
-            <p>{{ i18n.t('crafts.empty_state') }}</p>
-          </div>
-        } @else {
-          <div class="table-responsive">
-            <table class="requests-table">
-              <thead>
-                <tr>
-                  <th>{{ i18n.t('crafts.th_item') }}</th>
-                  <th>{{ i18n.t('crafts.th_armor') }}</th>
-                  <th>{{ i18n.t('crafts.th_by') }}</th>
-                  <th>{{ i18n.t('crafts.th_date') }}</th>
-                  <th class="actions-col">{{ i18n.t('crafts.th_action') }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (req of craftService.pendingRequests(); track req) {
-                  <tr class="request-row">
-                    <td>
-                      <div class="slot-cell">
-                        <span class="slot-badge">{{ getSlotLabel(req.slot) }}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span class="armor-badge" [class]="req.armor_type">{{
-                        getArmorTypeLabel(req.armor_type)
-                      }}</span>
-                    </td>
-                    <td>
-                      <div class="user-cell">
-                        <strong class="char-name">{{
-                          req.main_character_name || 'Sans Personnage'
-                        }}</strong>
-                        <span class="btag">{{ req.battletag }}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span class="date">{{ req.created_at | date: 'dd/MM/yyyy HH:mm' }}</span>
-                    </td>
-                    <td class="actions-col">
-                      <label class="complete-checkbox-label">
-                        <input
-                          type="checkbox"
-                          (change)="onCompleteRequest(req)"
-                          class="complete-checkbox"
-                        />
-                        <span class="checkmark"></span>
-                        <span class="label-text">{{ i18n.t('crafts.action_complete') }}</span>
-                      </label>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        }
+      <div class="ui-kpi brand" style="--i: 1">
+        <dt>{{ i18n.t('crafts.stat_mine') }}</dt>
+        <dd>{{ mineCount() }}</dd>
       </div>
-    </div>
-  }
+    </dl>
+  </app-page-header>
 
-  <!-- TAB: Make Request -->
-  @if (activeTab() === 'make_request') {
-    <div class="tab-content">
-      <div class="form-card">
-        <h2>{{ i18n.t('crafts.request_title') }}</h2>
-        <p class="form-help">{{ i18n.t('crafts.request_help') }}</p>
-        <form (submit)="onSubmitRequest()" class="request-form">
-          <div class="form-group">
-            <label for="slot-select">{{ i18n.t('crafts.form.slot') }}</label>
-            <select
-              id="slot-select"
-              [ngModel]="selectedSlot()"
-              (ngModelChange)="onSlotChange($event)"
-              name="slot"
-              class="custom-select"
-              required
-            >
-              <option value="" disabled selected>{{ i18n.t('crafts.form.select_slot') }}</option>
-              @for (s of slots; track s) {
-                <option [value]="s.value">{{ getSlotLabel(s.value) }}</option>
-              }
-            </select>
+  <div class="layout">
+    <!-- Nouvelle demande -->
+    <section class="ui-card request" style="--i: 1" aria-labelledby="request-title">
+      <header class="ui-card-head">
+        <h2 id="request-title">
+          <span class="ui-card-icon" aria-hidden="true">✨</span>
+          {{ i18n.t('crafts.request_title') }}
+        </h2>
+        <p>{{ i18n.t('crafts.request_help') }}</p>
+      </header>
+
+      <form (submit)="$event.preventDefault(); onSubmitRequest()">
+        <fieldset class="picker">
+          <legend class="ui-label">
+            <span class="step">1</span> {{ i18n.t('crafts.form.slot') }}
+          </legend>
+          <div class="slots">
+            @for (s of slots; track s.value; let i = $index) {
+              <button
+                type="button"
+                class="slot"
+                [class.active]="selectedSlot() === s.value"
+                [attr.aria-pressed]="selectedSlot() === s.value"
+                [style.--i]="i"
+                (click)="selectSlot(s.value)"
+              >
+                <span class="slot-emoji" aria-hidden="true">{{ s.emoji }}</span>
+                <span class="slot-label">{{ slotLabel(s.value) }}</span>
+              </button>
+            }
           </div>
-          <div class="form-group">
-            <label for="armor-select">
-              {{
-                selectedSlot() === 'weapon'
-                  ? i18n.t('crafts.form.weapon_type')
-                  : i18n.t('crafts.form.armor')
-              }}
-            </label>
-            <select
-              id="armor-select"
-              [ngModel]="selectedArmorType()"
-              (ngModelChange)="selectedArmorType.set($event)"
-              name="armorType"
-              class="custom-select"
-              required
-            >
-              <option value="" disabled selected>
-                {{
-                  selectedSlot() === 'weapon'
-                    ? i18n.t('crafts.form.select_weapon_type')
-                    : i18n.t('crafts.form.select_armor')
-                }}
-              </option>
-              @if (selectedSlot() !== 'weapon') {
-                @for (t of armorTypes; track t) {
-                  <option [value]="t.value">{{ getArmorTypeLabel(t.value) }}</option>
-                }
+        </fieldset>
+
+        <fieldset class="picker" [disabled]="!selectedSlot()">
+          <legend class="ui-label">
+            <span class="step">2</span>
+            {{
+              selectedSlot() === 'weapon'
+                ? i18n.t('crafts.form.weapon_type')
+                : i18n.t('crafts.form.armor')
+            }}
+          </legend>
+          @if (selectedSlot()) {
+            <div class="types reveal">
+              @for (t of availableTypes(); track t) {
+                <button
+                  type="button"
+                  class="type"
+                  [class]="'type-' + t"
+                  [class.active]="selectedType() === t"
+                  [attr.aria-pressed]="selectedType() === t"
+                  (click)="selectedType.set(t)"
+                >
+                  {{ typeLabel(t) }}
+                </button>
               }
-              @if (selectedSlot() === 'weapon') {
-                @for (w of weaponTypes; track w) {
-                  <option [value]="w.value">{{ getWeaponTypeLabel(w.value) }}</option>
-                }
-              }
-            </select>
-          </div>
+            </div>
+          } @else {
+            <p class="placeholder">{{ i18n.t('crafts.form.select_slot') }}</p>
+          }
+        </fieldset>
+
+        <button
+          type="submit"
+          class="ui-btn primary submit"
+          [class.loading]="isSaving()"
+          [disabled]="isSaving() || !selectedSlot() || !selectedType()"
+        >
+          @if (selectedSlot() && selectedType()) {
+            {{ slotEmoji(selectedSlot()) }} {{ slotLabel(selectedSlot()) }} ·
+            {{ typeLabel(selectedType()) }} —
+          }
+          {{ isSaving() ? i18n.t('crafts.form.submitting') : i18n.t('crafts.form.submit') }}
+        </button>
+      </form>
+    </section>
+
+    <!-- Demandes en attente -->
+    <section class="ui-card list" style="--i: 2" aria-labelledby="pending-title">
+      <header class="ui-card-head">
+        <h2 id="pending-title">
+          <span class="ui-card-icon" aria-hidden="true">📜</span>
+          {{ i18n.t('crafts.pending_title') }}
+        </h2>
+        <div class="ui-tabs scope" role="group" [attr.aria-label]="i18n.t('crafts.pending_title')">
           <button
-            type="submit"
-            class="btn-primary-craft"
-            [disabled]="isSaving() || !selectedSlot() || !selectedArmorType()"
+            type="button"
+            [class.active]="scope() === 'all'"
+            [attr.aria-pressed]="scope() === 'all'"
+            (click)="scope.set('all')"
           >
-            {{ isSaving() ? i18n.t('crafts.form.submitting') : i18n.t('crafts.form.submit') }}
+            {{ i18n.t('crafts.scope_all') }}
           </button>
-        </form>
-      </div>
-    </div>
-  }
+          <button
+            type="button"
+            [class.active]="scope() === 'mine'"
+            [attr.aria-pressed]="scope() === 'mine'"
+            (click)="scope.set('mine')"
+          >
+            {{ i18n.t('crafts.scope_mine') }} <span class="count">{{ mineCount() }}</span>
+          </button>
+        </div>
+      </header>
+
+      @if (typeCounts().length > 1) {
+        <div class="filters" role="group" [attr.aria-label]="i18n.t('crafts.filter_label')">
+          @for (entry of typeCounts(); track entry[0]) {
+            <button
+              type="button"
+              class="filter"
+              [class]="'type-' + entry[0]"
+              [class.active]="typeFilter() === entry[0]"
+              [attr.aria-pressed]="typeFilter() === entry[0]"
+              (click)="toggleTypeFilter(entry[0])"
+            >
+              {{ typeLabel(entry[0]) }} <b>{{ entry[1] }}</b>
+            </button>
+          }
+        </div>
+      }
+
+      @if (!loaded()) {
+        <div class="skeletons" aria-hidden="true">
+          <span class="ui-skeleton"></span>
+          <span class="ui-skeleton"></span>
+          <span class="ui-skeleton"></span>
+        </div>
+      } @else {
+        <ul class="requests">
+          @for (req of requests(); track req.id; let i = $index) {
+            <li class="req" [class.mine]="isMine(req)" [style.--i]="i" animate.leave="ui-leave">
+              <span class="req-emoji" aria-hidden="true">{{ slotEmoji(req.slot) }}</span>
+              <span class="req-main">
+                <span class="req-title">
+                  {{ slotLabel(req.slot) }}
+                  <span class="type-badge" [class]="'type-' + req.armor_type">{{
+                    typeLabel(req.armor_type)
+                  }}</span>
+                </span>
+                <span class="req-meta">
+                  <strong>{{ req.main_character_name || req.battletag }}</strong>
+                  @if (req.main_character_name && req.battletag) {
+                    <span class="btag">{{ req.battletag }}</span>
+                  }
+                  ·
+                  <time [attr.datetime]="req.created_at">{{
+                    req.created_at | date: 'dd/MM HH:mm'
+                  }}</time>
+                </span>
+              </span>
+              <button
+                type="button"
+                class="ui-btn success sm"
+                (click)="onCompleteRequest(req)"
+                [attr.aria-label]="i18n.t('crafts.action_complete') + ' – ' + slotLabel(req.slot)"
+              >
+                ✓ {{ i18n.t('crafts.action_complete') }}
+              </button>
+            </li>
+          } @empty {
+            <li class="ui-empty">
+              <span class="emoji" aria-hidden="true">🎉</span>
+              <strong>{{
+                craftService.pendingRequestsCount()
+                  ? i18n.t('crafts.filter_empty')
+                  : i18n.t('crafts.empty_state')
+              }}</strong>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
 </div>

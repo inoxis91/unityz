@@ -2,28 +2,47 @@
   display: block;
 }
 
-.roster-manager {
-  padding: 1rem 0;
-}
-
-/* Header */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+/* En-tête */
+.board-head {
   margin-bottom: 1.5rem;
 }
 
-.header h2 {
-  margin: 0;
+.board-head .ui-card-head {
+  margin-bottom: 0;
 }
 
-.subtitle {
-  margin: 0.25rem 0 0;
+.total {
+  min-width: 26px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-align: center;
+  color: var(--ui-badge-fg);
+  background: var(--ui-badge-bg);
+}
+
+.quota {
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.quota-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.quota-text p {
+  margin: 2px 0 0;
+}
+
+.modal-emoji {
+  font-size: 1.3rem;
+}
+
+.hint {
+  font-size: 0.78rem;
   color: var(--ui-text-muted);
-  font-size: 0.9rem;
 }
 
 /* Layout */
@@ -36,9 +55,10 @@
 
 /* Pool */
 .character-pool {
-  background: var(--ui-surface-muted);
-  border: 1px solid var(--ui-border);
-  border-radius: 10px;
+  background: var(--ui-bg-amber-50);
+  border: 2px dashed var(--ui-bd-amber-300);
+  border-radius: 20px;
+  animation: ui-rise 0.45s var(--ui-ease-out) 0.05s backwards;
   padding: 1rem;
   position: sticky;
   top: 1rem;
@@ -136,11 +156,24 @@
 
 .roster-card {
   container-type: inline-size;
-  background: var(--ui-surface);
+  background:
+    radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--ui-brand) 7%, transparent), transparent 55%),
+    var(--ui-surface);
   border: 1px solid var(--ui-border);
-  border-radius: 10px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  border-radius: 20px;
+  box-shadow: var(--ui-shadow-sm);
   overflow: hidden;
+  animation: ui-rise 0.45s var(--ui-ease-out) backwards;
+  animation-delay: calc(100ms + var(--i, 0) * 60ms);
+  transition: box-shadow 0.2s ease;
+}
+
+.roster-card:hover {
+  box-shadow: var(--ui-shadow-md);
+}
+
+.roster-card.ui-leave {
+  animation: ui-leave 0.25s ease-in forwards;
 }
 
 .roster-header {
@@ -515,128 +548,6 @@
   }
 }
 
-/* Modal */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 1rem;
-  z-index: 1000;
-}
-
-.modal {
-  background: var(--ui-surface);
-  padding: 1.75rem;
-  border-radius: 12px;
-  width: 100%;
-  max-width: 500px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-}
-
-.form-group {
-  margin-bottom: 1.25rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-}
-
-.form-group input,
-.form-group textarea {
-  width: 100%;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid var(--ui-border);
-  border-radius: 6px;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 1.5rem;
-}
-
-.btn-primary {
-  background: var(--ui-brand);
-  color: var(--ui-on-solid);
-  border: none;
-  padding: 0.65rem 1.25rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: var(--ui-surface-subtle);
-  color: var(--ui-text-secondary);
-  border: none;
-  padding: 0.65rem 1.25rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-/* Quota locked notice banner */
-.quota-locked-notice {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-  background: rgba(245, 158, 11, 0.08);
-  border: 1px solid rgba(245, 158, 11, 0.2);
-  border-radius: 8px;
-  padding: 0.85rem 1.25rem;
-  margin-bottom: 1.5rem;
-}
-
-.notice-icon {
-  font-size: 1.5rem;
-}
-
-.notice-text {
-  flex: 1 1 240px;
-}
-
-.notice-text strong {
-  font-size: 0.95rem;
-  color: var(--ui-fg-amber-700);
-  display: block;
-  margin-bottom: 0.2rem;
-}
-
-.notice-text p {
-  font-size: 0.85rem;
-  color: var(--ui-text-muted);
-  margin: 0;
-  line-height: 1.45;
-}
-
-.btn-upgrade-mini {
-  background: var(--ui-warning);
-  color: var(--ui-on-warning);
-  border: none;
-  font-weight: 700;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.btn-upgrade-mini:hover {
-  background: var(--ui-warning-hover);
-}
-
 /* Context Menu */
 .context-menu {
   position: fixed;
@@ -730,4 +641,11 @@
 .context-menu-list li:hover {
   background-color: var(--ui-bg-blue-50);
   color: var(--ui-brand);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .character-pool,
+  .roster-card {
+    animation: none;
+  }
 }

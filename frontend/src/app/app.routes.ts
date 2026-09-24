@@ -1,81 +1,85 @@
 import { Routes } from '@angular/router';
-import { LoginComponent } from './components/login/login';
-import { LandingComponent } from './components/landing/landing';
-import { SelectGuildComponent } from './components/select-guild/select-guild';
-import { PaymentComponent } from './components/payment/payment';
-import { DashboardComponent } from './components/dashboard/dashboard';
-import { OptionsComponent } from './components/options/options';
-import { CalendarComponent } from './components/calendar/calendar';
-import { AdminComponent } from './components/admin/admin';
-import { EventDetailsComponent } from './components/event-details/event-details';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
-import { FeesComponent } from './components/fees/fees';
-import { CraftsComponent } from './components/crafts/crafts';
-import { TermsOfServiceComponent } from './components/legal/terms';
-import { PrivacyPolicyComponent } from './components/legal/privacy';
-import { AbsencesComponent } from './components/absences/absences';
-import { GuildCharactersComponent } from './components/guild-characters/guild-characters';
 
+// Chaque écran est un chunk chargé à la demande : le bundle initial ne contient que le shell.
 export const routes: Routes = [
-  { path: '', component: LandingComponent },
-  { path: 'login', component: LoginComponent },
-  { path: 'terms', component: TermsOfServiceComponent },
-  { path: 'privacy', component: PrivacyPolicyComponent },
-  { 
-    path: 'select-guild', 
-    component: SelectGuildComponent, 
-    canActivate: [authGuard] 
+  {
+    path: '',
+    loadComponent: () => import('./components/landing/landing').then((m) => m.LandingComponent),
   },
-  { 
-    path: 'payment', 
-    component: PaymentComponent, 
-    canActivate: [authGuard] 
+  {
+    path: 'login',
+    loadComponent: () => import('./components/login/login').then((m) => m.LoginComponent),
   },
-  { 
-    path: 'dashboard', 
-    component: DashboardComponent, 
-    canActivate: [authGuard] 
+  {
+    path: 'terms',
+    loadComponent: () => import('./components/legal/terms').then((m) => m.TermsOfServiceComponent),
   },
-  { 
-    path: 'guild-characters', 
-    component: GuildCharactersComponent, 
-    canActivate: [authGuard] 
+  {
+    path: 'privacy',
+    loadComponent: () => import('./components/legal/privacy').then((m) => m.PrivacyPolicyComponent),
   },
-  { 
-    path: 'options', 
-    component: OptionsComponent, 
-    canActivate: [authGuard] 
+  {
+    path: 'select-guild',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./components/select-guild/select-guild').then((m) => m.SelectGuildComponent),
   },
-  { 
-    path: 'absences', 
-    component: AbsencesComponent, 
-    canActivate: [authGuard] 
+  {
+    path: 'payment',
+    canActivate: [authGuard],
+    loadComponent: () => import('./components/payment/payment').then((m) => m.PaymentComponent),
   },
-  { 
-    path: 'calendar', 
-    component: CalendarComponent, 
-    canActivate: [authGuard] 
+  {
+    path: 'dashboard',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./components/dashboard/dashboard').then((m) => m.DashboardComponent),
   },
-  { 
-    path: 'fees', 
-    component: FeesComponent, 
-    canActivate: [authGuard] 
+  {
+    path: 'guild-characters',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./components/guild-characters/guild-characters').then(
+        (m) => m.GuildCharactersComponent,
+      ),
   },
-  { 
-    path: 'crafts', 
-    component: CraftsComponent, 
-    canActivate: [authGuard] 
+  {
+    path: 'options',
+    canActivate: [authGuard],
+    loadComponent: () => import('./components/options/options').then((m) => m.OptionsComponent),
   },
-  { 
-    path: 'events/:id', 
-    component: EventDetailsComponent, 
-    canActivate: [authGuard] 
+  {
+    path: 'absences',
+    canActivate: [authGuard],
+    loadComponent: () => import('./components/absences/absences').then((m) => m.AbsencesComponent),
   },
-  { 
-    path: 'admin', 
-    component: AdminComponent, 
-    canActivate: [authGuard, adminGuard] 
+  {
+    path: 'calendar',
+    canActivate: [authGuard],
+    loadComponent: () => import('./components/calendar/calendar').then((m) => m.CalendarComponent),
   },
-  { path: '**', redirectTo: '' }
+  {
+    path: 'fees',
+    canActivate: [authGuard],
+    loadComponent: () => import('./components/fees/fees').then((m) => m.FeesComponent),
+  },
+  {
+    path: 'crafts',
+    canActivate: [authGuard],
+    loadComponent: () => import('./components/crafts/crafts').then((m) => m.CraftsComponent),
+  },
+  {
+    path: 'events/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./components/event-details/event-details').then((m) => m.EventDetailsComponent),
+  },
+  {
+    path: 'admin',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () => import('./components/admin/admin').then((m) => m.AdminComponent),
+  },
+  { path: '**', redirectTo: '' },
 ];

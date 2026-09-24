@@ -1,4 +1,12 @@
-import { Component, OnInit, signal, inject, computed, HostListener } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  HostListener,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 
 import { NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -10,28 +18,33 @@ import { ConfirmService } from '../../../services/confirm';
 import { ToastService } from '../../../services/toast';
 import { AuthService } from '../../../services/auth';
 import { I18nService } from '../../../services/i18n';
+import { limitsFor } from '../../../constants/tiers';
 
 type RoleBuckets = Record<RosterRole, Character[]>;
+
+interface RosterForm {
+  id?: string;
+  name: string;
+  description: string;
+  weight: number;
+}
 
 const CONTEXT_MENU_WIDTH = 230;
 const CONTEXT_MENU_MAX_HEIGHT = 340;
 
 @Component({
   selector: 'app-admin-rosters',
-  standalone: true,
   imports: [FormsModule, DragDropModule, RouterModule, NgTemplateOutlet],
   templateUrl: './admin-rosters.html',
   styleUrl: './admin-rosters.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminRostersComponent implements OnInit {
   readonly roles: RosterRole[] = ['tank', 'heal', 'dps'];
 
-  showCreateModal = signal(false);
-  newRoster = { name: '', description: '', weight: 1 };
-
-  // Modal for editing
-  showEditModal = signal(false);
-  editingRoster: Roster | null = null;
+  /** Formulaire de création (sans id) ou de modification ; null = fermé. */
+  readonly rosterForm = signal<RosterForm | null>(null);
+  readonly savingRoster = signal(false);
 
   // Context Menu state
   contextMenuVisible = signal(false);
@@ -45,8 +58,9 @@ export class AdminRostersComponent implements OnInit {
 
   public authService = inject(AuthService);
   public i18n = inject(I18nService);
-  isPro = computed(() => this.authService.currentUser()?.subscription_tier === 'pro');
-  limitReached = computed(() => !this.isPro() && this.rosterService.rosters().length >= 2);
+  /** Quota de rosters de l'offre (vérifié aussi côté serveur). */
+  rosterLimit = computed(() => limitsFor(this.authService.currentUser()?.subscription_tier).rosters);
+  limitReached = computed(() => this.rosterService.rosters().length >= this.rosterLimit());
 
   filteredUnassigned = computed(() => {
     const search = this.poolSearch().trim().toLowerCase();
@@ -135,38 +149,66 @@ export class AdminRostersComponent implements OnInit {
     });
   }
 
-  onCreateRoster() {
-    if (!this.newRoster.name) return;
-    this.rosterService.createRoster(this.newRoster).subscribe({
-      next: () => {
-        this.toast.success(this.i18n.t('admin.rosters.toast_create_success'));
-        this.closeModal();
-      },
-      error: () => this.toast.error(this.i18n.t('admin.rosters.toast_create_error')),
+  openCreateModal() {
+    if (this.limitReached()) return;
+    const nextWeight = Math.max(0, ...this.rosterService.rosters().map((r) => r.weight)) + 1;
+    this.rosterForm.set({ name: '', description: '', weight: nextWeight });
+  }
+
+  openEditModal(roster: Roster) {
+    this.rosterForm.set({
+      id: roster.id,
+      name: roster.name,
+      description: roster.description ?? '',
+      weight: roster.weight,
     });
   }
 
-  onUpdateRoster() {
-    if (!this.editingRoster || !this.editingRoster.name) return;
-    this.rosterService
-      .updateRoster(this.editingRoster.id, {
-        name: this.editingRoster.name,
-        description: this.editingRoster.description,
-        weight: this.editingRoster.weight,
-      })
-      .subscribe({
-        next: () => {
-          this.toast.success(this.i18n.t('admin.rosters.toast_update_success'));
-          this.closeEditModal();
-        },
-        error: () => this.toast.error(this.i18n.t('admin.rosters.toast_update_error')),
-      });
+  closeRosterForm() {
+    this.rosterForm.set(null);
+    this.savingRoster.set(false);
+  }
+
+  submitRosterForm() {
+    const form = this.rosterForm();
+    if (!form || !form.name.trim() || this.savingRoster()) return;
+    const body = {
+      name: form.name.trim(),
+      description: form.description,
+      weight: Number(form.weight) || 1,
+    };
+    this.savingRoster.set(true);
+    const request = form.id
+      ? this.rosterService.updateRoster(form.id, body)
+      : this.rosterService.createRoster(body);
+    request.subscribe({
+      next: () => {
+        this.toast.success(
+          this.i18n.t(
+            form.id ? 'admin.rosters.toast_update_success' : 'admin.rosters.toast_create_success',
+          ),
+        );
+        this.closeRosterForm();
+      },
+      error: (err) => {
+        this.savingRoster.set(false);
+        this.toast.error(
+          err?.error?.message ||
+            this.i18n.t(
+              form.id ? 'admin.rosters.toast_update_error' : 'admin.rosters.toast_create_error',
+            ),
+        );
+      },
+    });
   }
 
   async onDeleteRoster(id: string) {
     const ok = await this.confirm.ask(
       this.i18n.t('admin.rosters.confirm_delete_title'),
       this.i18n.t('admin.rosters.confirm_delete_msg'),
+      undefined,
+      undefined,
+      true,
     );
 
     if (ok) {
@@ -175,21 +217,6 @@ export class AdminRostersComponent implements OnInit {
         error: () => this.toast.error(this.i18n.t('admin.rosters.toast_delete_error')),
       });
     }
-  }
-
-  openEditModal(roster: Roster) {
-    this.editingRoster = { ...roster };
-    this.showEditModal.set(true);
-  }
-
-  closeEditModal() {
-    this.showEditModal.set(false);
-    this.editingRoster = null;
-  }
-
-  closeModal() {
-    this.showCreateModal.set(false);
-    this.newRoster = { name: '', description: '', weight: 1 };
   }
 
   getClassCategory(className: string | undefined): string {
@@ -218,11 +245,14 @@ export class AdminRostersComponent implements OnInit {
   }
 
   @HostListener('document:click')
-  @HostListener('document:keydown.escape')
   onDocumentClick() {
-    if (this.contextMenuVisible()) {
-      this.contextMenuVisible.set(false);
-    }
+    if (this.contextMenuVisible()) this.contextMenuVisible.set(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape() {
+    if (this.contextMenuVisible()) this.contextMenuVisible.set(false);
+    else if (this.rosterForm()) this.closeRosterForm();
   }
 
   moveToRoster(targetRosterId: string | null) {

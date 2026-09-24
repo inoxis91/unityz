@@ -1,103 +1,111 @@
-<div class="admin-attendance-container">
-  <div class="attendance-header-row">
-    <div>
-      <h2>{{ i18n.t('admin.attendance.title') }}</h2>
-      <p class="subtitle">{{ i18n.t('admin.attendance.subtitle') }}</p>
-    </div>
-    <button class="btn-refresh" (click)="loadAttendance()" [disabled]="isLoading()">
-      <span class="refresh-icon" [class.spinning]="isLoading()">🔄</span>
-      {{ i18n.t('admin.attendance.btn_refresh') }}
+<section class="ui-card" aria-labelledby="att-title">
+  <header class="ui-card-head">
+    <h2 id="att-title">
+      <span class="ui-card-icon" aria-hidden="true">📈</span>
+      {{ i18n.t('admin.attendance.title') }}
+    </h2>
+    <button
+      type="button"
+      class="ui-btn ghost sm"
+      [class.loading]="isLoading()"
+      [disabled]="isLoading()"
+      (click)="loadAttendance()"
+    >
+      ↻ {{ i18n.t('admin.attendance.btn_refresh') }}
     </button>
-  </div>
+    <p>{{ i18n.t('admin.attendance.subtitle') }}</p>
+  </header>
 
-  <!-- Search and Stats row -->
-  <div class="filters-row">
-    <div class="search-box">
-      <span class="search-icon">🔍</span>
-      <input
-        type="text"
-        [placeholder]="i18n.t('admin.attendance.search_placeholder')"
-        [ngModel]="searchTerm()"
-        (ngModelChange)="searchTerm.set($event)"
-      />
+  <dl class="ui-kpis kpis">
+    <div class="ui-kpi brand" style="--i: 0">
+      <dt>{{ i18n.t('admin.attendance.stat_average') }}</dt>
+      <dd>{{ stats().average ?? '—' }}<small>%</small></dd>
+    </div>
+    <div class="ui-kpi success" style="--i: 1">
+      <dt>{{ i18n.t('admin.attendance.stat_assiduous') }}</dt>
+      <dd>{{ stats().assiduous }}</dd>
+    </div>
+    <div class="ui-kpi" [class.danger]="stats().atRisk > 0" style="--i: 2">
+      <dt>{{ i18n.t('admin.attendance.stat_at_risk') }}</dt>
+      <dd>{{ stats().atRisk }}</dd>
+    </div>
+  </dl>
+
+  <div class="toolbar">
+    <input
+      type="search"
+      class="ui-input"
+      [value]="searchTerm()"
+      (input)="searchTerm.set($any($event.target).value)"
+      [placeholder]="i18n.t('admin.attendance.search_placeholder')"
+      [attr.aria-label]="i18n.t('admin.attendance.search_placeholder')"
+    />
+    <div class="ui-tabs sort" role="group" [attr.aria-label]="i18n.t('admin.attendance.sort')">
+      <button
+        type="button"
+        [class.active]="sortKey() === 'rate'"
+        [attr.aria-pressed]="sortKey() === 'rate'"
+        (click)="sortKey.set('rate')"
+      >
+        {{ i18n.t('admin.attendance.th_attendance_rate') }}
+      </button>
+      <button
+        type="button"
+        [class.active]="sortKey() === 'name'"
+        [attr.aria-pressed]="sortKey() === 'name'"
+        (click)="sortKey.set('name')"
+      >
+        {{ i18n.t('admin.attendance.th_member') }}
+      </button>
     </div>
   </div>
 
-  <!-- Loading State -->
-  @if (isLoading()) {
-    <div class="loading-state">
-      <div class="spinner"></div>
-      <p>{{ i18n.t('admin.attendance.loading') }}</p>
+  @if (isLoading() && !attendanceList().length) {
+    <div class="skeletons" aria-hidden="true">
+      <span class="ui-skeleton"></span><span class="ui-skeleton"></span
+      ><span class="ui-skeleton"></span>
     </div>
-  }
-
-  <!-- Empty State -->
-  @if (!isLoading() && getFilteredList().length === 0) {
-    <div class="empty-state">
-      <p>{{ i18n.t('admin.attendance.empty_state') }}</p>
-    </div>
-  }
-
-  <!-- Attendance Table -->
-  @if (!isLoading() && getFilteredList().length > 0) {
-    <div class="attendance-table-wrapper">
-      <table class="attendance-table">
-        <thead>
-          <tr>
-            <th>{{ i18n.t('admin.attendance.th_member') }}</th>
-            <th>{{ i18n.t('admin.attendance.th_main_char') }}</th>
-            <th>{{ i18n.t('admin.attendance.th_events_attended') }}</th>
-            <th>{{ i18n.t('admin.attendance.th_attendance_rate') }}</th>
-            <th class="progress-col">{{ i18n.t('admin.attendance.th_progress') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of getFilteredList(); track item) {
-            <tr>
-              <td>
-                <div class="member-cell">
-                  <span class="battletag">{{ item.battletag }}</span>
-                </div>
-              </td>
-              <td>
-                @if (item.main_character_name) {
-                  <div class="character-cell">
-                    <span
-                      class="char-name"
-                      [class]="'class-' + getClassCategory(item.main_character_class)"
-                    >
-                      {{ item.main_character_name }}
-                    </span>
-                  </div>
-                }
-                @if (!item.main_character_name) {
-                  <span class="no-char">{{ i18n.t('admin.attendance.no_character') }}</span>
-                }
-              </td>
-              <td>
-                <div class="stats-cell">
-                  <span class="stats-value">{{ item.attended }} / {{ item.total_eligible }}</span>
-                  <span class="stats-sub">{{ i18n.t('admin.attendance.events_label') }}</span>
-                </div>
-              </td>
-              <td>
-                <span class="percentage-badge" [class]="getAttendanceClass(item.percentage)">
-                  {{ item.percentage }}%
-                </span>
-              </td>
-              <td class="progress-col">
-                <div class="progress-bar-container">
-                  <div
-                    class="progress-bar-fill"
-                    [class]="getAttendanceClass(item.percentage)"
-                    [style.width]="item.percentage + '%'"
-                  ></div>
-                </div>
-              </td>
-            </tr>
+  } @else {
+    <ul class="rows">
+      @for (m of filtered(); track m.battletag; let i = $index) {
+        <li class="row" [class]="'t-' + tier(m.percentage)" [style.--i]="i">
+          @if (m.main_character_name) {
+            <img
+              class="icon"
+              [src]="classIcon(m.main_character_class)"
+              alt=""
+              width="36"
+              height="36"
+            />
+          } @else {
+            <span class="icon placeholder" aria-hidden="true">{{ m.battletag.charAt(0) }}</span>
           }
-        </tbody>
-      </table>
-    </div>
+          <span class="who">
+            <span class="name">{{ m.battletag.split('#')[0] }}</span>
+            <span class="sub">
+              @if (m.main_character_name) {
+                <span [class]="'class-' + classId(m.main_character_class)">{{
+                  m.main_character_name
+                }}</span>
+              } @else {
+                {{ i18n.t('admin.attendance.no_character') }}
+              }
+            </span>
+          </span>
+          <span class="count">
+            <strong>{{ m.attended }}</strong
+            >/{{ m.total_eligible }}
+            <small>{{ i18n.t('admin.attendance.events_label') }}</small>
+          </span>
+          <span class="bar" aria-hidden="true"><span [style.width.%]="m.percentage"></span></span>
+          <span class="pct">{{ m.percentage }}%</span>
+        </li>
+      } @empty {
+        <li class="ui-empty">
+          <span class="emoji" aria-hidden="true">📭</span>
+          <strong>{{ i18n.t('admin.attendance.empty_state') }}</strong>
+        </li>
+      }
+    </ul>
   }
-</div>
+</section>

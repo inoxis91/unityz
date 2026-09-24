@@ -1,18 +1,22 @@
 <nav class="navbar" [class.menu-open]="isMenuOpen()">
   <div class="navbar-container">
-    <div
+    <a
       class="navbar-brand"
       [routerLink]="authService.currentUser() ? '/dashboard' : '/'"
       (click)="closeMenu()"
     >
-      <img src="favicon.ico" class="navbar-logo" alt="Logo" />
-      <span>{{
-        authService.currentGuild() ? authService.currentGuild().name : 'Guild Manager'
-      }}</span>
-    </div>
+      <img src="favicon.ico" class="navbar-logo" alt="" width="32" height="32" />
+      <span>{{ authService.currentGuild()?.name || 'Guild Manager' }}</span>
+    </a>
 
     <!-- Burger Menu Button -->
-    <button class="burger-btn" (click)="toggleMenu()" [attr.aria-expanded]="isMenuOpen()">
+    <button
+      type="button"
+      class="burger-btn"
+      (click)="toggleMenu()"
+      [attr.aria-expanded]="isMenuOpen()"
+      [attr.aria-label]="i18n.t('nav.menu')"
+    >
       <span class="bar"></span>
       <span class="bar"></span>
       <span class="bar"></span>
@@ -117,7 +121,13 @@
           </a>
         }
         <div class="profile-dropdown" [class.open]="isProfileOpen()">
-          <button class="profile-toggle" (click)="toggleProfile()">
+          <button
+            type="button"
+            class="profile-toggle"
+            (click)="toggleProfile()"
+            aria-haspopup="menu"
+            [attr.aria-expanded]="isProfileOpen()"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"

@@ -99,7 +99,7 @@ test('readable /dashboard › Warcraft Logs (all tabs)', async ({ page }) => {
 
 test('readable /options (all tabs)', async ({ page }) => {
   await open(page, '/options');
-  await checkEachTab(page, '.options-tabs', '/options');
+  await checkEachTab(page, 'app-options app-page-header .ui-tabs', '/options');
 });
 
 test('readable /admin (all tabs)', async ({ page }) => {

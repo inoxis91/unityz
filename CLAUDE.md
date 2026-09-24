@@ -46,8 +46,8 @@ There are no backend tests and no backend linter. CI (`.github/workflows/ci.yml`
   - `requireActiveGuild`: 403 `NO_ACTIVE_GUILD`
   - `requirePaidGuild`: 402 `GUILD_UNPAID` when `guilds.subscription_expires_at` has passed
   - `hasRole([...])` / `isAdmin`, `canManageRosters`, `canManageEvents`, `canManageFees`. `admin` passes every role check.
-- **Roles**: `users.role` ∈ `admin | raid_leader | treasurer | event_manager | member` is a single column per user (not per guild). `UserService.fetchGuildCharacters` sets `admin` automatically when the user owns the guild master character and demotes a former admin otherwise. `users.rank` is the in-game guild rank (the frontend treats ≤2 as GM/officer).
-- **Subscriptions**: `guilds.subscription_tier` (`none|free|medium|pro`) and `subscription_expires_at`, managed by `routes/stripe.ts`. The webhook verifies signatures against `req.rawBody`, which is captured by the `express.json({ verify })` hook in `index.ts`; keep that hook. Tier limits are enforced inline in routes (e.g. max 2 rosters below `pro`).
+- **Roles**: per guild, in `guild_members (user_id, guild_id, role, rank)`; `role` ∈ `admin | raid_leader | treasurer | event_manager | member`, `rank` is the in-game guild rank (the frontend treats ≤2 as GM/officer; Stripe routes require it). `req.user.role` / `req.user.rank` and `/api/users/me` are resolved for the active guild (`UserService.getWithActiveGuildRole`, used by passport `deserializeUser`); the legacy `users.role` / `users.rank` columns are no longer read. `UserService.fetchGuildCharacters` upserts the membership, sets `admin` when the user owns the guild master character and demotes a former admin otherwise. Removing a member (`DELETE /users/:id`) only removes them from the active guild.
+- **Subscriptions**: `guilds.subscription_tier` (`none|free|medium|pro`) and `subscription_expires_at`, managed by `routes/stripe.ts`. The webhook verifies signatures against `req.rawBody`, which is captured by the `express.json({ verify })` hook in `index.ts`; keep that hook. Tier quotas (free: 1 roster / 3 events per month, medium: 2 / 6, pro: unlimited) live in `services/tierLimits.ts`, are checked in the same transaction as the insert with the guild row locked, and are mirrored in `frontend/src/app/constants/tiers.ts`.
 - **Side channels**: `lib/discord.ts` (discord.js bot; per-guild channel IDs live on the `guilds` row), `lib/cron.ts` (node-cron, Europe/Paris: daily event reminders, fee reminders on the 15th and last 5 days of the month), nodemailer for support (`routes/support.ts`), Warcraft Logs v2 GraphQL (client credentials). The raid event "Logs & Analyses" tab (`GET /events/:id/logs-analysis`) is built by `services/wclReportService.ts` (report code from `events.logs`, batched per-fight tables, consumables detected from the report's ability icons except the season's combat potion IDs, cached per report+locale) and scored by `services/raidMvpScoring.ts` (pure MVP formula: role-relative criteria and weights, wipe-cascade death rule; the frontend explains it, so keep `logs.criterion.*` i18n in sync). Character performance (dashboard) lives in `services/wclCharacterService.ts`: the current season's raid and Mythic+ zones are detected from WCL `worldData` (no zone IDs to bump each patch; `FALLBACK_SEASON` is only used if detection fails or keys are missing), boss/dungeon names come localized from WCL (`fr.` subdomain), results are cached in memory (`lib/ttlCache.ts`). All WCL calls go through `lib/wclClient.ts`, which maps failures to `HttpError` 502 `WCL_UNAVAILABLE` (404 `WCL_NOT_FOUND` for a missing/private resource) so a WCL 401 is never mistaken for an expired Blizzard token. Every integration no-ops with a warning when its env vars are missing. See `backend/.env.example`; Stripe also needs `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET`.
 - **Discord i18n**: bot messages go through `t()` in `backend/src/lib/i18n.ts` (fr/en, keyed by `guilds.discord_locale`).
 
@@ -61,8 +61,37 @@ There are no backend tests and no backend linter. CI (`.github/workflows/ci.yml`
 - WoW domain constants (classes, specs, icons) live in `constants/wow.ts`; class icons are in `public/assets/icons/class/`.
 - Theming: `ThemeService` sets `<html data-theme="light|dark">` (explicit choice in localStorage, otherwise the OS preference; `index.html` applies it before first paint). All colors in `src/app/**/*.css` must come from the tokens in `src/styles.css` (`--ui-*`, `--color-<class>*`, `--wcl-*`); see `docs/design-tokens.md`. Landing, login, select-guild, payment, navbar and the support widget are dark by design and exempt.
 - Component styles are emulated (no `ViewEncapsulation.None`): shared UI goes into its own component (e.g. `event-details/raid-buffs`) rather than leaking global selectors.
+- Shared UI kit: buttons, cards, tabs, fields, badges, KPI tiles, empty/loading states and modals are global `.ui-*` classes in `src/styles.css`, and every connected page starts with `<app-page-header>` (`shared/ui/page-header`). See the "UI kit" section of `docs/design-tokens.md`. Routes are lazy (`loadComponent`) and admin tabs are `@defer`red, so keep new screens out of the initial bundle.
 
 ## Conventions
 
 - Commit messages use Conventional Commits with a scope, e.g. `fix(composition): ...`, `style(dashboard): ...`.
 - Existing code comments and logs are a mix of French and English; logs are prefixed with a `[Tag]`, e.g. `[Auth]` or `[Cron]`.
+
+## Quality bar for every change
+
+These rules apply to every task, not only when asked.
+
+### UI (any screen or component touched)
+
+- **Polished design**: the screen must look like a finished product, not a form. Follow the patterns of the most recent reworks (`dashboard/parses`, `event-details/raid-lineup`, `event-details/mplus-groups`): cards with `--ui-surface` and a subtle radial gradient, clear hierarchy (title, KPI tiles, actions), useful empty states, badges and icons (`assets/icons/`), consistent 12–22px radii.
+- **Light and dark themes**: colors only from the tokens in `src/styles.css` (see `docs/design-tokens.md`). Never use `--ui-shade-rgb` / `--ui-highlight-rgb` for shadows (they flip in dark mode): use `rgba(15, 23, 42, x)` like the existing components. `npm run lint:css` must pass.
+- **Responsive**: works from 360px to desktop, no horizontal scroll. Breakpoints used in the app: 1100px, 820px, 640px. On mobile: stacked layout, full-width buttons in a grid, modals become bottom sheets, and drag & drop needs a tap alternative (`cdkDragStartDelay` touch + action sheet).
+- **Animations for dynamism**: staggered entrance (`animation-delay: calc(var(--i) * 50ms)`), hover lift, pop on status badges, transitions on bars and counters, `animate.leave` for removals. Always add a `@media (prefers-reduced-motion: reduce)` block that disables them. When a class toggles an `animation`, put it on an inner element, not the host that already has an entrance animation (it would replay).
+- **Accessibility**: `:focus-visible` outlines, `aria-label` on icon buttons, `aria-pressed` on toggles, Escape closes modals, cards operable with Enter/Space.
+- **UX**: optimistic updates with rollback + toast on error (see `raid-lineup` / `mplus-groups` `commit()`), no action that needs a page refresh to show its result, confirmation (`ConfirmService`) before destructive actions. Look for relevant features to add and propose them.
+
+### Code quality
+
+- Angular: standalone components, `input()` / `output()` / `computed()` / `linkedSignal()`, `ChangeDetectionStrategy.OnPush`, never mutate an `@Input` object. Pure logic (calculations, formatting) goes into a `*-utils.ts` file with its own spec. Split large screens into subcomponents, and use `@defer` for heavy screens that are not visible on load.
+- Backend: every query on a guild's data is scoped by `req.user.active_guild_id` (check this on the routes you touch and report the ones that aren't), Zod validation on params/body, `HttpError` with an explicit `code`, and `withTransaction` (`lib/db.ts`) + `FOR UPDATE` when an invariant spans several rows.
+- i18n keys in **both** locales, remove the keys that become unused, no dead code left behind.
+- Before finishing: `npm test`, `npm run lint:css`, `npx prettier --write` on the touched files (only the ones that were already clean, to avoid noise), `npx tsc --noEmit` in `backend/`, `npm run build` (budgets). Add or update unit tests, and the Playwright axe suite (`e2e/`) when a new screen or state is added.
+
+### Visual verification with the Chrome extension (mandatory for UI changes)
+
+- The stack is usually already running (backend :3000 via `npm run dev`, frontend :4200, Postgres :5433). Log in with the dev mock login on `/login` ("Connexion rapide", profile "GM - Guilde Pro" = `mock_user_6`, admin of the Pro guild), then finish `/select-guild` if asked. A backend restart drops the session.
+- Create test data through the app's API (`fetch` with `credentials: 'include'` from the page), not directly in the database.
+- Check the real screen: initial render, every interaction (clicks, drag & drop, modals, errors), light **and** dark themes (`document.documentElement.setAttribute('data-theme', ...)`), and mobile. Resizing the window has no effect: to test mobile, render the page in a same-origin `<iframe width=390>`.
+- Wait for animations to finish before judging a screenshot (the first frames are semi-transparent). Screenshots are downscaled: compute click coordinates from `getBoundingClientRect()` × (screenshot width / `innerWidth`). `ng serve` live reload wipes any state injected into the page.
+- If screenshots keep timing out on a tab, open a new tab rather than retrying.

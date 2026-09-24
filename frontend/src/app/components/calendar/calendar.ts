@@ -1,221 +1,178 @@
-import { Component, OnInit, signal, computed, HostListener, effect, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
 import { FullCalendarModule } from '@fullcalendar/angular';
-import { CalendarOptions, EventClickArg, DateSelectArg } from '@fullcalendar/core';
+import {
+  CalendarOptions,
+  DateSelectArg,
+  DayCellMountArg,
+  EventClickArg,
+  EventContentArg,
+  EventInput,
+  EventMountArg,
+} from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import { CalendarService, CalendarEvent, Signup } from '../../services/calendar';
+import { forkJoin } from 'rxjs';
+import { CalendarEvent, CalendarService, Signup } from '../../services/calendar';
 import { AuthService } from '../../services/auth';
-import { CharacterService } from '../../services/character';
 import { RosterService } from '../../services/roster';
 import { ToastService } from '../../services/toast';
 import { ConfirmService } from '../../services/confirm';
-import { FormsModule } from '@angular/forms';
-import { RouterModule, Router } from '@angular/router';
 import { I18nService } from '../../services/i18n';
-import { forkJoin } from 'rxjs';
 import { escapeHtml } from '../../utils/escape-html';
+import { eventTypeKey } from '../../utils/event-type';
+import { limitsFor } from '../../constants/tiers';
+import { PageHeaderComponent } from '../../shared/ui/page-header/page-header';
+import { EventFormModalComponent } from './event-form-modal/event-form-modal';
+import { buildAgenda, countEventsInMonth, pasteEventOn, toLocalDateStr } from './calendar-utils';
 
-type EventTypeKey = 'raid' | 'mm' | 'reunion' | 'custom';
+const MENU_WIDTH = 230;
+const MENU_HEIGHT = 170;
 
-/** Clé de couleur d'un type d'activité (tokens --ui-event-* dans styles.css). */
-function eventTypeKey(type: string | undefined): EventTypeKey {
-  const t = (type || '').toLowerCase();
-  if (t.includes('raid')) return 'raid';
-  if (t.includes('mm+')) return 'mm';
-  if (t.includes('reunion')) return 'reunion';
-  return 'custom';
-}
+type SignupStatus = 'signed_up' | 'standby' | 'absent' | null;
+
+type ContextMenu =
+  | { x: number; y: number; type: 'event'; event: CalendarEvent }
+  | { x: number; y: number; type: 'cell'; date: Date };
 
 @Component({
   selector: 'app-calendar',
-  standalone: true,
-  imports: [CommonModule, FullCalendarModule, FormsModule, RouterModule],
+  imports: [
+    DatePipe,
+    FullCalendarModule,
+    RouterModule,
+    PageHeaderComponent,
+    EventFormModalComponent,
+  ],
   templateUrl: './calendar.html',
-  styleUrl: './calendar.css'
+  styleUrl: './calendar.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '(document:click)': 'contextMenu.set(null)',
+    '(document:keydown.escape)': 'onEscape()',
+    '(window:resize)': 'contextMenu.set(null)',
+    '(window:scroll)': 'contextMenu.set(null)',
+  },
 })
 export class CalendarComponent implements OnInit {
-  public i18n = inject(I18nService);
+  readonly i18n = inject(I18nService);
+  readonly authService = inject(AuthService);
+  readonly rosterService = inject(RosterService);
+  private readonly calendarService = inject(CalendarService);
+  private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
+  private readonly confirm = inject(ConfirmService);
 
-  calendarOptions = signal<CalendarOptions>({
-    plugins: [dayGridPlugin, interactionPlugin, timeGridPlugin],
-    initialView: 'dayGridTwoWeeks',
-    views: {
-      dayGridTwoWeeks: {
-        type: 'dayGrid',
-        duration: { weeks: 2 },
-        buttonText: '2 Semaines'
-      }
-    },
-    headerToolbar: {
-      left: 'prev,next today',
-      center: 'title',
-      right: 'dayGridTwoWeeks,dayGridMonth'
-    },
-    buttonText: {
-      today: 'Aujourd\'hui',
-      month: 'Mois',
-      week: 'Semaine',
-      day: 'Jour',
-      list: 'Liste'
-    },
-    locale: 'fr',
-    firstDay: 1, // Start on Monday
-    events: [],
-    eventClick: this.handleEventClick.bind(this),
-    selectable: true,
-    select: this.handleDateSelect.bind(this),
-    dateClick: this.handleDateClick.bind(this),
-    height: 'auto',
-    expandRows: true,
-    showNonCurrentDates: false,
-    eventDidMount: this.handleEventDidMount.bind(this),
-    dayCellDidMount: this.handleDayCellDidMount.bind(this),
-    eventContent: (arg) => {
-      const event = arg.event;
-      const type = event.extendedProps['type'] || 'custom';
-      const rosterName = event.extendedProps['roster_name'];
-      const signupStatus = event.extendedProps['signupStatus'];
-      const isCanceled = event.extendedProps['is_canceled'];
-      const startTime = event.start ? event.start.toLocaleTimeString(this.i18n.currentLocale() === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' }) : '';
-      
-      const typeKey = eventTypeKey(type);
-      const typeClass = 'tag-' + typeKey;
+  readonly toDateStr = toLocalDateStr;
 
-      // Determine signup status badge html
-      let statusHtml = '';
-      if (signupStatus === 'signed_up') {
-        statusHtml = `<span class="status-indicator-badge present" title="${this.i18n.t('event.details.status_present')}">✅</span>`;
-      } else if (signupStatus === 'standby') {
-        statusHtml = `<span class="status-indicator-badge standby" title="${this.i18n.t('event.details.status_maybe')}">❓</span>`;
-      } else if (signupStatus === 'absent') {
-        statusHtml = `<span class="status-indicator-badge absent" title="${this.i18n.t('event.details.status_absent')}">❌</span>`;
-      } else {
-        statusHtml = `<span class="status-indicator-badge none" title="${this.i18n.t('dashboard.attendance.status_unregistered')}">⚪</span>`;
-      }
+  readonly eventsList = signal<CalendarEvent[]>([]);
+  readonly mySignups = signal<Signup[]>([]);
+  readonly loaded = signal(false);
+  readonly showModal = signal(false);
+  readonly saving = signal(false);
+  /** Événement en cours de modification ; null pour une création. */
+  readonly editingEvent = signal<CalendarEvent | null>(null);
+  readonly createDate = signal('');
+  readonly contextMenu = signal<ContextMenu | null>(null);
+  readonly copiedEvent = signal<CalendarEvent | null>(null);
 
-      const isReunion = type.toLowerCase() === 'reunion';
-      const invitedGroups = event.extendedProps['invited_groups'];
-      const isReunionAll = isReunion && (!invitedGroups || invitedGroups.includes('all'));
-      const reunionLabel = isReunion && !isReunionAll ? this.getInvitedGroupsLabel(invitedGroups) : '';
+  readonly canManageEvents = computed(() => this.authService.canManageEvents());
+  /** Quota mensuel d'événements de l'offre (vérifié aussi côté serveur). */
+  readonly monthlyLimit = computed(
+    () => limitsFor(this.authService.currentUser()?.subscription_tier).eventsPerMonth,
+  );
+  readonly hasMonthlyLimit = computed(() => Number.isFinite(this.monthlyLimit()));
+  private readonly locale = computed(() =>
+    this.i18n.currentLocale() === 'en' ? 'en-US' : 'fr-FR',
+  );
 
-      const rosterHtml = rosterName 
-        ? `<div class="event-tag tag-roster">${escapeHtml(rosterName.toUpperCase())}</div>` 
-        : (isReunion && !isReunionAll 
-            ? `<div class="event-tag tag-roster" title="${escapeHtml(reunionLabel)}">${escapeHtml(reunionLabel.toUpperCase())}</div>` 
-            : `<div class="event-tag tag-all">${this.i18n.t('calendar.tag_all').toUpperCase()}</div>`);
+  private readonly statusByEvent = computed(
+    () => new Map(this.mySignups().map((s) => [s.event_id, s.status as SignupStatus])),
+  );
 
-      const titlePrefix = isCanceled ? `<span class="canceled-tag">[${this.i18n.t('event.details.canceled')}]</span> ` : '';
+  readonly agenda = computed(() => buildAgenda(this.eventsList(), new Date()));
 
-      // eventContent injecte du HTML brut : tout texte saisi par un utilisateur est échappé
-      return {
-        html: `
-          <div class="custom-event-card type-${typeKey} ${isCanceled ? 'canceled-event' : ''}">
-            <div class="event-time-row-calendar">
-              <div class="event-time">${startTime}</div>
-              ${statusHtml}
-            </div>
-            <div class="event-title">${titlePrefix}${escapeHtml(event.title)}</div>
-            <div class="event-tags-container">
-              <div class="event-tag ${typeClass}">${isReunion ? this.i18n.t('calendar.form.type_reunion').toUpperCase() : escapeHtml(type.toUpperCase())}</div>
-              ${rosterHtml}
-            </div>
-          </div>
-        `
-      };
-    }
+  readonly stats = computed(() => {
+    const now = Date.now();
+    const statuses = this.statusByEvent();
+    const upcoming = this.eventsList().filter(
+      (e) => !e.is_canceled && new Date(e.start_time).getTime() > now,
+    );
+    const answered = upcoming.filter((e) => e.id && statuses.get(e.id)).length;
+    return {
+      thisMonth: countEventsInMonth(this.eventsList(), toLocalDateStr(new Date())),
+      upcoming: upcoming.length,
+      answered,
+      toAnswer: upcoming.length - answered,
+    };
   });
 
-  showModal = signal(false);
-  isEditing = signal(false);
-  selectedEventId = signal<string | null>(null);
-  contextMenu = signal<{ x: number, y: number, type: 'event' | 'cell', data: any } | null>(null);
-  copiedEvent = signal<CalendarEvent | null>(null);
-  
-  // Event Form
-  eventForm = {
-    title: '',
-    description: '',
-    start_date: '',
-    start_time: '20:30',
-    end_date: '',
-    end_time: '22:30',
-    type: 'raid',
-    customType: '',
-    roster_id: '' as string | null,
-    invited_groups: [] as string[],
-    logs: ''
-  };
-
-  canManageEvents = computed(() => {
-    return this.authService.canManageEvents();
+  private readonly fcEvents = computed<EventInput[]>(() => {
+    const statuses = this.statusByEvent();
+    return this.eventsList().map((e) => ({
+      id: e.id,
+      title: e.title,
+      start: e.start_time,
+      end: e.end_time,
+      allDay: false,
+      extendedProps: { ...e, signupStatus: (e.id && statuses.get(e.id)) || null },
+      backgroundColor: `var(--ui-event-${eventTypeKey(e.type)})`,
+    }));
   });
 
-  isPro = computed(() => this.authService.currentUser()?.subscription_tier === 'pro');
-
-  getEventsInMonthCount(dateStr: string): number {
-    if (!dateStr) return 0;
-    const targetDate = new Date(dateStr);
-    const targetYear = targetDate.getFullYear();
-    const targetMonth = targetDate.getMonth();
-
-    return this.eventsList().filter(e => {
-      const eDate = new Date(e.start_time);
-      return eDate.getFullYear() === targetYear && eDate.getMonth() === targetMonth;
-    }).length;
-  }
-
-  eventsList = signal<CalendarEvent[]>([]);
-  mySignups = signal<Signup[]>([]);
-
-  upcomingEvents = computed(() => {
-    const now = new Date();
-    // Set time to beginning of the day to show all of today's upcoming events
-    now.setHours(0, 0, 0, 0);
-    return this.eventsList()
-      .filter(e => new Date(e.start_time) >= now)
-      .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
-  });
-
-  onCreateEventMobile() {
-    if (!this.canManageEvents()) return;
-    const todayStr = new Date().toISOString().split('T')[0];
-    this.eventForm.start_date = todayStr;
-    this.eventForm.end_date = todayStr;
-    this.isEditing.set(false);
-    this.showModal.set(true);
-  }
-
-  constructor(
-    private calendarService: CalendarService,
-    public authService: AuthService,
-    private characterService: CharacterService,
-    public rosterService: RosterService,
-    private router: Router,
-    private toast: ToastService,
-    private confirm: ConfirmService
-  ) {
-    effect(() => {
-      const locale = this.i18n.currentLocale();
-      this.calendarOptions.update(options => ({
-        ...options,
-        locale: locale,
-        buttonText: {
-          today: locale === 'fr' ? "Aujourd'hui" : 'Today',
-          month: locale === 'fr' ? 'Mois' : 'Month',
-          week: locale === 'fr' ? 'Semaine' : 'Week',
-          day: locale === 'fr' ? 'Jour' : 'Day',
-          list: locale === 'fr' ? 'Liste' : 'List'
+  readonly calendarOptions = computed<CalendarOptions>(() => {
+    const fr = this.i18n.currentLocale() !== 'en';
+    return {
+      plugins: [dayGridPlugin, interactionPlugin, timeGridPlugin],
+      initialView: 'dayGridTwoWeeks',
+      views: {
+        dayGridTwoWeeks: {
+          type: 'dayGrid',
+          duration: { weeks: 2 },
+          buttonText: fr ? '2 semaines' : '2 weeks',
         },
-        views: {
-          dayGridTwoWeeks: {
-            type: 'dayGrid',
-            duration: { weeks: 2 },
-            buttonText: locale === 'fr' ? '2 Semaines' : '2 Weeks'
-          }
-        }
-      }));
+      },
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridTwoWeeks,dayGridMonth',
+      },
+      buttonText: {
+        today: fr ? "Aujourd'hui" : 'Today',
+        month: fr ? 'Mois' : 'Month',
+        week: fr ? 'Semaine' : 'Week',
+        day: fr ? 'Jour' : 'Day',
+        list: fr ? 'Liste' : 'List',
+      },
+      locale: fr ? 'fr' : 'en',
+      firstDay: 1,
+      height: 'auto',
+      expandRows: true,
+      showNonCurrentDates: false,
+      selectable: this.canManageEvents(),
+      events: this.fcEvents(),
+      eventClick: (arg) => this.handleEventClick(arg),
+      select: (arg) => this.handleDateSelect(arg),
+      eventDidMount: (arg) => this.handleEventDidMount(arg),
+      dayCellDidMount: (arg) => this.handleDayCellDidMount(arg),
+      eventContent: (arg) => this.renderEvent(arg),
+    };
+  });
+
+  constructor() {
+    // Le formulaire n'a de sens que pour un gestionnaire : on le ferme si le rôle change
+    effect(() => {
+      if (!this.canManageEvents()) this.showModal.set(false);
     });
   }
 
@@ -224,330 +181,244 @@ export class CalendarComponent implements OnInit {
     this.rosterService.loadRosters().subscribe();
   }
 
-  @HostListener('document:click')
-  closeContextMenu() {
-    this.contextMenu.set(null);
-  }
-
-  @HostListener('document:contextmenu')
-  closeContextMenuOnRightClick() {
-    this.contextMenu.set(null);
-  }
-
-  getEventSignupStatus(eventId: string | undefined): string | null {
-    if (!eventId) return null;
-    const signup = this.mySignups().find(s => s.event_id === eventId);
-    return signup ? signup.status : null;
-  }
-
   loadEvents() {
     forkJoin({
       events: this.calendarService.getEvents(),
-      signups: this.calendarService.getMySignups()
+      signups: this.calendarService.getMySignups(),
     }).subscribe({
       next: ({ events, signups }) => {
         this.eventsList.set(events);
         this.mySignups.set(signups);
-        
-        const formattedEvents = events.map(e => {
-          const signup = signups.find(s => s.event_id === e.id);
-          const signupStatus = signup ? signup.status : null;
-          
-          return {
-            id: e.id,
-            title: e.title,
-            start: e.start_time,
-            end: e.end_time,
-            allDay: false,
-            extendedProps: { ...e, signupStatus },
-            backgroundColor: `var(--ui-event-${eventTypeKey(e.type)})`
-          };
-        });
-        
-        this.calendarOptions.update(options => ({ ...options, events: formattedEvents }));
+        this.loaded.set(true);
       },
       error: (err) => {
-        console.error('Error loading calendar data:', err);
-      }
+        console.error('[Calendar] Error loading calendar data', err);
+        this.loaded.set(true);
+      },
     });
   }
 
-  handleEventDidMount(info: any) {
-    info.el.addEventListener('contextmenu', (e: MouseEvent) => {
-      if (!this.canManageEvents()) return;
-      e.preventDefault();
-      e.stopPropagation();
-      this.contextMenu.set({
-        x: e.clientX,
-        y: e.clientY,
-        type: 'event',
-        data: info.event
-      });
-    });
+  signupStatus(eventId: string | undefined): SignupStatus {
+    return (eventId && this.statusByEvent().get(eventId)) || null;
   }
 
-  handleDayCellDidMount(info: any) {
-    info.el.addEventListener('contextmenu', (e: MouseEvent) => {
-      if (!this.canManageEvents()) return;
-      e.preventDefault();
-      e.stopPropagation();
-      this.contextMenu.set({
-        x: e.clientX,
-        y: e.clientY,
-        type: 'cell',
-        data: info.date
-      });
-    });
+  typeKey(type: string | undefined) {
+    return eventTypeKey(type);
   }
 
-  handleDateClick(arg: { dateStr: string }) {
-    if (!this.canManageEvents()) return;
-    this.eventForm.start_date = arg.dateStr;
-    this.eventForm.end_date = arg.dateStr;
-    this.isEditing.set(false);
-    this.showModal.set(true);
+  typeLabel(type: string): string {
+    return eventTypeKey(type) === 'reunion' ? this.i18n.t('calendar.form.type_reunion') : type;
   }
 
-  handleDateSelect(selectInfo: DateSelectArg) {
-    if (!this.canManageEvents()) return;
-    const start = selectInfo.startStr.split('T')[0];
-    this.eventForm.start_date = start;
-    this.eventForm.end_date = start;
-    this.isEditing.set(false);
-    this.showModal.set(true);
-  }
-
-  onDateChange() {
-    this.eventForm.end_date = this.eventForm.start_date;
-  }
-
-  onTimeChange() {}
-
-  onSubmitEvent() {
-    const finalType = this.eventForm.type === 'custom' ? this.eventForm.customType : this.eventForm.type;
-    let finalEndDate = this.eventForm.start_date;
-    if (this.eventForm.end_time < this.eventForm.start_time) {
-        const d = new Date(this.eventForm.start_date);
-        d.setDate(d.getDate() + 1);
-        finalEndDate = d.toISOString().split('T')[0];
+  audienceLabel(event: CalendarEvent): string {
+    if (eventTypeKey(event.type) === 'reunion') {
+      const groups = event.invited_groups ?? [];
+      return !groups.length || groups.includes('all')
+        ? this.i18n.t('calendar.tag_all')
+        : groups.map((g) => this.groupLabel(g)).join(', ');
     }
+    return event.roster_name || this.i18n.t('calendar.tag_all');
+  }
 
-    // Check event limit for non-pro when creating (not editing)
-    if (!this.isPro() && !this.isEditing()) {
-      const count = this.getEventsInMonthCount(this.eventForm.start_date);
-      if (count >= 6) {
-        this.toast.error(this.i18n.t('calendar.toast.limit_reached'));
-        return;
-      }
-    }
+  groupLabel(group: string): string {
+    return this.i18n.t(`calendar.form.role_${group}`);
+  }
 
-    const eventData: CalendarEvent = {
-      title: this.eventForm.title,
-      description: this.eventForm.description,
-      start_time: `${this.eventForm.start_date}T${this.eventForm.start_time}:00`,
-      end_time: `${finalEndDate}T${this.eventForm.end_time}:00`,
-      type: finalType,
-      roster_id: finalType === 'reunion' ? null : (this.eventForm.roster_id || null),
-      invited_groups: finalType === 'reunion' ? (this.eventForm.invited_groups || []) : [],
-      logs: finalType === 'raid' ? (this.eventForm.logs || null) : null
+  // ---------- FullCalendar ----------
+
+  private renderEvent(arg: EventContentArg) {
+    const event = arg.event;
+    const type: string = event.extendedProps['type'] || 'custom';
+    const status: SignupStatus = event.extendedProps['signupStatus'];
+    const isCanceled = !!event.extendedProps['is_canceled'];
+    const typeKey = eventTypeKey(type);
+    const time = event.start
+      ? event.start.toLocaleTimeString(this.locale(), { hour: '2-digit', minute: '2-digit' })
+      : '';
+    const statusTitles: Record<string, string> = {
+      signed_up: this.i18n.t('event.details.status_present'),
+      standby: this.i18n.t('event.details.status_maybe'),
+      absent: this.i18n.t('event.details.status_absent'),
     };
+    const statusTitle =
+      (status && statusTitles[status]) || this.i18n.t('dashboard.attendance.status_unregistered');
+    const audience = this.audienceLabel(event.extendedProps as CalendarEvent);
+    const canceled = isCanceled
+      ? `<span class="fc-card-canceled">${escapeHtml(this.i18n.t('event.details.canceled'))}</span> `
+      : '';
 
-    if (this.isEditing() && this.selectedEventId()) {
-      this.calendarService.updateEvent(this.selectedEventId()!, eventData).subscribe({
-        next: () => {
-          this.loadEvents();
-          this.closeModal();
-          this.toast.success(this.i18n.t('calendar.toast.update_success'));
-        },
-        error: () => this.toast.error(this.i18n.t('calendar.toast.update_error'))
-      });
-    } else {
-      this.calendarService.createEvent(eventData).subscribe({
-        next: () => {
-          this.loadEvents();
-          this.closeModal();
-          this.toast.success(this.i18n.t('calendar.toast.create_success'));
-        },
-        error: () => this.toast.error(this.i18n.t('calendar.toast.create_error'))
-      });
-    }
+    // eventContent injecte du HTML brut : tout texte saisi par un utilisateur est échappé
+    return {
+      html: `
+        <div class="fc-card type-${typeKey}${isCanceled ? ' is-canceled' : ''}">
+          <div class="fc-card-top">
+            <span class="fc-card-time">${escapeHtml(time)}</span>
+            <span class="fc-card-status status-${status ?? 'none'}" role="img"
+              title="${escapeHtml(statusTitle)}" aria-label="${escapeHtml(statusTitle)}"></span>
+          </div>
+          <div class="fc-card-title">${canceled}${escapeHtml(event.title)}</div>
+          <div class="fc-card-tags">
+            <span class="fc-card-tag tag-${typeKey}">${escapeHtml(this.typeLabel(type))}</span>
+            <span class="fc-card-tag tag-audience" title="${escapeHtml(audience)}">${escapeHtml(audience)}</span>
+          </div>
+        </div>`,
+    };
   }
 
-  isGroupChecked(group: string): boolean {
-    return this.eventForm.invited_groups?.includes(group) || false;
+  private handleEventClick(arg: EventClickArg) {
+    if (arg.event.id) this.router.navigate(['/events', arg.event.id]);
   }
 
-  toggleGroup(group: string) {
-    if (!this.eventForm.invited_groups) {
-      this.eventForm.invited_groups = [];
-    }
-    
-    if (group === 'all') {
-      if (this.isGroupChecked('all')) {
-        this.eventForm.invited_groups = [];
-      } else {
-        this.eventForm.invited_groups = ['all'];
-      }
-    } else {
-      if (this.isGroupChecked(group)) {
-        this.eventForm.invited_groups = this.eventForm.invited_groups.filter(g => g !== group);
-      } else {
-        this.eventForm.invited_groups = [...this.eventForm.invited_groups, group];
-      }
-    }
+  private handleDateSelect(arg: DateSelectArg) {
+    arg.view.calendar.unselect();
+    this.openCreate(arg.startStr.split('T')[0]);
   }
 
-  getInvitedGroupsLabel(invitedGroups: string[] | undefined): string {
-    if (!invitedGroups || invitedGroups.length === 0) return '';
-    return invitedGroups.map(g => {
-      if (g === 'admin') return this.i18n.t('calendar.form.role_admin');
-      if (g === 'raid_leader') return this.i18n.t('calendar.form.role_raid_leader');
-      if (g === 'treasurer') return this.i18n.t('calendar.form.role_treasurer');
-      if (g === 'event_manager') return this.i18n.t('calendar.form.role_event_manager');
-      return g;
-    }).join(', ');
+  private handleEventDidMount(info: EventMountArg) {
+    info.el.addEventListener('contextmenu', (e: MouseEvent) => {
+      const event = this.eventsList().find((ev) => ev.id === info.event.id);
+      if (!this.canManageEvents() || !event) return;
+      e.preventDefault();
+      e.stopPropagation();
+      this.openMenuAt(e.clientX, e.clientY, { type: 'event', event });
+    });
+  }
+
+  private handleDayCellDidMount(info: DayCellMountArg) {
+    info.el.addEventListener('contextmenu', (e: MouseEvent) => {
+      if (!this.canManageEvents()) return;
+      e.preventDefault();
+      e.stopPropagation();
+      this.openMenuAt(e.clientX, e.clientY, { type: 'cell', date: info.date });
+    });
+  }
+
+  // ---------- Menu contextuel ----------
+
+  /** Menu ⋯ d'une carte de l'agenda : alternative tactile et clavier au clic droit. */
+  openEventMenu(e: MouseEvent, event: CalendarEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    this.openMenuAt(rect.right - MENU_WIDTH, rect.bottom + 6, { type: 'event', event });
+  }
+
+  private openMenuAt(
+    x: number,
+    y: number,
+    target: { type: 'event'; event: CalendarEvent } | { type: 'cell'; date: Date },
+  ) {
+    // Reste dans la fenêtre, même près des bords
+    const left = Math.max(8, Math.min(x, window.innerWidth - MENU_WIDTH - 8));
+    const top = Math.max(8, Math.min(y, window.innerHeight - MENU_HEIGHT - 8));
+    this.contextMenu.set({ x: left, y: top, ...target } as ContextMenu);
+  }
+
+  onEscape() {
+    if (this.contextMenu()) this.contextMenu.set(null);
+    // La modale gère sa propre touche Échap
+  }
+
+  // ---------- Création / édition ----------
+
+  openCreate(date = toLocalDateStr(new Date())) {
+    if (!this.canManageEvents()) return;
+    this.contextMenu.set(null);
+    this.createDate.set(date);
+    this.editingEvent.set(null);
+    this.showModal.set(true);
+  }
+
+  onEditEvent(event: CalendarEvent) {
+    this.contextMenu.set(null);
+    this.editingEvent.set(event);
+    this.showModal.set(true);
   }
 
   closeModal() {
     this.showModal.set(false);
-    this.isEditing.set(false);
-    this.selectedEventId.set(null);
-    this.eventForm = {
-      title: '',
-      description: '',
-      start_date: '',
-      start_time: '20:30',
-      end_date: '',
-      end_time: '22:30',
-      type: 'raid',
-      customType: '',
-      roster_id: '',
-      invited_groups: [],
-      logs: ''
-    };
+    this.editingEvent.set(null);
+    this.saving.set(false);
   }
 
-  handleEventClick(arg: EventClickArg) {
-    const eventId = arg.event.id;
-    if (eventId) {
-      this.router.navigate(['/events', eventId]);
-    }
+  private reachedMonthlyLimit(dateStr: string): boolean {
+    const limit = this.monthlyLimit();
+    if (countEventsInMonth(this.eventsList(), dateStr) < limit) return false;
+    this.toast.error(this.i18n.t('calendar.toast.limit_reached').replace('{count}', String(limit)));
+    return true;
   }
 
-  // Context Menu Actions
-  onEditEvent(event: any) {
-    this.contextMenu.set(null);
-    const props = event.extendedProps;
-    this.isEditing.set(true);
-    this.selectedEventId.set(event.id);
-    
-    const start = new Date(event.start);
-    const end = event.end ? new Date(event.end) : start;
+  onSubmitEvent(payload: CalendarEvent) {
+    if (this.saving()) return;
+    const id = this.editingEvent()?.id;
+    if (!id && this.reachedMonthlyLimit(payload.start_time.slice(0, 10))) return;
 
-    // Format times to HH:mm
-    const startH = String(start.getHours()).padStart(2, '0');
-    const startM = String(start.getMinutes()).padStart(2, '0');
-    const endH = String(end.getHours()).padStart(2, '0');
-    const endM = String(end.getMinutes()).padStart(2, '0');
+    this.saving.set(true);
+    const request = id
+      ? this.calendarService.updateEvent(id, payload)
+      : this.calendarService.createEvent(payload);
 
-    this.eventForm = {
-      title: event.title,
-      description: props.description || '',
-      start_date: start.toISOString().split('T')[0],
-      start_time: `${startH}:${startM}`,
-      end_date: end.toISOString().split('T')[0],
-      end_time: `${endH}:${endM}`,
-      type: props.type,
-      customType: ['raid', 'mm+', 'reunion'].includes(props.type) ? '' : props.type,
-      roster_id: props.roster_id || '',
-      invited_groups: props.invited_groups || [],
-      logs: props.logs || ''
-    };
-    if (this.eventForm.customType) this.eventForm.type = 'custom';
-
-    this.showModal.set(true);
-  }
-
-  onDeleteEvent(event: any) {
-    this.contextMenu.set(null);
-    this.confirm.ask(this.i18n.t('calendar.confirm.delete_title'), this.i18n.t('calendar.confirm.delete_desc').replace('{eventTitle}', event.title)).then(confirmed => {
-      if (confirmed) {
-        this.calendarService.deleteEvent(event.id).subscribe({
-          next: () => {
-            this.loadEvents();
-            this.toast.success(this.i18n.t('calendar.toast.delete_success'));
-          },
-          error: () => this.toast.error(this.i18n.t('calendar.toast.delete_error'))
-        });
-      }
+    request.subscribe({
+      next: () => {
+        this.loadEvents();
+        this.closeModal();
+        this.toast.success(
+          this.i18n.t(id ? 'calendar.toast.update_success' : 'calendar.toast.create_success'),
+        );
+      },
+      error: (err) => {
+        this.saving.set(false);
+        this.toast.error(
+          err?.error?.message ||
+            this.i18n.t(id ? 'calendar.toast.update_error' : 'calendar.toast.create_error'),
+        );
+      },
     });
   }
 
-  onCopyEvent(event: any) {
+  // ---------- Actions ----------
+
+  async onDeleteEvent(event: CalendarEvent) {
     this.contextMenu.set(null);
-    const props = event.extendedProps;
-    const start = new Date(event.start);
-    const end = event.end ? new Date(event.end) : start;
+    const confirmed = await this.confirm.ask(
+      this.i18n.t('calendar.confirm.delete_title'),
+      this.i18n.t('calendar.confirm.delete_desc').replace('{eventTitle}', event.title),
+      undefined,
+      undefined,
+      true,
+    );
+    if (!confirmed || !event.id) return;
 
-    const startH = String(start.getHours()).padStart(2, '0');
-    const startM = String(start.getMinutes()).padStart(2, '0');
-    const endH = String(end.getHours()).padStart(2, '0');
-    const endM = String(end.getMinutes()).padStart(2, '0');
-
-    this.copiedEvent.set({
-      title: event.title,
-      description: props.description || '',
-      type: props.type,
-      roster_id: props.roster_id || null,
-      invited_groups: props.invited_groups || [],
-      start_time: `${startH}:${startM}:00`,
-      end_time: `${endH}:${endM}:00`,
-      logs: null
+    // Retrait optimiste, restauré si l'API refuse
+    const previous = this.eventsList();
+    this.eventsList.set(previous.filter((e) => e.id !== event.id));
+    this.calendarService.deleteEvent(event.id).subscribe({
+      next: () => this.toast.success(this.i18n.t('calendar.toast.delete_success')),
+      error: () => {
+        this.eventsList.set(previous);
+        this.toast.error(this.i18n.t('calendar.toast.delete_error'));
+      },
     });
+  }
+
+  onCopyEvent(event: CalendarEvent) {
+    this.contextMenu.set(null);
+    this.copiedEvent.set(event);
     this.toast.info(this.i18n.t('calendar.toast.copied'));
-  }
-
-  onCreateEventFromCell(date: Date) {
-    this.contextMenu.set(null);
-    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    this.eventForm.start_date = dateStr;
-    this.eventForm.end_date = dateStr;
-    this.isEditing.set(false);
-    this.showModal.set(true);
   }
 
   onPasteEvent(date: Date) {
     this.contextMenu.set(null);
     const copied = this.copiedEvent();
-    if (!copied) return;
+    if (!copied || this.reachedMonthlyLimit(toLocalDateStr(date))) return;
 
-    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    
-    // Check if end time is on next day (not perfect but covers common cases)
-    let finalEndDate = dateStr;
-    if (copied.end_time < copied.start_time) {
-        const d = new Date(date);
-        d.setDate(d.getDate() + 1);
-        finalEndDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    }
-
-    const eventData: CalendarEvent = {
-      title: copied.title,
-      description: copied.description,
-      type: copied.type,
-      roster_id: copied.roster_id,
-      invited_groups: copied.invited_groups,
-      start_time: `${dateStr}T${copied.start_time}`,
-      end_time: `${finalEndDate}T${copied.end_time}`,
-      logs: null
-    };
-
-    this.calendarService.createEvent(eventData).subscribe({
+    this.calendarService.createEvent(pasteEventOn(copied, date)).subscribe({
       next: () => {
         this.loadEvents();
         this.toast.success(this.i18n.t('calendar.toast.paste_success'));
       },
-      error: () => this.toast.error(this.i18n.t('calendar.toast.paste_error'))
+      error: (err) =>
+        this.toast.error(err?.error?.message || this.i18n.t('calendar.toast.paste_error')),
     });
   }
 }

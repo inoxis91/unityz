@@ -1,561 +1,400 @@
-@if (event()) {
-  <div class="details-container">
-    <div class="back-link">
-      <a routerLink="/calendar">{{ i18n.t('event.details.back_to_calendar') }}</a>
-    </div>
-    <!-- Cancellation Banner -->
-    @if (event()?.is_canceled) {
-      <div class="canceled-banner animated-fade-in">
-        <div class="banner-title-row">
-          <span class="icon">🚨</span>
-          <h2>{{ i18n.t('event.details.canceled_banner_title') }}</h2>
+@if (event(); as evt) {
+  <div class="ui-page">
+    <a class="back" routerLink="/calendar">{{ i18n.t('event.details.back_to_calendar') }}</a>
+
+    @if (evt.is_canceled) {
+      <div class="ui-alert danger canceled" role="status">
+        <span class="canceled-icon" aria-hidden="true">🚨</span>
+        <div>
+          <strong>{{ i18n.t('event.details.canceled_banner_title') }}</strong>
+          @if (evt.canceled_reason) {
+            <p>
+              {{
+                i18n
+                  .t('event.details.canceled_banner_reason')
+                  .replace('{reason}', evt.canceled_reason)
+              }}
+            </p>
+          }
         </div>
-        @if (event()?.canceled_reason) {
-          <p class="reason">
-            {{
-              i18n
-                .t('event.details.canceled_banner_reason')
-                .split('{reason}')
-                .join(event()?.canceled_reason || '')
-            }}
-          </p>
-        }
       </div>
     }
-    <div class="event-header-card">
-      <div class="event-header-top">
-        <div class="event-title-row">
-          <div
-            class="type-badge"
-            [ngClass]="
-              event()?.type?.toLowerCase() === 'mm+' ? 'mm-plus' : event()?.type?.toLowerCase()
-            "
-          >
-            {{ event()?.type === 'reunion' ? i18n.t('calendar.form.type_reunion') : event()?.type }}
-          </div>
-          @if (event()?.roster_name && event()?.type !== 'reunion') {
-            <div class="roster-badge" [title]="'Poids: ' + event()?.roster_weight">
-              {{ event()?.roster_name }}
-            </div>
+
+    <!-- En-tête de l'événement -->
+    <header class="hero" [class]="'tone-' + typeKey()" [class.is-canceled]="evt.is_canceled">
+      <div class="hero-date" aria-hidden="true">
+        <span class="weekday">{{ evt.start_time | date: 'EEE' }}</span>
+        <span class="day">{{ evt.start_time | date: 'd' }}</span>
+        <span class="month">{{ evt.start_time | date: 'MMM' }}</span>
+      </div>
+
+      <div class="hero-main">
+        <div class="hero-badges">
+          <span class="type-badge">{{ typeLabel() }}</span>
+          <span class="ui-badge" [title]="evt.roster_weight ? 'Poids : ' + evt.roster_weight : ''">
+            👥 {{ audienceLabel() }}
+          </span>
+          @if (evt.registrations_locked && !evt.is_canceled) {
+            <span class="ui-badge warning">🔒 {{ i18n.t('event.details.locked_badge') }}</span>
           }
-          @if (!event()?.roster_name && event()?.type !== 'reunion') {
-            <div class="roster-badge all">{{ i18n.t('calendar.tag_all') }}</div>
+          @if (timing(); as t) {
+            @if (!evt.is_canceled) {
+              <span class="timing" [class]="t.state">
+                @if (t.state === 'live' || t.state === 'soon') {
+                  <span class="ui-dot live" aria-hidden="true"></span>
+                }
+                {{ t.label }}
+              </span>
+            }
           }
-          @if (event()?.type === 'reunion' && event()?.invited_groups?.includes('all')) {
-            <div class="roster-badge all">{{ i18n.t('calendar.form.all_members') }}</div>
-          }
-          @if (event()?.type === 'reunion' && !event()?.invited_groups?.includes('all')) {
-            <div class="roster-badge">
-              {{ getInvitedGroupsLabel(event()?.invited_groups) }}
-            </div>
-          }
-          <h1>
-            {{ event()?.is_canceled ? '[' + i18n.t('event.details.canceled') + '] ' : ''
-            }}{{ event()?.title }}
-          </h1>
         </div>
-        @if (canManageEvents()) {
-          <div class="admin-actions">
-            @if (!event()?.is_canceled) {
-              <button
-                class="btn-admin remind"
-                (click)="onRemindEvent()"
-                [title]="i18n.t('event.details.btn_remind')"
-              >
-                <span class="icon">🔔</span> {{ i18n.t('event.details.btn_remind') }}
-              </button>
+
+        <h1>{{ evt.title }}</h1>
+
+        <ul class="hero-meta">
+          <li>
+            <span aria-hidden="true">📅</span>
+            <span class="cap">{{ evt.start_time | date: 'EEEE d MMMM y' }}</span>
+          </li>
+          <li>
+            <span aria-hidden="true">🕒</span>
+            {{ evt.start_time | date: 'HH:mm' }} – {{ evt.end_time | date: 'HH:mm' }}
+            @if (duration(); as d) {
+              <span class="muted">({{ d }})</span>
             }
-            @if (!event()?.is_canceled) {
-              <button
-                class="btn-admin edit"
-                (click)="openEditModal()"
-                [title]="i18n.t('event.details.btn_edit')"
-              >
-                <span class="icon">✏️</span> {{ i18n.t('event.details.btn_edit') }}
-              </button>
-            }
-            @if (!event()?.is_canceled) {
-              <button
-                class="btn-admin lock"
-                [class.locked]="event()?.registrations_locked"
-                (click)="onToggleRegistrationLock()"
-                [title]="
-                  event()?.registrations_locked
-                    ? i18n.t('event.details.btn_unlock_registrations')
-                    : i18n.t('event.details.btn_lock_registrations')
-                "
-              >
-                <span class="icon">{{ event()?.registrations_locked ? '🔓' : '🔒' }}</span>
-                {{
-                  event()?.registrations_locked
-                    ? i18n.t('event.details.btn_unlock_registrations')
-                    : i18n.t('event.details.btn_lock_registrations')
-                }}
-              </button>
-            }
-            @if (!event()?.is_canceled) {
-              <button
-                class="btn-admin cancel"
-                (click)="onCancelEvent()"
-                [title]="i18n.t('event.details.btn_cancel_activity')"
-              >
-                <span class="icon">🚫</span> {{ i18n.t('event.details.btn_cancel_activity') }}
-              </button>
-            }
-            <button
-              class="btn-admin delete"
-              (click)="onDeleteEvent()"
-              [title]="i18n.t('event.details.btn_delete')"
-            >
-              <span class="icon">🗑️</span> {{ i18n.t('event.details.btn_delete') }}
+          </li>
+          @if (evt.creator_name) {
+            <li>
+              <span aria-hidden="true">✍️</span>
+              {{ evt.creator_name }}
+            </li>
+          }
+        </ul>
+
+        @if (evt.description) {
+          <p class="hero-desc">{{ evt.description }}</p>
+        }
+
+        @if (hasLogs()) {
+          <a class="wcl-link" [href]="evt.logs" target="_blank" rel="noopener noreferrer">
+            <img src="assets/icons/warcraftlogs.png" alt="" width="20" height="20" />
+            {{ i18n.t('event.details.view_logs') }} <span aria-hidden="true">↗</span>
+          </a>
+        }
+      </div>
+
+      @if (canManageEvents()) {
+        <div class="hero-actions" role="toolbar" [attr.aria-label]="i18n.t('event.details.manage')">
+          @if (!evt.is_canceled) {
+            <button type="button" class="ui-btn primary sm" (click)="modal.set('edit')">
+              <span aria-hidden="true">✏️</span> {{ i18n.t('event.details.btn_edit') }}
             </button>
-          </div>
-        }
-      </div>
-      <div class="event-meta">
-        <div class="meta-item">
-          <span class="icon">📅</span>
-          <span class="text">{{
-            event()?.start_time | date: 'EEEE d MMMM yyyy' : '' : i18n.currentLocale()
-          }}</span>
+            <button type="button" class="ui-btn ghost sm" (click)="onRemindEvent()">
+              <span aria-hidden="true">🔔</span> {{ i18n.t('event.details.btn_remind') }}
+            </button>
+            <button
+              type="button"
+              class="ui-btn ghost sm"
+              [class.on]="evt.registrations_locked"
+              [attr.aria-pressed]="!!evt.registrations_locked"
+              (click)="onToggleRegistrationLock()"
+            >
+              <span aria-hidden="true">{{ evt.registrations_locked ? '🔓' : '🔒' }}</span>
+              {{
+                evt.registrations_locked
+                  ? i18n.t('event.details.btn_unlock_registrations')
+                  : i18n.t('event.details.btn_lock_registrations')
+              }}
+            </button>
+            <button type="button" class="ui-btn ghost sm" (click)="openCancel()">
+              <span aria-hidden="true">🚫</span> {{ i18n.t('event.details.btn_cancel_activity') }}
+            </button>
+          }
+          <button type="button" class="ui-btn subtle-danger sm" (click)="onDeleteEvent()">
+            <span aria-hidden="true">🗑️</span> {{ i18n.t('event.details.btn_delete') }}
+          </button>
         </div>
-        <div class="meta-item">
-          <span class="icon">🕒</span>
-          <span class="text"
-            >{{ event()?.start_time | date: 'HH:mm' }} -
-            {{ event()?.end_time | date: 'HH:mm' }}</span
-          >
-        </div>
-        @if (event()?.description) {
-          <div class="meta-item">
-            <span class="icon">📝</span>
-            <span class="text">{{ event()?.description }}</span>
-          </div>
-        }
-        @if (event()?.type?.toLowerCase() === 'raid' && event()?.logs) {
-          <div class="meta-item logs-item">
-            <span class="icon">📊</span>
-            <span class="text">
-              <a [href]="event()?.logs" target="_blank" rel="noopener noreferrer" class="logs-link">
-                <img src="assets/icons/warcraftlogs.png" class="wcl-icon" alt="WCL" />
-                {{ i18n.t('event.details.view_logs') }}
-              </a>
-            </span>
-          </div>
-        }
-      </div>
-    </div>
+      }
+    </header>
+
     @if (myLineupSignup(); as mine) {
       <app-lineup-status [signup]="mine" />
     }
-    <div class="tabs">
+
+    <nav class="ui-tabs tabs" [attr.aria-label]="evt.title">
       <button
+        type="button"
         [class.active]="activeTab() === 'participants'"
+        [attr.aria-pressed]="activeTab() === 'participants'"
         (click)="activeTab.set('participants')"
       >
-        {{ i18n.t('event.details.tab_participants') }}
+        <span aria-hidden="true">👥</span> {{ i18n.t('event.details.tab_participants') }}
+        <span class="count">{{ attendingCount() }}</span>
       </button>
-      <button [class.active]="activeTab() === 'composition'" (click)="activeTab.set('composition')">
+      <button
+        type="button"
+        [class.active]="activeTab() === 'composition'"
+        [attr.aria-pressed]="activeTab() === 'composition'"
+        (click)="activeTab.set('composition')"
+      >
+        <span aria-hidden="true">{{ isMplus() ? '🗝️' : '🛡️' }}</span>
         {{ i18n.t(isRaid() ? 'event.lineup.tab' : 'event.details.tab_composition') }}
       </button>
-      @if (event()?.type?.toLowerCase() === 'raid' && event()?.logs) {
-        <button [class.active]="activeTab() === 'logs'" (click)="activeTab.set('logs')">
-          {{ i18n.t('event.details.tab_logs') }}
+      @if (hasLogs()) {
+        <button
+          type="button"
+          [class.active]="activeTab() === 'logs'"
+          [attr.aria-pressed]="activeTab() === 'logs'"
+          (click)="activeTab.set('logs')"
+        >
+          <span aria-hidden="true">📊</span> {{ i18n.t('event.details.tab_logs') }}
         </button>
       }
-    </div>
-    <!-- TAB: Participants -->
-    @if (activeTab() === 'participants') {
-      <div class="tab-content">
-        <app-participants
-          [event]="event()"
-          [signups]="signups()"
-          [myCharacters]="myCharacters()"
-          [rosters]="rosters()"
-          [canManageEvents]="canManageEvents()"
-          [rioScores]="rioScores()"
-          (signupChanged)="onReloadSignups()"
-          (openAlts)="onOpenAltsModal($event)"
-        ></app-participants>
-      </div>
-    }
-    <!-- TAB: Composition -->
-    @if (activeTab() === 'composition') {
-      <div class="tab-content">
-        @if (isRaid()) {
-          <app-raid-lineup
-            [event]="event()!"
+    </nav>
+
+    <div class="tab-content">
+      @switch (activeTab()) {
+        @case ('participants') {
+          <app-participants
+            [event]="evt"
             [signups]="signups()"
-            [canManage]="canManageLineup() && !event()!.is_canceled"
+            [myCharacters]="myCharacters()"
+            [rosters]="rosters()"
+            [canManageEvents]="canManageEvents()"
+            [rioScores]="rioScores()"
             [currentUserId]="currentUserId()"
-            (entriesChange)="onLineupEntriesChange($event)"
+            (signupChanged)="onReloadSignups()"
             (openAlts)="onOpenAltsModal($event)"
           />
-        } @else if (isMplus()) {
-          @defer {
-            <app-mplus-groups
-              [event]="event()!"
+        }
+        @case ('composition') {
+          @if (isRaid()) {
+            <app-raid-lineup
+              [event]="evt"
               [signups]="signups()"
-              [rioScores]="rioScores()"
-              [canManage]="canManageEvents() && !event()!.is_canceled"
+              [canManage]="canManageLineup() && !evt.is_canceled"
               [currentUserId]="currentUserId()"
-              (stateChange)="onMplusStateChange($event)"
+              (entriesChange)="onLineupEntriesChange($event)"
               (openAlts)="onOpenAltsModal($event)"
             />
-          }
-        } @else {
-          <app-composition [signups]="signups()" (openAlts)="onOpenAltsModal($event)" />
-        }
-      </div>
-    }
-    <!-- TAB: Logs & Stats -->
-    @if (activeTab() === 'logs') {
-      <div class="tab-content">
-        @defer {
-          <app-logs-dashboard [eventId]="event()!.id!" [myCharacters]="myCharacters()" />
-        }
-      </div>
-    }
-  </div>
-}
-
-<!-- Modal de Modification (Admin Only) -->
-@if (showEditModal() && canManageEvents()) {
-  <div class="modal-overlay" (click)="showEditModal.set(false)">
-    <div class="modal-card" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <div class="header-title">
-          <span class="icon">📝</span>
-          <h2>{{ i18n.t('calendar.modal.edit_title') }}</h2>
-        </div>
-        <button class="close-btn" (click)="showEditModal.set(false)">&times;</button>
-      </div>
-      <form (ngSubmit)="onUpdateEvent()" class="modern-form">
-        <div class="modal-body">
-          <div class="form-section">
-            <label>{{ i18n.t('calendar.form.title') }}</label>
-            <input
-              type="text"
-              [(ngModel)]="editEventData.title"
-              name="title"
-              required
-              [placeholder]="i18n.t('calendar.form.title_placeholder')"
-            />
-          </div>
-          <div class="form-section">
-            <label>{{ i18n.t('calendar.form.desc') }}</label>
-            <textarea
-              [(ngModel)]="editEventData.description"
-              name="description"
-              rows="3"
-            ></textarea>
-          </div>
-          <div class="form-grid">
-            <div class="form-section">
-              <label>{{ i18n.t('calendar.form.type') }}</label>
-              <select [(ngModel)]="editEventData.type" name="type" class="custom-select">
-                <option value="raid">{{ i18n.t('calendar.form.type_raid') }}</option>
-                <option value="mm+">{{ i18n.t('calendar.form.type_mm') }}</option>
-                <option value="reunion">{{ i18n.t('calendar.form.type_reunion') }}</option>
-                <option value="custom">{{ i18n.t('calendar.form.type_custom') }}</option>
-              </select>
-            </div>
-            @if (editEventData.type !== 'reunion') {
-              <div class="form-section">
-                <label>{{ i18n.t('calendar.form.roster') }}</label>
-                <select
-                  [(ngModel)]="editEventData.roster_id"
-                  name="roster_id"
-                  class="custom-select"
-                >
-                  <option value="">{{ i18n.t('calendar.form.roster_all') }}</option>
-                  @for (roster of rosterService.rosters(); track roster.id) {
-                    <option [value]="roster.id">
-                      {{ roster.name }} (Poids: {{ roster.weight }})
-                    </option>
-                  }
-                </select>
-              </div>
+          } @else if (isMplus()) {
+            @defer {
+              <app-mplus-groups
+                [event]="evt"
+                [signups]="signups()"
+                [rioScores]="rioScores()"
+                [canManage]="canManageEvents() && !evt.is_canceled"
+                [currentUserId]="currentUserId()"
+                (stateChange)="onMplusStateChange($event)"
+                (openAlts)="onOpenAltsModal($event)"
+              />
+            } @placeholder {
+              <div class="tab-placeholder ui-skeleton" aria-hidden="true"></div>
             }
-            @if (editEventData.type === 'reunion') {
-              <div class="form-section">
-                <label>{{ i18n.t('calendar.form.invited_group') }}</label>
-                <div class="invited-groups-checkboxes">
-                  <label class="checkbox-label">
-                    <input
-                      type="checkbox"
-                      [checked]="isGroupChecked('all')"
-                      (change)="toggleGroup('all')"
-                    />
-                    {{ i18n.t('calendar.form.all_members') }}
-                  </label>
-                  <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
-                    <input
-                      type="checkbox"
-                      [checked]="isGroupChecked('admin')"
-                      (change)="toggleGroup('admin')"
-                      [disabled]="isGroupChecked('all')"
-                    />
-                    {{ i18n.t('calendar.form.role_admin') }}
-                  </label>
-                  <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
-                    <input
-                      type="checkbox"
-                      [checked]="isGroupChecked('raid_leader')"
-                      (change)="toggleGroup('raid_leader')"
-                      [disabled]="isGroupChecked('all')"
-                    />
-                    {{ i18n.t('calendar.form.role_raid_leader') }}
-                  </label>
-                  <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
-                    <input
-                      type="checkbox"
-                      [checked]="isGroupChecked('treasurer')"
-                      (change)="toggleGroup('treasurer')"
-                      [disabled]="isGroupChecked('all')"
-                    />
-                    {{ i18n.t('calendar.form.role_treasurer') }}
-                  </label>
-                  <label class="checkbox-label" [class.disabled]="isGroupChecked('all')">
-                    <input
-                      type="checkbox"
-                      [checked]="isGroupChecked('event_manager')"
-                      (change)="toggleGroup('event_manager')"
-                      [disabled]="isGroupChecked('all')"
-                    />
-                    {{ i18n.t('calendar.form.role_event_manager') }}
-                  </label>
-                </div>
-              </div>
-            }
-          </div>
-          @if (editEventData.type === 'mm+') {
-            <div class="form-section">
-              <label>{{ i18n.t('event.details.mm_groups_count') }}</label>
-              <input
-                type="number"
-                [(ngModel)]="editEventData.mm_groups_count"
-                name="mm_groups_count"
-                min="0"
-              />
-            </div>
+          } @else {
+            <app-composition [signups]="signups()" (openAlts)="onOpenAltsModal($event)" />
           }
-          @if (editEventData.type === 'custom') {
-            <div class="form-section">
-              <label>{{ i18n.t('calendar.form.custom_type') }}</label>
-              <input
-                type="text"
-                [(ngModel)]="editEventData.customType"
-                name="customType"
-                [placeholder]="i18n.t('calendar.form.custom_type_placeholder')"
-              />
-            </div>
+        }
+        @case ('logs') {
+          @defer {
+            <app-logs-dashboard [eventId]="evt.id!" [myCharacters]="myCharacters()" />
+          } @placeholder {
+            <div class="tab-placeholder ui-skeleton" aria-hidden="true"></div>
           }
-          @if (editEventData.type === 'raid') {
-            <div class="form-section animated-fade-in">
-              <label>{{ i18n.t('calendar.form.logs') }}</label>
-              <input
-                type="text"
-                [(ngModel)]="editEventData.logs"
-                name="logs"
-                [placeholder]="i18n.t('calendar.form.logs_placeholder')"
-              />
-            </div>
-          }
-          <div class="form-grid">
-            <div class="form-section">
-              <label>{{ i18n.t('event.details.start_date') }}</label>
-              <input
-                type="date"
-                [(ngModel)]="editEventData.start_date"
-                name="start_date"
-                required
-              />
-            </div>
-            <div class="form-section">
-              <label>{{ i18n.t('calendar.form.start_time') }}</label>
-              <input
-                type="time"
-                [(ngModel)]="editEventData.start_time"
-                name="start_time"
-                required
-              />
-            </div>
-          </div>
-          <div class="form-grid">
-            <div class="form-section">
-              <label>{{ i18n.t('event.details.end_date') }}</label>
-              <input type="date" [(ngModel)]="editEventData.end_date" name="end_date" required />
-            </div>
-            <div class="form-section">
-              <label>{{ i18n.t('calendar.form.end_time') }}</label>
-              <input type="time" [(ngModel)]="editEventData.end_time" name="end_time" required />
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" (click)="showEditModal.set(false)">
-            {{ i18n.t('calendar.form.btn_cancel') }}
-          </button>
-          <button type="submit" class="btn-primary">
-            {{ i18n.t('event.details.btn_save_changes') }}
-          </button>
-        </div>
-      </form>
+        }
+      }
     </div>
   </div>
-}
 
-<!-- Modal de visualisation des Alts -->
-@if (showAltsModal() && selectedSignup()) {
-  <div class="modal-overlay" (click)="showAltsModal.set(false)">
-    <div class="modal-card alts-modal" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <div class="header-title">
-          <span class="icon">👥</span>
-          <h2>
+  <!-- Modification -->
+  @if (modal() === 'edit' && canManageEvents()) {
+    <app-event-form-modal
+      [event]="evt"
+      [saving]="busy()"
+      (submitted)="onUpdateEvent($event)"
+      (closed)="closeModal()"
+    />
+  }
+
+  <!-- Annulation -->
+  @if (modal() === 'cancel') {
+    <div class="ui-overlay" (click)="closeModal()">
+      <div
+        class="ui-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cancel-title"
+        (click)="$event.stopPropagation()"
+      >
+        <header class="ui-modal-head">
+          <span class="modal-emoji" aria-hidden="true">🚫</span>
+          <h2 id="cancel-title">{{ i18n.t('event.details.prompt_cancel_title') }}</h2>
+          <button
+            type="button"
+            class="ui-close"
+            (click)="closeModal()"
+            [attr.aria-label]="i18n.t('event.details.btn_close')"
+          >
+            ×
+          </button>
+        </header>
+        <div class="ui-modal-body">
+          <p class="modal-desc">{{ i18n.t('event.details.prompt_cancel_desc') }}</p>
+          <div class="ui-field">
+            <label for="cancel-reason">{{ i18n.t('event.details.cancel_reason_label') }}</label>
+            <textarea
+              id="cancel-reason"
+              rows="3"
+              maxlength="500"
+              [(ngModel)]="cancelReason"
+              [placeholder]="i18n.t('event.details.comment_placeholder')"
+            ></textarea>
+          </div>
+        </div>
+        <footer class="ui-modal-foot">
+          <button type="button" class="ui-btn ghost" (click)="closeModal()">
+            {{ i18n.t('event.details.btn_cancel_modal_close') }}
+          </button>
+          <button
+            type="button"
+            class="ui-btn danger"
+            [class.loading]="busy()"
+            [disabled]="busy()"
+            (click)="confirmCancelEvent()"
+          >
+            {{ i18n.t('event.details.btn_confirm_cancellation') }}
+          </button>
+        </footer>
+      </div>
+    </div>
+  }
+
+  <!-- Personnages d'un joueur -->
+  @if (modal() === 'alts' && selectedSignup(); as s) {
+    <div class="ui-overlay" (click)="closeModal()">
+      <div
+        class="ui-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="alts-title"
+        (click)="$event.stopPropagation()"
+      >
+        <header class="ui-modal-head">
+          <span class="modal-emoji" aria-hidden="true">🧙</span>
+          <h2 id="alts-title">
             {{
               i18n
                 .t('event.details.characters_of')
-                .replace('{name}', selectedSignup()?.battletag?.split('#')?.[0] || '')
+                .replace('{name}', s.battletag?.split('#')?.[0] || '')
             }}
           </h2>
-        </div>
-        <button class="close-btn" (click)="showAltsModal.set(false)">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="alts-list">
-          @for (char of selectedSignup()?.user_characters; track char) {
-            <div class="alt-row" [class]="'bg-class-' + getClassCategory(char.class)">
-              <div class="alt-info-vertical">
-                <span class="alt-name">{{ char.name }}</span>
-                <span class="alt-roster-text">{{
-                  char.roster_name || i18n.t('event.details.no_roster')
-                }}</span>
-              </div>
-              <div class="alt-roles">
-                @if (getRioScoreForKey(char.name, char.realm)) {
-                  <span class="rio-mini">{{ getRioScoreForKey(char.name, char.realm) }}</span>
-                }
-                @if (canManageEvents()) {
-                  @if (char.is_tank) {
-                    <button
-                      [class.active-role]="isSelectedCharacterAndRole(char.id, 'tank')"
-                      class="role-select-btn"
-                      (click)="onAdminUpdateSignup(char.id, 'tank')"
-                      [title]="i18n.t('event.details.assign_tank')"
-                    >
-                      <img src="assets/icons/tank.png" class="role-icon-img small" alt="Tank" />
-                    </button>
-                  }
-                  @if (char.is_heal) {
-                    <button
-                      [class.active-role]="isSelectedCharacterAndRole(char.id, 'heal')"
-                      class="role-select-btn"
-                      (click)="onAdminUpdateSignup(char.id, 'heal')"
-                      [title]="i18n.t('event.details.assign_heal')"
-                    >
-                      <img src="assets/icons/heal.png" class="role-icon-img small" alt="Heal" />
-                    </button>
-                  }
-                  @if (char.is_dps) {
-                    <button
-                      [class.active-role]="isSelectedCharacterAndRole(char.id, 'dps')"
-                      class="role-select-btn"
-                      (click)="onAdminUpdateSignup(char.id, 'dps')"
-                      [title]="i18n.t('event.details.assign_dps')"
-                    >
-                      <img src="assets/icons/dps.png" class="role-icon-img small" alt="DPS" />
-                    </button>
-                  }
-                } @else {
-                  @if (char.is_tank) {
-                    <img
-                      src="assets/icons/tank.png"
-                      class="role-icon-img small"
-                      [title]="i18n.t('event.details.role_tank')"
-                      alt="Tank"
-                    />
-                  }
-                  @if (char.is_heal) {
-                    <img
-                      src="assets/icons/heal.png"
-                      class="role-icon-img small"
-                      [title]="i18n.t('event.details.role_heal')"
-                      alt="Heal"
-                    />
-                  }
-                  @if (char.is_dps) {
-                    <img
-                      src="assets/icons/dps.png"
-                      class="role-icon-img small"
-                      [title]="i18n.t('event.details.role_dps')"
-                      alt="DPS"
-                    />
-                  }
-                }
-                <a
-                  [href]="characterService.getRaiderIoUrl(char.name, char.realm)"
-                  target="_blank"
-                  class="logs-link-mini"
-                  (click)="$event.stopPropagation()"
-                >
-                  <img src="assets/icons/raiderio.webp" alt="Raider.IO" />
-                </a>
-                <a
-                  [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)"
-                  target="_blank"
-                  class="logs-link-mini"
-                  (click)="$event.stopPropagation()"
-                >
-                  <img src="assets/icons/warcraftlogs.png" alt="Warcraft Logs" />
-                </a>
-              </div>
-            </div>
+          <button
+            type="button"
+            class="ui-close"
+            (click)="closeModal()"
+            [attr.aria-label]="i18n.t('event.details.btn_close')"
+          >
+            ×
+          </button>
+        </header>
+        <div class="ui-modal-body">
+          @if (canManageEvents() && s.user_characters?.length) {
+            <p class="modal-desc">{{ i18n.t('event.details.alts_manager_hint') }}</p>
           }
+          <ul class="alts">
+            @for (char of s.user_characters; track char.id; let i = $index) {
+              <li
+                class="alt"
+                [class.current]="char.id === s.character_id"
+                [style.--i]="i"
+                [style.--class-color]="'var(--color-' + classId(char.class) + ')'"
+              >
+                <img class="alt-icon" [src]="classIcon(char.class)" alt="" width="38" height="38" />
+                <span class="alt-info">
+                  <span class="alt-name" [class]="'class-' + classId(char.class)">
+                    {{ char.name }}
+                    @if (char.id === s.character_id) {
+                      <span class="ui-badge info">{{ i18n.t('event.details.signed_with') }}</span>
+                    }
+                  </span>
+                  <span class="alt-sub">
+                    {{ char.roster_name || i18n.t('event.details.no_roster') }}
+                    @if (rioOf(char.name, char.realm); as rio) {
+                      · <span class="rio">{{ rio }}</span>
+                    }
+                  </span>
+                </span>
+                <span class="alt-roles">
+                  @for (r of roles; track r) {
+                    @if (char['is_' + r]) {
+                      @if (canManageEvents()) {
+                        <button
+                          type="button"
+                          class="role-btn"
+                          [class.active]="isSelectedCharacterAndRole(char.id, r)"
+                          [attr.aria-pressed]="isSelectedCharacterAndRole(char.id, r)"
+                          [disabled]="busy()"
+                          [attr.aria-label]="
+                            i18n.t('event.details.assign_' + r) + ' – ' + char.name
+                          "
+                          [title]="i18n.t('event.details.assign_' + r)"
+                          (click)="onAdminUpdateSignup(char.id, r)"
+                        >
+                          <img [src]="'assets/icons/' + r + '.png'" alt="" />
+                        </button>
+                      } @else {
+                        <img
+                          class="role-static"
+                          [src]="'assets/icons/' + r + '.png'"
+                          [alt]="i18n.t('event.details.role_' + r)"
+                          [title]="i18n.t('event.details.role_' + r)"
+                        />
+                      }
+                    }
+                  }
+                </span>
+                <span class="alt-links">
+                  <a
+                    [href]="characterService.getRaiderIoUrl(char.name, char.realm)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    [attr.aria-label]="'Raider.IO – ' + char.name"
+                  >
+                    <img src="assets/icons/raiderio.webp" alt="" />
+                  </a>
+                  <a
+                    [href]="characterService.getWarcraftLogsUrl(char.name, char.realm)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    [attr.aria-label]="'Warcraft Logs – ' + char.name"
+                  >
+                    <img src="assets/icons/warcraftlogs.png" alt="" />
+                  </a>
+                </span>
+              </li>
+            } @empty {
+              <li class="ui-empty">
+                <span class="emoji" aria-hidden="true">🫥</span>
+                <p>{{ i18n.t('event.details.no_characters_for_player') }}</p>
+              </li>
+            }
+          </ul>
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn-secondary" (click)="showAltsModal.set(false)">
-          {{ i18n.t('event.details.btn_close') }}
-        </button>
-      </div>
     </div>
+  }
+} @else if (notFound()) {
+  <div class="ui-empty not-found">
+    <span class="emoji" aria-hidden="true">🔍</span>
+    <strong>{{ i18n.t('event.details.not_found') }}</strong>
+    <a class="ui-btn primary" routerLink="/calendar">{{
+      i18n.t('event.details.back_to_calendar')
+    }}</a>
   </div>
-}
-
-<!-- Modal d'Annulation (Admin Only) -->
-@if (showCancelModal()) {
-  <div class="modal-overlay" (click)="showCancelModal.set(false)">
-    <div class="modal-card cancel-modal" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <div class="header-title">
-          <span class="icon">🚫</span>
-          <h2>{{ i18n.t('event.details.prompt_cancel_title') }}</h2>
-        </div>
-        <button class="close-btn" (click)="showCancelModal.set(false)">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p class="modal-desc">
-          {{ i18n.t('event.details.prompt_cancel_desc') }}
-        </p>
-        <div class="form-group modern-form flush">
-          <textarea
-            [(ngModel)]="cancelReason"
-            rows="3"
-            [placeholder]="i18n.t('event.details.comment_placeholder')"
-            [attr.aria-label]="i18n.t('event.details.prompt_cancel_title')"
-          ></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-secondary" (click)="showCancelModal.set(false)">
-          {{ i18n.t('event.details.btn_cancel_modal_close') }}
-        </button>
-        <button class="btn-primary danger" (click)="confirmCancelEvent()">
-          {{ i18n.t('event.details.btn_confirm_cancellation') }}
-        </button>
-      </div>
-    </div>
+} @else {
+  <div class="ui-page" aria-busy="true">
+    <div class="ui-skeleton sk-hero"></div>
+    <div class="ui-skeleton sk-tabs"></div>
+    <div class="ui-skeleton sk-body"></div>
   </div>
 }

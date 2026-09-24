@@ -1,0 +1,172 @@
+<div class="ui-overlay" (click)="closed.emit()">
+  <form
+    class="ui-modal wide event-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="event-modal-title"
+    (click)="$event.stopPropagation()"
+    (ngSubmit)="submit()"
+    #eventForm="ngForm"
+  >
+    <header class="ui-modal-head" [class]="'tone-' + formTone()">
+      <span class="modal-icon" aria-hidden="true">{{ event() ? '✏️' : '✨' }}</span>
+      <h2 id="event-modal-title">
+        {{ event() ? i18n.t('calendar.modal.edit_title') : i18n.t('calendar.modal.create_title') }}
+      </h2>
+      <button
+        type="button"
+        class="ui-close"
+        (click)="closed.emit()"
+        [attr.aria-label]="i18n.t('event.details.btn_close')"
+      >
+        ×
+      </button>
+    </header>
+
+    <div class="ui-modal-body">
+      <!-- Type : cartes sélectionnables -->
+      <fieldset class="type-picker">
+        <legend class="ui-label">{{ i18n.t('calendar.form.type') }}</legend>
+        @for (t of eventTypes; track t.value) {
+          <label class="type-option" [class]="'tone-' + t.tone">
+            <input type="radio" name="type" [value]="t.value" [(ngModel)]="form.type" />
+            <span class="type-emoji" aria-hidden="true">{{ t.emoji }}</span>
+            <span>{{ i18n.t(t.label) }}</span>
+          </label>
+        }
+      </fieldset>
+
+      @if (form.type === 'custom') {
+        <div class="ui-field reveal">
+          <label for="ev-custom">{{ i18n.t('calendar.form.custom_type') }}</label>
+          <input
+            id="ev-custom"
+            type="text"
+            name="customType"
+            maxlength="40"
+            required
+            [(ngModel)]="form.customType"
+            [placeholder]="i18n.t('calendar.form.custom_type_placeholder')"
+          />
+        </div>
+      }
+
+      <div class="ui-field">
+        <label for="ev-title">{{ i18n.t('calendar.form.title') }}</label>
+        <input
+          id="ev-title"
+          type="text"
+          name="title"
+          maxlength="120"
+          required
+          [(ngModel)]="form.title"
+          [placeholder]="i18n.t('calendar.form.title_placeholder')"
+        />
+      </div>
+
+      <div class="grid-3">
+        <div class="ui-field">
+          <label for="ev-date">{{ i18n.t('calendar.form.date') }}</label>
+          <input
+            id="ev-date"
+            type="date"
+            name="start_date"
+            required
+            [(ngModel)]="form.start_date"
+          />
+        </div>
+        <div class="ui-field">
+          <label for="ev-start">{{ i18n.t('calendar.form.start_time') }}</label>
+          <input
+            id="ev-start"
+            type="time"
+            name="start_time"
+            required
+            [(ngModel)]="form.start_time"
+          />
+        </div>
+        <div class="ui-field">
+          <label for="ev-end">{{ i18n.t('calendar.form.end_time') }}</label>
+          <input id="ev-end" type="time" name="end_time" required [(ngModel)]="form.end_time" />
+        </div>
+      </div>
+      @if (form.end_time && form.end_time < form.start_time) {
+        <p class="hint-next-day">🌙 {{ i18n.t('calendar.form.ends_next_day') }}</p>
+      }
+
+      @if (form.type === 'reunion') {
+        <fieldset class="groups reveal">
+          <legend class="ui-label">{{ i18n.t('calendar.form.invited_group') }}</legend>
+          <label class="chip-check">
+            <input
+              type="checkbox"
+              [checked]="isGroupChecked('all')"
+              (change)="toggleGroup('all')"
+            />
+            <span>{{ i18n.t('calendar.form.all_members') }}</span>
+          </label>
+          @for (g of groups; track g) {
+            <label class="chip-check" [class.disabled]="isGroupChecked('all')">
+              <input
+                type="checkbox"
+                [checked]="isGroupChecked(g)"
+                [disabled]="isGroupChecked('all')"
+                (change)="toggleGroup(g)"
+              />
+              <span>{{ groupLabel(g) }}</span>
+            </label>
+          }
+        </fieldset>
+      } @else {
+        <div class="ui-field">
+          <label for="ev-roster">{{ i18n.t('calendar.form.roster') }}</label>
+          <select id="ev-roster" name="roster_id" [(ngModel)]="form.roster_id">
+            <option value="">{{ i18n.t('calendar.form.roster_all') }}</option>
+            @for (roster of rosterService.rosters(); track roster.id) {
+              <option [value]="roster.id">{{ roster.name }}</option>
+            }
+          </select>
+        </div>
+      }
+
+      <div class="ui-field">
+        <label for="ev-desc">{{ i18n.t('calendar.form.desc') }}</label>
+        <textarea
+          id="ev-desc"
+          name="description"
+          rows="3"
+          maxlength="2000"
+          [(ngModel)]="form.description"
+          [placeholder]="i18n.t('calendar.form.desc_placeholder')"
+        ></textarea>
+      </div>
+
+      @if (form.type === 'raid') {
+        <div class="ui-field reveal">
+          <label for="ev-logs">{{ i18n.t('calendar.form.logs') }}</label>
+          <input
+            id="ev-logs"
+            type="text"
+            name="logs"
+            [(ngModel)]="form.logs"
+            [placeholder]="i18n.t('calendar.form.logs_placeholder')"
+          />
+        </div>
+      }
+    </div>
+
+    <footer class="ui-modal-foot">
+      <button type="button" class="ui-btn ghost" (click)="closed.emit()">
+        {{ i18n.t('calendar.form.btn_cancel') }}
+      </button>
+      <button
+        type="submit"
+        class="ui-btn primary"
+        [class.loading]="saving()"
+        [disabled]="eventForm.invalid || saving()"
+      >
+        {{ event() ? i18n.t('calendar.form.btn_save') : i18n.t('calendar.form.btn_create') }}
+      </button>
+    </footer>
+  </form>
+</div>

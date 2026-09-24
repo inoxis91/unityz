@@ -1,173 +1,212 @@
-import { Component, Input, Output, EventEmitter, signal, computed, inject, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  linkedSignal,
+  output,
+  signal,
+} from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { CalendarService, Signup, effectiveRole } from '../../../services/calendar';
-import { Character } from '../../../services/character';
+import {
+  CalendarEvent,
+  CalendarService,
+  RaidRole,
+  Signup,
+  effectiveRole,
+} from '../../../services/calendar';
+import { Character, CharacterService } from '../../../services/character';
 import { Roster } from '../../../services/roster';
 import { ToastService } from '../../../services/toast';
+import { ConfirmService } from '../../../services/confirm';
 import { I18nService } from '../../../services/i18n';
-import { CharacterService } from '../../../services/character';
+import {
+  SignupStatus,
+  SortDirection,
+  SortMethod,
+  countSignups,
+  defaultRoleFor,
+  isCharacterAllowed,
+  signupClass,
+  signupDisplayName,
+  sortSignups,
+} from './participants-utils';
+
+type StatusFilter = 'all' | SignupStatus;
 
 @Component({
   selector: 'app-participants',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [DatePipe, FormsModule, RouterModule],
   templateUrl: './participants.html',
-  styleUrl: './participants.css'
+  styleUrl: './participants.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ParticipantsComponent {
-  private calendarService = inject(CalendarService);
-  private toast = inject(ToastService);
-  public i18n = inject(I18nService);
+  private readonly calendarService = inject(CalendarService);
+  private readonly toast = inject(ToastService);
+  private readonly confirm = inject(ConfirmService);
+  readonly i18n = inject(I18nService);
 
-  eventSig = signal<any>(null);
-  @Input() set event(val: any) { this.eventSig.set(val); }
-  get event(): any { return this.eventSig(); }
+  readonly event = input<CalendarEvent | null>(null);
+  readonly signups = input<Signup[]>([]);
+  readonly myCharacters = input<Character[]>([]);
+  readonly rosters = input<Roster[]>([]);
+  readonly canManageEvents = input(false);
+  readonly rioScores = input<ReadonlyMap<string, number>>(new Map());
+  readonly currentUserId = input<string | null>(null);
 
-  @Input() canManageEvents!: boolean;
-  @Input() rioScores!: Map<string, number>;
+  readonly signupChanged = output<void>();
+  readonly openAlts = output<Signup>();
 
-  @Input() set signups(val: any[]) { this.signupsSig.set(val || []); }
-  @Input() set myCharacters(val: any[]) { this.myCharactersSig.set(val || []); }
-  @Input() set rosters(val: any[]) { this.rostersSig.set(val || []); }
-
-  @Output() signupChanged = new EventEmitter<void>();
-  @Output() openAlts = new EventEmitter<Signup>();
-
-  signupsSig = signal<any[]>([]);
-  myCharactersSig = signal<any[]>([]);
-  rostersSig = signal<any[]>([]);
-
+  readonly roles: RaidRole[] = ['tank', 'heal', 'dps'];
+  readonly statuses: SignupStatus[] = ['signed_up', 'standby', 'absent'];
   readonly effectiveRole = effectiveRole;
-  isRaid = computed(() => this.eventSig()?.type?.toLowerCase() === 'raid');
 
-  // Sorting
-  sortMethod = signal<'date' | 'status'>('date');
-  sortDirection = signal<'asc' | 'desc'>('asc');
+  // ---------- Liste ----------
+  readonly sortMethod = signal<SortMethod>('date');
+  readonly sortDirection = signal<SortDirection>('asc');
+  readonly statusFilter = signal<StatusFilter>('all');
 
-  // Form Fields
-  selectedCharacterId = signal<string>('');
-  selectedRole = signal<string>('dps');
-  signupStatus = signal<'signed_up' | 'standby' | 'absent'>('signed_up');
-  comment = signal<string>('');
+  readonly isRaid = computed(() => this.event()?.type?.toLowerCase() === 'raid');
+  readonly counts = computed(() => countSignups(this.signups(), effectiveRole));
 
-  // Computeds
-  presentCount = computed(() => this.signupsSig().filter(s => s.status === 'signed_up').length);
-  standbyCount = computed(() => this.signupsSig().filter(s => s.status === 'standby').length);
-  absentCount = computed(() => this.signupsSig().filter(s => s.status === 'absent').length);
-
-  sortedSignups = computed(() => {
-    const list = [...this.signupsSig()];
-    const method = this.sortMethod();
-    if (method === 'date') {
-      const direction = this.sortDirection();
-      return list.sort((a, b) => {
-        const dateA = new Date(a.updated_at || a.signup_date || a.created_at || 0).getTime() || 0;
-        const dateB = new Date(b.updated_at || b.signup_date || b.created_at || 0).getTime() || 0;
-        return direction === 'asc' ? dateA - dateB : dateB - dateA;
-      });
-    } else {
-      const order = { 'signed_up': 1, 'standby': 2, 'absent': 3 } as any;
-      return list.sort((a, b) => (order[a.status] || 9) - (order[b.status] || 9));
-    }
+  readonly sortedSignups = computed(() => {
+    const filter = this.statusFilter();
+    const list =
+      filter === 'all' ? this.signups() : this.signups().filter((s) => s.status === filter);
+    return sortSignups(list, this.sortMethod(), this.sortDirection());
   });
 
-  allowedCharacters = computed(() => {
-    return this.myCharactersSig().filter(c => this.isCharacterAllowed(c));
+  // ---------- Formulaire d'inscription ----------
+  readonly mySignup = computed(
+    () => this.signups().find((s) => s.user_id === this.currentUserId()) ?? null,
+  );
+
+  readonly allowedCharacters = computed(() => this.myCharacters().filter((c) => this.isAllowed(c)));
+
+  private readonly defaultCharacter = computed(() => {
+    const allowed = this.allowedCharacters();
+    return allowed.find((c) => c.is_main) ?? allowed[0];
   });
 
-  isSignupDisabled = computed(() => {
-    const evt = this.eventSig();
-    if (!evt) return true;
-    if (evt.registrations_locked) return true;
-    if (this.isEventPast()) return true;
-    if (this.signupStatus() === 'absent') return false;
-    if (!this.selectedCharacterId()) return true;
-    const char = this.myCharactersSig().find(c => c.id === this.selectedCharacterId());
-    return !char || !this.isCharacterAllowed(char);
+  /** Valeurs initiales reprises de l'inscription existante, réinitialisées quand elle change. */
+  readonly status = linkedSignal<SignupStatus>(
+    () => (this.mySignup()?.status as SignupStatus) ?? 'signed_up',
+  );
+  readonly characterId = linkedSignal(
+    () => this.mySignup()?.character_id || this.defaultCharacter()?.id || '',
+  );
+  readonly role = linkedSignal<RaidRole>(
+    () =>
+      (this.mySignup()?.role as RaidRole) ??
+      defaultRoleFor(this.myCharacters().find((c) => c.id === this.characterId())),
+  );
+  readonly comment = linkedSignal(() => this.mySignup()?.comment ?? '');
+
+  readonly saving = signal(false);
+
+  readonly isPast = computed(() => {
+    const evt = this.event();
+    return !!evt && new Date(evt.start_time).getTime() < Date.now();
   });
 
-  constructor() {
-    effect(() => {
-      const allowed = this.allowedCharacters();
-      if (allowed.length > 0 && !this.selectedCharacterId() && this.signupStatus() !== 'absent') {
-        const mainChar = allowed.find(c => c.is_main);
-        if (mainChar) {
-          this.selectedCharacterId.set(mainChar.id || '');
-        } else {
-          this.selectedCharacterId.set(allowed[0].id || '');
-        }
-        this.onCharacterChange();
-      }
-    }, { allowSignalWrites: true });
-    
-    // Auto-load user's existing signup status into the form
-    effect(() => {
-      const list = this.signupsSig();
-      const myId = (this.calendarService as any).authService?.currentUser()?.id;
-      const mySignup = list.find(s => s.user_id === myId);
-      if (mySignup) {
-        this.selectedCharacterId.set(mySignup.character_id || '');
-        this.selectedRole.set(mySignup.role);
-        this.signupStatus.set(mySignup.status as any);
-        this.comment.set(mySignup.comment || '');
-      }
-    }, { allowSignalWrites: true });
+  readonly readOnly = computed(() => this.isPast() || !!this.event()?.registrations_locked);
+
+  readonly selectedCharacter = computed(() =>
+    this.myCharacters().find((c) => c.id === this.characterId()),
+  );
+
+  readonly isSignupDisabled = computed(() => {
+    if (!this.event() || this.readOnly() || this.saving()) return true;
+    if (this.status() === 'absent') return false;
+    const char = this.selectedCharacter();
+    return !char || !this.isAllowed(char);
+  });
+
+  /** Le formulaire diffère-t-il de l'inscription enregistrée ? */
+  readonly isDirty = computed(() => {
+    const mine = this.mySignup();
+    if (!mine) return true;
+    return (
+      mine.status !== this.status() ||
+      (this.status() !== 'absent' &&
+        ((mine.character_id || '') !== this.characterId() || mine.role !== this.role())) ||
+      (mine.comment ?? '') !== this.comment()
+    );
+  });
+
+  isAllowed(char: Character): boolean {
+    return isCharacterAllowed(char, this.event(), this.rosters());
   }
 
-  isEventPast(): boolean {
-    if (!this.event) return false;
-    const now = new Date();
-    const eventDate = new Date(this.event.start_time);
-    return eventDate < now;
+  selectCharacter(char: Character) {
+    if (!this.isAllowed(char) || this.readOnly()) return;
+    this.characterId.set(char.id ?? '');
+    this.role.set(defaultRoleFor(char));
   }
 
-  isCharacterAllowed(char: Character): boolean {
-    if (!this.event || !this.event.roster_id) return true;
-    const targetWeight = this.event.roster_weight || 999;
-    if (!char.roster_id) return false;
-    const charRoster = this.rostersSig().find(r => r.id === char.roster_id);
-    return charRoster ? charRoster.weight <= targetWeight : false;
-  }
-
-  onCharacterChange() {
-    const char = this.myCharactersSig().find(c => c.id === this.selectedCharacterId());
-    if (char) {
-      if (char.is_tank) this.selectedRole.set('tank');
-      else if (char.is_heal) this.selectedRole.set('heal');
-      else this.selectedRole.set('dps');
+  setStatus(status: SignupStatus) {
+    this.status.set(status);
+    if (status !== 'absent' && !this.characterId()) {
+      const char = this.defaultCharacter();
+      if (char) this.selectCharacter(char);
     }
   }
 
-  setStatus(status: 'signed_up' | 'standby' | 'absent') {
-    this.signupStatus.set(status);
-    if (status !== 'absent' && (!this.selectedCharacterId() || this.selectedCharacterId() === '')) {
-      const allowed = this.allowedCharacters();
-      const mainChar = allowed.find(c => c.is_main);
-      if (mainChar) this.selectedCharacterId.set(mainChar.id || '');
-      else if (allowed.length > 0) this.selectedCharacterId.set(allowed[0].id || '');
-      this.onCharacterChange();
-    }
+  canPlay(role: RaidRole): boolean {
+    const char = this.selectedCharacter();
+    if (!char) return true;
+    return role === 'tank' ? !!char.is_tank : role === 'heal' ? !!char.is_heal : !!char.is_dps;
   }
 
   onSignup() {
-    if (!this.event || this.isSignupDisabled()) return;
-    const signupData = {
-      character_id: this.signupStatus() === 'absent' ? null : this.selectedCharacterId(),
-      role: this.selectedRole(),
-      status: this.signupStatus(),
-      comment: this.comment()
-    };
-    this.calendarService.signup(this.event.id, signupData).subscribe({
+    const evt = this.event();
+    if (!evt?.id || this.isSignupDisabled()) return;
+    const absent = this.status() === 'absent';
+    this.saving.set(true);
+    this.calendarService
+      .signup(evt.id, {
+        character_id: absent ? null : this.characterId(),
+        role: this.role(),
+        status: this.status(),
+        comment: this.comment().trim(),
+      })
+      .subscribe({
+        next: () => {
+          this.saving.set(false);
+          this.signupChanged.emit();
+          this.toast.success(this.i18n.t('event.details.toast_signup_success'));
+        },
+        error: (err) => {
+          this.saving.set(false);
+          console.error('[Participants] Signup error', err);
+          this.toast.error(err?.error?.message || this.i18n.t('event.details.toast_signup_error'));
+        },
+      });
+  }
+
+  async onUnsignup() {
+    const evt = this.event();
+    if (!evt?.id || this.readOnly()) return;
+    const ok = await this.confirm.ask(
+      this.i18n.t('event.details.confirm_unsignup_title'),
+      this.i18n.t('event.details.confirm_unsignup_desc'),
+    );
+    if (!ok) return;
+    this.saving.set(true);
+    this.calendarService.unsignup(evt.id).subscribe({
       next: () => {
+        this.saving.set(false);
         this.signupChanged.emit();
-        this.toast.success(this.i18n.t('event.details.toast_signup_success'));
+        this.toast.success(this.i18n.t('event.details.toast_unsignup_success'));
       },
-      error: (err) => {
-        console.error('Signup error:', err);
+      error: () => {
+        this.saving.set(false);
         this.toast.error(this.i18n.t('event.details.toast_signup_error'));
-      }
+      },
     });
   }
 
@@ -180,16 +219,41 @@ export class ParticipantsComponent {
     }
   }
 
-  getClassCategory(className: string | undefined): string {
+  displayName(s: Signup): string {
+    return signupDisplayName(s, this.i18n.t('event.details.unknown_user'));
+  }
+
+  classId(className: string | undefined): string {
     return CharacterService.getClassId(className);
   }
 
-  getRioScoreForKey(name: string | undefined, realm: string | undefined): number | null {
-    if (!name || !realm || !this.rioScores) return null;
-    return this.rioScores.get(`${name}-${realm}`.toLowerCase()) || null;
+  signupClassId(s: Signup): string {
+    return CharacterService.getClassId(signupClass(s));
   }
 
-  onOpenAltsModal(s: Signup) {
-    this.openAlts.emit(s);
+  signupIcon(s: Signup): string {
+    return CharacterService.getClassIcon(signupClass(s));
+  }
+
+  classIcon(className: string | undefined): string {
+    return CharacterService.getClassIcon(className);
+  }
+
+  rioOf(s: Signup): number | null {
+    const name = s.character_name || s.main_character_name;
+    const realm = s.character_realm || s.main_character_realm;
+    if (!name || !realm) return null;
+    return this.rioScores().get(`${name}-${realm}`.toLowerCase()) || null;
+  }
+
+  statusLabel(status: string): string {
+    const key = { signed_up: 'status_present', standby: 'status_maybe', absent: 'status_absent' }[
+      status
+    ];
+    return this.i18n.t(`event.details.${key ?? 'status_present'}`);
+  }
+
+  roleLabel(role: string): string {
+    return this.i18n.t(`event.details.role_${role}`);
   }
 }

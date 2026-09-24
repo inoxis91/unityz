@@ -1,7 +1,17 @@
-import { Component, OnInit, signal, computed, effect, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  OnInit,
+  computed,
+  inject,
+  linkedSignal,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth';
 import { I18nService } from '../../services/i18n';
@@ -9,66 +19,97 @@ import { CharacterManagerComponent } from '../character-manager/character-manage
 import { ToastService } from '../../services/toast';
 import { ConfirmService } from '../../services/confirm';
 import { environment } from '../../../environments/environment';
+import { PageHeaderComponent } from '../../shared/ui/page-header/page-header';
+
+type OptionsTab = 'characters' | 'settings';
 
 @Component({
   selector: 'app-options',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, CharacterManagerComponent],
+  imports: [DatePipe, FormsModule, RouterModule, CharacterManagerComponent, PageHeaderComponent],
   templateUrl: './options.html',
-  styleUrl: './options.css'
+  styleUrl: './options.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OptionsComponent implements OnInit {
-  activeTab = signal<'characters' | 'settings'>('characters');
+  activeTab = signal<OptionsTab>('characters');
   isSetupMode = signal(false);
 
   public i18n = inject(I18nService);
   private http = inject(HttpClient);
+  private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
   private confirmService = inject(ConfirmService);
   private apiUrl = environment.apiUrl;
   
   isPro = computed(() => this.authService.currentUser()?.subscription_tier === 'pro');
   isProcessingSub = signal(false);
 
-  birthdayValue = signal<string>('');
-
-  professionsList = [
-    { id: 'alchemy' },
-    { id: 'inscription' },
-    { id: 'tailoring' },
-    { id: 'enchanting' },
-    { id: 'blacksmithing' },
-    { id: 'engineering' },
-    { id: 'jewelcrafting' },
-    { id: 'leatherworking' }
+  readonly professionsList = [
+    { id: 'alchemy', emoji: '⚗️' },
+    { id: 'inscription', emoji: '📜' },
+    { id: 'tailoring', emoji: '🧵' },
+    { id: 'enchanting', emoji: '✨' },
+    { id: 'blacksmithing', emoji: '⚒️' },
+    { id: 'engineering', emoji: '⚙️' },
+    { id: 'jewelcrafting', emoji: '💎' },
+    { id: 'leatherworking', emoji: '🥾' },
   ];
 
-  selectedProfessions = signal<string[]>([]);
+  /** Valeurs éditables, réinitialisées quand le profil est rechargé. */
+  readonly birthdayValue = linkedSignal(
+    () => this.authService.currentUser()?.birthday?.substring(0, 10) ?? '',
+  );
+  readonly selectedProfessions = linkedSignal<string[]>(() => [
+    ...(this.authService.currentUser()?.professions ?? []),
+  ]);
+  readonly savingBirthday = signal(false);
+  readonly savingProfessions = signal(false);
+  readonly unlinkingDiscord = signal(false);
+
+  readonly professionsDirty = computed(() => {
+    const saved = [...(this.authService.currentUser()?.professions ?? [])].sort();
+    const current = [...this.selectedProfessions()].sort();
+    return saved.join() !== current.join();
+  });
+
+  readonly birthdayDirty = computed(
+    () => this.birthdayValue() !== (this.authService.currentUser()?.birthday?.substring(0, 10) ?? ''),
+  );
+
+  /** Progression de la période d'abonnement (offre gratuite de 30 jours). */
+  readonly remainingDays = computed(() =>
+    this.getRemainingDays(this.authService.currentUser()?.subscription_expires_at),
+  );
 
   constructor(
-    public authService: AuthService, 
+    public authService: AuthService,
     private route: ActivatedRoute,
     private toast: ToastService
-  ) {
-    effect(() => {
-      const bday = this.authService.currentUser()?.birthday;
-      if (bday) {
-        this.birthdayValue.set(bday.substring(0, 10));
-      } else {
-        this.birthdayValue.set('');
-      }
-    });
+  ) {}
 
-    effect(() => {
-      const userProfs = this.authService.currentUser()?.professions || [];
-      this.selectedProfessions.set([...userProfs]);
+  selectTab(tab: OptionsTab) {
+    this.activeTab.set(tab);
+    // L'onglet reste dans l'URL (partage, retour arrière) sans empiler l'historique
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
     });
   }
 
   saveBirthday() {
-    const val = this.birthdayValue() ? this.birthdayValue() : null;
+    const val = this.birthdayValue() || null;
+    this.savingBirthday.set(true);
     this.authService.updateBirthday(val).subscribe({
-      next: () => this.toast.success(this.i18n.t('options.birthday.toast_success')),
-      error: () => this.toast.error(this.i18n.t('options.birthday.toast_error'))
+      next: () => {
+        this.savingBirthday.set(false);
+        this.toast.success(this.i18n.t('options.birthday.toast_success'));
+      },
+      error: () => {
+        this.savingBirthday.set(false);
+        this.toast.error(this.i18n.t('options.birthday.toast_error'));
+      }
     });
   }
 
@@ -86,28 +127,63 @@ export class OptionsComponent implements OnInit {
   }
 
   saveProfessions() {
+    this.savingProfessions.set(true);
     this.authService.updateProfessions(this.selectedProfessions()).subscribe({
-      next: () => this.toast.success(this.i18n.t('options.professions.toast_success')),
-      error: () => this.toast.error(this.i18n.t('options.professions.toast_error'))
+      next: () => {
+        this.savingProfessions.set(false);
+        this.toast.success(this.i18n.t('options.professions.toast_success'));
+      },
+      error: () => {
+        this.savingProfessions.set(false);
+        this.toast.error(this.i18n.t('options.professions.toast_error'));
+      }
+    });
+  }
+
+  async unlinkDiscord() {
+    const ok = await this.confirmService.ask(
+      this.i18n.t('options.discord.btn_unlink'),
+      this.i18n.t('options.discord.confirm_unlink'),
+      this.i18n.t('options.discord.btn_unlink'),
+      this.i18n.t('calendar.form.btn_cancel'),
+      true,
+    );
+    if (!ok) return;
+    this.unlinkingDiscord.set(true);
+    this.authService.updateDiscordId(null).subscribe({
+      next: () => {
+        this.unlinkingDiscord.set(false);
+        this.toast.success(this.i18n.t('options.discord.toast_unlinked'));
+      },
+      error: () => {
+        this.unlinkingDiscord.set(false);
+        this.toast.error(this.i18n.t('options.birthday.toast_error'));
+      },
     });
   }
 
   ngOnInit() {
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       if (params['tab'] === 'settings') {
         this.activeTab.set('settings');
       } else {
         this.activeTab.set('characters');
       }
-      if (params['setup'] === 'true') {
+      if (params['setup'] === 'true' && !this.isSetupMode()) {
         this.isSetupMode.set(true);
         this.toast.info(this.i18n.t('options.toast.import_chars'));
       }
-      if (params['success'] === 'discord_linked') {
-        this.toast.success(this.i18n.t('options.toast.discord_linked'));
-      }
-      if (params['error'] === 'discord_failed') {
-        this.toast.error(this.i18n.t('options.toast.discord_failed'));
+      // Retour de l'OAuth Discord : message affiché une fois, puis retiré de l'URL
+      const flash = params['success'] === 'discord_linked' ? 'success' : params['error'] === 'discord_failed' ? 'error' : null;
+      if (flash) {
+        if (flash === 'success') this.toast.success(this.i18n.t('options.toast.discord_linked'));
+        else this.toast.error(this.i18n.t('options.toast.discord_failed'));
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { success: null, error: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
       }
     });
   }
@@ -176,7 +252,8 @@ export class OptionsComponent implements OnInit {
       this.i18n.t('options.sub.unsubscribe'),
       message,
       this.i18n.t('options.sub.unsubscribe'),
-      'Annuler'
+      this.i18n.t('calendar.form.btn_cancel'),
+      true,
     ).then((confirmed) => {
       if (!confirmed) return;
 

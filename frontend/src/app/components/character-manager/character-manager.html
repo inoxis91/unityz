@@ -1,134 +1,174 @@
-<div class="manager-container">
-  <h2>{{ i18n.t('char.manager.title') }}</h2>
+<div class="manager">
+  <!-- Personnages importés -->
+  <section class="ui-card" style="--i: 1" aria-labelledby="mine-title">
+    <header class="ui-card-head">
+      <h2 id="mine-title">
+        <span class="ui-card-icon" aria-hidden="true">🛡️</span>
+        {{ i18n.t('char.manager.list_title').replace('{guildName}', guildName()) }}
+        <span class="total">{{ myCharacters().length }}</span>
+      </h2>
+      <p>{{ i18n.t('char.manager.list_hint') }}</p>
+    </header>
 
-  <!-- Liste des personnages importés -->
-  <section class="my-characters">
-    <h3>
-      {{
-        i18n
-          .t('char.manager.list_title')
-          .replace('{guildName}', authService.currentGuild()?.name || '')
-      }}
-      ({{ myCharacters().length }})
-    </h3>
-    @if (myCharacters().length === 0) {
-      <div class="empty-state">
-        {{ i18n.t('char.manager.empty') }}
+    @if (!loaded()) {
+      <div class="grid" aria-hidden="true">
+        <span class="ui-skeleton sk"></span>
+        <span class="ui-skeleton sk"></span>
       </div>
-    }
-
-    @if (myCharacters().length > 0) {
-      <div class="table-scroll">
-        <table class="char-table">
-          <thead>
-            <tr>
-              <th>{{ i18n.t('char.manager.th_main') }}</th>
-              <th>{{ i18n.t('char.manager.th_name') }}</th>
-              <th>{{ i18n.t('char.manager.th_realm') }}</th>
-              <th>{{ i18n.t('char.manager.th_level') }}</th>
-              <th>{{ i18n.t('char.manager.th_roles') }}</th>
-              <th>{{ i18n.t('char.manager.th_actions') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (char of myCharacters(); track char) {
-              <tr
-                [class.is-main]="char.is_main"
-                [class]="'border-class-' + getClassCategory(char.class)"
+    } @else {
+      <ul class="grid">
+        @for (char of myCharacters(); track char.id; let i = $index) {
+          <li
+            class="char"
+            [class.main]="char.is_main"
+            [style.--i]="i"
+            [style.--class-color]="'var(--color-' + classId(char.class) + ')'"
+            animate.leave="ui-leave"
+          >
+            <div class="char-head">
+              <img class="char-icon" [src]="classIcon(char.class)" alt="" width="44" height="44" />
+              <div class="char-id">
+                <span class="char-name" [class]="'class-' + classId(char.class)">{{
+                  char.name
+                }}</span>
+                <span class="char-sub"
+                  >{{ char.realm }} ·
+                  {{ i18n.t('char.level').replace('{level}', char.level.toString()) }}</span
+                >
+              </div>
+              <button
+                type="button"
+                class="star"
+                [class.on]="char.is_main"
+                [attr.aria-pressed]="!!char.is_main"
+                [attr.aria-label]="
+                  char.is_main
+                    ? i18n.t('char.manager.star_main')
+                    : i18n.t('char.manager.star_set_main')
+                "
+                [title]="
+                  char.is_main
+                    ? i18n.t('char.manager.star_main')
+                    : i18n.t('char.manager.star_set_main')
+                "
+                (click)="setMain(char)"
               >
-                <td class="main-cell">
-                  <span
-                    class="main-star"
-                    (click)="setMain(char)"
-                    [title]="
-                      char.is_main
-                        ? i18n.t('char.manager.star_main')
-                        : i18n.t('char.manager.star_set_main')
-                    "
-                  >
-                    {{ char.is_main ? '⭐' : '☆' }}
-                  </span>
-                </td>
-                <td class="char-name-cell" [class]="'class-' + getClassCategory(char.class)">
-                  {{ char.name }}
-                </td>
-                <td>{{ char.realm }}</td>
-                <td>{{ char.level }}</td>
-                <td class="roles-cell">
-                  <div class="role-toggles">
-                    <button
-                      class="role-toggle tank"
-                      [class.active]="char.is_tank"
-                      (click)="char.is_tank = !char.is_tank; updateRoles(char)"
-                      [title]="i18n.t('char.role.tooltip.tank')"
-                    >
-                      <img src="assets/icons/tank.png" class="role-icon-img" alt="Tank" />
-                    </button>
-                    <button
-                      class="role-toggle heal"
-                      [class.active]="char.is_heal"
-                      (click)="char.is_heal = !char.is_heal; updateRoles(char)"
-                      [title]="i18n.t('char.role.tooltip.healer')"
-                    >
-                      <img src="assets/icons/heal.png" class="role-icon-img" alt="Heal" />
-                    </button>
-                    <button
-                      class="role-toggle dps"
-                      [class.active]="char.is_dps"
-                      (click)="char.is_dps = !char.is_dps; updateRoles(char)"
-                      [title]="i18n.t('char.role.tooltip.dps')"
-                    >
-                      <img src="assets/icons/dps.png" class="role-icon-img" alt="DPS" />
-                    </button>
-                  </div>
-                </td>
-                <td class="actions-cell">
+                {{ char.is_main ? '★' : '☆' }}
+              </button>
+            </div>
+
+            <div class="char-foot">
+              <div class="roles" role="group" [attr.aria-label]="i18n.t('char.manager.th_roles')">
+                @for (r of roleFlags; track r.flag) {
                   <button
-                    (click)="removeCharacter(char)"
-                    class="btn-remove-icon"
-                    [title]="i18n.t('char.manager.delete_btn')"
+                    type="button"
+                    class="role"
+                    [class]="'role-' + r.icon"
+                    [class.on]="char[r.flag]"
+                    [attr.aria-pressed]="!!char[r.flag]"
+                    [attr.aria-label]="i18n.t(r.tooltip) + ' – ' + char.name"
+                    [title]="i18n.t(r.tooltip)"
+                    (click)="toggleRole(char, r.flag)"
                   >
-                    🗑️
+                    <img [src]="'assets/icons/' + r.icon + '.png'" alt="" />
                   </button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+                }
+              </div>
+              @if (char.roster_name) {
+                <span class="roster">{{ char.roster_name }}</span>
+              }
+              <button
+                type="button"
+                class="ui-btn ghost icon sm remove"
+                [attr.aria-label]="i18n.t('char.manager.delete_btn') + ' – ' + char.name"
+                [title]="i18n.t('char.manager.delete_btn')"
+                (click)="removeCharacter(char)"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M9 3h6a1 1 0 0 1 1 1v1h4v2H4V5h4V4a1 1 0 0 1 1-1Zm-3 6h12l-.8 11.1A2 2 0 0 1 15.2 22H8.8a2 2 0 0 1-2-1.9L6 9Zm4 2v8h2v-8h-2Zm4 0v8h2v-8h-2Z"
+                  />
+                </svg>
+              </button>
+            </div>
+          </li>
+        } @empty {
+          <li class="ui-empty">
+            <span class="emoji" aria-hidden="true">🧙</span>
+            <strong>{{ i18n.t('char.manager.empty') }}</strong>
+          </li>
+        }
+      </ul>
     }
   </section>
 
-  <hr />
-
-  <!-- Section Import depuis Battle.net -->
-  <section class="bnet-import">
-    <div class="header-row">
-      <h3>{{ i18n.t('char.manager.import_title') }} ({{ bnetCharacters().length }} disponibles)</h3>
-      <button (click)="fetchBnetCharacters()" [disabled]="loadingBnet()" class="btn-fetch">
+  <!-- Import Battle.net -->
+  <section class="ui-card bnet" style="--i: 2" aria-labelledby="bnet-title">
+    <header class="ui-card-head">
+      <h2 id="bnet-title">
+        <span class="ui-card-icon bnet-icon" aria-hidden="true">⚡</span>
+        {{ i18n.t('char.manager.import_title') }}
+        <span class="total">{{ bnetCharacters().length }}</span>
+      </h2>
+      <button
+        type="button"
+        class="ui-btn ghost sm"
+        [class.loading]="loadingBnet()"
+        [disabled]="loadingBnet()"
+        (click)="fetchBnetCharacters()"
+      >
+        ↻
         {{
           loadingBnet() ? i18n.t('char.manager.fetch_loading') : i18n.t('char.manager.fetch_btn')
         }}
       </button>
-    </div>
+    </header>
 
-    @if (bnetCharacters().length > 0) {
-      <div class="bnet-list">
-        @for (char of bnetCharacters(); track char) {
-          <div class="bnet-char-card" [class]="'border-class-' + getClassCategory(char.class)">
-            <div class="char-info">
-              <strong [class]="'class-' + getClassCategory(char.class)">{{ char.name }}</strong>
-              <span class="char-details">{{ char.realm }} (Niv. {{ char.level }})</span>
+    <input
+      type="search"
+      class="ui-input search"
+      [value]="bnetQuery()"
+      (input)="bnetQuery.set($any($event.target).value)"
+      [placeholder]="i18n.t('char.manager.search')"
+      [attr.aria-label]="i18n.t('char.manager.search')"
+    />
+
+    <ul class="bnet-list">
+      @for (char of bnetCharacters(); track char.name + char.realm; let i = $index) {
+        <li
+          class="bnet-char"
+          [style.--i]="i"
+          [style.--class-color]="'var(--color-' + classId(char.class) + ')'"
+          animate.leave="ui-leave"
+        >
+          <img [src]="classIcon(char.class)" alt="" width="34" height="34" />
+          <span class="bnet-main">
+            <span class="char-name" [class]="'class-' + classId(char.class)">{{ char.name }}</span>
+            <span class="char-sub">
+              {{ char.realm }} ·
+              {{ i18n.t('char.level').replace('{level}', char.level.toString()) }}
               @if (char.guild) {
-                <span class="guild-tag">🏰 {{ char.guild.name }}</span>
+                · 🏰 {{ char.guild.name }}
               }
-            </div>
-            <button (click)="importCharacter(char)" class="btn-import">
-              {{ i18n.t('char.manager.add_btn') }}
-            </button>
-          </div>
+            </span>
+          </span>
+          <button
+            type="button"
+            class="ui-btn primary sm"
+            [class.loading]="isImporting(char)"
+            [disabled]="isImporting(char)"
+            (click)="importCharacter(char)"
+          >
+            ＋ {{ i18n.t('char.manager.add_btn') }}
+          </button>
+        </li>
+      } @empty {
+        @if (!loadingBnet()) {
+          <li class="ui-empty compact">
+            <p>{{ i18n.t('char.manager.bnet_empty') }}</p>
+          </li>
         }
-      </div>
-    }
+      }
+    </ul>
   </section>
 </div>

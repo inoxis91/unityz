@@ -1,45 +1,25 @@
-.admin-container {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+:host {
+  display: block;
 }
 
 .admin-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  border-bottom: 2px solid var(--ui-border-subtle);
-  padding-bottom: 1rem;
-}
-
-.admin-tabs button {
-  background: transparent;
-  border: none;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--ui-text-muted);
-  cursor: pointer;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  transition: all 0.2s;
-}
-
-.admin-tabs button:hover {
-  background: var(--ui-surface-muted);
-  color: var(--ui-fg-brand);
-}
-
-.admin-tabs button.active {
-  background: var(--ui-brand);
-  color: var(--ui-on-solid);
+  align-self: flex-start;
+  max-width: 100%;
+  box-shadow: none;
 }
 
 .tab-content {
-  animation: fadeIn 0.3s ease-in-out;
+  min-width: 0;
+  animation: ui-fade 0.25s ease-out;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+.tab-skeleton {
+  height: 420px;
+  border-radius: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-content {
+    animation: none;
+  }
 }

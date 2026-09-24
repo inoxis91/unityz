@@ -1,0 +1,191 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* ---------- Bandeau Discord ---------- */
+.discord-banner {
+  padding: 10px 20px;
+  border-bottom: 1px solid color-mix(in srgb, var(--ui-discord) 30%, var(--ui-border));
+  background:
+    radial-gradient(
+      60% 200% at 0% 50%,
+      color-mix(in srgb, var(--ui-discord) 18%, transparent),
+      transparent 70%
+    ),
+    var(--ui-surface);
+  animation: banner-in 0.35s var(--ui-ease-out);
+}
+
+.banner-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.banner-icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--ui-discord);
+  box-shadow: 0 6px 14px -6px var(--ui-discord);
+}
+
+.banner-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: var(--ui-on-solid);
+}
+
+.banner-text {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  min-width: 0;
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: var(--ui-text-secondary);
+}
+
+.banner-text strong {
+  color: var(--ui-text-strong);
+}
+
+.banner-close {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 9px;
+  font-size: 1.3rem;
+  line-height: 1;
+  color: var(--ui-text-muted);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.banner-close:hover {
+  color: var(--ui-text-strong);
+  background: var(--ui-surface-subtle);
+}
+
+.banner-close:focus-visible {
+  outline: 3px solid var(--ui-focus);
+  outline-offset: 2px;
+}
+
+/* ---------- Contenu ---------- */
+main {
+  flex-grow: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px 40px;
+}
+
+main.full-width {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* ---------- Pied de page ---------- */
+.app-footer {
+  width: 100%;
+  padding: 20px;
+  border-top: 1px solid var(--ui-border);
+  font-size: 0.825rem;
+  color: var(--ui-text-muted);
+}
+
+.footer-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.footer-links a {
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--ui-text-muted);
+  transition: color 0.2s;
+}
+
+.footer-links a:hover {
+  color: var(--ui-fg-brand);
+}
+
+.footer-links a:focus-visible {
+  border-radius: 4px;
+  outline: 3px solid var(--ui-focus);
+  outline-offset: 2px;
+}
+
+.footer-links .dot {
+  color: var(--ui-border-strong);
+}
+
+@keyframes banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}
+
+@media (max-width: 640px) {
+  main {
+    padding: 16px 12px 32px;
+  }
+
+  .discord-banner {
+    padding: 10px 12px;
+  }
+
+  .banner-content {
+    flex-wrap: wrap;
+  }
+
+  .banner-text {
+    flex-basis: calc(100% - 90px);
+  }
+
+  .banner-content .ui-btn {
+    order: 3;
+    width: 100%;
+  }
+
+  .footer-content {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .discord-banner {
+    animation: none;
+  }
+}

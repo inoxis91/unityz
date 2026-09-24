@@ -1,6 +1,5 @@
 :host {
   display: block;
-  margin-bottom: 2.5rem;
 }
 
 .birthday-card {
@@ -9,9 +8,10 @@
   gap: 1.75rem;
   padding: 1.75rem;
   border: 1px solid var(--ui-bd-amber-200);
-  border-radius: 24px;
+  border-radius: 22px;
   background: linear-gradient(135deg, var(--ui-bg-amber-50) 0%, var(--ui-bg-orange-50) 100%);
   box-shadow: 0 4px 20px rgba(251, 191, 36, 0.08);
+  animation: ui-rise 0.45s var(--ui-ease-out) 0.15s backwards;
 }
 
 .birthday-icon {

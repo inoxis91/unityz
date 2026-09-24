@@ -1,223 +1,305 @@
-.manager-container {
-  padding: 20px;
-  font-family: Arial, sans-serif;
+:host {
+  display: block;
 }
 
-h2 {
-  color: var(--ui-text-strong);
-  border-bottom: 2px solid var(--ui-brand);
-  padding-bottom: 10px;
-}
-.main-cell {
-  text-align: center;
-  font-size: 1.2rem;
-}
-
-.main-star {
-  cursor: pointer;
-  transition: transform 0.2s;
-  display: inline-block;
-}
-
-.main-star:hover {
-  transform: scale(1.2);
-}
-
-.is-main {
-  background-color: var(--ui-bg-amber-50);
-}
-
-.is-main td {
-  font-weight: 600;
-}
-
-/* Narrow screens: scroll the table instead of the page */
-.table-scroll {
-  margin-top: 1rem;
-  overflow-x: auto;
-}
-
-.char-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 8px;
-}
-
-.char-table tr {
-  background: var(--ui-surface);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  border-radius: 12px;
-  transition: transform 0.2s;
-}
-
-.char-table tr:hover {
-  transform: translateX(4px);
-}
-
-.char-table td {
-  padding: 16px;
-  border: none;
-}
-
-.char-table td:first-child { border-radius: 12px 0 0 12px; }
-.char-table td:last-child { border-radius: 0 12px 12px 0; }
-
-.char-name-cell {
-  font-weight: 800;
-  font-size: 1.15rem;
-}
-
-.char-table th {
-  background-color: var(--ui-surface-muted);
-  font-weight: bold;
-}
-
-.roles-cell {
-  padding: 8px !important;
-}
-
-.role-toggles {
+.manager {
   display: flex;
-  gap: 6px;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-.role-toggle {
-  background: var(--ui-surface-muted);
-  border: 1px solid var(--ui-border);
+.total {
+  min-width: 26px;
+  padding: 2px 8px;
   border-radius: 8px;
-  padding: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-  opacity: 0.4;
-  filter: grayscale(1);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-align: center;
+  color: var(--ui-badge-fg);
+  background: var(--ui-badge-bg);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.grid > .ui-empty {
+  grid-column: 1 / -1;
+}
+
+.sk {
+  height: 118px;
+  border-radius: 16px;
+}
+
+.char {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--ui-border);
+  border-top: 3px solid var(--class-color, var(--ui-border-strong));
+  border-radius: 16px;
+  background:
+    radial-gradient(
+      100% 80% at 0% 0%,
+      color-mix(in srgb, var(--class-color, transparent) 12%, transparent),
+      transparent 60%
+    ),
+    var(--ui-surface-muted);
+  animation: ui-rise 0.35s var(--ui-ease-out) backwards;
+  animation-delay: calc(min(var(--i, 0), 20) * 40ms);
+  transition:
+    transform 0.2s var(--ui-ease-out),
+    box-shadow 0.2s ease;
+}
+
+.char:hover {
+  box-shadow: var(--ui-shadow-md);
+  transform: translateY(-2px);
+}
+
+.char.main {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ui-status-warning) 55%, transparent);
+}
+
+.char-head {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 10px;
+}
+
+.char-icon {
+  flex-shrink: 0;
+  border-radius: 12px;
+  box-shadow: 0 0 0 2px var(--class-color, transparent);
+}
+
+.char-id,
+.bnet-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.char-name {
+  overflow: hidden;
+  font-size: 1rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.char-sub {
+  overflow: hidden;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ui-text-muted);
+}
+
+.star {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
   width: 36px;
   height: 36px;
-}
-
-.role-toggle:hover {
-  transform: translateY(-2px);
-  border-color: var(--ui-border-strong);
-}
-
-.role-toggle.active {
-  opacity: 1;
-  filter: grayscale(0);
-  background: var(--ui-surface);
-  border-color: var(--ui-status-info);
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
-}
-
-.role-toggle.tank.active { background: var(--ui-role-tank-bg); border-color: var(--ui-role-tank); }
-.role-toggle.heal.active { background: var(--ui-role-heal-bg); border-color: var(--ui-role-heal); }
-.role-toggle.dps.active { background: var(--ui-role-dps-bg); border-color: var(--ui-role-dps); }
-
-.actions-cell {
-  text-align: center;
-}
-
-.btn-remove-icon {
-  background: transparent;
-  border: none;
-  font-size: 1.25rem;
-  cursor: pointer;
-  padding: 8px;
+  border: 1px solid var(--ui-border);
   border-radius: 10px;
+  font-size: 1.2rem;
+  line-height: 1;
   color: var(--ui-text-muted);
-  transition: all 0.2s;
-}
-
-.btn-remove-icon:hover {
-  background: var(--ui-bg-red-50);
-  color: var(--ui-fg-red-600);
-  transform: scale(1.1);
-}
-
-.btn-fetch {
-  background-color: var(--ui-brand);
-  color: var(--ui-on-solid);
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
+  background: var(--ui-surface);
   cursor: pointer;
+  transition:
+    color 0.15s ease,
+    transform 0.3s var(--ui-ease-spring),
+    border-color 0.15s ease;
 }
 
-.btn-import {
-  background-color: var(--ui-success);
-  color: var(--ui-on-solid);
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
+.star:hover {
+  color: var(--ui-status-warning);
+  transform: rotate(-12deg) scale(1.1);
 }
 
-.header-row {
+.star.on {
+  border-color: var(--ui-bd-amber-300);
+  color: var(--ui-status-warning);
+  background: var(--ui-bg-amber-50);
+  animation: ui-pop 0.4s var(--ui-ease-spring);
+}
+
+.char-foot {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-top: 30px;
+  gap: 8px;
+}
+
+.roles {
+  display: flex;
+  gap: 4px;
+}
+
+.role {
+  --role: var(--ui-role-dps);
+  --role-bg: var(--ui-role-dps-bg);
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 2px solid var(--ui-border);
+  border-radius: 10px;
+  background: var(--ui-surface);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.2s var(--ui-ease-spring);
+}
+
+.role img {
+  width: 20px;
+  height: 20px;
+  opacity: 0.4;
+  filter: grayscale(1);
+  transition:
+    opacity 0.15s ease,
+    filter 0.15s ease;
+}
+
+.role.role-tank {
+  --role: var(--ui-role-tank);
+  --role-bg: var(--ui-role-tank-bg);
+}
+.role.role-heal {
+  --role: var(--ui-role-heal);
+  --role-bg: var(--ui-role-heal-bg);
+}
+
+.role:hover {
+  transform: scale(1.06);
+}
+
+.role.on {
+  border-color: var(--role);
+  background: var(--role-bg);
+}
+
+.role.on img {
+  opacity: 1;
+  filter: none;
+}
+
+.roster {
+  overflow: hidden;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ui-fg-brand);
+  background: var(--ui-bg-blue-50);
+}
+
+.remove {
+  margin-left: auto;
+  color: var(--ui-text-muted);
+}
+
+.remove:hover:not(:disabled) {
+  border-color: var(--ui-bd-red-200);
+  color: var(--ui-fg-red-600);
+  background: var(--ui-bg-red-50);
+}
+
+.star:focus-visible,
+.role:focus-visible {
+  outline: 3px solid var(--ui-focus);
+  outline-offset: 2px;
+}
+
+/* ---------- Import Battle.net ---------- */
+.bnet {
+  --card-accent: var(--ui-brand);
+}
+
+.bnet-icon {
+  background: linear-gradient(135deg, var(--ui-brand), var(--ui-purple));
+}
+
+.search {
+  margin-bottom: 0.75rem;
 }
 
 .bnet-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 15px;
-  margin-top: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 8px;
+  max-height: 480px;
+  margin: 0;
+  padding: 2px;
+  overflow-y: auto;
+  list-style: none;
+  scrollbar-width: thin;
 }
 
-.bnet-char-card {
+.bnet-list > .ui-empty {
+  grid-column: 1 / -1;
+}
+
+.bnet-char {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 1.25rem;
-  background: var(--ui-surface);
-  border-radius: 16px;
-  border: 1px solid var(--ui-border-subtle);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--ui-border);
+  border-left: 3px solid var(--class-color, var(--ui-border-strong));
+  border-radius: 12px;
+  background: var(--ui-surface-muted);
+  animation: ui-rise 0.3s var(--ui-ease-out) backwards;
+  animation-delay: calc(min(var(--i, 0), 20) * 25ms);
 }
 
-.bnet-char-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  border-color: var(--ui-status-info);
+.bnet-char img {
+  flex-shrink: 0;
+  border-radius: 9px;
 }
 
-.char-info {
-  display: flex;
-  flex-direction: column;
+.compact {
+  padding: 1.25rem 1rem;
 }
 
-.char-info strong {
-  display: block;
-  font-size: 1.25rem;
-  margin-bottom: 0.25rem;
+@media (max-width: 640px) {
+  .grid,
+  .bnet-list {
+    grid-template-columns: 1fr;
+  }
+
+  .bnet-list {
+    max-height: none;
+  }
 }
 
-.char-details {
-  font-size: 0.88rem;
-  color: var(--ui-text-muted);
-}
+@media (prefers-reduced-motion: reduce) {
+  .char,
+  .star.on,
+  .bnet-char {
+    animation: none;
+  }
 
-.guild-tag {
-  display: inline-block;
-  align-self: flex-start;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--ui-fg-blue-600);
-  background: rgba(59, 130, 246, 0.1);
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-  margin-top: 0.35rem;
-  border: 1px solid rgba(59, 130, 246, 0.2);
-}
-
-.empty-state {
-  padding: 20px;
-  background: var(--ui-bg-amber-100);
-  color: var(--ui-fg-amber-800);
-  border-radius: 4px;
-  margin-top: 15px;
+  .char,
+  .star,
+  .role,
+  .role img {
+    transition: none;
+  }
 }

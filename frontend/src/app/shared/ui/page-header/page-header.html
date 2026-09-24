@@ -1,0 +1,18 @@
+<header class="ph">
+  <div class="ph-main">
+    @if (icon()) {
+      <span class="ph-icon" aria-hidden="true">{{ icon() }}</span>
+    }
+    <div class="ph-text">
+      <h1>{{ title() }}</h1>
+      @if (subtitle()) {
+        <p>{{ subtitle() }}</p>
+      }
+    </div>
+    <div class="ph-actions">
+      <ng-content select="[pageActions]" />
+    </div>
+  </div>
+  <ng-content select="[pageStats]" />
+  <ng-content />
+</header>

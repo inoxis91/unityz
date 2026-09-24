@@ -1,5 +1,15 @@
-import { Component, OnInit, signal, computed, OnDestroy, effect, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  OnInit,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import { CharacterService, Character } from '../../services/character';
@@ -9,210 +19,251 @@ import { FeeService, FeeAllocation } from '../../services/fee';
 import { I18nService } from '../../services/i18n';
 import { DashboardBirthdaysComponent, GuildBirthday } from './birthdays/birthdays';
 import { DashboardParsesComponent } from './parses/parses';
+import { CountUpDirective } from '../../shared/wcl/count-up';
+import { eventTypeKey } from '../../utils/event-type';
+import {
+  buildFeeSummary,
+  formatCountdown,
+  pickCharacterImage,
+  pickUpcomingEvents,
+} from './dashboard-utils';
+
+interface Attendance {
+  percentage: number;
+  total_eligible: number;
+  attended: number;
+  events: {
+    id: string;
+    title: string;
+    start_time: string;
+    status: string | null;
+    roster_name?: string | null;
+    character_name?: string | null;
+  }[];
+}
+
+type SignupTone = 'success' | 'warning' | 'danger' | 'neutral';
+
+const RING_RADIUS = 30;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 @Component({
   selector: 'app-dashboard',
-  standalone: true,
-  imports: [CommonModule, RouterModule, DashboardBirthdaysComponent, DashboardParsesComponent],
+  imports: [
+    DatePipe,
+    RouterModule,
+    DashboardBirthdaysComponent,
+    DashboardParsesComponent,
+    CountUpDirective,
+  ],
   templateUrl: './dashboard.html',
-  styleUrl: './dashboard.css'
+  styleUrl: './dashboard.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '(document:keydown.escape)': 'showAttendanceModal.set(false)' },
 })
-export class DashboardComponent implements OnInit, OnDestroy {
-  public i18n = inject(I18nService);
+export class DashboardComponent implements OnInit {
+  readonly i18n = inject(I18nService);
+  readonly authService = inject(AuthService);
+  readonly characterService = inject(CharacterService);
+  private readonly calendarService = inject(CalendarService);
+  private readonly rosterService = inject(RosterService);
+  private readonly feeService = inject(FeeService);
 
-  myCharacters = signal<Character[]>([]);
-  upcomingEvents = signal<CalendarEvent[]>([]);
-  mySignups = signal<Signup[]>([]);
-  myRoster = signal<Roster | null>(null);
-  myAllocations = signal<FeeAllocation[]>([]);
-  currentTime = signal(new Date());
-  myAttendance = signal<{ percentage: number; total_eligible: number; attended: number; events: any[] } | null>(null);
-  showAttendanceModal = signal(false);
+  readonly myCharacters = signal<Character[]>([]);
+  readonly charactersLoaded = signal(false);
+  private readonly events = signal<CalendarEvent[]>([]);
+  readonly eventsLoaded = signal(false);
+  readonly mySignups = signal<Signup[]>([]);
+  readonly myRoster = signal<Roster | null>(null);
+  readonly myAllocations = signal<FeeAllocation[]>([]);
+  readonly myAttendance = signal<Attendance | null>(null);
+  readonly birthdays = signal<GuildBirthday[]>([]);
+  readonly currentTime = signal(new Date());
+  readonly showAttendanceModal = signal(false);
 
-  charDetails = signal<any>(null);
-  loadingDetails = signal(false);
-  mainCharacterRioScore = signal<number | null>(null);
-  rioScores = signal<Map<string, number>>(new Map());
+  readonly charDetails = signal<any>(null);
+  readonly loadingDetails = signal(false);
+  readonly rioScores = signal<ReadonlyMap<string, number>>(new Map());
 
-  birthdays = signal<GuildBirthday[]>([]);
+  readonly ringRadius = RING_RADIUS;
+  readonly ringCircumference = RING_CIRCUMFERENCE;
 
-  private timerInterval: any;
-
-  mainCharacter = computed(() => this.myCharacters().find(c => c.is_main));
-
-  // Computed summary for next 3 months
-  minimumFee = computed(() => this.authService.currentUser()?.active_guild_minimum_fee_amount ?? 2000);
-
-  feeSummary = computed(() => {
-    const months: { name: string, status: any }[] = [];
-    const now = new Date();
-    const locale = this.i18n.currentLocale() === 'en' ? 'en-US' : 'fr-FR';
-    
-    for (let i = 0; i < 3; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-      // Manually construct YYYY-MM in local time to avoid timezone shifts
-      const year = d.getFullYear();
-      const monthNum = d.getMonth() + 1;
-      const dateStr = `${year}-${String(monthNum).padStart(2, '0')}`;
-      
-      const alloc = this.myAllocations().find(a => a.month_date.startsWith(dateStr));
-      
-      const monthName = d.toLocaleDateString(locale, { month: 'long' });
-      const capitalized = monthName.charAt(0).toUpperCase() + monthName.slice(1);
-      
-      let status = { class: 'none', icon: '⭕', label: '0 PO' };
-      if (alloc) {
-        if (alloc.amount >= this.minimumFee()) {
-          status = { 
-            class: alloc.amount > this.minimumFee() ? 'donation' : 'paid', 
-            icon: alloc.amount > this.minimumFee() ? '⭐' : '✅',
-            label: `${alloc.amount} PO`
-          };
-        } else {
-          status = { class: 'partial', icon: '⚠️', label: `${alloc.amount} PO` };
-        }
-      }
-      
-      months.push({ name: capitalized, status });
-    }
-    return months;
+  readonly locale = computed(() => (this.i18n.currentLocale() === 'en' ? 'en-US' : 'fr-FR'));
+  readonly mainCharacter = computed(() => this.myCharacters().find((c) => c.is_main));
+  readonly mainImage = computed(() => pickCharacterImage(this.charDetails()));
+  readonly mainRio = computed(() => {
+    const main = this.mainCharacter();
+    return main ? this.rioOf(main) : null;
   });
 
-  constructor(
-    public authService: AuthService,
-    public characterService: CharacterService,
-    private calendarService: CalendarService,
-    private rosterService: RosterService,
-    private feeService: FeeService
-  ) {
-    // Fetch details when main character is loaded
+  readonly greeting = computed(() => {
+    const h = this.currentTime().getHours();
+    if (h < 5 || h >= 18) return this.i18n.t('dashboard.greeting_evening');
+    return this.i18n.t('dashboard.welcome');
+  });
+
+  readonly todayLabel = computed(() =>
+    this.currentTime().toLocaleDateString(this.locale(), {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    }),
+  );
+
+  readonly minimumFee = computed(
+    () => this.authService.currentUser()?.active_guild_minimum_fee_amount ?? 2000,
+  );
+
+  readonly feeSummary = computed(() =>
+    buildFeeSummary(this.myAllocations(), this.minimumFee(), new Date(), this.locale()),
+  );
+
+  readonly currentFee = computed(() => this.feeSummary()[0]);
+
+  /** Signups indexés par événement pour éviter une recherche linéaire par carte. */
+  private readonly signupByEvent = computed(
+    () => new Map(this.mySignups().map((s) => [s.event_id, s])),
+  );
+
+  readonly upcoming = computed(() => {
+    const now = this.currentTime();
+    const dayUnit = this.i18n.t('dashboard.days_short');
+    const signups = this.signupByEvent();
+    return pickUpcomingEvents(this.events(), now).map((event) => ({
+      event,
+      tone: eventTypeKey(event.type),
+      countdown: formatCountdown(event.start_time, now, dayUnit),
+      signup: this.signupView(event.id ? signups.get(event.id) : undefined),
+    }));
+  });
+
+  readonly nextEvent = computed(() => this.upcoming()[0] ?? null);
+
+  readonly attendanceOffset = computed(() => {
+    const pct = Math.min(100, Math.max(0, this.myAttendance()?.percentage ?? 0));
+    return RING_CIRCUMFERENCE * (1 - pct / 100);
+  });
+
+  readonly attendanceTone = computed(() => {
+    const pct = this.myAttendance()?.percentage ?? 0;
+    if (pct >= 80) return 'good';
+    if (pct >= 50) return 'mid';
+    return 'low';
+  });
+
+  constructor() {
+    const destroyRef = inject(DestroyRef);
+    const timer = setInterval(() => this.currentTime.set(new Date()), 60_000);
+    destroyRef.onDestroy(() => clearInterval(timer));
+
+    // Rendu Blizzard du main, rechargé seulement quand le main change
     effect(() => {
       const main = this.mainCharacter();
-      if (main) {
-        this.fetchCharacterDetails(main);
-        this.characterService.getRioScore(main.name, main.realm).subscribe(score => {
-          this.mainCharacterRioScore.set(score);
-        });
-      }
+      if (main) untracked(() => this.fetchCharacterDetails(main));
     });
   }
 
   ngOnInit() {
     this.loadData();
-    this.timerInterval = setInterval(() => {
-      this.currentTime.set(new Date());
-    }, 60000); // Update every minute
   }
 
-  ngOnDestroy() {
-    if (this.timerInterval) clearInterval(this.timerInterval);
-  }
-
-  loadData() {
-    // Load characters
-    this.characterService.getMyCharacters().subscribe(chars => {
-      this.myCharacters.set(chars);
-
-      // Fetch RIO scores for all
-      chars.forEach(c => {
-        this.characterService.getRioScore(c.name, c.realm).subscribe(score => {
-          this.rioScores.update(map => {
-            const newMap = new Map(map);
-            newMap.set(`${c.name}-${c.realm}`.toLowerCase(), score);
-            return newMap;
+  private loadData() {
+    this.characterService.getMyCharacters().subscribe({
+      next: (chars) => {
+        this.myCharacters.set(chars);
+        this.charactersLoaded.set(true);
+        for (const c of chars) {
+          this.characterService.getRioScore(c.name, c.realm).subscribe((score) => {
+            this.rioScores.update((map) => new Map(map).set(this.rioKey(c), score));
           });
-        });
-      });
-    });
-    
-    // Load events and filter for upcoming
-    this.calendarService.getEvents().subscribe(events => {
-      const now = new Date();
-      const upcoming = events
-        .filter(e => new Date(e.start_time) > now)
-        .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
-        .slice(0, 3); // Only next 3
-      this.upcomingEvents.set(upcoming);
+        }
+      },
+      error: () => this.charactersLoaded.set(true),
     });
 
-    // Load signups
-    this.calendarService.getMySignups().subscribe(signups => this.mySignups.set(signups));
+    this.calendarService.getEvents().subscribe({
+      next: (events) => {
+        this.events.set(events);
+        this.eventsLoaded.set(true);
+      },
+      error: () => this.eventsLoaded.set(true),
+    });
 
-    // Load roster
-    this.rosterService.getMyRoster().subscribe(roster => this.myRoster.set(roster));
+    this.calendarService.getMySignups().subscribe((signups) => this.mySignups.set(signups));
+    this.rosterService.getMyRoster().subscribe((roster) => this.myRoster.set(roster));
 
-    // Load allocations
-    const currentYear = new Date().getFullYear();
-    this.feeService.loadMyAllocations(currentYear).subscribe(allocs => this.myAllocations.set(allocs));
+    const now = new Date();
+    this.feeService.loadMyAllocations(now.getFullYear()).subscribe((allocs) => {
+      this.myAllocations.set(allocs);
+      // Les 3 mois affichés peuvent déborder sur l'année suivante (novembre, décembre)
+      if (now.getMonth() >= 10) {
+        this.feeService
+          .loadMyAllocations(now.getFullYear() + 1)
+          .subscribe((next) => this.myAllocations.update((cur) => [...cur, ...next]));
+      }
+    });
 
-    // Load guild birthdays
     this.authService.getGuildBirthdays().subscribe({
       next: (birthdays) => this.birthdays.set(birthdays),
-      error: (err) => console.error('Error loading guild birthdays', err)
+      error: (err) => console.error('[Dashboard] Error loading guild birthdays', err),
     });
 
-    // Load attendance
     this.authService.getAttendance().subscribe({
       next: (attendance) => this.myAttendance.set(attendance),
-      error: (err) => console.error('Error loading attendance', err)
+      error: (err) => console.error('[Dashboard] Error loading attendance', err),
     });
   }
 
-  fetchCharacterDetails(char: Character) {
+  private fetchCharacterDetails(char: Character) {
     this.loadingDetails.set(true);
     this.characterService.getCharacterDetails(char.realm, char.name).subscribe({
       next: (details) => {
         this.charDetails.set(details);
         this.loadingDetails.set(false);
       },
-      error: () => this.loadingDetails.set(false)
+      error: () => this.loadingDetails.set(false),
     });
   }
 
-  getCharacterImage(): string | null {
-    const details = this.charDetails();
-    if (!details || !details.media || !details.media.assets) return null;
-    
-    const assets = details.media.assets;
-    // Order of preference for a nice dashboard render
-    const preferredKeys = ['main-raw', 'main', 'inset', 'portrait', 'avatar'];
-    
-    for (const key of preferredKeys) {
-      const asset = assets.find((a: any) => a.key === key);
-      if (asset) return asset.value;
+  private signupView(signup: Signup | undefined): { tone: SignupTone; label: string } {
+    switch (signup?.status) {
+      case 'signed_up':
+        return { tone: 'success', label: this.i18n.t('dashboard.signed_up') };
+      case 'standby':
+        return { tone: 'warning', label: this.i18n.t('dashboard.standby') };
+      case 'absent':
+        return { tone: 'danger', label: this.i18n.t('dashboard.absent') };
+      case undefined:
+        return { tone: 'neutral', label: this.i18n.t('dashboard.unregistered') };
+      default:
+        return { tone: 'success', label: this.i18n.t('dashboard.signed_up') };
     }
-    
-    return assets[0].value;
   }
 
-  getSignupStatus(eventId: string | undefined): Signup | undefined {
-    if (!eventId) return undefined;
-    return this.mySignups().find(s => s.event_id === eventId);
+  private rioKey(c: Pick<Character, 'name' | 'realm'>): string {
+    return `${c.name}-${c.realm}`.toLowerCase();
   }
 
-  getCountdown(startTime: string): string {
-    const start = new Date(startTime).getTime();
-    const now = this.currentTime().getTime();
-    const diff = start - now;
-
-    if (diff <= 0) return this.i18n.t('dashboard.in_progress');
-
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-    const dayUnit = this.i18n.t('dashboard.days_short');
-
-    if (days > 0) return `${days}${dayUnit} ${hours}h`;
-    if (hours > 0) return `${hours}h ${minutes}m`;
-    return `${minutes} min`;
+  rioOf(c: Pick<Character, 'name' | 'realm'>): number | null {
+    return this.rioScores().get(this.rioKey(c)) || null;
   }
 
-  getClassCategory(className: string | undefined): string {
+  classId(className: string | undefined): string {
     return CharacterService.getClassId(className);
   }
 
-  getRioScoreForKey(name: string, realm: string): number | null {
-    return this.rioScores().get(`${name}-${realm}`.toLowerCase()) || null;
+  classIcon(className: string | undefined): string {
+    return CharacterService.getClassIcon(className);
+  }
+
+  attendanceLabel(att: Attendance): string {
+    return this.i18n
+      .t('dashboard.attendance.events_count')
+      .replace('{attended}', String(att.attended))
+      .replace('{eligible}', String(att.total_eligible));
+  }
+
+  isPresent(status: string | null): boolean {
+    return status === 'signed_up' || status === 'standby';
   }
 }

@@ -1,184 +1,270 @@
-<div class="fees-container animated-fade-in">
-  <div class="header-section">
-    <h1>{{ i18n.t('fees.title') }}</h1>
-    <p class="subtitle">{{ i18n.t('fees.subtitle') }}</p>
-  </div>
+<div class="ui-page">
+  <app-page-header
+    icon="💰"
+    tone="amber"
+    [title]="i18n.t('fees.title')"
+    [subtitle]="i18n.t('fees.subtitle')"
+  >
+    <dl pageStats class="ui-kpis">
+      <div class="ui-kpi warning" style="--i: 0">
+        <dt>{{ i18n.t('fees.stat_total').replace('{year}', displayYear().toString()) }}</dt>
+        <dd><span [appCountUp]="stats().total"></span> <small>PO</small></dd>
+      </div>
+      <div class="ui-kpi success" style="--i: 1">
+        <dt>{{ i18n.t('fees.stat_covered') }}</dt>
+        <dd>{{ stats().covered }}<small>/12</small></dd>
+      </div>
+      <div class="ui-kpi" [class.brand]="stats().pending > 0" style="--i: 2">
+        <dt>{{ i18n.t('fees.stat_pending') }}</dt>
+        <dd>{{ stats().pending }}</dd>
+      </div>
+      <div class="ui-kpi" style="--i: 3">
+        <dt>{{ i18n.t('fees.stat_minimum') }}</dt>
+        <dd>{{ minimumFee() }} <small>PO</small></dd>
+      </div>
+    </dl>
+  </app-page-header>
 
-  <!-- Discord Warning (Only if ID is missing AND the guild has a Pro subscription) -->
-  @if (isPro() && !authService.currentUser()?.discord_id) {
-    <section class="discord-warning-section animated-fade-in">
-      <div class="card warning-card">
-        <div class="warning-header">
-          <span class="warning-icon">📱</span>
-          <h3>{{ i18n.t('fees.discord.warning_title') }}</h3>
-        </div>
-        <p>{{ i18n.t('fees.discord.warning_desc') }}</p>
-        <div class="warning-form">
-          <button class="btn-discord-login" (click)="linkDiscord()">
-            <span class="icon">💬</span> {{ i18n.t('fees.discord.link_btn') }}
-          </button>
-        </div>
-        <p class="help-text">
+  @if (needsDiscord()) {
+    <div class="ui-alert discord-alert">
+      <span class="alert-icon" aria-hidden="true">📱</span>
+      <div class="alert-body">
+        <strong>{{ i18n.t('fees.discord.warning_title') }}</strong>
+        <p>
+          {{ i18n.t('fees.discord.warning_desc') }}
           {{ i18n.t('fees.discord.options_hint') }}
-          <a routerLink="/options">{{ i18n.t('fees.discord.options_link') }}</a
+          <a routerLink="/options" [queryParams]="{ tab: 'settings' }">{{
+            i18n.t('fees.discord.options_link')
+          }}</a
           >.
         </p>
       </div>
-    </section>
+      <button type="button" class="ui-btn discord sm" (click)="linkDiscord()">
+        {{ i18n.t('fees.discord.link_btn') }}
+      </button>
+    </div>
   }
 
-  <!-- Visual Grid Section -->
-  <section class="overview-section">
-    <div class="card grid-card">
-      <div class="card-header">
+  <div class="layout">
+    <!-- Grille de l'année -->
+    <section class="ui-card year-card" style="--i: 1" aria-labelledby="year-title">
+      <header class="year-head">
         <div class="year-nav">
-          <button class="btn-year" (click)="changeYear(-1)">◀</button>
-          <h2>{{ displayYear() }}</h2>
-          <button class="btn-year" (click)="changeYear(1)">▶</button>
+          <button
+            type="button"
+            class="ui-btn ghost icon sm"
+            (click)="changeYear(-1)"
+            [disabled]="displayYear() <= minYear"
+            [attr.aria-label]="i18n.t('fees.prev_year')"
+          >
+            ‹
+          </button>
+          <h2 id="year-title" class="year">{{ displayYear() }}</h2>
+          <button
+            type="button"
+            class="ui-btn ghost icon sm"
+            (click)="changeYear(1)"
+            [disabled]="displayYear() >= maxYear"
+            [attr.aria-label]="i18n.t('fees.next_year')"
+          >
+            ›
+          </button>
         </div>
-        <div class="legend">
-          <span class="legend-item"
-            ><span class="dot paid"></span> {{ i18n.t('fees.legend.paid') }}</span
-          >
-          <span class="legend-item"
-            ><span class="dot donation"></span> {{ i18n.t('fees.legend.donation') }}</span
-          >
-          <span class="legend-item"
-            ><span class="dot partial"></span> {{ i18n.t('fees.legend.partial') }}</span
-          >
-        </div>
-      </div>
-      <div class="months-grid">
-        @for (month of months(); track month.index) {
-          <div
-            class="month-box clickable"
-            [class]="getMonthStatus(month.index).class"
-            (click)="selectMonth(month.index)"
-          >
-            <span class="month-name">{{ month.name }}</span>
-            <div class="month-status">
-              <span class="icon">{{ getMonthStatus(month.index).icon }}</span>
-              <span class="amount">{{ getMonthStatus(month.index).label }}</span>
-            </div>
-            <div class="click-hint">{{ i18n.t('fees.grid.declare') }}</div>
-          </div>
-        }
-      </div>
-    </div>
-  </section>
+        <ul class="legend">
+          <li class="paid">{{ i18n.t('fees.legend.paid') }}</li>
+          <li class="donation">{{ i18n.t('fees.legend.donation') }}</li>
+          <li class="partial">{{ i18n.t('fees.legend.partial') }}</li>
+        </ul>
+      </header>
 
-  <div class="main-layout">
-    <!-- Declaration Form (Visible only after clicking a month) -->
-    <section class="form-column">
-      @if (showForm()) {
-        <div class="card form-card animated-fade-in">
-          <div class="form-header">
-            <h3>{{ i18n.t('fees.form.title') }}</h3>
-            <button class="btn-close" (click)="showForm.set(false)">×</button>
-          </div>
-          <div class="selected-period">
-            <span class="label">{{ i18n.t('fees.form.selected_period') }}</span>
-            <div class="period-badge">
-              <span class="icon">📅</span>
-              <strong>{{ selectedMonthName }}</strong>
-            </div>
-          </div>
-          <form (ngSubmit)="onSubmit()" class="declaration-form">
-            <div class="form-group">
-              <label>{{ i18n.t('fees.form.amount_label') }}</label>
-              <div class="input-with-icon gold-input">
-                <input
-                  type="number"
-                  [(ngModel)]="newDeclaration.amount"
-                  name="amount"
-                  required
-                  min="1"
-                />
-                <span class="unit">PO</span>
-              </div>
-              <p class="form-hint">
-                {{ i18n.t('fees.form.min_fee_hint').replace('{minFee}', minimumFee().toString()) }}
-              </p>
-            </div>
-            <div class="form-group">
-              <label>{{ i18n.t('fees.form.months_covered') }}</label>
-              <div class="duration-selector">
-                <select [(ngModel)]="newDeclaration.duration_months" name="duration">
-                  <option [ngValue]="1">{{ i18n.t('fees.form.duration.1') }}</option>
-                  <option [ngValue]="3">{{ i18n.t('fees.form.duration.3') }}</option>
-                  <option [ngValue]="6">{{ i18n.t('fees.form.duration.6') }}</option>
-                  <option [ngValue]="12">{{ i18n.t('fees.form.duration.12') }}</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-group">
-              <label>{{ i18n.t('fees.form.comment_label') }}</label>
-              <textarea
-                [(ngModel)]="newDeclaration.comment"
-                name="comment"
-                [placeholder]="i18n.t('fees.form.comment_placeholder')"
-              ></textarea>
-            </div>
-            <button type="submit" class="btn-submit">{{ i18n.t('fees.form.btn_submit') }}</button>
-          </form>
-        </div>
-      }
-
-      @if (!showForm()) {
-        <div class="card empty-form-card">
-          <div class="empty-icon" aria-hidden="true">☝️</div>
-          <p>{{ i18n.t('fees.empty_hint') }}</p>
-        </div>
+      @for (year of [displayYear()]; track year) {
+        <ol class="months">
+          @for (m of months(); track m.key) {
+            <li [style.--i]="m.index">
+              <button
+                type="button"
+                class="month"
+                [class]="m.state"
+                [class.current]="m.key === currentKey"
+                [class.covered]="covered().has(m.key)"
+                [attr.aria-pressed]="covered().has(m.key)"
+                [attr.aria-label]="
+                  m.name +
+                  ' ' +
+                  displayYear() +
+                  ' – ' +
+                  m.amount +
+                  ' PO. ' +
+                  i18n.t('fees.grid.declare')
+                "
+                (click)="selectMonth(m.index)"
+              >
+                <span class="month-top">
+                  <span class="month-name">{{ m.name }}</span>
+                  <span class="month-icon" aria-hidden="true">
+                    @switch (m.state) {
+                      @case ('paid') {
+                        ✓
+                      }
+                      @case ('donation') {
+                        ★
+                      }
+                      @case ('partial') {
+                        !
+                      }
+                    }
+                  </span>
+                </span>
+                <span class="month-amount">{{ m.amount }} <small>PO</small></span>
+                <span class="month-bar" aria-hidden="true">
+                  <span [style.width.%]="m.progress"></span>
+                </span>
+                <span class="month-cta" aria-hidden="true"
+                  >＋ {{ i18n.t('fees.grid.declare') }}</span
+                >
+              </button>
+            </li>
+          }
+        </ol>
       }
     </section>
 
-    <!-- History Column -->
-    <section class="history-column">
-      <div class="card history-card">
-        <h3>{{ i18n.t('fees.history.title') }}</h3>
-        <div class="declarations-list">
-          @for (decl of feeService.myDeclarations(); track decl.id) {
-            <div class="decl-card" [class]="decl.status">
-              <div class="decl-header">
-                <span class="status-badge" [class]="decl.status">
-                  {{
-                    decl.status === 'pending'
-                      ? i18n.t('fees.status.pending')
-                      : decl.status === 'rejected'
-                        ? i18n.t('fees.status.rejected')
-                        : i18n.t('fees.status.approved')
-                  }}
-                </span>
-                <span class="date">{{ decl.created_at | date: 'dd/MM/yyyy' }}</span>
-              </div>
-              <div class="decl-body">
-                <div class="main-val">{{ decl.amount }} PO</div>
-                <p class="details">
-                  {{ i18n.t('fees.history.starting_from') }}
-                  {{ decl.start_month | date: 'MMMM yyyy' : '' : i18n.currentLocale() }} ({{
-                    decl.duration_months
-                  }}
-                  {{
-                    decl.duration_months > 1
-                      ? i18n.t('fees.history.months')
-                      : i18n.t('fees.history.month')
-                  }})
-                </p>
+    <!-- Déclaration -->
+    <section class="ui-card form-card" id="fee-form" style="--i: 2" aria-labelledby="form-title">
+      <header class="ui-card-head">
+        <h2 id="form-title">
+          <span class="ui-card-icon" aria-hidden="true">🪙</span>
+          {{ i18n.t('fees.form.title') }}
+        </h2>
+      </header>
 
-                @if (decl.status === 'rejected' && decl.admin_comment) {
-                  <div class="admin-feedback">
-                    <strong>{{ i18n.t('fees.history.motif') }}</strong>
-                    <p>{{ decl.admin_comment }}</p>
-                  </div>
-                }
-              </div>
-            </div>
-          }
-          @if (feeService.myDeclarations().length === 0) {
-            <p class="empty-msg">{{ i18n.t('fees.history.empty') }}</p>
-          }
+      <form class="form" (ngSubmit)="onSubmit()">
+        <div class="period">
+          <span class="ui-label">{{ i18n.t('fees.form.selected_period') }}</span>
+          <strong class="period-value">
+            <span aria-hidden="true">📅</span> {{ startLabel() }}
+            @if (duration() > 1) {
+              <span class="period-plus">+{{ duration() - 1 }}</span>
+            }
+          </strong>
+          <span class="hint">{{ i18n.t('fees.form.pick_hint') }}</span>
         </div>
-      </div>
+
+        <fieldset class="durations">
+          <legend class="ui-label">{{ i18n.t('fees.form.months_covered') }}</legend>
+          @for (d of durations; track d) {
+            <button
+              type="button"
+              class="duration"
+              [class.active]="duration() === d"
+              [attr.aria-pressed]="duration() === d"
+              (click)="setDuration(d)"
+            >
+              <strong>{{ d }}</strong>
+              <span>{{ i18n.t('fees.form.duration_short.' + d) }}</span>
+            </button>
+          }
+        </fieldset>
+
+        <div class="ui-field">
+          <label for="fee-amount">{{ i18n.t('fees.form.amount_label') }}</label>
+          <div class="amount">
+            <input
+              id="fee-amount"
+              type="number"
+              name="amount"
+              min="1"
+              step="1"
+              required
+              inputmode="numeric"
+              [ngModel]="effectiveAmount()"
+              (ngModelChange)="onAmountInput($event)"
+            />
+            <span class="unit">PO</span>
+          </div>
+          <span class="hint breakdown" [class.warn]="belowMinimum()">
+            {{
+              i18n
+                .t('fees.form.per_month')
+                .replace('{amount}', perMonth().toString())
+                .replace('{min}', minimumFee().toString())
+            }}
+          </span>
+        </div>
+
+        <div class="ui-field">
+          <label for="fee-comment">{{ i18n.t('fees.form.comment_label') }}</label>
+          <textarea
+            id="fee-comment"
+            name="comment"
+            rows="2"
+            maxlength="1000"
+            [ngModel]="comment()"
+            (ngModelChange)="comment.set($event)"
+            [placeholder]="i18n.t('fees.form.comment_placeholder')"
+          ></textarea>
+        </div>
+
+        <button
+          type="submit"
+          class="ui-btn success submit"
+          [class.loading]="submitting()"
+          [disabled]="submitting() || effectiveAmount() < 1"
+        >
+          {{ i18n.t('fees.form.btn_submit') }}
+        </button>
+      </form>
     </section>
   </div>
+
+  <!-- Historique -->
+  <section class="ui-card" style="--i: 3" aria-labelledby="history-title">
+    <header class="ui-card-head">
+      <h2 id="history-title">
+        <span class="ui-card-icon" aria-hidden="true">🧾</span>
+        {{ i18n.t('fees.history.title') }}
+      </h2>
+    </header>
+    <ol class="history">
+      @for (decl of feeService.myDeclarations(); track decl.id; let i = $index) {
+        <li class="decl" [class]="decl.status" [style.--i]="i">
+          <span class="decl-dot" aria-hidden="true"></span>
+          <div class="decl-main">
+            <div class="decl-top">
+              <strong class="decl-amount">{{ decl.amount }} PO</strong>
+              <span class="ui-badge" [class]="'status-' + decl.status">{{
+                statusLabel(decl.status)
+              }}</span>
+            </div>
+            <p class="decl-details">
+              {{ i18n.t('fees.history.starting_from') }}
+              <span class="cap">{{ decl.start_month | date: 'MMMM y' }}</span>
+              · {{ decl.duration_months }}
+              {{
+                decl.duration_months > 1
+                  ? i18n.t('fees.history.months')
+                  : i18n.t('fees.history.month')
+              }}
+            </p>
+            @if (decl.comment) {
+              <p class="decl-comment">“{{ decl.comment }}”</p>
+            }
+            @if (decl.status === 'rejected' && decl.admin_comment) {
+              <p class="decl-feedback">
+                <strong>{{ i18n.t('fees.history.motif') }}</strong> {{ decl.admin_comment }}
+              </p>
+            }
+          </div>
+          <time class="decl-date" [attr.datetime]="decl.created_at">{{
+            decl.created_at | date: 'dd/MM/yyyy'
+          }}</time>
+        </li>
+      } @empty {
+        <li class="ui-empty">
+          <span class="emoji" aria-hidden="true">🪙</span>
+          <strong>{{ i18n.t('fees.history.empty') }}</strong>
+        </li>
+      }
+    </ol>
+  </section>
 </div>
