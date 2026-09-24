@@ -1,0 +1,85 @@
+<ul class="dungeon-grid" role="list">
+  @for (d of dungeons(); track d.id; let i = $index) {
+    <li
+      class="dungeon-card"
+      [class.not-run]="d.runs === 0"
+      [class]="'wcl-tier-' + parseColorClass(d.ranking?.rankPercent)"
+      [style.--i]="i"
+    >
+      <div class="card-top">
+        <img
+          class="dungeon-icon"
+          [src]="d.iconUrl"
+          alt=""
+          loading="lazy"
+          width="48"
+          height="48"
+          (error)="hideBrokenImage($event)"
+        />
+        <div class="dungeon-title">
+          <h4>{{ d.name[i18n.currentLocale()] }}</h4>
+          @if (d.runs > 0) {
+            <span class="meta">
+              {{ d.runs }} {{ i18n.t(d.runs > 1 ? 'wcl.runs' : 'wcl.run') }}
+              @if (d.timeMs) {
+                · ⏱ {{ formatDuration(d.timeMs) }}
+              }
+            </span>
+          } @else {
+            <span class="meta muted">{{ i18n.t('wcl.no_key') }}</span>
+          }
+        </div>
+        @if (d.keyLevel) {
+          <span class="key-level" [attr.aria-label]="i18n.t('wcl.key_level') + ' ' + d.keyLevel">
+            +{{ d.keyLevel }}
+          </span>
+        }
+      </div>
+
+      @if (d.runs > 0) {
+        <div class="score-row">
+          <div class="score">
+            <span class="label">{{ i18n.t('wcl.score') }}</span>
+            <span class="value">{{ d.points | number: '1.0-1' : i18n.currentLocale() }}</span>
+          </div>
+          @if (d.ranking; as ranking) {
+            <div
+              class="rank"
+              [title]="
+                i18n.t('wcl.top') +
+                ' ' +
+                (topPercent(ranking.rank, ranking.total) | number: '1.0-1' : i18n.currentLocale()) +
+                ' %'
+              "
+            >
+              <span class="label">{{ i18n.t('wcl.rank_world') }}</span>
+              <span class="value"
+                >#{{ ranking.rank | number: '1.0-0' : i18n.currentLocale() }}</span
+              >
+            </div>
+          }
+        </div>
+
+        <div class="throughput" [class]="'wcl-tier-' + parseColorClass(d.throughput?.bestPercent)">
+          <span class="parse-pill">{{ displayPercent(d.throughput?.bestPercent) ?? '—' }}</span>
+          <div class="throughput-body">
+            <div class="parse-track" aria-hidden="true">
+              <div class="parse-fill" [style.--p]="(d.throughput?.bestPercent ?? 0) / 100"></div>
+            </div>
+            <span class="throughput-meta">
+              @if (d.throughput; as t) {
+                {{ compact(t.amount) }}
+                {{ i18n.t(data().metric === 'hps' ? 'wcl.hps' : 'wcl.dps') }} · +{{ t.keyLevel }}
+                @if (t.medianPercent !== null) {
+                  · {{ i18n.t('wcl.median_short') }} {{ displayPercent(t.medianPercent) }}
+                }
+              } @else {
+                {{ i18n.t('wcl.no_throughput') }}
+              }
+            </span>
+          </div>
+        </div>
+      }
+    </li>
+  }
+</ul>

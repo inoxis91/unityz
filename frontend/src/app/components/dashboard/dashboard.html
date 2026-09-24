@@ -302,7 +302,12 @@
         </div>
       </section>
     </div>
-    <app-dashboard-parses class="animated-fade-in" [characters]="myCharacters()" />
+    <!-- Sous la ligne de flottaison : chunk et appels Warcraft Logs chargés à l'approche -->
+    @defer (on viewport) {
+      <app-dashboard-parses class="animated-fade-in" [characters]="myCharacters()" />
+    } @placeholder {
+      <div class="parses-placeholder" aria-hidden="true"></div>
+    }
 
     <!-- Bottom Guild Directory Link Button -->
     <div class="dashboard-bottom-directory-banner" routerLink="/guild-characters">

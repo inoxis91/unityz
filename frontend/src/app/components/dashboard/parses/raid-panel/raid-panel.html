@@ -1,0 +1,105 @@
+<div class="boss-table" role="table" [attr.aria-label]="zone().zone.name[i18n.currentLocale()]">
+  <div class="boss-row head" role="row">
+    <span role="columnheader">{{ i18n.t('wcl.col.boss') }}</span>
+    <span role="columnheader">{{ i18n.t('wcl.col.best_percent') }}</span>
+    <span role="columnheader" class="num">
+      {{ i18n.t(metric() === 'hps' ? 'wcl.col.best_hps' : 'wcl.col.best_dps') }}
+    </span>
+    <span role="columnheader" class="num">{{ i18n.t('wcl.col.kills') }}</span>
+    <span role="columnheader" class="num">{{ i18n.t('wcl.col.fastest') }}</span>
+    <span role="columnheader" class="num">{{ i18n.t('wcl.col.all_stars') }}</span>
+  </div>
+
+  @for (enc of zone().encounters; track enc.id; let i = $index) {
+    <div
+      class="boss-row"
+      role="row"
+      [class.not-killed]="enc.kills === 0"
+      [class]="'wcl-tier-' + parseColorClass(enc.bestPercent)"
+      [style.--i]="i"
+    >
+      <div class="boss-cell" role="cell">
+        <span class="boss-index">{{ i + 1 }}</span>
+        <img
+          class="boss-icon"
+          [src]="enc.iconUrl"
+          alt=""
+          loading="lazy"
+          width="40"
+          height="40"
+          (error)="hideBrokenImage($event)"
+        />
+        <div class="boss-name">
+          <span class="name">{{ enc.name[i18n.currentLocale()] }}</span>
+          @if (enc.kills === 0) {
+            <span class="sub muted">{{ i18n.t('wcl.not_killed') }}</span>
+          } @else {
+            <span class="sub">
+              {{ enc.spec }}
+              @if (enc.itemLevel) {
+                · {{ i18n.t('wcl.ilvl') }} {{ enc.itemLevel }}
+              }
+              @if (!enc.lockedIn) {
+                <span class="tag" [title]="i18n.t('wcl.not_locked_hint')">{{
+                  i18n.t('wcl.not_locked')
+                }}</span>
+              }
+            </span>
+          }
+        </div>
+      </div>
+
+      <div class="parse-cell" role="cell">
+        <span class="parse-pill">{{ displayPercent(enc.bestPercent) ?? '—' }}</span>
+        <div class="parse-track" aria-hidden="true">
+          <div class="parse-fill" [style.--p]="(enc.bestPercent ?? 0) / 100"></div>
+          @if (enc.medianPercent !== null) {
+            <span
+              class="median-mark"
+              [style.left.%]="enc.medianPercent"
+              [title]="i18n.t('wcl.median') + ' ' + displayPercent(enc.medianPercent)"
+            ></span>
+          }
+        </div>
+        @if (enc.medianPercent !== null) {
+          <span class="median-label">
+            {{ i18n.t('wcl.median_short') }} {{ displayPercent(enc.medianPercent) }}
+          </span>
+        }
+      </div>
+
+      <div
+        class="stat num"
+        role="cell"
+        [attr.data-label]="i18n.t(metric() === 'hps' ? 'wcl.col.best_hps' : 'wcl.col.best_dps')"
+      >
+        {{ compact(enc.bestAmount) }}
+      </div>
+      <div class="stat num" role="cell" [attr.data-label]="i18n.t('wcl.col.kills')">
+        {{ enc.kills || '—' }}
+      </div>
+      <div class="stat num" role="cell" [attr.data-label]="i18n.t('wcl.col.fastest')">
+        {{ formatDuration(enc.fastestKillMs) }}
+      </div>
+      <div class="stat num all-stars" role="cell" [attr.data-label]="i18n.t('wcl.col.all_stars')">
+        @if (enc.allStars; as stars) {
+          <span class="points">{{ stars.points | number: '1.0-1' : i18n.currentLocale() }}</span>
+          <span
+            class="rank"
+            [class]="'wcl-tier-' + parseColorClass(stars.rankPercent)"
+            [title]="
+              i18n.t('wcl.top') +
+              ' ' +
+              (topPercent(stars.rank, stars.total) | number: '1.0-1' : i18n.currentLocale()) +
+              ' %'
+            "
+          >
+            #{{ stars.rank | number: '1.0-0' : i18n.currentLocale() }}
+          </span>
+        } @else {
+          —
+        }
+      </div>
+    </div>
+  }
+</div>

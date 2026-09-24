@@ -1,12 +1,20 @@
-import express from 'express';
+import express, { Request } from 'express';
 import axios from 'axios';
 import pool from '../lib/db';
 import { CharacterService } from '../services/characterService';
 import { BlizzardService } from '../services/blizzardService';
 import { isAuthenticated, requireActiveGuild, requirePaidGuild, canManageRosters } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
-import { importCharactersSchema, updateRolesSchema, setMainSchema } from '../schemas/characterSchemas';
-import { WclService } from '../services/wclService';
+import {
+  importCharactersSchema,
+  updateRolesSchema,
+  setMainSchema,
+  wclRaidPerformanceSchema,
+  wclMythicPlusPerformanceSchema,
+} from '../schemas/characterSchemas';
+import { WclCharacterRef, WclCharacterService } from '../services/wclCharacterService';
+import { HttpError } from '../middlewares/errorHandler';
+import { toRealmSlug } from '../lib/realm';
 
 const router = express.Router();
 
@@ -215,46 +223,52 @@ router.delete('/:id', isAuthenticated, requireActiveGuild, requirePaidGuild, asy
   }
 });
 
-// GET /api/characters/:id/parses : Récupère les parses Warcraft Logs d'un personnage
-router.get('/:id/parses', isAuthenticated, requireActiveGuild, requirePaidGuild, async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    let character;
-
-    if (id === 'main') {
-      const chars = await CharacterService.getByUserId(req.user!.id, req.user!.active_guild_id || undefined);
-      character = chars.find(c => c.is_main) || chars[0];
-    } else {
-      const chars = await CharacterService.getByUserId(req.user!.id, req.user!.active_guild_id || undefined);
-      character = chars.find(c => c.id === id);
-    }
-
-    if (!character) {
-      return res.status(404).json({ status: 'error', message: 'Character not found' });
-    }
-
-    const guildId = req.user!.active_guild_id;
-    let region = 'eu';
-    if (guildId) {
-      const guildRes = await pool.query('SELECT region FROM guilds WHERE id = $1', [guildId]);
-      if (guildRes.rowCount! > 0 && guildRes.rows[0].region) {
-        region = guildRes.rows[0].region;
-      }
-    }
-
-    const realmSlug = character.realm.toLowerCase()
-      .trim()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-');
-    const difficultyParam = req.query.difficulty ? parseInt(req.query.difficulty as string, 10) : undefined;
-    const parses = await WclService.getCharacterParses(character.name, realmSlug, region, character.class, difficultyParam);
-    res.json(parses);
-  } catch (error) {
-    next(error);
+/** Personnage du joueur (guilde active) au format attendu par Warcraft Logs. */
+async function resolveWclCharacter(req: Request): Promise<WclCharacterRef> {
+  const guildId = req.user!.active_guild_id!;
+  const chars = await CharacterService.getByUserId(req.user!.id, guildId);
+  const character = chars.find((c) => c.id === req.params.id);
+  if (!character) {
+    throw new HttpError(404, 'Character not found', 'CHARACTER_NOT_FOUND');
   }
-});
+
+  const guildRes = await pool.query('SELECT region FROM guilds WHERE id = $1', [guildId]);
+  return {
+    name: character.name,
+    realmSlug: toRealmSlug(character.realm),
+    region: guildRes.rows[0]?.region || 'eu',
+    className: character.class,
+  };
+}
+
+// GET /api/characters/:id/wcl/raid : parses Warcraft Logs du raid de la saison en cours
+router.get(
+  '/:id/wcl/raid',
+  isAuthenticated, requireActiveGuild, requirePaidGuild, validate(wclRaidPerformanceSchema),
+  async (req, res, next) => {
+    try {
+      const query = wclRaidPerformanceSchema.shape.query.parse(req.query);
+      const ref = await resolveWclCharacter(req);
+      res.json(await WclCharacterService.getRaidPerformance(ref, query));
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+// GET /api/characters/:id/wcl/mythic-plus : score et parses Mythique+ de la saison en cours
+router.get(
+  '/:id/wcl/mythic-plus',
+  isAuthenticated, requireActiveGuild, requirePaidGuild, validate(wclMythicPlusPerformanceSchema),
+  async (req, res, next) => {
+    try {
+      const { metric } = wclMythicPlusPerformanceSchema.shape.query.parse(req.query);
+      const ref = await resolveWclCharacter(req);
+      res.json(await WclCharacterService.getMythicPlusPerformance(ref, metric));
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 export default router;

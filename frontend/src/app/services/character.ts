@@ -72,6 +72,16 @@ export class CharacterService {
     return map[name] || name.replace(/\s+/g, '-');
   }
 
+  /** Icône de classe (`assets/icons/class/`) à partir du nom de classe FR ou EN. */
+  static getClassIcon(className: string | undefined): string {
+    const icons: Record<string, string> = {
+      warrior: 'warrior', paladin: 'paladin', hunter: 'hunt', rogue: 'rogue', priest: 'priest',
+      'death-knight': 'dk', shaman: 'shaman', mage: 'mage', warlock: 'warlock', monk: 'monk',
+      druid: 'drood', 'demon-hunter': 'dh', evoker: 'evoker',
+    };
+    return `assets/icons/class/${icons[CharacterService.getClassId(className)] ?? 'warrior'}.webp`;
+  }
+
   getWarcraftLogsUrl(name: string | undefined, realm: string | undefined): string {
     if (!name || !realm) return '#';
     const slugRealm = realm.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
@@ -142,15 +152,6 @@ export class CharacterService {
   // Récupère les détails (image, stuff) d'un personnage via Blizzard
   getCharacterDetails(realm: string, name: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/details/${realm}/${name}`, { withCredentials: true });
-  }
-
-  // Récupère les parses Warcraft Logs d'un personnage
-  getCharacterParses(charId: string, difficulty?: number): Observable<any> {
-    let url = `${this.apiUrl}/${charId}/parses`;
-    if (difficulty) {
-      url += `?difficulty=${difficulty}`;
-    }
-    return this.http.get<any>(url, { withCredentials: true });
   }
 
   // Récupère l'ensemble des personnages de la guilde active (Vue admin)

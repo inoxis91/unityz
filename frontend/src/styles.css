@@ -369,6 +369,15 @@ body {
   --wcl-gold-text: #e5cc80;
 }
 
+/* Scope a WCL tier: --tier (fill), --tier-on (text on the fill), --tier-text (AA text on surfaces) */
+.wcl-tier-gray { --tier: var(--wcl-gray); --tier-on: var(--wcl-gray-on); --tier-text: var(--wcl-gray-text); }
+.wcl-tier-green { --tier: var(--wcl-green); --tier-on: var(--wcl-green-on); --tier-text: var(--wcl-green-text); }
+.wcl-tier-blue { --tier: var(--wcl-blue); --tier-on: var(--wcl-blue-on); --tier-text: var(--wcl-blue-text); }
+.wcl-tier-purple { --tier: var(--wcl-purple); --tier-on: var(--wcl-purple-on); --tier-text: var(--wcl-purple-text); }
+.wcl-tier-orange { --tier: var(--wcl-orange); --tier-on: var(--wcl-orange-on); --tier-text: var(--wcl-orange-text); }
+.wcl-tier-pink { --tier: var(--wcl-pink); --tier-on: var(--wcl-pink-on); --tier-text: var(--wcl-pink-text); }
+.wcl-tier-gold { --tier: var(--wcl-gold); --tier-on: var(--wcl-gold-on); --tier-text: var(--wcl-gold-text); }
+
 /* Border variants */
 .border-class-death-knight { border-left: 4px solid var(--color-death-knight) !important; }
 .border-class-demon-hunter { border-left: 4px solid var(--color-demon-hunter) !important; }

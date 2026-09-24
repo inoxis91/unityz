@@ -1,212 +1,533 @@
-<section class="parses-section">
-  <div class="section-header flex-header">
-    <div class="header-titles">
-      <h2>{{ i18n.t('dashboard.parses.title') }}</h2>
-      @if (selectedCharacter()) {
-        <p class="subtitle">
-          {{ i18n.t('dashboard.parses.subtitle') }} —
-          <strong
-            class="char-highlight"
-            [class]="'class-' + getClassCategory(selectedCharacter()?.class)"
-            >{{ selectedCharacter()?.name }}</strong
-          >
-        </p>
+<section class="wcl-section" aria-labelledby="wcl-title">
+  <header class="section-header">
+    <div>
+      <h2 id="wcl-title">
+        <img src="assets/icons/warcraftlogs.png" alt="" class="title-icon" width="28" height="28" />
+        {{ i18n.t('wcl.title') }}
+      </h2>
+      <p class="subtitle">
+        {{ i18n.t('wcl.subtitle') }}
+        @if (seasonLabel()) {
+          <span class="season">{{ seasonLabel() }}</span>
+        }
+      </p>
+    </div>
+    @if (selectedCharacter()) {
+      <a class="wcl-link" [href]="wclUrl()" target="_blank" rel="noopener noreferrer">
+        {{ i18n.t('wcl.view_on_wcl') }}
+        <span aria-hidden="true">↗</span>
+      </a>
+    }
+  </header>
+
+  @if (characters().length === 0) {
+    <div class="empty-state">
+      <p>{{ i18n.t('wcl.no_character') }}</p>
+      <button class="btn-primary" [routerLink]="['/options']" [queryParams]="{ tab: 'characters' }">
+        {{ i18n.t('dashboard.import') }}
+      </button>
+    </div>
+  } @else {
+    <!-- Sélecteur de personnage -->
+    <div class="character-picker" role="radiogroup" [attr.aria-label]="i18n.t('wcl.character')">
+      @for (c of characters(); track c.id) {
+        <button
+          type="button"
+          role="radio"
+          class="character-chip"
+          [class.active]="c.id === selectedCharacterId()"
+          [attr.aria-checked]="c.id === selectedCharacterId()"
+          [style.--class-color]="'var(--color-' + classId(c.class) + ')'"
+          (click)="selectCharacter(c.id)"
+        >
+          <img [src]="classIcon(c.class)" alt="" width="24" height="24" />
+          <span class="chip-name">{{ c.name }}</span>
+          @if (c.is_main) {
+            <span class="main-star" [title]="i18n.t('wcl.main')" aria-hidden="true">★</span>
+          }
+        </button>
       }
     </div>
-    @if (parses.hasValue() && parses.value() && selectedCharacter()) {
-      <div class="header-actions">
-        <a
-          [href]="
-            characterService.getWarcraftLogsUrl(
-              selectedCharacter()?.name,
-              selectedCharacter()?.realm
-            )
-          "
-          target="_blank"
-          class="wcl-btn"
-        >
-          <img src="assets/icons/warcraftlogs.png" alt="WCL" class="wcl-mini-icon" />
-          {{ i18n.t('dashboard.parses.view_wcl') }}
-        </a>
-      </div>
-    }
-  </div>
-  <!-- Main Character Parse Card -->
-  @if (mainCharacter()) {
-    <div class="parses-card">
-      <!-- Loading State -->
-      @if (parses.isLoading()) {
-        <div class="parses-loading">
-          <div class="spinner"></div>
-          <p>{{ i18n.t('dashboard.parses.loading') }}</p>
-        </div>
-      }
-      <!-- Content State -->
-      @if (!parses.isLoading() && parses.hasValue() && parses.value(); as data) {
-        <div class="parses-header-row">
-          <div class="parses-tabs">
-            <button
-              class="tab-btn"
-              [class.active]="parsesTab() === 'raid'"
-              (click)="parsesTab.set('raid')"
-            >
-              🛡️ {{ i18n.t('dashboard.parses.raid') }}
-            </button>
-            <button
-              class="tab-btn"
-              [class.active]="parsesTab() === 'dungeon'"
-              (click)="parsesTab.set('dungeon')"
-            >
-              🌀 {{ i18n.t('dashboard.parses.dungeons') }}
-            </button>
+
+    <div class="wcl-card">
+      <!-- Identité + métrique -->
+      @if (selectedCharacter(); as character) {
+        <div class="identity">
+          <div
+            class="avatar"
+            [style.--class-color]="'var(--color-' + classId(character.class) + ')'"
+          >
+            <img [src]="classIcon(character.class)" alt="" width="52" height="52" />
           </div>
-          <div class="parses-controls">
-            <!-- Character Dropdown -->
-            <div class="control-group">
-              <label>{{ i18n.t('dashboard.parses.character_label') }}</label>
-              <select class="styled-select" (change)="onCharacterChange($event)">
-                @for (c of characters(); track c.id) {
-                  <option [value]="c.id" [selected]="c.id === selectedCharacterId()">
-                    {{ c.name }} ({{ c.realm }})
-                  </option>
-                }
-              </select>
-            </div>
-            <!-- Difficulty Dropdown (only for Raid) -->
-            @if (parsesTab() === 'raid') {
-              <div class="control-group">
-                <label>{{ i18n.t('dashboard.parses.difficulty_label') }}</label>
-                <select class="styled-select" (change)="onDifficultyChange($event)">
-                  <option [value]="3" [selected]="selectedDifficulty() === 3">
-                    {{ i18n.t('difficulty.3') }}
-                  </option>
-                  <option [value]="4" [selected]="selectedDifficulty() === 4">
-                    {{ i18n.t('difficulty.4') }}
-                  </option>
-                  <option [value]="5" [selected]="selectedDifficulty() === 5">
-                    {{ i18n.t('difficulty.5') }}
-                  </option>
-                </select>
-              </div>
+          <div class="identity-text">
+            <h3 [class]="'class-' + classId(character.class)">{{ character.name }}</h3>
+            <p>
+              {{ character.realm }} · {{ character.class }}
+              @if (isDemo()) {
+                <span class="demo-badge" [title]="i18n.t('wcl.demo_hint')">
+                  {{ i18n.t('wcl.demo') }}
+                </span>
+              }
+            </p>
+          </div>
+          <div
+            class="segmented metric-toggle"
+            role="radiogroup"
+            [attr.aria-label]="i18n.t('wcl.metric')"
+          >
+            @for (m of ['dps', 'hps']; track m) {
+              <button
+                type="button"
+                role="radio"
+                [class.active]="metric() === m"
+                [attr.aria-checked]="metric() === m"
+                (click)="metric.set($any(m))"
+              >
+                {{ i18n.t('wcl.metric_' + m) }}
+              </button>
             }
           </div>
         </div>
-        <div class="parses-content-container">
-          <!-- Left side: Summary -->
-          <div class="parses-summary-col">
-            <div class="summary-metric-box">
-              <span class="box-label">{{ i18n.t('dashboard.parses.best_average') }}</span>
-              <div class="box-value-container">
-                <span
-                  class="box-value"
-                  [class]="
-                    parseColorClass(
-                      parsesTab() === 'raid'
-                        ? data.raidRankings.bestPerformanceAverage
-                        : data.dungeonRankings.bestPerformanceAverage
-                    )
-                  "
-                >
-                  {{
-                    parsesTab() === 'raid'
-                      ? data.raidRankings.bestPerformanceAverage
-                      : data.dungeonRankings.bestPerformanceAverage
-                  }}
-                </span>
-                <span class="percent-sign">%</span>
-              </div>
-              <div
-                class="parse-rank-indicator"
-                [class]="
-                  parseColorClass(
-                    parsesTab() === 'raid'
-                      ? data.raidRankings.bestPerformanceAverage
-                      : data.dungeonRankings.bestPerformanceAverage
-                  )
-                "
-              >
-                <span class="bullet">●</span>
-                <span class="text">
-                  {{ i18n.t('dashboard.attendance.current_month') }}
-                </span>
-              </div>
-            </div>
-          </div>
-          <!-- Right side: Grid of specific encounters -->
-          <div class="parses-grid-col">
-            <div class="encounters-grid">
-              @for (
-                p of parsesTab() === 'raid'
-                  ? data.raidRankings.rankings
-                  : data.dungeonRankings.rankings;
-                track p.encounterId
-              ) {
-                <div class="encounter-row">
-                  <div class="encounter-info">
-                    <div class="encounter-title-row">
-                      <span class="enc-name">{{ i18n.t('encounter.' + p.encounterId) }}</span>
-                      @if (p.difficulty) {
-                        <span class="difficulty-badge" [class]="'diff-' + p.difficulty">
-                          {{
-                            p.difficulty === 10 && p.keyLevel
-                              ? 'Clef +' + p.keyLevel
-                              : i18n.t('difficulty.' + p.difficulty)
-                          }}
-                        </span>
-                      }
-                    </div>
-                    <span class="enc-spec">{{ p.spec || 'N/A' }}</span>
+      }
+
+      @if (characterError(); as kind) {
+        <div class="state-card" role="status">
+          <span class="state-icon" aria-hidden="true">{{ kind === 'hidden' ? '🔒' : '🔍' }}</span>
+          <p>{{ i18n.t('wcl.error_' + kind) }}</p>
+          <a class="wcl-link" [href]="wclUrl()" target="_blank" rel="noopener noreferrer">
+            {{ i18n.t('wcl.view_on_wcl') }} <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      } @else {
+        <!-- Indicateurs clés -->
+        <div class="kpi-grid">
+          <!-- Perf. raid -->
+          <article
+            class="kpi kpi-ring"
+            [class.loading]="!activeZone() && !raidError()"
+            [style.--i]="0"
+          >
+            @if (activeZone(); as zone) {
+              <app-perf-ring
+                [value]="zone.bestAverage"
+                [label]="i18n.t('wcl.kpi.best_avg_short')"
+                [locale]="i18n.currentLocale()"
+              />
+              <div class="kpi-body">
+                <h4>{{ i18n.t('wcl.kpi.raid_perf') }}</h4>
+                <dl>
+                  <div>
+                    <dt>{{ i18n.t('wcl.median') }}</dt>
+                    <dd [class]="'wcl-tier-' + parseColorClass(zone.medianAverage)">
+                      {{
+                        zone.medianAverage !== null
+                          ? (zone.medianAverage | number: '1.1-1' : i18n.currentLocale())
+                          : '—'
+                      }}
+                    </dd>
                   </div>
-                  <div class="encounter-percentile-container">
-                    <div class="percentile-badge" [class]="parseColorClass(p.percentile)">
-                      {{ p.percentile !== null && p.percentile !== undefined ? p.percentile : '-' }}
+                  <div>
+                    <dt>{{ i18n.t('wcl.kills_logged') }}</dt>
+                    <dd>{{ zone.killsLogged }}</dd>
+                  </div>
+                </dl>
+              </div>
+            } @else if (raidError()) {
+              <div class="kpi-body">
+                <h4>{{ i18n.t('wcl.kpi.raid_perf') }}</h4>
+                <p class="kpi-empty">{{ i18n.t('wcl.error_unavailable_short') }}</p>
+              </div>
+            } @else {
+              <div class="skeleton skeleton-ring"></div>
+              <div class="kpi-body">
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line short"></div>
+              </div>
+            }
+          </article>
+
+          <!-- Progression -->
+          <article class="kpi" [class.loading]="!activeZone() && !raidError()" [style.--i]="1">
+            @if (activeZone(); as zone) {
+              <h4>{{ i18n.t('wcl.kpi.progress') }}</h4>
+              <p class="kpi-value">
+                <span [appCountUp]="zone.bossesKilled" [countUpLocale]="i18n.currentLocale()"></span
+                ><small>/{{ zone.bossCount }}</small>
+              </p>
+              <p class="kpi-caption">
+                {{ zone.difficulty ? i18n.t('difficulty.' + zone.difficulty) : '—' }}
+              </p>
+              <div class="progress-segments" aria-hidden="true">
+                @for (enc of zone.encounters; track enc.id; let i = $index) {
+                  <span
+                    class="segment"
+                    [class.killed]="enc.kills > 0"
+                    [class]="'wcl-tier-' + parseColorClass(enc.bestPercent)"
+                    [style.--i]="i"
+                    [title]="enc.name[i18n.currentLocale()]"
+                  ></span>
+                }
+              </div>
+            } @else if (raidError()) {
+              <h4>{{ i18n.t('wcl.kpi.progress') }}</h4>
+              <p class="kpi-empty">{{ i18n.t('wcl.error_unavailable_short') }}</p>
+            } @else {
+              <div class="skeleton skeleton-line"></div>
+              <div class="skeleton skeleton-value"></div>
+              <div class="skeleton skeleton-line short"></div>
+            }
+          </article>
+
+          <!-- All Stars raid -->
+          <article class="kpi" [class.loading]="!activeZone() && !raidError()" [style.--i]="2">
+            @if (activeZone()) {
+              <h4>{{ i18n.t('wcl.kpi.raid_all_stars') }}</h4>
+              @if (topRaidSpec(); as spec) {
+                <p class="kpi-value" [class]="'wcl-tier-' + parseColorClass(spec.rankPercent)">
+                  <span
+                    class="tier-text"
+                    [appCountUp]="spec.points"
+                    [countUpDecimals]="1"
+                    [countUpLocale]="i18n.currentLocale()"
+                  ></span>
+                  @if (spec.possiblePoints) {
+                    <small
+                      >/{{ spec.possiblePoints | number: '1.0-0' : i18n.currentLocale() }}</small
+                    >
+                  }
+                </p>
+                <p class="kpi-caption" [title]="specRankingTitle(spec)">
+                  {{ spec.spec }} · {{ i18n.t('wcl.top') }}
+                  {{ topPercent(spec.rank, spec.total) | number: '1.0-1' : i18n.currentLocale() }} %
+                </p>
+                <ul class="ranks">
+                  <li>
+                    <span>{{ i18n.t('wcl.rank_world') }}</span
+                    ><strong>#{{ spec.rank | number: '1.0-0' : i18n.currentLocale() }}</strong>
+                  </li>
+                  <li>
+                    <span>{{ i18n.t('wcl.rank_region') }}</span
+                    ><strong
+                      >#{{ spec.regionRank | number: '1.0-0' : i18n.currentLocale() }}</strong
+                    >
+                  </li>
+                  <li>
+                    <span>{{ i18n.t('wcl.rank_server') }}</span
+                    ><strong
+                      >#{{ spec.serverRank | number: '1.0-0' : i18n.currentLocale() }}</strong
+                    >
+                  </li>
+                </ul>
+              } @else {
+                <p class="kpi-empty">{{ i18n.t('wcl.no_ranking') }}</p>
+              }
+            } @else if (raidError()) {
+              <h4>{{ i18n.t('wcl.kpi.raid_all_stars') }}</h4>
+              <p class="kpi-empty">{{ i18n.t('wcl.error_unavailable_short') }}</p>
+            } @else {
+              <div class="skeleton skeleton-line"></div>
+              <div class="skeleton skeleton-value"></div>
+              <div class="skeleton skeleton-line"></div>
+            }
+          </article>
+
+          <!-- Score M+ -->
+          <article class="kpi" [class.loading]="!mplusData() && !mplusError()" [style.--i]="3">
+            @if (mplusData(); as mplus) {
+              <h4>{{ i18n.t('wcl.kpi.mplus_score') }}</h4>
+              @if (topMplusSpec(); as spec) {
+                <p class="kpi-value" [class]="'wcl-tier-' + parseColorClass(spec.rankPercent)">
+                  <span
+                    class="tier-text"
+                    [appCountUp]="spec.points"
+                    [countUpLocale]="i18n.currentLocale()"
+                  ></span>
+                </p>
+                <p class="kpi-caption" [title]="specRankingTitle(spec)">
+                  {{ spec.spec }} · {{ i18n.t('wcl.top') }}
+                  {{ topPercent(spec.rank, spec.total) | number: '1.0-1' : i18n.currentLocale() }} %
+                </p>
+                <ul class="ranks">
+                  <li>
+                    <span>{{ i18n.t('wcl.rank_world') }}</span
+                    ><strong>#{{ spec.rank | number: '1.0-0' : i18n.currentLocale() }}</strong>
+                  </li>
+                  <li>
+                    <span>{{ i18n.t('wcl.rank_region') }}</span
+                    ><strong
+                      >#{{ spec.regionRank | number: '1.0-0' : i18n.currentLocale() }}</strong
+                    >
+                  </li>
+                  <li>
+                    <span>{{ i18n.t('wcl.rank_server') }}</span
+                    ><strong
+                      >#{{ spec.serverRank | number: '1.0-0' : i18n.currentLocale() }}</strong
+                    >
+                  </li>
+                </ul>
+              } @else {
+                <p class="kpi-empty">{{ i18n.t('wcl.no_mplus') }}</p>
+              }
+            } @else if (mplusError()) {
+              <h4>{{ i18n.t('wcl.kpi.mplus_score') }}</h4>
+              <p class="kpi-empty">{{ i18n.t('wcl.error_unavailable_short') }}</p>
+            } @else {
+              <div class="skeleton skeleton-line"></div>
+              <div class="skeleton skeleton-value"></div>
+              <div class="skeleton skeleton-line"></div>
+            }
+          </article>
+        </div>
+
+        <!-- Onglets -->
+        <div class="tabs" role="tablist" [style.--tab-index]="tab() === 'raid' ? 0 : 1">
+          <span class="tab-indicator" aria-hidden="true"></span>
+          <button
+            type="button"
+            role="tab"
+            id="wcl-tab-raid"
+            aria-controls="wcl-panel"
+            [attr.aria-selected]="tab() === 'raid'"
+            [class.active]="tab() === 'raid'"
+            (click)="tab.set('raid')"
+          >
+            <span aria-hidden="true">🐍</span> {{ i18n.t('wcl.tab_raid') }}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="wcl-tab-mplus"
+            aria-controls="wcl-panel"
+            [attr.aria-selected]="tab() === 'mplus'"
+            [class.active]="tab() === 'mplus'"
+            (click)="tab.set('mplus')"
+          >
+            <span aria-hidden="true">🗝️</span> {{ i18n.t('wcl.tab_mplus') }}
+          </button>
+        </div>
+
+        <div
+          id="wcl-panel"
+          role="tabpanel"
+          class="tab-panel"
+          [attr.aria-labelledby]="tab() === 'raid' ? 'wcl-tab-raid' : 'wcl-tab-mplus'"
+          [attr.aria-busy]="tab() === 'raid' ? raid.isLoading() : mythicPlus.isLoading()"
+        >
+          @switch (tab()) {
+            @case ('raid') {
+              <div class="panel-inner" [class.reloading]="raid.isLoading() && raidData()">
+                @if (activeZone(); as zone) {
+                  <div class="zone-banner">
+                    <img
+                      class="zone-emblem"
+                      [src]="zone.zone.imageUrl"
+                      alt=""
+                      width="56"
+                      height="56"
+                    />
+                    <div class="zone-text">
+                      <span class="zone-kicker">{{ i18n.t('wcl.current_raid') }}</span>
+                      <h4>{{ zone.zone.name[i18n.currentLocale()] }}</h4>
+                      <span class="zone-meta">
+                        {{ zone.bossesKilled }}/{{ zone.bossCount }} {{ i18n.t('wcl.bosses') }}
+                        @if (zone.difficulty) {
+                          · {{ i18n.t('difficulty.' + zone.difficulty) }}
+                        }
+                        · {{ zone.killsLogged }} {{ i18n.t('wcl.kills_logged').toLowerCase() }}
+                      </span>
                     </div>
-                    <div class="encounter-progress-bg">
-                      <div
-                        class="encounter-progress-bar"
-                        [style.width]="
-                          (p.percentile !== null && p.percentile !== undefined ? p.percentile : 0) +
-                          '%'
-                        "
-                        [class]="parseColorClass(p.percentile)"
-                      ></div>
-                    </div>
-                    @if (p.rank > 0) {
-                      <div class="encounter-rank">
-                        <span class="rank-label">{{ i18n.t('dashboard.parses.rank') }}</span>
-                        <span class="rank-val">#{{ p.rank | number }}</span>
+                    @if ((raidData()?.zones?.length ?? 0) > 1) {
+                      <div class="zone-switch">
+                        @for (z of raidData()!.zones; track z.zone.id) {
+                          <button
+                            type="button"
+                            [class.active]="z.zone.id === zone.zone.id"
+                            [attr.aria-pressed]="z.zone.id === zone.zone.id"
+                            (click)="selectedZoneId.set(z.zone.id)"
+                          >
+                            {{ z.zone.name[i18n.currentLocale()] }}
+                          </button>
+                        }
                       </div>
                     }
                   </div>
+                }
+
+                <div class="toolbar">
+                  <div
+                    class="segmented"
+                    role="radiogroup"
+                    [attr.aria-label]="i18n.t('wcl.difficulty')"
+                  >
+                    @for (d of difficulties; track d) {
+                      <button
+                        type="button"
+                        role="radio"
+                        [class.active]="difficulty() === d"
+                        [attr.aria-checked]="difficulty() === d"
+                        (click)="difficulty.set(d)"
+                      >
+                        {{ difficultyLabel(d) }}
+                      </button>
+                    }
+                  </div>
+                  @if (knownSpecs().length > 1) {
+                    <div
+                      class="spec-filter"
+                      role="radiogroup"
+                      [attr.aria-label]="i18n.t('wcl.spec')"
+                    >
+                      <button
+                        type="button"
+                        role="radio"
+                        [class.active]="spec() === null"
+                        [attr.aria-checked]="spec() === null"
+                        (click)="spec.set(null)"
+                      >
+                        {{ i18n.t('wcl.all_specs') }}
+                      </button>
+                      @for (s of knownSpecs(); track s) {
+                        <button
+                          type="button"
+                          role="radio"
+                          [class.active]="spec() === s"
+                          [attr.aria-checked]="spec() === s"
+                          (click)="spec.set(s)"
+                        >
+                          {{ s }}
+                        </button>
+                      }
+                    </div>
+                  }
                 </div>
-              }
-              @if (
-                (parsesTab() === 'raid'
-                  ? data.raidRankings.rankings
-                  : data.dungeonRankings.rankings
-                ).length === 0
-              ) {
-                <div class="no-parses-empty">
-                  <p>{{ i18n.t('dashboard.parses.no_parses') }}</p>
-                </div>
-              }
-            </div>
-          </div>
+
+                @if (raidError()) {
+                  <div class="state-card" role="alert">
+                    <span class="state-icon" aria-hidden="true">⚠️</span>
+                    <p>{{ i18n.t('wcl.error_unavailable') }}</p>
+                    <button type="button" class="btn-primary" (click)="retry()">
+                      {{ i18n.t('wcl.retry') }}
+                    </button>
+                  </div>
+                } @else if (activeZone(); as zone) {
+                  @if (zone.bossesKilled === 0) {
+                    <div class="state-card compact" role="status">
+                      <span class="state-icon" aria-hidden="true">📭</span>
+                      <p>{{ i18n.t('wcl.no_raid_kills') }}</p>
+                    </div>
+                  }
+                  <app-wcl-raid-panel [zone]="zone" [metric]="raidData()!.metric" />
+                } @else {
+                  <div class="skeleton-rows">
+                    @for (i of [0, 1, 2, 3, 4]; track i) {
+                      <div class="skeleton skeleton-row" [style.--i]="i"></div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+            @case ('mplus') {
+              <div class="panel-inner" [class.reloading]="mythicPlus.isLoading() && mplusData()">
+                @if (mplusData(); as mplus) {
+                  <div class="zone-banner mplus">
+                    <img
+                      class="zone-emblem"
+                      [src]="mplus.zone.imageUrl"
+                      alt=""
+                      width="56"
+                      height="56"
+                    />
+                    <div class="zone-text">
+                      <span class="zone-kicker">{{ i18n.t('wcl.current_mplus') }}</span>
+                      <h4>{{ mplus.zone.name[i18n.currentLocale()] }}</h4>
+                      <span class="zone-meta">
+                        {{ mplus.runs }} {{ i18n.t(mplus.runs > 1 ? 'wcl.runs' : 'wcl.run') }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="mplus-summary">
+                    <div class="summary-item">
+                      <span class="label">{{
+                        i18n.t('wcl.best_throughput_avg_' + mplus.metric)
+                      }}</span>
+                      <strong [class]="'wcl-tier-' + parseColorClass(mplus.throughputBestAverage)">
+                        <span
+                          class="tier-text"
+                          [appCountUp]="mplus.throughputBestAverage"
+                          [countUpDecimals]="1"
+                          [countUpLocale]="i18n.currentLocale()"
+                        ></span>
+                      </strong>
+                    </div>
+                    <div class="summary-item">
+                      <span class="label">{{
+                        i18n.t('wcl.median_throughput_avg_' + mplus.metric)
+                      }}</span>
+                      <strong
+                        [class]="'wcl-tier-' + parseColorClass(mplus.throughputMedianAverage)"
+                      >
+                        <span
+                          class="tier-text"
+                          [appCountUp]="mplus.throughputMedianAverage"
+                          [countUpDecimals]="1"
+                          [countUpLocale]="i18n.currentLocale()"
+                        ></span>
+                      </strong>
+                    </div>
+                    <div class="summary-item">
+                      <span class="label">{{ i18n.t('wcl.runs_logged') }}</span>
+                      <strong
+                        ><span
+                          [appCountUp]="mplus.runs"
+                          [countUpLocale]="i18n.currentLocale()"
+                        ></span
+                      ></strong>
+                    </div>
+                    @if (mplus.specs.length > 1) {
+                      <div class="summary-item specs">
+                        <span class="label">{{ i18n.t('wcl.score_by_spec') }}</span>
+                        <div class="spec-scores">
+                          @for (s of mplus.specs; track s.spec) {
+                            <span
+                              class="spec-score"
+                              [class]="'wcl-tier-' + parseColorClass(s.rankPercent)"
+                              [title]="specRankingTitle(s)"
+                            >
+                              {{ s.spec }}
+                              <b>{{ s.points | number: '1.0-0' : i18n.currentLocale() }}</b>
+                            </span>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                  @if (mplus.runs === 0) {
+                    <div class="state-card compact" role="status">
+                      <span class="state-icon" aria-hidden="true">📭</span>
+                      <p>{{ i18n.t('wcl.no_mplus') }}</p>
+                    </div>
+                  }
+                  <app-wcl-mplus-panel [data]="mplus" />
+                } @else if (mplusError()) {
+                  <div class="state-card" role="alert">
+                    <span class="state-icon" aria-hidden="true">⚠️</span>
+                    <p>{{ i18n.t('wcl.error_unavailable') }}</p>
+                    <button type="button" class="btn-primary" (click)="retry()">
+                      {{ i18n.t('wcl.retry') }}
+                    </button>
+                  </div>
+                } @else {
+                  <div class="skeleton-grid">
+                    @for (i of [0, 1, 2, 3]; track i) {
+                      <div class="skeleton skeleton-card" [style.--i]="i"></div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          }
         </div>
       }
-    </div>
-  } @else {
-    <div class="parses-card empty-parses-card">
-      <div class="empty-state">
-        <p>{{ i18n.t('dashboard.parses.no_char') }}</p>
-        <button
-          class="btn-import"
-          [routerLink]="['/options']"
-          [queryParams]="{ tab: 'characters' }"
-        >
-          {{ i18n.t('dashboard.import') }}
-        </button>
-      </div>
     </div>
   }
 </section>

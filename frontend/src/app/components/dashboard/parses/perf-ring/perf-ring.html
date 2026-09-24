@@ -1,0 +1,28 @@
+<div
+  class="ring"
+  [class]="'wcl-tier-' + tier()"
+  role="img"
+  [attr.aria-label]="label() + ' : ' + (value() ?? '—')"
+>
+  <svg viewBox="0 0 120 120" aria-hidden="true">
+    <circle class="track" cx="60" cy="60" [attr.r]="radius" />
+    <circle
+      class="progress"
+      cx="60"
+      cy="60"
+      [attr.r]="radius"
+      [style.stroke-dasharray]="circumference"
+      [style.stroke-dashoffset]="dashOffset()"
+      [style.--ring-circumference]="circumference"
+    />
+  </svg>
+  <div class="center" aria-hidden="true">
+    <span
+      class="value"
+      [appCountUp]="value()"
+      [countUpDecimals]="1"
+      [countUpLocale]="locale()"
+    ></span>
+    <span class="caption">{{ label() }}</span>
+  </div>
+</div>

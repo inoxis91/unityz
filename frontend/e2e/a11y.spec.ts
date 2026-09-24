@@ -82,6 +82,21 @@ for (const path of [
   });
 }
 
+test('readable /dashboard › Warcraft Logs (all tabs)', async ({ page }) => {
+  await open(page, '/dashboard');
+  // Deferred on viewport: scrolling the placeholder loads the section
+  await page.locator('.parses-placeholder').scrollIntoViewIfNeeded();
+  const section = page.locator('app-dashboard-parses');
+  // Demo data without WCL keys (CI), real data or a "not found" state with them
+  await expect(section.locator('.wcl-card')).toBeVisible();
+  await expect(section.locator('.skeleton')).toHaveCount(0);
+  if (await section.locator('.tabs').count()) {
+    await checkEachTab(page, 'app-dashboard-parses .tabs', '/dashboard › WCL');
+  } else {
+    await check(page, '/dashboard › WCL');
+  }
+});
+
 test('readable /options (all tabs)', async ({ page }) => {
   await open(page, '/options');
   await checkEachTab(page, '.options-tabs', '/options');

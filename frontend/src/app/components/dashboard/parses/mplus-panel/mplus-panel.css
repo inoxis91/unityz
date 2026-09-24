@@ -1,0 +1,244 @@
+:host {
+  display: block;
+}
+
+.dungeon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dungeon-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1rem;
+  border: 1px solid var(--ui-border-subtle);
+  border-radius: 18px;
+  background:
+    radial-gradient(
+      120% 80% at 100% 0%,
+      color-mix(in srgb, var(--tier) 14%, transparent),
+      transparent 60%
+    ),
+    var(--ui-surface);
+  overflow: hidden;
+  animation: cardIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 55ms);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.dungeon-card::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--tier);
+}
+
+.dungeon-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--tier) 45%, var(--ui-border));
+  box-shadow: 0 14px 28px -14px color-mix(in srgb, var(--tier) 55%, transparent);
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dungeon-icon {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  object-fit: cover;
+  background: var(--ui-surface-subtle);
+  box-shadow: 0 0 0 2px var(--tier);
+  transition: transform 0.3s ease;
+}
+
+.dungeon-card:hover .dungeon-icon {
+  transform: scale(1.08) rotate(-3deg);
+}
+
+.dungeon-title {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+h4 {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--ui-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta {
+  font-size: 0.8rem;
+  color: var(--ui-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.meta.muted {
+  color: var(--ui-text-muted);
+  font-style: italic;
+}
+
+.key-level {
+  flex-shrink: 0;
+  padding: 0.3rem 0.6rem;
+  border-radius: 12px;
+  background: var(--tier);
+  color: var(--tier-on);
+  font-size: 1.1rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 6px 14px -6px var(--tier);
+}
+
+.score-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.score,
+.rank {
+  display: flex;
+  flex-direction: column;
+}
+
+.rank {
+  align-items: flex-end;
+  cursor: help;
+}
+
+.label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ui-text-muted);
+}
+
+.score .value,
+.rank .value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--tier-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.throughput {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--ui-border);
+}
+
+.parse-pill {
+  min-width: 2.4rem;
+  padding: 0.25rem 0.45rem;
+  border-radius: 9px;
+  background: var(--tier);
+  color: var(--tier-on);
+  font-weight: 800;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.throughput-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.parse-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--ui-surface-subtle);
+  overflow: hidden;
+}
+
+.parse-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--tier);
+  transform-origin: left;
+  transform: scaleX(var(--p, 0));
+  animation: barGrow 0.9s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(150ms + var(--i, 0) * 55ms);
+}
+
+.throughput-meta {
+  font-size: 0.75rem;
+  color: var(--ui-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.not-run {
+  background: var(--ui-surface-muted);
+  border-style: dashed;
+}
+
+.not-run::after {
+  display: none;
+}
+
+.not-run .dungeon-icon {
+  filter: grayscale(1);
+  opacity: 0.55;
+  box-shadow: none;
+}
+
+.not-run h4 {
+  color: var(--ui-text-tertiary);
+}
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+
+@keyframes barGrow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .dungeon-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dungeon-card,
+  .parse-fill {
+    animation: none;
+  }
+
+  .dungeon-card:hover,
+  .dungeon-card:hover .dungeon-icon {
+    transform: none;
+  }
+}

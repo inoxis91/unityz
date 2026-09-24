@@ -1,0 +1,76 @@
+:host {
+  display: inline-block;
+  width: var(--ring-size, 128px);
+  aspect-ratio: 1;
+}
+
+.ring {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+circle {
+  fill: none;
+  stroke-width: 10;
+}
+
+.track {
+  stroke: var(--ui-surface-strong);
+}
+
+.progress {
+  stroke: var(--tier);
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--tier) 45%, transparent));
+  transition:
+    stroke-dashoffset 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    stroke 0.4s ease;
+  animation: ringFill 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes ringFill {
+  from {
+    stroke-dashoffset: var(--ring-circumference);
+  }
+}
+
+.center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+}
+
+.value {
+  font-size: calc(var(--ring-size, 128px) * 0.24);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--tier-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.caption {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ui-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress {
+    animation: none;
+    transition: none;
+  }
+}
