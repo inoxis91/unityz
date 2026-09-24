@@ -1,0 +1,108 @@
+<div class="toolbar">
+  <div class="filters" role="group" [attr.aria-label]="i18n.t('logs.stat.role')">
+    @for (r of filters; track r) {
+      <button
+        type="button"
+        [class.active]="roleFilter() === r"
+        [attr.aria-pressed]="roleFilter() === r"
+        (click)="roleFilter.set(r)"
+      >
+        {{ i18n.t('logs.roles.' + r) }}
+      </button>
+    }
+  </div>
+  <label class="search">
+    <span class="visually-hidden">{{ i18n.t('logs.players.search') }}</span>
+    <span aria-hidden="true">🔎</span>
+    <input
+      type="search"
+      [value]="search()"
+      (input)="onSearch($event)"
+      [placeholder]="i18n.t('logs.players.search')"
+    />
+  </label>
+</div>
+
+<div class="table-wrap" tabindex="0" [attr.aria-label]="i18n.t('logs.tab.players')">
+  <table>
+    <thead>
+      <tr>
+        <th scope="col" class="sticky" [attr.aria-sort]="ariaSort('name')">
+          <button type="button" (click)="sortBy('name')">
+            {{ i18n.t('logs.stat.player') }}
+            <span class="sort-icon" aria-hidden="true">{{ sortIcon('name') }}</span>
+          </button>
+        </th>
+        <th scope="col" class="num" [attr.aria-sort]="ariaSort('rank')">
+          <button type="button" (click)="sortBy('rank')">
+            {{ i18n.t('logs.score') }}
+            <span class="sort-icon" aria-hidden="true">{{ sortIcon('rank') }}</span>
+          </button>
+        </th>
+        @for (col of columns; track col.key) {
+          <th scope="col" class="num" [attr.aria-sort]="ariaSort(col.key)">
+            <button type="button" (click)="sortBy(col.key)">
+              {{ i18n.t(col.label) }}
+              <span class="sort-icon" aria-hidden="true">{{ sortIcon(col.key) }}</span>
+            </button>
+          </th>
+          @if (col.key === 'potions') {
+            <th scope="col" class="num">{{ i18n.t('logs.stat.flask') }}</th>
+            <th scope="col" class="num">{{ i18n.t('logs.stat.food') }}</th>
+          }
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (p of rows(); track p.actorId; let i = $index) {
+        <tr
+          [class.is-mine]="mine().has(p.actorId)"
+          [class.is-mvp]="p.actorId === analysis().mvpActorId"
+          [style.--i]="i"
+        >
+          <th scope="row" class="sticky">
+            <span class="player-cell">
+              <span class="rank">#{{ p.rank }}</span>
+              <app-player-tag [player]="p" size="sm" [mine]="mine().has(p.actorId)" />
+            </span>
+          </th>
+          <td class="num score">{{ p.score | number: '1.1-1' : i18n.currentLocale() }}</td>
+          <td class="num">{{ p.itemLevel ?? '—' }}</td>
+          <td class="num">
+            <span class="parse" [class]="'wcl-tier-' + parseColorClass(p.avgParse)">
+              {{ displayPercent(p.avgParse) ?? '—' }}
+            </span>
+          </td>
+          <td class="num">
+            <span class="parse" [class]="'wcl-tier-' + parseColorClass(p.bestParse)">
+              {{ displayPercent(p.bestParse) ?? '—' }}
+            </span>
+          </td>
+          <td class="num" [class.muted]="p.role === 'healer'">{{ compact(p.dps) }}</td>
+          <td class="num" [class.muted]="p.role !== 'healer'">{{ compact(p.hps) }}</td>
+          <td class="num">
+            <strong [class.danger]="p.prematureDeaths > 0">{{ p.prematureDeaths }}</strong>
+            <small>/ {{ p.deaths }}</small>
+          </td>
+          <td class="num">
+            <span class="pill" [class]="potionStatus(p)"
+              >{{ p.potionPulls }}/{{ p.potionEligiblePulls }}</span
+            >
+          </td>
+          <td class="num" [class.warn]="p.flaskPulls < p.pulls">
+            {{ p.flaskPulls }}/{{ p.pulls }}
+          </td>
+          <td class="num" [class.warn]="p.foodPulls < p.pulls">{{ p.foodPulls }}/{{ p.pulls }}</td>
+          <td class="num">{{ p.healthstones }}</td>
+          <td class="num">{{ p.interrupts }}</td>
+          <td class="num">{{ p.dispels }}</td>
+        </tr>
+      } @empty {
+        <tr>
+          <td class="empty" colspan="14">{{ i18n.t('logs.players.no_result') }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+<p class="footnote">{{ i18n.t('logs.players.footnote') }}</p>

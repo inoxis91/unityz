@@ -63,66 +63,6 @@ export interface Signup {
   user_characters?: any[];
 }
 
-export interface WclPlayerPerf {
-  name: string;
-  class: string;
-  role: 'tank' | 'heal' | 'dps';
-  dps: number;
-  hps: number;
-  deaths: number;
-  avoidableDeaths: number;
-  damageTaken: number;
-  activeTime: number;
-  parse: number;
-  burstPotionsUsed?: number;
-}
-
-export interface WclFight {
-  id: number;
-  name: string;
-  difficulty: string;
-  kill: boolean;
-  duration: number;
-  bossPercentage: number;
-  deathsCount: number;
-  averageDps: number;
-  averageHps: number;
-  players: WclPlayerPerf[];
-}
-
-export interface WclMvpEntry {
-  name: string;
-  class: string;
-  score: number;
-  dpsTotal: number;
-  hpsTotal: number;
-  deathsCount: number;
-  damageTakenSum: number;
-  burstPotionsUsed: number;
-}
-
-export interface WclReportMetrics {
-  title: string;
-  zone: string;
-  owner: string;
-  totalDuration: number;
-  totalKills: number;
-  totalWipes: number;
-  totalDamage: number;
-  totalHealing: number;
-  raidAvgDps: number;
-  raidAvgHps: number;
-  totalDeaths: number;
-  avgActiveTime: number;
-  mostDeadlyBoss: string;
-  mvpPlayer: { name: string; class: string; score: number };
-  mostDiedPlayer: { name: string; class: string; deaths: number } | null;
-  leastDiedPlayer: { name: string; class: string; deaths: number } | null;
-  mvpLeaderboard: WclMvpEntry[];
-  fights: WclFight[];
-  wclKeysMissing?: boolean;
-}
-
 /** Rôle réellement joué : celui imposé par le raid lead, sinon celui choisi par le joueur. */
 export function effectiveRole(signup: Pick<Signup, 'role' | 'assigned_role'>): RaidRole {
   return (signup.assigned_role ?? signup.role) as RaidRole;
@@ -139,7 +79,7 @@ export function playableRoles(signup: Signup): Set<RaidRole> {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CalendarService {
   private apiUrl = `${environment.apiUrl}/events`;
@@ -179,27 +119,53 @@ export class CalendarService {
   }
 
   updateGroupsCount(eventId: string, count: number): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/${eventId}/groups-count`, { count }, { withCredentials: true });
+    return this.http.patch(
+      `${this.apiUrl}/${eventId}/groups-count`,
+      { count },
+      { withCredentials: true },
+    );
   }
 
   deleteGroup(eventId: string, groupIndex: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${eventId}/groups/${groupIndex}`, { withCredentials: true });
+    return this.http.delete(`${this.apiUrl}/${eventId}/groups/${groupIndex}`, {
+      withCredentials: true,
+    });
   }
 
   updateSignupGroup(eventId: string, userId: string, groupIndex: number): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/${eventId}/signups/${userId}/group`, { group_index: groupIndex }, { withCredentials: true });
+    return this.http.patch(
+      `${this.apiUrl}/${eventId}/signups/${userId}/group`,
+      { group_index: groupIndex },
+      { withCredentials: true },
+    );
   }
 
-  updateSignup(eventId: string, userId: string, data: { character_id?: string | null, role?: string, status?: string }): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/${eventId}/signups/${userId}`, data, { withCredentials: true });
+  updateSignup(
+    eventId: string,
+    userId: string,
+    data: { character_id?: string | null; role?: string; status?: string },
+  ): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${eventId}/signups/${userId}`, data, {
+      withCredentials: true,
+    });
   }
 
   updateLineupEntry(eventId: string, userId: string, patch: LineupPatch): Observable<LineupEntry> {
-    return this.http.patch<LineupEntry>(`${this.apiUrl}/${eventId}/lineup/${userId}`, patch, { withCredentials: true });
+    return this.http.patch<LineupEntry>(`${this.apiUrl}/${eventId}/lineup/${userId}`, patch, {
+      withCredentials: true,
+    });
   }
 
-  bulkUpdateLineup(eventId: string, userIds: string[], selection: LineupSelection): Observable<LineupEntry[]> {
-    return this.http.patch<LineupEntry[]>(`${this.apiUrl}/${eventId}/lineup`, { user_ids: userIds, selection }, { withCredentials: true });
+  bulkUpdateLineup(
+    eventId: string,
+    userIds: string[],
+    selection: LineupSelection,
+  ): Observable<LineupEntry[]> {
+    return this.http.patch<LineupEntry[]>(
+      `${this.apiUrl}/${eventId}/lineup`,
+      { user_ids: userIds, selection },
+      { withCredentials: true },
+    );
   }
 
   getSignups(eventId: string): Observable<Signup[]> {
@@ -207,7 +173,9 @@ export class CalendarService {
   }
 
   signup(eventId: string, data: any): Observable<Signup> {
-    return this.http.post<Signup>(`${this.apiUrl}/${eventId}/signup`, data, { withCredentials: true });
+    return this.http.post<Signup>(`${this.apiUrl}/${eventId}/signup`, data, {
+      withCredentials: true,
+    });
   }
 
   unsignup(eventId: string): Observable<any> {
@@ -216,9 +184,5 @@ export class CalendarService {
 
   getMySignups(): Observable<Signup[]> {
     return this.http.get<Signup[]>(`${this.apiUrl}/my-signups`, { withCredentials: true });
-  }
-
-  getEventLogsMetrics(eventId: string): Observable<WclReportMetrics> {
-    return this.http.get<WclReportMetrics>(`${this.apiUrl}/${eventId}/logs-metrics`, { withCredentials: true });
   }
 }

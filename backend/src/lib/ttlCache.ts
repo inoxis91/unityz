@@ -11,7 +11,12 @@ export class TtlCache<T> {
     private readonly maxEntries = 500,
   ) {}
 
-  async getOrLoad(key: string, loader: () => Promise<T>, ttlMs = this.ttlMs): Promise<T> {
+  /** `ttlMs` peut dépendre de la valeur chargée (ex. rapport encore en cours d'enregistrement). */
+  async getOrLoad(
+    key: string,
+    loader: () => Promise<T>,
+    ttlMs: number | ((value: T) => number) = this.ttlMs,
+  ): Promise<T> {
     const hit = this.entries.get(key);
     if (hit && hit.expiresAt > Date.now()) return hit.value;
     if (hit) this.entries.delete(key);
@@ -21,7 +26,7 @@ export class TtlCache<T> {
 
     const promise = loader()
       .then((value) => {
-        this.set(key, value, ttlMs);
+        this.set(key, value, typeof ttlMs === 'function' ? ttlMs(value) : ttlMs);
         return value;
       })
       .finally(() => this.inflight.delete(key));

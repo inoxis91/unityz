@@ -8,7 +8,7 @@ import {
   formatDuration,
   parseColorClass,
   topPercent,
-} from '../parse-tier';
+} from '../../../../shared/wcl/parse-tier';
 
 /** Tableau des boss d'une zone de raid : meilleur %, médiane, DPS/HPS, kills, temps, All Stars. */
 @Component({

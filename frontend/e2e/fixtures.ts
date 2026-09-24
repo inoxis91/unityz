@@ -5,6 +5,7 @@ export const MOCK_USER_ID = 'mock_user_6'; // GM (admin) de la guilde « Pro » 
 export const PRO_GUILD_ID = '22222222-2222-4222-8222-222222222222';
 export const STATE_PATH = 'e2e/.auth/state.json';
 export const SEED_PATH = 'e2e/.auth/seed.json';
+export const WCL_REPORT_URL = 'https://www.warcraftlogs.com/reports/7qRgKthjfGTN1MYA';
 
 export interface Seed {
   eventId: string;

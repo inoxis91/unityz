@@ -1,6 +1,7 @@
 import { HttpError } from '../middlewares/errorHandler';
 import { isWclConfigured, wclQuery } from '../lib/wclClient';
 import { TtlCache } from '../lib/ttlCache';
+import { encounterIconUrl, zoneImageUrl } from '../lib/wclAssets';
 
 /**
  * Performances Warcraft Logs d'un personnage (page personnage WCL) : raid et Mythique+ de la saison en cours.
@@ -352,13 +353,6 @@ export async function getCurrentSeason(): Promise<WclSeason> {
 /* ------------------------------------------------------------------ */
 /* Normalisation                                                        */
 /* ------------------------------------------------------------------ */
-
-const WCL_ASSETS = 'https://assets.rpglogs.com/img/warcraft';
-
-/** Les rencontres réutilisées d'une ancienne saison ont un préfixe (61762 → 11762) que WCL ignore pour l'icône. */
-const encounterIconUrl = (id: number) =>
-  `${WCL_ASSETS}/bosses/${id >= 10_000 ? 10_000 + (id % 10_000) : id}-icon.jpg`;
-const zoneImageUrl = (id: number) => `${WCL_ASSETS}/zones/zone-${id}.png`;
 
 const round = (value: number, decimals = 2) => {
   const factor = 10 ** decimals;

@@ -101,3 +101,12 @@ export const bulkUpdateLineupSchema = z.object({
     selection: lineupSelection,
   }),
 });
+
+export const eventLogsAnalysisSchema = z.object({
+  params: z.object({
+    id: z.string().uuid(),
+  }),
+  query: z.object({
+    locale: z.enum(['fr', 'en']).default('fr'),
+  }),
+});

@@ -1,0 +1,18 @@
+<img
+  class="avatar"
+  [src]="classIcon()"
+  alt=""
+  [style.--class-color]="'var(--color-' + player().classId + ')'"
+/>
+<span class="text">
+  <span class="name" [class]="'class-' + player().classId">{{ player().name }}</span>
+  @if (showSpec()) {
+    <span class="spec">
+      <img [src]="roleIcon()" alt="" />
+      {{ player().spec ?? i18n.t('logs.role.' + player().role) }}
+    </span>
+  }
+</span>
+@if (mine()) {
+  <span class="you">{{ i18n.t('logs.you') }}</span>
+}

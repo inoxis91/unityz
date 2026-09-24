@@ -1,0 +1,12 @@
+<div class="track" role="img" [attr.aria-label]="label()">
+  @for (s of segments(); track s.criterion) {
+    <span
+      class="segment"
+      [class]="'crit-' + s.criterion"
+      [style.width.%]="s.points"
+      [title]="
+        i18n.t('logs.criterion.' + s.criterion) + ' : ' + s.points.toFixed(1) + ' / ' + s.weight
+      "
+    ></span>
+  }
+</div>

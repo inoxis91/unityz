@@ -1,0 +1,125 @@
+@let a = analysis();
+@let w = weights();
+
+<details class="method">
+  <summary>
+    <span aria-hidden="true">⚖️</span>
+    {{ i18n.t('logs.ranking.how') }}
+  </summary>
+  <div class="method-body">
+    <p class="intro">{{ i18n.t('logs.ranking.intro') }}</p>
+    <ul class="method-criteria">
+      @for (c of criteria; track c) {
+        <li>
+          <span class="weight" [class]="'crit-' + c">{{ w[c] }}</span>
+          <div>
+            <strong>{{ i18n.t('logs.criterion.' + c) }}</strong>
+            <p>{{ i18n.t('logs.criterion.' + c + '_desc') }}</p>
+          </div>
+        </li>
+      }
+    </ul>
+    <p class="rules">
+      {{ i18n.t('logs.ranking.eligibility') }} {{ a.scoring.minAttendance * 100 }} %
+      {{ i18n.t('logs.ranking.eligibility_end') }}
+    </p>
+  </div>
+</details>
+
+<div class="toolbar">
+  <div class="filters" role="group" [attr.aria-label]="i18n.t('logs.stat.role')">
+    @for (r of filters; track r) {
+      <button
+        type="button"
+        [class.active]="roleFilter() === r"
+        [attr.aria-pressed]="roleFilter() === r"
+        (click)="roleFilter.set(r)"
+      >
+        {{ i18n.t('logs.roles.' + r) }}
+        <span class="count">{{ roleCounts()[r] }}</span>
+      </button>
+    }
+  </div>
+  <ul class="legend">
+    @for (c of criteria; track c) {
+      <li><span class="swatch" [class]="'crit-' + c"></span>{{ i18n.t('logs.criterion.' + c) }}</li>
+    }
+  </ul>
+</div>
+
+<ol class="board">
+  @for (row of rows(); track row.player.actorId; let i = $index) {
+    @let p = row.player;
+    <li
+      class="row"
+      [class.is-mvp]="p.actorId === a.mvpActorId"
+      [class.is-mine]="mine().has(p.actorId)"
+      [class.ineligible]="!p.eligible"
+      [class.open]="expanded() === p.actorId"
+      [style.--i]="i"
+    >
+      <button
+        type="button"
+        class="row-main"
+        [attr.aria-expanded]="expanded() === p.actorId"
+        [attr.aria-controls]="'mvp-details-' + p.actorId"
+        (click)="toggle(p.actorId)"
+      >
+        <span class="rank">
+          @if (medal(p.rank, p.eligible); as m) {
+            <span class="medal" aria-hidden="true">{{ m }}</span>
+            <span class="visually-hidden">#{{ p.rank }}</span>
+          } @else {
+            #{{ p.rank }}
+          }
+        </span>
+        <app-player-tag [player]="p" [mine]="mine().has(p.actorId)" />
+        <span class="bar-col">
+          <app-score-bar [breakdown]="p.breakdown" [weights]="w" />
+          <span class="facts">
+            <span [class]="'wcl-tier-' + parseColorClass(p.avgParse)">
+              {{ i18n.t('logs.kpi.parse_short') }}
+              <strong class="tier-text">{{ displayPercent(p.avgParse) ?? '—' }}</strong>
+            </span>
+            <span>💀 {{ p.prematureDeaths }}</span>
+            <span>🧪 {{ p.potionPulls }}/{{ p.potionEligiblePulls }}</span>
+            @if (!p.eligible) {
+              <span class="ineligible-tag">{{ i18n.t('logs.ranking.ineligible') }}</span>
+            }
+          </span>
+        </span>
+        <span class="score">
+          <strong>{{ p.score | number: '1.1-1' : i18n.currentLocale() }}</strong>
+          <small>/ 100</small>
+        </span>
+        <span class="chevron" aria-hidden="true">▾</span>
+      </button>
+
+      @if (expanded() === p.actorId) {
+        <div class="details" [id]="'mvp-details-' + p.actorId">
+          @for (part of row.parts; track part.criterion) {
+            <div class="detail">
+              <div class="detail-head">
+                <span class="swatch" [class]="'crit-' + part.criterion"></span>
+                <strong>{{ i18n.t('logs.criterion.' + part.criterion) }}</strong>
+                <span class="detail-points">
+                  +{{ part.points | number: '1.1-1' : i18n.currentLocale() }}
+                  <small>/ {{ part.weight }}</small>
+                </span>
+              </div>
+              <span class="detail-bar">
+                <span [class]="'crit-' + part.criterion" [style.width.%]="part.value"></span>
+              </span>
+              <span class="detail-evidence">
+                {{ part.value | number: '1.0-0' : i18n.currentLocale() }}/100 —
+                {{ evidence(p, part.criterion) }}
+              </span>
+            </div>
+          }
+        </div>
+      }
+    </li>
+  } @empty {
+    <li class="empty">{{ i18n.t('logs.ranking.empty_role') }}</li>
+  }
+</ol>

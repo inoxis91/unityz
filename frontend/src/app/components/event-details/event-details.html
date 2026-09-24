@@ -206,7 +206,9 @@
     <!-- TAB: Logs & Stats -->
     @if (activeTab() === 'logs') {
       <div class="tab-content">
-        <app-logs-dashboard [eventId]="event()!.id!"></app-logs-dashboard>
+        @defer {
+          <app-logs-dashboard [eventId]="event()!.id!" [myCharacters]="myCharacters()" />
+        }
       </div>
     }
   </div>

@@ -1,0 +1,199 @@
+@let p = pull();
+
+<div class="layout">
+  <nav class="selector" [attr.aria-label]="i18n.t('logs.pulls.select')">
+    @for (g of groups(); track g.encounter.id + '-' + g.encounter.difficulty) {
+      <div class="group">
+        <div class="group-head">
+          <img [src]="g.encounter.iconUrl" alt="" (error)="hideImage($event)" />
+          <span>{{ g.encounter.name }}</span>
+        </div>
+        <div class="group-pulls">
+          @for (x of g.pulls; track x.pull.id) {
+            <button
+              type="button"
+              class="pull-btn"
+              [class.kill]="x.pull.kill"
+              [class.active]="x.pull.id === p.id"
+              [attr.aria-pressed]="x.pull.id === p.id"
+              (click)="selectedPullId.set(x.pull.id)"
+            >
+              <span class="pull-num">#{{ x.attempt }}</span>
+              <span class="pull-state">
+                {{
+                  x.pull.kill
+                    ? i18n.t('logs.kill')
+                    : (x.pull.bossPercent | number: '1.0-1' : i18n.currentLocale()) + ' %'
+                }}
+              </span>
+              <span class="pull-time">{{ formatDuration(x.pull.durationMs) }}</span>
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </nav>
+
+  @if (p) {
+    <section class="detail" [attr.aria-live]="'polite'">
+      <header class="pull-header">
+        @if (encounter(); as e) {
+          <img class="boss-icon" [src]="e.iconUrl" alt="" (error)="hideImage($event)" />
+        }
+        <div class="pull-title">
+          <h3>
+            {{ p.name }} <span class="attempt">#{{ attempt() }}</span>
+          </h3>
+          <div class="pull-meta">
+            <span class="badge" [class.kill]="p.kill">{{
+              p.kill ? i18n.t('logs.kill') : i18n.t('logs.wipe')
+            }}</span>
+            <span>{{ i18n.t('difficulty.' + p.difficulty) }}</span>
+            <span>⏱️ {{ formatDuration(p.durationMs) }}</span>
+            @if (p.itemLevel) {
+              <span
+                >{{ i18n.t('logs.stat.ilvl') }}
+                {{ p.itemLevel | number: '1.1-1' : i18n.currentLocale() }}</span
+              >
+            }
+          </div>
+        </div>
+        <a class="wcl-link" [href]="pullUrl()" target="_blank" rel="noopener noreferrer">
+          {{ i18n.t('logs.pulls.open_wcl') }} ↗
+        </a>
+      </header>
+
+      <div
+        class="boss-health"
+        role="img"
+        [attr.aria-label]="i18n.t('logs.boss_hp') + ' ' + p.bossPercent + ' %'"
+      >
+        <span
+          class="health-fill"
+          [class.kill]="p.kill"
+          [style.width.%]="p.kill ? 100 : 100 - p.bossPercent"
+        ></span>
+        <span class="health-label">
+          <span>
+            {{ i18n.t('logs.boss_hp') }}&nbsp;:
+            <strong>{{ p.bossPercent | number: '1.0-2' : i18n.currentLocale() }}&nbsp;%</strong>
+          </span>
+        </span>
+      </div>
+
+      <div class="pull-stats">
+        <div>
+          <span class="label">{{ i18n.t('logs.kpi.raid_dps') }}</span>
+          <strong>{{ compact(p.raidDps) }}</strong>
+        </div>
+        <div>
+          <span class="label">{{ i18n.t('logs.pulls.raid_hps') }}</span>
+          <strong>{{ compact(p.raidHps) }}</strong>
+        </div>
+        <div>
+          <span class="label">{{ i18n.t('logs.stat.deaths') }}</span>
+          <strong>
+            <span class="danger">{{ prematureCount() }}</span>
+            <small>/ {{ p.deaths.length }}</small>
+          </strong>
+        </div>
+        <div>
+          <span class="label">{{ i18n.t('logs.stat.players') }}</span>
+          <strong>{{ p.players.length }}</strong>
+        </div>
+      </div>
+
+      <!-- Chronologie des morts -->
+      <div class="card">
+        <h4>💀 {{ i18n.t('logs.pulls.timeline') }}</h4>
+        @if (deaths().length) {
+          <div class="timeline" aria-hidden="true">
+            <span class="timeline-track"></span>
+            @for (d of deaths(); track $index) {
+              <span
+                class="marker"
+                [class.premature]="d.premature"
+                [style.left.%]="d.position"
+                [style.--i]="$index"
+                [title]="(d.player?.name ?? '?') + ' — ' + formatDuration(d.timeMs)"
+              ></span>
+            }
+            <span class="tick start">0:00</span>
+            <span class="tick end">{{ formatDuration(p.durationMs) }}</span>
+          </div>
+          <ol class="death-list">
+            @for (d of deaths(); track $index) {
+              <li [class.cascade]="!d.premature" [class.is-mine]="mine().has(d.actorId)">
+                <span class="death-time">{{ formatDuration(d.timeMs) }}</span>
+                @if (d.player; as pl) {
+                  <app-player-tag [player]="pl" size="sm" [showSpec]="false" />
+                }
+                <span class="death-cause">
+                  @if (d.iconUrl) {
+                    <img [src]="d.iconUrl" alt="" (error)="hideImage($event)" />
+                  }
+                  {{ d.ability ?? i18n.t('logs.pulls.unknown_ability') }}
+                </span>
+                <span class="death-tag" [class.premature]="d.premature">
+                  {{ d.premature ? i18n.t('logs.pulls.premature') : i18n.t('logs.pulls.cascade') }}
+                </span>
+              </li>
+            }
+          </ol>
+        } @else {
+          <p class="empty">🛡️ {{ i18n.t('logs.pulls.no_death') }}</p>
+        }
+      </div>
+
+      <!-- Dégâts et soins -->
+      <div class="meters">
+        @for (m of meters(); track m.key) {
+          <div class="card">
+            <h4>
+              {{ m.icon }} {{ i18n.t(m.title) }} <small>({{ i18n.t(m.unit) }})</small>
+            </h4>
+            <ol class="meter" [class]="m.key">
+              @for (row of m.rows; track row.player.actorId; let i = $index) {
+                <li [class.is-mine]="mine().has(row.player.actorId)" [style.--i]="i">
+                  <app-player-tag [player]="row.player" size="sm" [showSpec]="false" />
+                  <span class="meter-bar">
+                    <span
+                      [style.width.%]="row.width"
+                      [style.--class-color]="'var(--color-' + row.player.classId + ')'"
+                    ></span>
+                  </span>
+                  <span class="meter-value">{{ compact(row.amount) }}</span>
+                  <span class="meter-flags">
+                    @if (p.kill && m.key === (row.stats.role === 'healer' ? 'healing' : 'damage')) {
+                      <span
+                        class="parse"
+                        [class]="'wcl-tier-' + parseColorClass(row.stats.parse)"
+                        [title]="i18n.t('logs.stat.parse')"
+                      >
+                        {{ displayPercent(row.stats.parse) ?? '—' }}
+                      </span>
+                    }
+                    @if (m.key === 'damage') {
+                      <span
+                        [title]="i18n.t('logs.stat.potions')"
+                        [class.off]="!row.stats.combatPotions"
+                        >🧪</span
+                      >
+                      @if (row.stats.died) {
+                        <span
+                          [title]="i18n.t('logs.stat.deaths')"
+                          [class.off]="!row.stats.prematureDeath"
+                          >💀</span
+                        >
+                      }
+                    }
+                  </span>
+                </li>
+              }
+            </ol>
+          </div>
+        }
+      </div>
+    </section>
+  }
+</div>

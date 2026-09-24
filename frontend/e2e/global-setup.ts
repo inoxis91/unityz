@@ -1,7 +1,15 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { request, type APIResponse } from '@playwright/test';
-import { API_URL, MOCK_USER_ID, PRO_GUILD_ID, SEED_PATH, STATE_PATH, type Seed } from './fixtures';
+import {
+  API_URL,
+  MOCK_USER_ID,
+  PRO_GUILD_ID,
+  SEED_PATH,
+  STATE_PATH,
+  WCL_REPORT_URL,
+  type Seed,
+} from './fixtures';
 
 async function ok(res: APIResponse, step: string) {
   if (!res.ok()) throw new Error(`[e2e setup] ${step}: HTTP ${res.status()} ${await res.text()}`);
@@ -31,6 +39,8 @@ export default async function globalSetup() {
         type: 'raid',
         start_time: start.toISOString(),
         end_time: new Date(start.getTime() + 3 * 3600 * 1000).toISOString(),
+        // Rapport public : analysé avec des clés WCL, état « indisponible » sans (CI)
+        logs: WCL_REPORT_URL,
       },
     }),
     'create event',

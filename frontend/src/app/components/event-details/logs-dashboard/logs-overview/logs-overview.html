@@ -1,0 +1,382 @@
+@let a = analysis();
+@let s = a.summary;
+@let locale = i18n.currentLocale();
+
+<!-- Chiffres clés -->
+<section class="kpis" [attr.aria-label]="i18n.t('logs.kpi.title')">
+  <article class="kpi" style="--i: 0">
+    <span class="kpi-label">{{ i18n.t('logs.kpi.bosses') }}</span>
+    <span class="kpi-value">
+      <span [appCountUp]="s.bossesKilled" [countUpLocale]="locale"></span>
+      <small>/ {{ s.encounters }}</small>
+    </span>
+    <span class="kpi-sub">
+      <span class="dot kill"></span>{{ s.kills }} {{ i18n.t('logs.kills') }}
+      <span class="dot wipe"></span>{{ s.wipes }} {{ i18n.t('logs.wipes') }}
+    </span>
+  </article>
+  <article class="kpi" style="--i: 1">
+    <span class="kpi-label">{{ i18n.t('logs.kpi.combat_time') }}</span>
+    <span class="kpi-value">{{ formatDuration(s.combatTimeMs) }}</span>
+    <span class="kpi-sub"
+      >{{ i18n.t('logs.kpi.raid_duration') }} {{ formatDuration(s.elapsedMs) }}</span
+    >
+  </article>
+  <article class="kpi kpi-ring" style="--i: 2">
+    <app-perf-ring
+      [value]="s.avgParse"
+      [label]="i18n.t('logs.kpi.parse_short')"
+      [locale]="locale"
+    />
+    <span class="kpi-label">{{ i18n.t('logs.kpi.avg_parse') }}</span>
+  </article>
+  <article class="kpi" style="--i: 3">
+    <span class="kpi-label">{{ i18n.t('logs.kpi.raid_dps') }}</span>
+    <span class="kpi-value">{{ compact(s.raidDps) }}</span>
+    <span class="kpi-sub">{{ compact(s.raidHps) }} {{ i18n.t('logs.unit.hps') }}</span>
+  </article>
+  <article class="kpi" style="--i: 4">
+    <span class="kpi-label">{{ i18n.t('logs.kpi.deaths') }}</span>
+    <span class="kpi-value danger">
+      <span [appCountUp]="s.prematureDeaths" [countUpLocale]="locale"></span>
+    </span>
+    <span class="kpi-sub">{{ s.deaths }} {{ i18n.t('logs.kpi.deaths_total') }}</span>
+  </article>
+  <article class="kpi" style="--i: 5">
+    <span class="kpi-label">{{ i18n.t('logs.kpi.potions') }}</span>
+    <span class="kpi-value">
+      @if (s.potionRate !== null) {
+        <span [appCountUp]="s.potionRate * 100" [countUpLocale]="locale"></span><small>%</small>
+      } @else {
+        —
+      }
+    </span>
+    <span class="kpi-sub">{{ i18n.t('logs.kpi.potions_hint') }}</span>
+  </article>
+</section>
+
+<!-- MVP -->
+<section class="mvp-grid">
+  @if (mvp(); as m) {
+    <article
+      class="mvp-card"
+      [style.--class-color]="'var(--color-' + m.classId + ')'"
+      [attr.aria-label]="i18n.t('logs.mvp') + ' : ' + m.name"
+    >
+      <div class="mvp-glow" aria-hidden="true"></div>
+      <header class="mvp-header">
+        <span class="crown" aria-hidden="true">👑</span>
+        <span class="mvp-title">{{ i18n.t('logs.mvp') }}</span>
+      </header>
+      <div class="mvp-body">
+        <div class="mvp-identity">
+          <app-player-tag [player]="m" size="lg" [mine]="isMine(m)" />
+          <dl class="mvp-facts">
+            <div>
+              <dt>{{ i18n.t('logs.stat.avg_parse') }}</dt>
+              <dd [class]="'wcl-tier-' + parseColorClass(m.avgParse)">
+                <span class="tier-text">{{ displayPercent(m.avgParse) ?? '—' }}</span>
+              </dd>
+            </div>
+            <div>
+              <dt>{{ m.role === 'healer' ? i18n.t('logs.unit.hps') : i18n.t('logs.unit.dps') }}</dt>
+              <dd>{{ compact(m.role === 'healer' ? m.hps : m.dps) }}</dd>
+            </div>
+            <div>
+              <dt>{{ i18n.t('logs.stat.deaths') }}</dt>
+              <dd>{{ m.prematureDeaths }}</dd>
+            </div>
+            <div>
+              <dt>{{ i18n.t('logs.stat.potions') }}</dt>
+              <dd>{{ m.potionPulls }}/{{ m.potionEligiblePulls }}</dd>
+            </div>
+          </dl>
+        </div>
+        <div
+          class="score-ring"
+          role="img"
+          [attr.aria-label]="i18n.t('logs.score') + ' ' + m.score + ' / 100'"
+        >
+          <svg viewBox="0 0 128 128" aria-hidden="true">
+            <defs>
+              <linearGradient id="mvp-score-gradient" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="var(--wcl-gold)" />
+                <stop offset="100%" stop-color="var(--class-color)" />
+              </linearGradient>
+            </defs>
+            <circle class="ring-track" cx="64" cy="64" [attr.r]="scoreRadius" />
+            <circle
+              class="ring-progress"
+              cx="64"
+              cy="64"
+              [attr.r]="scoreRadius"
+              [style.stroke-dasharray]="scoreCircumference"
+              [style.stroke-dashoffset]="mvpDashOffset()"
+              [style.--ring-circumference]="scoreCircumference"
+            />
+          </svg>
+          <span class="ring-center" aria-hidden="true">
+            <span
+              class="ring-value"
+              [appCountUp]="m.score"
+              [countUpDecimals]="1"
+              [countUpLocale]="locale"
+            ></span>
+            <span class="ring-caption">{{ i18n.t('logs.score') }}</span>
+          </span>
+        </div>
+      </div>
+      <ul class="criteria">
+        @for (c of mvpContributions(); track c.criterion; let i = $index) {
+          <li [style.--i]="i">
+            <span class="criterion-name">
+              <span class="swatch" [class]="'crit-' + c.criterion"></span>
+              {{ i18n.t('logs.criterion.' + c.criterion) }}
+            </span>
+            <span class="criterion-bar">
+              <span [class]="'crit-' + c.criterion" [style.width.%]="c.value"></span>
+            </span>
+            <span class="criterion-value">{{
+              c.value | number: '1.0-0' : i18n.currentLocale()
+            }}</span>
+          </li>
+        }
+      </ul>
+    </article>
+  } @else {
+    <article class="mvp-card empty">
+      <p>{{ i18n.t('logs.mvp_none') }}</p>
+    </article>
+  }
+
+  <div class="side-column">
+    @for (p of podium(); track p.actorId; let i = $index) {
+      <article class="podium-card" [class]="'place-' + (i + 2)" [style.--i]="i">
+        <span class="medal" aria-hidden="true">{{ i === 0 ? '🥈' : '🥉' }}</span>
+        <app-player-tag [player]="p" [mine]="isMine(p)" />
+        <span class="podium-score">
+          <strong>{{ p.score | number: '1.1-1' : i18n.currentLocale() }}</strong>
+          <small>{{ i18n.t('logs.points') }}</small>
+        </span>
+      </article>
+    }
+
+    @for (p of myPlayers(); track p.actorId) {
+      <article class="me-card">
+        <header>
+          <span>{{ i18n.t('logs.my_performance') }}</span>
+          <span class="me-rank"
+            >#{{ p.rank }} <small>/ {{ players().length }}</small></span
+          >
+        </header>
+        <app-player-tag [player]="p" size="sm" />
+        <app-score-bar [breakdown]="p.breakdown" [weights]="a.scoring.weights" />
+        <dl class="me-facts">
+          <div>
+            <dt>{{ i18n.t('logs.score') }}</dt>
+            <dd>{{ p.score | number: '1.1-1' : i18n.currentLocale() }}</dd>
+          </div>
+          <div>
+            <dt>{{ i18n.t('logs.kpi.parse_short') }}</dt>
+            <dd [class]="'wcl-tier-' + parseColorClass(p.avgParse)">
+              <span class="tier-text">{{ displayPercent(p.avgParse) ?? '—' }}</span>
+            </dd>
+          </div>
+          <div>
+            <dt>{{ i18n.t('logs.stat.deaths') }}</dt>
+            <dd>{{ p.prematureDeaths }}</dd>
+          </div>
+          <div>
+            <dt>{{ i18n.t('logs.stat.potions') }}</dt>
+            <dd>{{ p.potionPulls }}/{{ p.potionEligiblePulls }}</dd>
+          </div>
+        </dl>
+      </article>
+    }
+
+    <button type="button" class="link-button" (click)="openRanking.emit()">
+      {{ i18n.t('logs.see_ranking') }} →
+    </button>
+  </div>
+</section>
+
+<!-- Champions par rôle -->
+<section class="champions">
+  @for (role of roles; track role; let i = $index) {
+    @if (champions()[role]; as c) {
+      <article class="champion" [class]="'role-' + role" [style.--i]="i">
+        <span class="champion-role">
+          <img [src]="roleIcons[role]" alt="" />
+          {{ i18n.t('logs.best_role.' + role) }}
+        </span>
+        <app-player-tag [player]="c" [mine]="isMine(c)" />
+        <span class="champion-score">
+          <strong>{{ c.score | number: '1.1-1' : i18n.currentLocale() }}</strong>
+          <small>{{ i18n.t('logs.points') }}</small>
+        </span>
+      </article>
+    }
+  }
+</section>
+
+<!-- Distinctions -->
+<section class="panel">
+  <h3>{{ i18n.t('logs.awards') }}</h3>
+  <div class="awards">
+    @for (award of awards(); track award.key; let i = $index) {
+      <article class="award" [style.--i]="i">
+        <span class="award-icon" aria-hidden="true">{{ award.icon }}</span>
+        <span class="award-title">{{ i18n.t('logs.award.' + award.key) }}</span>
+        <app-player-tag
+          [player]="award.player"
+          size="sm"
+          [showSpec]="false"
+          [mine]="isMine(award.player)"
+        />
+        <span
+          class="award-value"
+          [class]="award.isParse ? 'wcl-tier-' + parseColorClass(award.value) : ''"
+        >
+          <strong [class.tier-text]="award.isParse">{{
+            awardValue(award.value, award.isParse)
+          }}</strong>
+          <small>{{ i18n.t(award.unit) }}</small>
+        </span>
+      </article>
+    }
+  </div>
+</section>
+
+<!-- Consommables et morts -->
+<section class="two-columns">
+  <article class="panel">
+    <header class="panel-header">
+      <h3>🧪 {{ i18n.t('logs.potions.title') }}</h3>
+      <div class="legend">
+        @for (status of potionStatuses; track status) {
+          <span class="status" [class]="status" [title]="i18n.t('logs.potions.' + status)">
+            <span class="visually-hidden">{{ i18n.t('logs.potions.' + status) }} :</span>
+            {{ potionCounts()[status] }}
+          </span>
+        }
+      </div>
+    </header>
+    <p class="hint">{{ i18n.t('logs.potions.hint') }}</p>
+    <ul class="potion-grid">
+      @for (row of potionBoard(); track row.player.actorId) {
+        <li
+          class="potion-chip"
+          [class]="row.status"
+          [class.is-mine]="isMine(row.player)"
+          [style.--class-color]="'var(--color-' + row.player.classId + ')'"
+        >
+          <span class="potion-name">{{ row.player.name }}</span>
+          <span class="potion-count">
+            @if (row.status === 'none') {
+              {{ i18n.t('logs.potions.never') }}
+            } @else {
+              {{ row.player.potionPulls }}/{{ row.player.potionEligiblePulls }}
+            }
+          </span>
+        </li>
+      }
+    </ul>
+  </article>
+
+  <article class="panel">
+    <header class="panel-header">
+      <h3>💀 {{ i18n.t('logs.deaths.title') }}</h3>
+    </header>
+    <p class="hint">{{ i18n.t('logs.deaths.hint') }}</p>
+    @if (deathBoard().rows.length) {
+      <ul class="death-list">
+        @for (row of deathBoard().rows; track row.player.actorId; let i = $index) {
+          <li [style.--i]="i" [class.is-mine]="isMine(row.player)">
+            <app-player-tag [player]="row.player" size="sm" [showSpec]="false" />
+            <span class="death-bar"><span [style.width.%]="row.width"></span></span>
+            <span class="death-count">
+              <strong>{{ row.player.prematureDeaths }}</strong>
+              <small>/ {{ row.player.deaths }}</small>
+            </span>
+          </li>
+        }
+      </ul>
+    }
+    @if (deathBoard().clean.length) {
+      <p class="clean-title">
+        🛡️ {{ i18n.t('logs.deaths.none') }} ({{ deathBoard().clean.length }})
+      </p>
+      <p class="clean-list">
+        @for (p of deathBoard().clean; track p.actorId) {
+          <span [class]="'class-' + p.classId">{{ p.name }}</span>
+        }
+      </p>
+    }
+  </article>
+</section>
+
+<!-- Progression des boss -->
+<section class="panel">
+  <h3>{{ i18n.t('logs.progression') }}</h3>
+  <ol class="encounters">
+    @for (e of encounters(); track e.id + '-' + e.difficulty; let i = $index) {
+      <li class="encounter" [class.killed]="e.kill" [style.--i]="i">
+        <img class="boss-icon" [src]="e.iconUrl" alt="" />
+        <div class="encounter-main">
+          <div class="encounter-head">
+            <span class="boss-name">{{ e.name }}</span>
+            <span class="badge" [class.kill]="e.kill">
+              {{ e.kill ? i18n.t('logs.kill') : i18n.t('logs.wipe') }}
+            </span>
+          </div>
+          <div class="encounter-meta">
+            <span>{{ i18n.t('difficulty.' + e.difficulty) }}</span>
+            <span
+              >{{ e.pulls.length }}
+              {{ i18n.t(e.pulls.length > 1 ? 'logs.pulls' : 'logs.pull') }}</span
+            >
+            @if (e.kill) {
+              <span>{{ i18n.t('logs.killed_in') }} {{ formatDuration(e.killDurationMs) }}</span>
+            } @else {
+              <span
+                >{{ i18n.t('logs.best_try') }}
+                {{ e.bestPercent | number: '1.0-1' : i18n.currentLocale() }} %</span
+              >
+            }
+          </div>
+          <div class="pull-pips">
+            @for (p of e.pulls; track p.id; let n = $index) {
+              <button
+                type="button"
+                class="pip"
+                [class.kill]="p.kill"
+                [style.--progress]="100 - p.bossPercent"
+                [title]="
+                  '#' + (n + 1) + ' — ' + (p.kill ? i18n.t('logs.kill') : p.bossPercent + ' %')
+                "
+                [attr.aria-label]="
+                  e.name +
+                  ' #' +
+                  (n + 1) +
+                  ' : ' +
+                  (p.kill ? i18n.t('logs.kill') : p.bossPercent + ' %')
+                "
+                (click)="openPull.emit(p.id)"
+              >
+                <span></span>
+              </button>
+            }
+          </div>
+        </div>
+        <button
+          type="button"
+          class="open-pull"
+          (click)="openPull.emit(e.killPullId ?? e.pullIds[e.pullIds.length - 1])"
+        >
+          <span class="visually-hidden">{{ e.name }}</span
+          >→
+        </button>
+      </li>
+    }
+  </ol>
+</section>

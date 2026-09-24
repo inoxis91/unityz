@@ -23,10 +23,10 @@ import {
   WclPerformanceService,
   WclSpecRanking,
 } from '../../../services/wcl-performance';
-import { CountUpDirective } from './count-up';
+import { CountUpDirective } from '../../../shared/wcl/count-up';
 import { WclMplusPanelComponent } from './mplus-panel/mplus-panel';
-import { parseColorClass, topPercent } from './parse-tier';
-import { PerfRingComponent } from './perf-ring/perf-ring';
+import { parseColorClass, topPercent } from '../../../shared/wcl/parse-tier';
+import { PerfRingComponent } from '../../../shared/wcl/perf-ring/perf-ring';
 import { WclRaidPanelComponent } from './raid-panel/raid-panel';
 
 export type PerformanceTab = 'raid' | 'mplus';

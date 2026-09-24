@@ -8,7 +8,7 @@ import {
   formatDuration,
   parseColorClass,
   topPercent,
-} from '../parse-tier';
+} from '../../../../shared/wcl/parse-tier';
 
 /** Grille des donjons Mythique+ : meilleure clé, score, classement et parse DPS/HPS par niveau. */
 @Component({

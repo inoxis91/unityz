@@ -15,6 +15,8 @@ const API_HOSTS: Record<WclLocale, string> = {
   fr: 'https://fr.warcraftlogs.com',
 };
 const TOKEN_EXPIRY_MARGIN_MS = 60_000;
+/** Rapport inexistant ou privé : ce n'est pas une panne de WCL. */
+const NOT_FOUND_ERROR = /does not exist|do not have permission/i;
 
 let cachedToken: { value: string; expiresAt: number } | null = null;
 let pendingToken: Promise<string> | null = null;
@@ -68,6 +70,7 @@ function invalidateToken() {
 /**
  * Exécute une requête GraphQL. Toute erreur (réseau, HTTP, GraphQL) devient une HttpError 502
  * `WCL_UNAVAILABLE` : une 401 WCL ne doit jamais être confondue avec l'expiration du token Blizzard.
+ * Une ressource inexistante ou privée devient une HttpError 404 `WCL_NOT_FOUND`.
  */
 export async function wclQuery<T>(
   query: string,
@@ -88,6 +91,7 @@ export async function wclQuery<T>(
       );
       if (response.data?.errors?.length) {
         const message = response.data.errors.map((e: { message: string }) => e.message).join('; ');
+        if (NOT_FOUND_ERROR.test(message)) throw new HttpError(404, message, 'WCL_NOT_FOUND');
         throw new HttpError(502, `Warcraft Logs GraphQL error: ${message}`, 'WCL_UNAVAILABLE');
       }
       return response.data.data as T;

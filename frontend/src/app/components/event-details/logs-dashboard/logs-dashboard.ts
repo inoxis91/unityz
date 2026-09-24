@@ -1,158 +1,88 @@
-import { Component, Input, OnInit, signal, inject } from '@angular/core';
-
-import { FormsModule } from '@angular/forms';
-import {
-  CalendarService,
-  WclReportMetrics,
-  WclFight,
-  WclPlayerPerf,
-} from '../../../services/calendar';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { I18nService } from '../../../services/i18n';
+import { RaidLogsService } from '../../../services/raid-logs';
+import { formatDuration } from '../../../shared/wcl/parse-tier';
+import { LogsOverviewComponent } from './logs-overview/logs-overview';
+import { LogsPlayersComponent } from './logs-players/logs-players';
+import { LogsPullsComponent } from './logs-pulls/logs-pulls';
+import { LogsRankingComponent } from './logs-ranking/logs-ranking';
+import { matchMyPlayers } from './raid-logs-insights';
 
+export type LogsTab = 'overview' | 'ranking' | 'players' | 'pulls';
+
+type ErrorKind = 'not_found' | 'invalid_url' | 'unavailable' | 'generic';
+
+const TABS: { id: LogsTab; icon: string }[] = [
+  { id: 'overview', icon: '📊' },
+  { id: 'ranking', icon: '👑' },
+  { id: 'players', icon: '🧙' },
+  { id: 'pulls', icon: '🐉' },
+];
+
+function errorKind(error: unknown): ErrorKind {
+  const code = error instanceof HttpErrorResponse ? error.error?.code : undefined;
+  switch (code) {
+    case 'WCL_REPORT_NOT_FOUND':
+    case 'LOGS_NOT_FOUND':
+      return 'not_found';
+    case 'WCL_INVALID_URL':
+      return 'invalid_url';
+    case 'WCL_UNAVAILABLE':
+      return 'unavailable';
+    default:
+      return 'generic';
+  }
+}
+
+/** Onglet « Logs & Analyses » d'un raid : synthèse du rapport Warcraft Logs et classement MVP. */
 @Component({
   selector: 'app-logs-dashboard',
-  standalone: true,
-  imports: [FormsModule],
+  imports: [LogsOverviewComponent, LogsRankingComponent, LogsPlayersComponent, LogsPullsComponent],
   templateUrl: './logs-dashboard.html',
   styleUrl: './logs-dashboard.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LogsDashboardComponent implements OnInit {
-  private calendarService = inject(CalendarService);
-  public i18n = inject(I18nService);
+export class LogsDashboardComponent {
+  readonly i18n = inject(I18nService);
+  private readonly raidLogs = inject(RaidLogsService);
 
-  @Input() eventId!: string;
+  readonly eventId = input.required<string>();
+  /** Personnages de l'utilisateur, pour mettre en avant ses performances. */
+  readonly myCharacters = input<{ name: string; realm?: string | null }[]>([]);
 
-  logsMetrics = signal<WclReportMetrics | null>(null);
-  logsSubTab = signal<'overview' | 'bosses' | 'players' | 'mvp'>('overview');
-  selectedFightId = signal<number | null>(null);
-  loadingLogs = signal<boolean>(false);
-  logsError = signal<boolean>(false);
+  readonly tabs = TABS;
+  readonly tab = signal<LogsTab>('overview');
+  readonly selectedPullId = signal<number | null>(null);
 
-  // Sorting
-  logsPlayerSortBy = signal<'dps' | 'hps' | 'activeTime' | 'damageTaken' | 'deaths' | 'parse'>(
-    'dps',
+  readonly analysis = rxResource({
+    params: () => ({ id: this.eventId(), locale: this.i18n.currentLocale() }),
+    stream: ({ params }) => this.raidLogs.getAnalysis(params.id, params.locale),
+  });
+
+  readonly data = computed(() => (this.analysis.hasValue() ? this.analysis.value() : undefined));
+  readonly error = computed(() =>
+    this.analysis.error() ? errorKind(this.analysis.error()) : null,
   );
-  logsPlayerSortOrder = signal<'asc' | 'desc'>('desc');
+  readonly mine = computed(() => matchMyPlayers(this.data()?.players ?? [], this.myCharacters()));
 
-  ngOnInit() {
-    if (this.eventId) {
-      this.loadLogsMetrics(this.eventId);
-    }
+  readonly reportDate = computed(() => {
+    const data = this.data();
+    if (!data) return '';
+    return new Intl.DateTimeFormat(this.i18n.currentLocale(), { dateStyle: 'full' }).format(
+      new Date(data.report.startTime),
+    );
+  });
+
+  readonly formatDuration = formatDuration;
+
+  openPull(pullId: number) {
+    this.selectedPullId.set(pullId);
+    this.tab.set('pulls');
   }
 
-  loadLogsMetrics(id: string) {
-    this.loadingLogs.set(true);
-    this.logsError.set(false);
-    this.calendarService.getEventLogsMetrics(id).subscribe({
-      next: (metrics) => {
-        this.logsMetrics.set(metrics);
-        this.loadingLogs.set(false);
-        if (metrics && metrics.fights && metrics.fights.length > 0) {
-          this.selectedFightId.set(metrics.fights[0].id);
-        }
-      },
-      error: (err) => {
-        console.error('Error loading logs metrics:', err);
-        this.logsError.set(true);
-        this.loadingLogs.set(false);
-      },
-    });
-  }
-
-  formatDuration(seconds: number): string {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  }
-
-  formatHourDuration(seconds: number): string {
-    const hours = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    if (hours > 0) {
-      return `${hours}h ${mins}m`;
-    }
-    return `${mins}m`;
-  }
-
-  formatBigNumber(num: number): string {
-    if (num >= 1000000000) {
-      return (num / 1000000000).toFixed(2) + 'B';
-    }
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(2) + 'M';
-    }
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1) + 'k';
-    }
-    return num.toString();
-  }
-
-  formatNumberWithSpaces(num: number): string {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-  }
-
-  getSelectedFight(): WclFight | null {
-    const metrics = this.logsMetrics();
-    const fightId = this.selectedFightId();
-    if (!metrics || fightId === null) return null;
-    return metrics.fights.find((f) => f.id === fightId) || null;
-  }
-
-  getSortedPlayersForSelectedFight(): WclPlayerPerf[] {
-    const fight = this.getSelectedFight();
-    if (!fight) return [];
-
-    const sortBy = this.logsPlayerSortBy();
-    const isDesc = this.logsPlayerSortOrder() === 'desc';
-
-    return [...(fight.players || [])].sort((a, b) => {
-      let valA = a[sortBy];
-      let valB = b[sortBy];
-
-      if (valA < valB) return isDesc ? 1 : -1;
-      if (valA > valB) return isDesc ? -1 : 1;
-      return 0;
-    });
-  }
-
-  setPlayerSort(field: 'dps' | 'hps' | 'activeTime' | 'damageTaken' | 'deaths' | 'parse') {
-    if (this.logsPlayerSortBy() === field) {
-      this.logsPlayerSortOrder.update((o) => (o === 'desc' ? 'asc' : 'desc'));
-    } else {
-      this.logsPlayerSortBy.set(field);
-      this.logsPlayerSortOrder.set('desc');
-    }
-  }
-
-  getParseClass(parse: number): string {
-    if (parse >= 99) return 'parse-legendary';
-    if (parse >= 95) return 'parse-epic';
-    if (parse >= 75) return 'parse-heroic';
-    if (parse >= 50) return 'parse-rare';
-    if (parse >= 25) return 'parse-uncommon';
-    return 'parse-common';
-  }
-
-  getClassIcon(className: string | undefined): string {
-    if (!className) return 'mage.webp';
-    const c = className.toLowerCase().trim();
-    if (c === 'deathknight' || c === 'death knight' || c === 'dk') return 'dk.webp';
-    if (c === 'demonhunter' || c === 'demon hunter' || c === 'dh') return 'dh.webp';
-    if (c === 'druid' || c === 'drood') return 'drood.webp';
-    if (c === 'hunter' || c === 'hunt') return 'hunt.webp';
-    if (c === 'evoker') return 'evoker.webp';
-    if (c === 'mage') return 'mage.webp';
-    if (c === 'monk') return 'monk.webp';
-    if (c === 'paladin') return 'paladin.webp';
-    if (c === 'priest') return 'priest.webp';
-    if (c === 'rogue') return 'rogue.webp';
-    if (c === 'shaman') return 'shaman.webp';
-    if (c === 'warlock') return 'warlock.webp';
-    if (c === 'warrior') return 'warrior.webp';
-    return 'mage.webp';
-  }
-
-  getSortedHealersForFight(players: WclPlayerPerf[]): WclPlayerPerf[] {
-    return [...(players || [])].sort((a, b) => b.hps - a.hps);
+  hideImage(event: Event) {
+    (event.target as HTMLElement).hidden = true;
   }
 }

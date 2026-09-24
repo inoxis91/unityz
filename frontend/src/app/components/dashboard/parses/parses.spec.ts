@@ -6,7 +6,7 @@ import {
   formatDuration,
   parseColorClass,
   topPercent,
-} from './parse-tier';
+} from '../../../shared/wcl/parse-tier';
 import { Character } from '../../../services/character';
 
 describe('parseColorClass', () => {

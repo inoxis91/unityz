@@ -2,10 +2,10 @@ import express from 'express';
 import pool from '../lib/db';
 import { EventService } from '../services/eventService';
 import { LineupService } from '../services/lineupService';
-import { WclService } from '../services/wclService';
+import { WclReportService } from '../services/wclReportService';
 import { isAuthenticated, canManageEvents, canManageLineup, requireActiveGuild, requirePaidGuild } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
-import { createEventSchema, updateEventSchema, signupSchema, updateSignupGroupSchema, updateGroupsCountSchema, updateSignupSchema, updateLineupEntrySchema, bulkUpdateLineupSchema } from '../schemas/eventSchemas';
+import { createEventSchema, updateEventSchema, signupSchema, updateSignupGroupSchema, updateGroupsCountSchema, updateSignupSchema, updateLineupEntrySchema, bulkUpdateLineupSchema, eventLogsAnalysisSchema } from '../schemas/eventSchemas';
 
 const router = express.Router();
 
@@ -55,14 +55,13 @@ router.get('/:id', isAuthenticated, async (req, res, next) => {
   }
 });
 
-// GET /api/events/:id/logs-metrics : Récupère les métriques de logs de l'événement
-router.get('/:id/logs-metrics', isAuthenticated, async (req, res, next) => {
+// GET /api/events/:id/logs-analysis : synthèse du rapport Warcraft Logs et classement MVP du raid
+router.get('/:id/logs-analysis', isAuthenticated, validate(eventLogsAnalysisSchema), async (req, res, next) => {
   try {
-    const metrics = await WclService.getMetricsForEvent(req.params.id as string);
-    if (!metrics) {
-      return res.status(404).json({ status: 'error', message: 'Metrics not found or invalid event' });
-    }
-    res.json(metrics);
+    const { locale } = eventLogsAnalysisSchema.shape.query.parse(req.query);
+    res.json(
+      await WclReportService.getEventAnalysis(req.params.id as string, req.user!.active_guild_id!, locale),
+    );
   } catch (error) {
     next(error);
   }

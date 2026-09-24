@@ -1,0 +1,57 @@
+:host {
+  display: block;
+}
+
+.track {
+  display: flex;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--ui-surface-strong);
+}
+
+.segment {
+  height: 100%;
+  transform-origin: left center;
+  animation: grow 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.segment + .segment {
+  box-shadow: inset 2px 0 0 var(--ui-surface);
+}
+
+.crit-performance {
+  background: var(--crit-performance);
+}
+
+.crit-output {
+  background: var(--crit-output);
+  animation-delay: 0.08s;
+}
+
+.crit-survival {
+  background: var(--crit-survival);
+  animation-delay: 0.16s;
+}
+
+.crit-preparation {
+  background: var(--crit-preparation);
+  animation-delay: 0.24s;
+}
+
+.crit-utility {
+  background: var(--crit-utility);
+  animation-delay: 0.32s;
+}
+
+@keyframes grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segment {
+    animation: none;
+  }
+}

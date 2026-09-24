@@ -109,5 +109,20 @@ test('readable /admin (all tabs)', async ({ page }) => {
 
 test('readable /events/:id (all tabs)', async ({ page }) => {
   await open(page, `/events/${readSeed().eventId}`);
-  await checkEachTab(page, '.tabs', '/events');
+  await checkEachTab(page, 'app-event-details .tabs:not([role="tablist"])', '/events');
+});
+
+test('readable /events/:id › Logs & Analyses (all tabs)', async ({ page }) => {
+  // Première analyse du rapport côté WCL (~5 s) puis axe sur quatre sous-onglets
+  test.setTimeout(120_000);
+  await open(page, `/events/${readSeed().eventId}`);
+  await page.locator('app-event-details .tabs:not([role="tablist"]) > button').last().click();
+  const logs = page.locator('app-logs-dashboard');
+  // Analyse réelle avec des clés WCL, message d'erreur sans (CI)
+  await expect(logs.locator('.hero, .state-card').first()).toBeVisible({ timeout: 30_000 });
+  if (await logs.locator('.hero').count()) {
+    await checkEachTab(page, 'app-logs-dashboard .tabs', '/events › logs');
+  } else {
+    await check(page, '/events › logs (error)');
+  }
 });

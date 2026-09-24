@@ -1,0 +1,267 @@
+:host {
+  display: grid;
+  gap: 1rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+button:focus-visible,
+input:focus-visible,
+.table-wrap:focus-visible {
+  outline: 3px solid var(--ui-focus);
+  outline-offset: 2px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.filters button {
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--ui-border);
+  border-radius: 999px;
+  background: var(--ui-surface);
+  color: var(--ui-text-secondary);
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.filters button.active {
+  border-color: var(--ui-brand);
+  background: var(--ui-brand);
+  color: var(--ui-on-solid);
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--ui-border);
+  border-radius: 12px;
+  background: var(--ui-surface);
+}
+
+.search input {
+  width: min(220px, 50vw);
+  padding: 0.55rem 0;
+  border: none;
+  background: transparent;
+  color: var(--ui-text-primary);
+  font: inherit;
+  outline: none;
+}
+
+.search input::placeholder {
+  color: var(--ui-placeholder);
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--ui-border-subtle);
+  border-radius: 18px;
+  background: var(--ui-surface);
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.88rem;
+}
+
+th,
+td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  white-space: nowrap;
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--ui-surface-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--ui-text-muted);
+}
+
+thead button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+thead th[aria-sort='ascending'],
+thead th[aria-sort='descending'] {
+  color: var(--ui-text-strong);
+}
+
+.sort-icon {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.sticky {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--ui-surface);
+  text-align: left;
+}
+
+thead .sticky {
+  z-index: 3;
+  background: var(--ui-surface-muted);
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+thead .num button {
+  justify-content: flex-end;
+}
+
+tbody tr {
+  animation: fade 0.35s ease-out both;
+  animation-delay: calc(min(var(--i, 0), 25) * 20ms);
+}
+
+tbody tr:hover td,
+tbody tr:hover .sticky {
+  background: var(--ui-surface-muted);
+}
+
+tbody tr.is-mine td,
+tbody tr.is-mine .sticky {
+  background: var(--ui-bg-blue-50);
+}
+
+tbody tr.is-mvp .sticky {
+  box-shadow: inset 4px 0 0 var(--wcl-gold);
+}
+
+tbody tr:last-child th,
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.player-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 400;
+}
+
+.rank {
+  min-width: 2rem;
+  font-weight: 800;
+  color: var(--ui-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.score {
+  font-weight: 900;
+  color: var(--ui-text-strong);
+}
+
+.parse {
+  font-weight: 900;
+  color: var(--tier-text);
+}
+
+.muted {
+  color: var(--ui-text-muted);
+}
+
+.danger {
+  color: var(--ui-fg-red-600);
+}
+
+.warn {
+  color: var(--ui-fg-amber-800);
+  font-weight: 700;
+}
+
+td small {
+  color: var(--ui-text-muted);
+}
+
+.pill {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.pill.full {
+  background: var(--ui-bg-green-50);
+  color: var(--ui-fg-green-700);
+}
+
+.pill.partial {
+  background: var(--ui-bg-amber-50);
+  color: var(--ui-fg-amber-800);
+}
+
+.pill.none {
+  background: var(--ui-bg-red-50);
+  color: var(--ui-fg-red-700);
+}
+
+.empty {
+  padding: 2rem;
+  text-align: center;
+  color: var(--ui-text-muted);
+}
+
+.footnote {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ui-text-muted);
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  tbody tr {
+    animation: none;
+  }
+}
