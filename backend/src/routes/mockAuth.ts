@@ -54,6 +54,7 @@ router.post('/login', async (req, res, next) => {
 
     // 3. Clear any existing characters of this mock user in the database to simulate a fresh connection
     await pool.query('DELETE FROM characters WHERE user_id = $1', [user.id]);
+    await pool.query('DELETE FROM guild_members WHERE user_id = $1', [user.id]);
 
     // 4. Connecter l'utilisateur via passport
     const dbUserRes = await pool.query('SELECT * FROM users WHERE id = $1', [user.id]);

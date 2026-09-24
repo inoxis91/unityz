@@ -20,6 +20,7 @@ import { errorHandler } from './middlewares/errorHandler';
 import { initDiscord } from './lib/discord';
 import { initCronJobs } from './lib/cron';
 import { UserService } from './services/userService';
+import { isProd } from './lib/env';
 
 // Étendre le type Session pour inclure nos propriétés personnalisées
 declare module 'express-session' {
@@ -39,7 +40,6 @@ if (frontendUrl.endsWith('/')) {
   frontendUrl = frontendUrl.slice(0, -1);
 }
 
-const isProd = process.env.NODE_ENV === 'production' || !!process.env.RAILWAY_ENVIRONMENT_NAME || !!process.env.RAILWAY_STATIC_URL;
 
 console.log(`[System] Environment: ${isProd ? 'Production' : 'Development'}`);
 if (isProd) {
@@ -212,8 +212,7 @@ app.get('/api/users/me', async (req, res, next) => {
 
   if (req.isAuthenticated()) {
     try {
-      const dbUserRes = await pool.query('SELECT * FROM users WHERE id = $1', [req.user!.id]);
-      const user = dbUserRes.rows[0];
+      const user = await UserService.getWithActiveGuildRole(req.user!.id);
       if (!user) {
         return res.status(404).json({ status: 'error', message: 'User not found' });
       }

@@ -6,16 +6,35 @@ import { MplusGroupService } from '../services/mplusGroupService';
 import { WclReportService } from '../services/wclReportService';
 import { isAuthenticated, canManageEvents, canManageLineup, requireActiveGuild, requirePaidGuild } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
+import { HttpError } from '../middlewares/errorHandler';
 import { createEventSchema, updateEventSchema, signupSchema, updateSignupGroupSchema, mplusGroupsSchema, deleteMplusGroupSchema, setGroupAssignmentsSchema, updateSignupSchema, updateLineupEntrySchema, bulkUpdateLineupSchema, eventLogsAnalysisSchema } from '../schemas/eventSchemas';
 
 const router = express.Router();
 
 router.use(requireActiveGuild, requirePaidGuild);
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Toutes les routes /:id : identifiant valide et événement de la guilde active. Sinon 404, sans
+// révéler si l'événement existe dans une autre guilde (multi-tenant).
+router.param('id', async (req, _res, next, id: string) => {
+  try {
+    if (!UUID_RE.test(id)) throw new HttpError(404, 'Event not found', 'EVENT_NOT_FOUND');
+    const { rowCount } = await pool.query('SELECT 1 FROM events WHERE id = $1 AND guild_id = $2', [
+      id,
+      req.user!.active_guild_id,
+    ]);
+    if (!rowCount) throw new HttpError(404, 'Event not found', 'EVENT_NOT_FOUND');
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/events/my-signups : Récupère les inscriptions de l'utilisateur
 router.get('/my-signups', isAuthenticated, async (req, res, next) => {
   try {
-    const signups = await EventService.getMySignups(req.user!.id);
+    const signups = await EventService.getMySignups(req.user!.id, req.user!.active_guild_id!);
     res.json(signups);
   } catch (error) {
     next(error);
@@ -93,28 +112,6 @@ router.get('/:id/signups', isAuthenticated, async (req, res, next) => {
 router.post('/', canManageEvents, validate(createEventSchema), async (req, res, next) => {
   try {
     const guildId = req.user!.active_guild_id!;
-    const startTime = req.body.start_time;
-
-    // Check subscription tier limit
-    const guildRes = await pool.query('SELECT subscription_tier FROM guilds WHERE id = $1', [guildId]);
-    const tier = guildRes.rows[0]?.subscription_tier || 'free';
-
-    if (tier === 'free' || tier === 'medium') {
-      const countRes = await pool.query(`
-        SELECT COUNT(*) FROM events 
-        WHERE guild_id = $1 
-          AND DATE_TRUNC('month', start_time) = DATE_TRUNC('month', $2::timestamp)
-      `, [guildId, startTime]);
-      const count = parseInt(countRes.rows[0].count, 10);
-      if (count >= 6) {
-        return res.status(403).json({
-          status: 'error',
-          code: 'LIMIT_REACHED',
-          message: 'You have reached the limit of 6 events per month for your subscription tier. Upgrade to Pro for unlimited events.'
-        });
-      }
-    }
-
     const event = await EventService.create(req.body, req.user!.id, guildId);
     res.status(201).json(event);
   } catch (error) {

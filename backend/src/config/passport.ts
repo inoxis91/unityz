@@ -1,3 +1,4 @@
+import { UserService } from '../services/userService';
 import passport from 'passport';
 import { Strategy as BnetStrategy } from 'passport-bnet';
 import { Strategy as DiscordStrategy } from 'passport-discord';
@@ -94,8 +95,8 @@ passport.serializeUser((user: any, done) => {
 
 passport.deserializeUser(async (id: string, done) => {
   try {
-    const res = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
-    const user = res.rows[0];
+    // Rôle et rang de la guilde active (ils changent avec la guilde sélectionnée)
+    const user = await UserService.getWithActiveGuildRole(id);
     done(null, user || null);
   } catch (error) {
     done(error);

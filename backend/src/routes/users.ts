@@ -57,7 +57,12 @@ router.patch('/:id/role', isAdmin, validate(updateRoleSchema), async (req, res, 
     const { role } = req.body;
     const id = req.params.id as string;
 
-    const user = await UserService.updateRole(id, role);
+    // Un admin ne gère que les membres de sa guilde active
+    if (!(await UserService.isGuildMember(id, req.user!.active_guild_id!))) {
+      return res.status(404).json({ status: 'error', code: 'USER_NOT_FOUND', message: 'User not found' });
+    }
+
+    const user = await UserService.updateRole(id, role, req.user!.active_guild_id!);
 
     if (!user) {
       return res.status(404).json({ status: 'error', message: 'User not found' });
@@ -79,7 +84,12 @@ router.delete('/:id', isAdmin, async (req, res, next) => {
       return res.status(400).json({ status: 'error', message: 'You cannot delete your own account.' });
     }
 
-    const success = await UserService.deleteUser(id);
+    if (!(await UserService.isGuildMember(id, req.user!.active_guild_id!))) {
+      return res.status(404).json({ status: 'error', code: 'USER_NOT_FOUND', message: 'User not found' });
+    }
+
+    // Retire le joueur de la guilde active uniquement : son compte et ses autres guildes restent
+    const success = await UserService.removeFromGuild(id, req.user!.active_guild_id!);
 
     if (!success) {
       return res.status(404).json({ status: 'error', message: 'User not found' });

@@ -2,6 +2,7 @@ import express from 'express';
 import { FeeService } from '../services/feeService';
 import { isAuthenticated, canManageFees, requireActiveGuild, requirePaidGuild } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
+import { HttpError } from '../middlewares/errorHandler';
 import { createDeclarationSchema, resolveDeclarationSchema, adjustAllocationSchema } from '../schemas/feeSchemas';
 
 const router = express.Router();
@@ -11,7 +12,7 @@ router.use(requireActiveGuild, requirePaidGuild);
 // GET /api/fees/my-declarations : Récupère les déclarations de l'utilisateur
 router.get('/my-declarations', isAuthenticated, async (req, res, next) => {
   try {
-    const declarations = await FeeService.getUserDeclarations(req.user!.id);
+    const declarations = await FeeService.getUserDeclarations(req.user!.id, req.user!.active_guild_id!);
     res.json(declarations);
   } catch (error) {
     next(error);
@@ -21,8 +22,11 @@ router.get('/my-declarations', isAuthenticated, async (req, res, next) => {
 // GET /api/fees/my-allocations/:year : Récupère la grille des paiements validés de l'utilisateur
 router.get('/my-allocations/:year', isAuthenticated, async (req, res, next) => {
   try {
-    const year = req.params.year as string;
-    const allocations = await FeeService.getUserAllocations(req.user!.id, parseInt(year));
+    const year = parseInt(req.params.year as string, 10);
+    if (!Number.isInteger(year) || year < 2000 || year > 2100) {
+      throw new HttpError(400, 'Invalid year', 'INVALID_YEAR');
+    }
+    const allocations = await FeeService.getUserAllocations(req.user!.id, year, req.user!.active_guild_id!);
     res.json(allocations);
   } catch (error) {
     next(error);
@@ -42,7 +46,7 @@ router.post('/declare', isAuthenticated, validate(createDeclarationSchema), asyn
 // GET /api/fees/pending : Liste des déclarations à valider (Admin, Trésorier)
 router.get('/pending', canManageFees, async (req, res, next) => {
   try {
-    const pending = await FeeService.getPendingDeclarations(req.user!.active_guild_id || undefined);
+    const pending = await FeeService.getPendingDeclarations(req.user!.active_guild_id!);
     res.json(pending);
   } catch (error) {
     next(error);
@@ -52,8 +56,11 @@ router.get('/pending', canManageFees, async (req, res, next) => {
 // GET /api/fees/guild-overview/:year : Vue d'ensemble de la guilde (Admin, Trésorier)
 router.get('/guild-overview/:year', canManageFees, async (req, res, next) => {
   try {
-    const year = req.params.year as string;
-    const overview = await FeeService.getGuildOverview(parseInt(year), req.user!.active_guild_id || undefined);
+    const year = parseInt(req.params.year as string, 10);
+    if (!Number.isInteger(year) || year < 2000 || year > 2100) {
+      throw new HttpError(400, 'Invalid year', 'INVALID_YEAR');
+    }
+    const overview = await FeeService.getGuildOverview(year, req.user!.active_guild_id!);
     res.json(overview);
   } catch (error) {
     next(error);
@@ -64,7 +71,12 @@ router.get('/guild-overview/:year', canManageFees, async (req, res, next) => {
 router.patch('/resolve/:id', canManageFees, validate(resolveDeclarationSchema), async (req, res, next) => {
   try {
     const id = req.params.id as string;
-    await FeeService.resolveDeclaration(id, req.body.status, req.body.admin_comment);
+    await FeeService.resolveDeclaration(
+      id,
+      req.body.status,
+      req.body.admin_comment ?? null,
+      req.user!.active_guild_id!,
+    );
     res.json({ status: 'success', message: `Declaration ${req.body.status}` });
   } catch (error) {
     next(error);

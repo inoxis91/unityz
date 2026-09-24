@@ -1,4 +1,5 @@
-import pool from '../lib/db';
+import pool, { withTransaction } from '../lib/db';
+import { assertRosterQuota } from './tierLimits';
 import { Character } from './characterService';
 
 export type RosterRole = 'tank' | 'heal' | 'dps';
@@ -58,8 +59,12 @@ export class RosterService {
       VALUES ($1, $2, $3, $4)
       RETURNING *
     `;
-    const result = await pool.query(query, [data.name, data.description, data.weight || 1, guildId]);
-    return result.rows[0];
+    // Quota de l'offre vérifié et insertion dans la même transaction (ligne guilde verrouillée)
+    return withTransaction(async (client) => {
+      await assertRosterQuota(client, guildId);
+      const result = await client.query(query, [data.name, data.description, data.weight || 1, guildId]);
+      return result.rows[0];
+    });
   }
 
   static async update(id: string, data: Partial<Roster>, guildId: string): Promise<Roster | null> {

@@ -1,4 +1,6 @@
-import pool from '../lib/db';
+import pool, { withTransaction } from '../lib/db';
+import { assertEventQuota } from './tierLimits';
+import { HttpError } from '../middlewares/errorHandler';
 import { sendDiscordChannelMessage } from '../lib/discord';
 import { t, getDiscordLocale, SupportedDiscordLocale } from '../lib/i18n';
 
@@ -47,10 +49,24 @@ export interface Signup {
 }
 
 export class EventService {
-  static async getMySignups(userId: string): Promise<Signup[]> {
-    const query = 'SELECT * FROM event_signups WHERE user_id = $1';
-    const result = await pool.query(query, [userId]);
+  static async getMySignups(userId: string, guildId: string): Promise<Signup[]> {
+    const query = `
+      SELECT s.* FROM event_signups s
+      JOIN events e ON e.id = s.event_id
+      WHERE s.user_id = $1 AND e.guild_id = $2
+    `;
+    const result = await pool.query(query, [userId, guildId]);
     return result.rows;
+  }
+
+  /** Un joueur ne peut s'inscrire (ou être inscrit) qu'avec l'un de ses propres personnages. */
+  private static async assertCharacterOwnedBy(characterId: string | null | undefined, userId: string) {
+    if (!characterId) return;
+    const { rowCount } = await pool.query('SELECT 1 FROM characters WHERE id = $1 AND user_id = $2', [
+      characterId,
+      userId,
+    ]);
+    if (!rowCount) throw new HttpError(403, 'Character does not belong to this user', 'CHARACTER_NOT_OWNED');
   }
 
   static async getAll(guildId?: string, userRole?: string): Promise<Event[]> {
@@ -106,20 +122,24 @@ export class EventService {
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
     `;
-    const result = await pool.query(query, [
-      data.title, 
-      data.description, 
-      data.start_time, 
-      data.end_time, 
-      data.type, 
-      data.roster_id || null, 
-      data.mm_groups_count || 0,
-      userId,
-      guildId,
-      data.invited_groups || [],
-      data.logs || null
-    ]);
-    
+    // Quota mensuel de l'offre vérifié et insertion dans la même transaction (ligne guilde verrouillée)
+    const result = await withTransaction(async (client) => {
+      await assertEventQuota(client, guildId, data.start_time!);
+      return client.query(query, [
+        data.title,
+        data.description,
+        data.start_time,
+        data.end_time,
+        data.type,
+        data.roster_id || null,
+        data.mm_groups_count || 0,
+        userId,
+        guildId,
+        data.invited_groups || [],
+        data.logs || null,
+      ]);
+    });
+
     const createdEvent = result.rows[0];
 
     // On récupère l'event complet (avec les infos du roster) pour la notification
@@ -233,7 +253,7 @@ export class EventService {
   static async update(id: string, data: Partial<Event>): Promise<Event | null> {
     const query = `
       UPDATE events 
-      SET title = $1, description = $2, start_time = $3, end_time = $4, type = $5, roster_id = $6, mm_groups_count = $7, invited_groups = $8, logs = $9, updated_at = CURRENT_TIMESTAMP
+      SET title = $1, description = $2, start_time = $3, end_time = $4, type = $5, roster_id = $6, mm_groups_count = COALESCE($7, mm_groups_count), invited_groups = $8, logs = $9, updated_at = CURRENT_TIMESTAMP
       WHERE id = $10
       RETURNING *
     `;
@@ -243,8 +263,9 @@ export class EventService {
       data.start_time, 
       data.end_time, 
       data.type, 
-      data.roster_id || null, 
-      data.mm_groups_count ?? 0,
+      data.roster_id || null,
+      // Les groupes M+ sont gérés par MplusGroupService : absent du corps, le nombre est conservé
+      data.mm_groups_count ?? null,
       data.invited_groups || [],
       data.logs || null,
       id
@@ -380,6 +401,7 @@ export class EventService {
     }
 
     const charId = data.character_id && data.character_id !== '' ? data.character_id : null;
+    await EventService.assertCharacterOwnedBy(charId, userId);
     const query = `
       INSERT INTO event_signups (event_id, user_id, character_id, role, comment, status)
       VALUES ($1, $2, $3, $4, $5, $6)
@@ -436,6 +458,7 @@ export class EventService {
     let paramIndex = 1;
 
     if (data.character_id !== undefined) {
+      await EventService.assertCharacterOwnedBy(data.character_id, userId);
       fields.push(`character_id = $${paramIndex}`);
       values.push(data.character_id);
       paramIndex++;

@@ -1,4 +1,5 @@
 import pool from '../lib/db';
+import { HttpError } from '../middlewares/errorHandler';
 import { sendDiscordDM, sendFeeDeclarationNotification, sendDiscordChannelMessage } from '../lib/discord';
 import { t, getDiscordLocale } from '../lib/i18n';
 
@@ -60,67 +61,55 @@ export class FeeService {
     return declaration;
   }
 
-  static async getUserDeclarations(userId: string): Promise<FeeDeclaration[]> {
-    const query = 'SELECT * FROM fee_declarations WHERE user_id = $1 ORDER BY created_at DESC';
-    const result = await pool.query(query, [userId]);
+  static async getUserDeclarations(userId: string, guildId: string): Promise<FeeDeclaration[]> {
+    const query =
+      'SELECT * FROM fee_declarations WHERE user_id = $1 AND guild_id = $2 ORDER BY created_at DESC';
+    const result = await pool.query(query, [userId, guildId]);
     return result.rows;
   }
 
-  static async getUserAllocations(userId: string, year: number): Promise<FeeAllocation[]> {
+  static async getUserAllocations(userId: string, year: number, guildId: string): Promise<FeeAllocation[]> {
     const query = `
       SELECT * FROM fee_allocations 
       WHERE user_id = $1 
+      AND guild_id = $3
       AND EXTRACT(YEAR FROM month_date) = $2
       ORDER BY month_date ASC
     `;
-    const result = await pool.query(query, [userId, year]);
+    const result = await pool.query(query, [userId, year, guildId]);
     return result.rows;
   }
 
-  static async getPendingDeclarations(guildId?: string): Promise<FeeDeclaration[]> {
-    let query = `
+  static async getPendingDeclarations(guildId: string): Promise<FeeDeclaration[]> {
+    const query = `
       SELECT fd.*, u.battletag,
-             (SELECT name FROM characters WHERE user_id = fd.user_id AND is_main = true LIMIT 1) as main_character,
-             (SELECT json_agg(json_build_object('name', name, 'realm', realm, 'class', class, 'is_main', is_main)) FROM characters WHERE user_id = fd.user_id) as characters
+             (SELECT name FROM characters WHERE user_id = fd.user_id AND is_main = true AND guild_id = $1 LIMIT 1) as main_character,
+             (SELECT json_agg(json_build_object('name', name, 'realm', realm, 'class', class, 'is_main', is_main)) FROM characters WHERE user_id = fd.user_id AND guild_id = $1) as characters
       FROM fee_declarations fd
       JOIN users u ON fd.user_id = u.id
+      WHERE fd.guild_id = $1 AND fd.status = 'pending'
+      ORDER BY fd.created_at ASC
     `;
-    const params: any[] = [];
-    if (guildId) {
-      query += ' WHERE fd.guild_id = $1 AND fd.status = \'pending\'';
-      params.push(guildId);
-    } else {
-      query += ' WHERE fd.status = \'pending\'';
-    }
-    query += ' ORDER BY fd.created_at ASC';
-    const result = await pool.query(query, params);
+    const result = await pool.query(query, [guildId]);
     return result.rows;
   }
 
-  static async getGuildOverview(year: number, guildId?: string): Promise<any[]> {
-    if (!guildId) {
-      const query = `
-        SELECT u.id as user_id, u.battletag, 
-               (SELECT name FROM characters WHERE user_id = u.id AND is_main = true LIMIT 1) as main_character,
-               (SELECT json_agg(json_build_object('name', name, 'realm', realm, 'class', class, 'is_main', is_main)) FROM characters WHERE user_id = u.id) as characters,
-               COALESCE(JSON_AGG(json_build_object('month', fa.month_date, 'amount', fa.amount)) FILTER (WHERE fa.month_date IS NOT NULL), '[]'::json) as allocations
-        FROM users u
-        LEFT JOIN fee_allocations fa ON u.id = fa.user_id AND EXTRACT(YEAR FROM fa.month_date) = $1
-        GROUP BY u.id, u.battletag
-        ORDER BY u.battletag ASC
-      `;
-      const result = await pool.query(query, [year]);
-      return result.rows;
-    }
 
+  static async getGuildOverview(year: number, guildId: string): Promise<any[]> {
+    // Appartenance via EXISTS : une jointure sur characters dupliquerait chaque allocation
+    // autant de fois que le joueur a de personnages dans la guilde.
     const query = `
       SELECT u.id as user_id, u.battletag, 
              (SELECT name FROM characters WHERE user_id = u.id AND is_main = true AND guild_id = $2 LIMIT 1) as main_character,
              (SELECT json_agg(json_build_object('name', name, 'realm', realm, 'class', class, 'is_main', is_main)) FROM characters WHERE user_id = u.id AND guild_id = $2) as characters,
-             COALESCE(JSON_AGG(json_build_object('month', fa.month_date, 'amount', fa.amount)) FILTER (WHERE fa.month_date IS NOT NULL), '[]'::json) as allocations
+             COALESCE(
+               JSON_AGG(json_build_object('month', to_char(fa.month_date, 'YYYY-MM-DD'), 'amount', fa.amount))
+                 FILTER (WHERE fa.month_date IS NOT NULL),
+               '[]'::json
+             ) as allocations
       FROM users u
-      JOIN characters c ON u.id = c.user_id AND c.guild_id = $2
       LEFT JOIN fee_allocations fa ON u.id = fa.user_id AND EXTRACT(YEAR FROM fa.month_date) = $1 AND fa.guild_id = $2
+      WHERE EXISTS (SELECT 1 FROM characters c WHERE c.user_id = u.id AND c.guild_id = $2)
       GROUP BY u.id, u.battletag
       ORDER BY u.battletag ASC
     `;
@@ -128,21 +117,30 @@ export class FeeService {
     return result.rows;
   }
 
-  static async resolveDeclaration(id: string, status: 'accepted' | 'rejected', adminComment: string | null): Promise<void> {
+
+  static async resolveDeclaration(
+    id: string,
+    status: 'accepted' | 'rejected',
+    adminComment: string | null,
+    guildId: string,
+  ): Promise<void> {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
 
-      // 1. Update declaration status
+      // 1. Update declaration status. Seule une déclaration en attente de la guilde active peut
+      // être traitée : une double validation créditerait deux fois les mois couverts.
       const declQuery = `
         UPDATE fee_declarations 
         SET status = $1, admin_comment = $2, updated_at = CURRENT_TIMESTAMP
-        WHERE id = $3
+        WHERE id = $3 AND guild_id = $4 AND status = 'pending'
         RETURNING *
       `;
-      const declResult = await client.query(declQuery, [status, adminComment, id]);
-      
-      if (declResult.rowCount === 0) throw new Error('Declaration not found');
+      const declResult = await client.query(declQuery, [status, adminComment, id, guildId]);
+
+      if (declResult.rowCount === 0) {
+        throw new HttpError(404, 'Pending declaration not found', 'DECLARATION_NOT_FOUND');
+      }
       const decl = declResult.rows[0];
 
       // Fetch user discord_id
@@ -150,29 +148,23 @@ export class FeeService {
       const userResult = await client.query(userQuery, [decl.user_id]);
       const discordId = userResult.rows[0]?.discord_id;
 
-      // 2. If accepted, create allocations
+      // 2. If accepted, create allocations. Les mois sont calculés en SQL à partir de la colonne
+      // DATE : pas de conversion en Date JS, dont le fuseau décalait l'allocation d'un mois.
       if (status === 'accepted') {
-        const monthlyAmount = Math.floor(decl.amount / decl.duration_months);
-        
-        // Robust date parsing (handles both Date objects from PG and strings)
-        const startDate = new Date(decl.start_month);
-        const year = startDate.getUTCFullYear();
-        const month = startDate.getUTCMonth(); // 0-indexed
-        
-        for (let i = 0; i < decl.duration_months; i++) {
-          const allocDate = new Date(Date.UTC(year, month + i, 1));
-          const monthStr = allocDate.toISOString().split('T')[0];
-
-          const allocQuery = `
-            INSERT INTO fee_allocations (user_id, month_date, amount, guild_id)
-            VALUES ($1, $2, $3, $4)
-            ON CONFLICT (user_id, month_date, guild_id) 
-            DO UPDATE SET 
-              amount = fee_allocations.amount + EXCLUDED.amount,
-              updated_at = CURRENT_TIMESTAMP
-          `;
-          await client.query(allocQuery, [decl.user_id, monthStr, monthlyAmount, decl.guild_id]);
-        }
+        await client.query(
+          `INSERT INTO fee_allocations (user_id, month_date, amount, guild_id)
+           SELECT d.user_id,
+                  (date_trunc('month', d.start_month) + i * INTERVAL '1 month')::date,
+                  FLOOR(d.amount / d.duration_months),
+                  d.guild_id
+           FROM fee_declarations d, generate_series(0, d.duration_months - 1) AS i
+           WHERE d.id = $1
+           ON CONFLICT (user_id, month_date, guild_id)
+           DO UPDATE SET
+             amount = fee_allocations.amount + EXCLUDED.amount,
+             updated_at = CURRENT_TIMESTAMP`,
+          [decl.id],
+        );
       }
 
       await client.query('COMMIT');

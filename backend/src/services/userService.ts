@@ -1,4 +1,4 @@
-import pool from '../lib/db';
+import pool, { withTransaction } from '../lib/db';
 import axios from 'axios';
 import { BlizzardService } from './blizzardService';
 
@@ -18,26 +18,91 @@ export class UserService {
     return result.rows;
   }
 
+  /**
+   * Utilisateur avec le rôle et le rang de sa guilde active (req.user, /users/me). Les colonnes
+   * users.role / users.rank sont historiques : le rôle dépend de la guilde.
+   */
+  static async getWithActiveGuildRole(userId: string): Promise<any | null> {
+    const { rows } = await pool.query(
+      `SELECT u.*, COALESCE(gm.role, 'member') AS role, gm.rank AS rank
+       FROM users u
+       LEFT JOIN guild_members gm ON gm.user_id = u.id AND gm.guild_id = u.active_guild_id
+       WHERE u.id = $1`,
+      [userId],
+    );
+    return rows[0] ?? null;
+  }
+
   static async getAllForGuild(guildId: string): Promise<any[]> {
     const query = `
-      SELECT u.id, u.battletag, u.bnet_id, u.discord_id, u.role, u.created_at,
+      SELECT u.id, u.battletag, u.bnet_id, u.discord_id,
+             COALESCE(MAX(gm.role), 'member') AS role, u.created_at,
              (SELECT json_agg(json_build_object('name', name, 'realm', realm, 'class', class, 'is_main', is_main)) 
               FROM characters 
               WHERE user_id = u.id AND guild_id = $1) as characters
       FROM users u
       LEFT JOIN characters c ON u.id = c.user_id
-      WHERE c.guild_id = $1 OR u.active_guild_id = $1
-      GROUP BY u.id, u.battletag, u.bnet_id, u.discord_id, u.role, u.created_at
+      LEFT JOIN guild_members gm ON gm.user_id = u.id AND gm.guild_id = $1
+      WHERE c.guild_id = $1 OR u.active_guild_id = $1 OR gm.guild_id = $1
+      GROUP BY u.id, u.battletag, u.bnet_id, u.discord_id, u.created_at
       ORDER BY u.battletag ASC
     `;
     const result = await pool.query(query, [guildId]);
     return result.rows;
   }
 
-  static async updateRole(id: string, role: string): Promise<User | null> {
-    const query = 'UPDATE users SET role = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *';
-    const result = await pool.query(query, [role, id]);
-    return result.rows[0] || null;
+  /** Membre d'une guilde : un personnage dans la guilde, ou la guilde active de l'utilisateur. */
+  static async isGuildMember(userId: string, guildId: string): Promise<boolean> {
+    const { rowCount } = await pool.query(
+      `SELECT 1 FROM users u
+       WHERE u.id = $1
+         AND (u.active_guild_id = $2
+              OR EXISTS (SELECT 1 FROM guild_members gm WHERE gm.user_id = u.id AND gm.guild_id = $2)
+              OR EXISTS (SELECT 1 FROM characters c WHERE c.user_id = u.id AND c.guild_id = $2))`,
+      [userId, guildId],
+    );
+    return (rowCount ?? 0) > 0;
+  }
+
+  /** Rôle du joueur dans une guilde donnée (sans effet sur ses autres guildes). */
+  static async updateRole(id: string, role: string, guildId: string): Promise<any | null> {
+    const { rows } = await pool.query(
+      `INSERT INTO guild_members (user_id, guild_id, role)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (user_id, guild_id)
+       DO UPDATE SET role = EXCLUDED.role, updated_at = CURRENT_TIMESTAMP
+       RETURNING user_id AS id, guild_id, role, rank`,
+      [id, guildId, role],
+    );
+    return rows[0] ?? null;
+  }
+
+  /**
+   * Retire un joueur d'une guilde : ses personnages, inscriptions et absences dans cette guilde et
+   * son rôle. Son compte et ses autres guildes sont conservés ; l'historique des cotisations aussi.
+   */
+  static async removeFromGuild(userId: string, guildId: string): Promise<boolean> {
+    return withTransaction(async (client) => {
+      await client.query(
+        `DELETE FROM event_signups s USING events e
+         WHERE s.event_id = e.id AND e.guild_id = $2 AND s.user_id = $1`,
+        [userId, guildId],
+      );
+      await client.query('DELETE FROM absences WHERE user_id = $1 AND guild_id = $2', [userId, guildId]);
+      const chars = await client.query('DELETE FROM characters WHERE user_id = $1 AND guild_id = $2', [
+        userId,
+        guildId,
+      ]);
+      const member = await client.query(
+        'DELETE FROM guild_members WHERE user_id = $1 AND guild_id = $2',
+        [userId, guildId],
+      );
+      await client.query(
+        'UPDATE users SET active_guild_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND active_guild_id = $2',
+        [userId, guildId],
+      );
+      return (chars.rowCount ?? 0) + (member.rowCount ?? 0) > 0;
+    });
   }
 
   static async updateDiscordId(userId: string, discordId: string | null): Promise<User | null> {
@@ -61,12 +126,6 @@ export class UserService {
   static async hasCharacters(userId: string): Promise<boolean> {
     const query = 'SELECT 1 FROM characters WHERE user_id = $1 LIMIT 1';
     const result = await pool.query(query, [userId]);
-    return (result.rowCount ?? 0) > 0;
-  }
-
-  static async deleteUser(id: string): Promise<boolean> {
-    const query = 'DELETE FROM users WHERE id = $1';
-    const result = await pool.query(query, [id]);
     return (result.rowCount ?? 0) > 0;
   }
 
@@ -386,9 +445,18 @@ export class UserService {
       console.error('[UserService] Failed to fetch guild roster for GM/Rank check:', err);
     }
 
-    // Update user role based on GM status
-    const userRes = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
-    const currentRole = userRes.rows[0]?.role || 'member';
+    // Rôle dans CETTE guilde : le GM en jeu est admin, un ancien GM redevient membre
+    const memberRes = await pool.query(
+      'SELECT role FROM guild_members WHERE user_id = $1 AND guild_id = $2',
+      [userId, realGuildId],
+    );
+    let defaultRole = 'member';
+    if (accessToken.startsWith('mock_')) {
+      // Profils de test : rôle prédéfini à la première connexion à la guilde
+      const { mockUsers } = require('../lib/mockData');
+      defaultRole = mockUsers.find((u: any) => u.id === userId)?.role ?? 'member';
+    }
+    const currentRole = memberRes.rows[0]?.role || defaultRole;
     let newRole = currentRole;
 
     if (isGuildMaster) {
@@ -399,8 +467,11 @@ export class UserService {
 
     console.log(`[UserService] Saving user ${userId} rank: ${userRank}, role: ${newRole} during fetchGuildCharacters`);
     await pool.query(
-      'UPDATE users SET rank = $1, role = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
-      [userRank, newRole, userId]
+      `INSERT INTO guild_members (user_id, guild_id, role, rank)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (user_id, guild_id)
+       DO UPDATE SET role = EXCLUDED.role, rank = EXCLUDED.rank, updated_at = CURRENT_TIMESTAMP`,
+      [userId, realGuildId, newRole, userRank]
     );
 
     return matchingCharacters;
@@ -515,9 +586,9 @@ export class UserService {
           OR 'all' = ANY(e.invited_groups)
           OR EXISTS (
             SELECT 1 
-            FROM users u2
-            WHERE u2.id = $2 
-              AND (u2.role = 'admin' OR u2.role = ANY(e.invited_groups))
+            FROM guild_members gm2
+            WHERE gm2.user_id = $2 AND gm2.guild_id = $1
+              AND (gm2.role = 'admin' OR gm2.role = ANY(e.invited_groups))
           )
         )
       ORDER BY e.start_time DESC
@@ -540,9 +611,10 @@ export class UserService {
   static async getGuildAttendance(guildId: string): Promise<any[]> {
     const query = `
       WITH guild_users AS (
-        SELECT DISTINCT u.id, u.battletag, u.role
+        SELECT DISTINCT u.id, u.battletag, COALESCE(gm.role, 'member') AS role
         FROM users u
         LEFT JOIN characters c ON u.id = c.user_id
+        LEFT JOIN guild_members gm ON gm.user_id = u.id AND gm.guild_id = $1
         WHERE c.guild_id = $1 OR u.active_guild_id = $1
       ),
       past_events AS (

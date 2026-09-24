@@ -484,6 +484,42 @@ export const initDb = async (retries = 5, delay = 3000): Promise<void> => {
       ALTER TABLE absences ALTER COLUMN end_date DROP NOT NULL;
     `);
 
+    // Rôle applicatif et rang en jeu par guilde (users.role / users.rank ne sont plus lus :
+    // un joueur peut être admin d'une guilde et simple membre d'une autre).
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'guild_members') THEN
+          CREATE TABLE guild_members (
+            user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            guild_id UUID NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,
+            role VARCHAR(50) NOT NULL DEFAULT 'member'
+              CHECK (role IN ('admin', 'raid_leader', 'treasurer', 'event_manager', 'member')),
+            rank INTEGER,
+            created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (user_id, guild_id)
+          );
+          CREATE INDEX idx_guild_members_guild ON guild_members (guild_id);
+
+          -- Reprise unique de l'existant : l'ancien rôle global s'applique à la guilde active,
+          -- les autres guildes où le joueur a des personnages démarrent en simple membre.
+          INSERT INTO guild_members (user_id, guild_id, role, rank)
+          SELECT id, active_guild_id,
+                 CASE WHEN role IN ('admin', 'raid_leader', 'treasurer', 'event_manager') THEN role ELSE 'member' END,
+                 rank
+          FROM users
+          WHERE active_guild_id IS NOT NULL
+          ON CONFLICT DO NOTHING;
+
+          INSERT INTO guild_members (user_id, guild_id)
+          SELECT DISTINCT user_id, guild_id FROM characters
+          WHERE user_id IS NOT NULL AND guild_id IS NOT NULL
+          ON CONFLICT DO NOTHING;
+        END IF;
+      END $$;
+    `);
+
     console.log('Database tables initialized successfully.');
   } catch (err) {
     console.error('Error initializing database:', err);

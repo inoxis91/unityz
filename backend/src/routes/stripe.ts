@@ -1,6 +1,7 @@
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import { requireActiveGuild } from '../middlewares/auth';
 import pool from '../lib/db';
+import { isProd } from '../lib/env';
 import Stripe from 'stripe';
 
 const router = express.Router();
@@ -22,8 +23,35 @@ if (stripeSecretKey) {
   console.log('[Stripe] STRIPE_SECRET_KEY not set. Operating in MOCK / SIMULATOR mode.');
 }
 
+const PAID_TIERS = ['medium', 'pro'];
+
+/** Simulateur de paiement : uniquement hors production et sans clé Stripe. */
+const mockPaymentsEnabled = () => !stripe && !isProd;
+
+/** Seuls le GM et les officiers (rang <= 2) gèrent l'abonnement de la guilde. */
+async function requireSubscriptionManager(req: Request, res: Response, next: NextFunction) {
+  try {
+    // Rang en jeu dans la guilde active (0 = GM, 1-2 = officiers)
+    const userRes = await pool.query(
+      'SELECT rank FROM guild_members WHERE user_id = $1 AND guild_id = $2',
+      [req.user!.id, req.user!.active_guild_id],
+    );
+    const userRank = userRes.rows[0]?.rank;
+    if (userRank === null || userRank === undefined || userRank > 2) {
+      return res.status(403).json({
+        status: 'error',
+        code: 'FORBIDDEN',
+        message: 'Only Guild Masters and Officers are authorized to manage subscriptions.',
+      });
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
 // POST /api/stripe/create-checkout-session : Crée une session Stripe de paiement ou simule
-router.post('/create-checkout-session', requireActiveGuild, async (req, res, next) => {
+router.post('/create-checkout-session', requireActiveGuild, requireSubscriptionManager, async (req, res, next) => {
   try {
     const guildId = req.user!.active_guild_id;
     const { tier } = req.body;
@@ -32,24 +60,12 @@ router.post('/create-checkout-session', requireActiveGuild, async (req, res, nex
       return res.status(400).json({ status: 'error', message: 'No active guild found in session.' });
     }
 
-    if (!tier || !['medium', 'pro'].includes(tier)) {
+    if (!tier || !PAID_TIERS.includes(tier)) {
       return res.status(400).json({ status: 'error', message: 'Invalid subscription tier selected.' });
     }
 
-    // Security check: Only GMs and Officers (rank <= 2) can manage or activate subscriptions!
-    const userRes = await pool.query('SELECT rank FROM users WHERE id = $1', [req.user!.id]);
-    const userRank = userRes.rows[0]?.rank;
-    
-    if (userRank === null || userRank === undefined || userRank > 2) {
-      return res.status(403).json({
-        status: 'error',
-        code: 'FORBIDDEN',
-        message: 'Only Guild Masters and Officers are authorized to manage or activate subscriptions.'
-      });
-    }
-
-    // Fallback to simulator/mock if Stripe is not configured
-    if (!stripe) {
+    // Simulateur en développement quand Stripe n'est pas configuré
+    if (mockPaymentsEnabled()) {
       const mockSessionId = `mock_cs_${Math.random().toString(36).substring(2, 15)}`;
       const checkoutUrl = `/payment?session_id=${mockSessionId}&guild_id=${guildId}&tier=${tier}`;
       return res.json({ url: checkoutUrl });
@@ -99,6 +115,9 @@ router.post('/create-checkout-session', requireActiveGuild, async (req, res, nex
       customer: guild.stripe_customer_id || undefined
     };
 
+    if (!stripe) {
+      return res.status(503).json({ status: 'error', code: 'PAYMENTS_UNAVAILABLE', message: 'Payments are not configured.' });
+    }
     const session = await stripe.checkout.sessions.create(sessionParams);
     res.json({ url: session.url });
   } catch (error) {
@@ -107,7 +126,7 @@ router.post('/create-checkout-session', requireActiveGuild, async (req, res, nex
 });
 
 // GET /api/stripe/checkout-session/:sessionId : Valide et active immédiatement l'abonnement
-router.get('/checkout-session/:sessionId', requireActiveGuild, async (req, res, next) => {
+router.get('/checkout-session/:sessionId', requireActiveGuild, requireSubscriptionManager, async (req, res, next) => {
   try {
     const { sessionId } = req.params as { sessionId: string };
     const guildId = req.user!.active_guild_id;
@@ -116,21 +135,15 @@ router.get('/checkout-session/:sessionId', requireActiveGuild, async (req, res, 
       return res.status(400).json({ status: 'error', message: 'No active guild found in session.' });
     }
 
-    // Security check: Only GMs and Officers (rank <= 2) can manage or activate subscriptions!
-    const userRes = await pool.query('SELECT rank FROM users WHERE id = $1', [req.user!.id]);
-    const userRank = userRes.rows[0]?.rank;
-    
-    if (userRank === null || userRank === undefined || userRank > 2) {
-      return res.status(403).json({
-        status: 'error',
-        code: 'FORBIDDEN',
-        message: 'Only Guild Masters and Officers are authorized to manage or activate subscriptions.'
-      });
-    }
-
-    // Handle mock session
+    // Session simulée : jamais acceptée en production ni quand Stripe est configuré
     if (sessionId.startsWith('mock_')) {
-      const tier = (req.query.tier as string) || 'pro';
+      if (!mockPaymentsEnabled()) {
+        return res.status(400).json({ status: 'error', code: 'INVALID_SESSION', message: 'Invalid checkout session.' });
+      }
+      const tier = String(req.query.tier || 'pro');
+      if (!PAID_TIERS.includes(tier)) {
+        return res.status(400).json({ status: 'error', message: 'Invalid subscription tier selected.' });
+      }
       const interval = '30 days';
 
       const result = await pool.query(
@@ -397,76 +410,49 @@ router.post('/webhook', async (req, res) => {
   res.json({ received: true });
 });
 
-// POST /api/stripe/mock-payment-success : Conserve la compatibilité pour l'activation d'essai gratuit
-router.post('/mock-payment-success', requireActiveGuild, async (req, res, next) => {
+// POST /api/stripe/activate-free : Active (ou renouvelle) l'offre gratuite de 30 jours. Refusé
+// si un abonnement payant est encore en cours, pour ne jamais l'écraser.
+router.post('/activate-free', requireActiveGuild, requireSubscriptionManager, async (req, res, next) => {
   try {
     const guildId = req.user!.active_guild_id;
-    const { tier } = req.body;
-
-    if (!guildId) {
-      return res.status(400).json({ status: 'error', message: 'No active guild found in session.' });
-    }
-
-    // Security check: Only GMs and Officers (rank <= 2) can manage or activate subscriptions!
-    const userRes = await pool.query('SELECT rank FROM users WHERE id = $1', [req.user!.id]);
-    const userRank = userRes.rows[0]?.rank;
-    
-    if (userRank === null || userRank === undefined || userRank > 2) {
-      return res.status(403).json({
-        status: 'error',
-        code: 'FORBIDDEN',
-        message: 'Only Guild Masters and Officers are authorized to manage or activate subscriptions.'
-      });
-    }
-
-    const subscriptionTier = tier === 'pro' ? 'pro' : (tier === 'free' ? 'free' : 'medium');
-    const interval = subscriptionTier === 'free' ? '30 days' : '1 year';
-
-    // Mettre à jour la guilde au niveau d'abonnement sélectionné et ajouter la durée correspondante
     const result = await pool.query(
-      `UPDATE guilds 
-       SET subscription_tier = $1, 
-           subscription_expires_at = CURRENT_TIMESTAMP + $2::interval, 
+      `UPDATE guilds
+       SET subscription_tier = 'free',
+           subscription_expires_at = CURRENT_TIMESTAMP + INTERVAL '30 days',
            subscription_status = 'active',
-           updated_at = CURRENT_TIMESTAMP 
-       WHERE id = $3 
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1
+         AND (
+           subscription_tier IS NULL
+           OR subscription_tier IN ('none', 'free')
+           OR subscription_expires_at IS NULL
+           OR subscription_expires_at < CURRENT_TIMESTAMP
+         )
        RETURNING *`,
-      [subscriptionTier, interval, guildId]
+      [guildId],
     );
 
     if (result.rowCount === 0) {
-      return res.status(404).json({ status: 'error', message: 'Guild not found.' });
+      return res.status(409).json({
+        status: 'error',
+        code: 'ACTIVE_SUBSCRIPTION',
+        message: 'A paid subscription is still active for this guild.',
+      });
     }
 
-    res.json({
-      status: 'success',
-      message: `Payment completed successfully for ${subscriptionTier} tier (Mocked)`,
-      guild: result.rows[0]
-    });
+    res.json({ status: 'success', guild: result.rows[0] });
   } catch (error) {
     next(error);
   }
 });
 
 // POST /api/stripe/cancel-subscription : Résilie l'abonnement en cours pour la guilde active
-router.post('/cancel-subscription', requireActiveGuild, async (req, res, next) => {
+router.post('/cancel-subscription', requireActiveGuild, requireSubscriptionManager, async (req, res, next) => {
   try {
     const guildId = req.user!.active_guild_id;
 
     if (!guildId) {
       return res.status(400).json({ status: 'error', message: 'No active guild found in session.' });
-    }
-
-    // Security check: Only GMs and Officers (rank <= 2) can manage or cancel subscriptions!
-    const userRes = await pool.query('SELECT rank FROM users WHERE id = $1', [req.user!.id]);
-    const userRank = userRes.rows[0]?.rank;
-    
-    if (userRank === null || userRank === undefined || userRank > 2) {
-      return res.status(403).json({
-        status: 'error',
-        code: 'FORBIDDEN',
-        message: 'Only Guild Masters and Officers are authorized to manage or cancel subscriptions.'
-      });
     }
 
     // Fetch guild subscription details

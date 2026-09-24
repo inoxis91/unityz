@@ -49,23 +49,6 @@ router.get('/unassigned', canManageRosters, async (req, res, next) => {
 router.post('/', canManageRosters, validate(createRosterSchema), async (req, res, next) => {
   try {
     const guildId = req.user!.active_guild_id!;
-    
-    // Check subscription tier limit
-    const guildRes = await pool.query('SELECT subscription_tier FROM guilds WHERE id = $1', [guildId]);
-    const tier = guildRes.rows[0]?.subscription_tier || 'free';
-    
-    if (tier === 'free' || tier === 'medium') {
-      const countRes = await pool.query('SELECT COUNT(*) FROM rosters WHERE guild_id = $1', [guildId]);
-      const count = parseInt(countRes.rows[0].count, 10);
-      if (count >= 2) {
-        return res.status(403).json({
-          status: 'error',
-          code: 'LIMIT_REACHED',
-          message: 'You have reached the limit of 2 rosters for your subscription tier. Upgrade to Pro for unlimited rosters.'
-        });
-      }
-    }
-
     const roster = await RosterService.create(req.body, guildId);
     res.status(201).json(roster);
   } catch (error) {
