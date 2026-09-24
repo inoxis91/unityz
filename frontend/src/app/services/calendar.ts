@@ -63,6 +63,18 @@ export interface Signup {
   user_characters?: any[];
 }
 
+/** Placement d'un joueur dans un groupe M+ (0 = sans groupe). */
+export interface GroupAssignment {
+  user_id: string;
+  group_index: number;
+}
+
+/** État complet des groupes M+ d'un événement, renvoyé par chaque modification. */
+export interface MplusGroupsState {
+  mm_groups_count: number;
+  assignments: GroupAssignment[];
+}
+
 /** Rôle réellement joué : celui imposé par le raid lead, sinon celui choisi par le joueur. */
 export function effectiveRole(signup: Pick<Signup, 'role' | 'assigned_role'>): RaidRole {
   return (signup.assigned_role ?? signup.role) as RaidRole;
@@ -118,24 +130,39 @@ export class CalendarService {
     return this.http.post(`${this.apiUrl}/${id}/toggle-lock`, {}, { withCredentials: true });
   }
 
-  updateGroupsCount(eventId: string, count: number): Observable<any> {
-    return this.http.patch(
-      `${this.apiUrl}/${eventId}/groups-count`,
-      { count },
-      { withCredentials: true },
-    );
-  }
+  // --- Groupes Mythique+ : chaque appel renvoie l'état complet des groupes ---
 
-  deleteGroup(eventId: string, groupIndex: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${eventId}/groups/${groupIndex}`, {
+  addMplusGroup(eventId: string): Observable<MplusGroupsState> {
+    return this.http.post<MplusGroupsState>(`${this.apiUrl}/${eventId}/groups`, null, {
       withCredentials: true,
     });
   }
 
-  updateSignupGroup(eventId: string, userId: string, groupIndex: number): Observable<any> {
-    return this.http.patch(
+  deleteMplusGroup(eventId: string, groupIndex: number): Observable<MplusGroupsState> {
+    return this.http.delete<MplusGroupsState>(`${this.apiUrl}/${eventId}/groups/${groupIndex}`, {
+      withCredentials: true,
+    });
+  }
+
+  moveToMplusGroup(
+    eventId: string,
+    userId: string,
+    groupIndex: number,
+  ): Observable<MplusGroupsState> {
+    return this.http.patch<MplusGroupsState>(
       `${this.apiUrl}/${eventId}/signups/${userId}/group`,
       { group_index: groupIndex },
+      { withCredentials: true },
+    );
+  }
+
+  setMplusAssignments(
+    eventId: string,
+    assignments: GroupAssignment[],
+  ): Observable<MplusGroupsState> {
+    return this.http.put<MplusGroupsState>(
+      `${this.apiUrl}/${eventId}/groups/assignments`,
+      { assignments },
       { withCredentials: true },
     );
   }

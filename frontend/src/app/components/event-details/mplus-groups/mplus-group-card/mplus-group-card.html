@@ -1,0 +1,119 @@
+<article
+  class="mp-group"
+  [class.is-complete]="group().isComplete"
+  [class.is-full]="group().isFull"
+  [class.is-new]="highlighted()"
+  [attr.aria-label]="title()"
+>
+  <header class="mp-group-head">
+    <span class="mp-keystone" aria-hidden="true">{{ group().index }}</span>
+    <div class="mp-group-title">
+      <h4>{{ title() }}</h4>
+      <span class="mp-group-sub">
+        {{ group().members.length }}/{{ groupSize }}
+        @if (group().avgScore) {
+          · {{ i18n.t('event.mplus.average') }}
+          <strong>{{ group().avgScore }}</strong>
+        }
+      </span>
+    </div>
+    @if (group().isComplete) {
+      <span class="mp-ready">✓ {{ i18n.t('event.mplus.ready') }}</span>
+    }
+    @if (canManage()) {
+      <button
+        type="button"
+        class="mp-remove"
+        (click)="remove.emit()"
+        [title]="i18n.t('event.details.mm_delete_group')"
+        [attr.aria-label]="i18n.t('event.details.mm_delete_group') + ' — ' + title()"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
+      </button>
+    }
+  </header>
+
+  <div
+    class="mp-progress"
+    role="progressbar"
+    [attr.aria-valuenow]="group().members.length"
+    aria-valuemin="0"
+    [attr.aria-valuemax]="groupSize"
+    [attr.aria-label]="title()"
+  >
+    <span [style.width.%]="fill()"></span>
+  </div>
+
+  <div
+    class="mp-slots"
+    cdkDropList
+    cdkDropListSortingDisabled
+    [cdkDropListData]="group().index"
+    [cdkDropListDisabled]="!canManage()"
+    [cdkDropListEnterPredicate]="canEnter"
+    (cdkDropListDropped)="dropped.emit($event)"
+  >
+    @for (slot of group().slots; track slot.signup?.user_id ?? 'free-' + $index) {
+      <div
+        class="mp-slot"
+        [class]="'role-' + slot.role"
+        [class.is-free]="!slot.signup"
+        [class.is-wanted]="!slot.signup && draggingRole() === slot.role"
+      >
+        @if (slot.signup; as s) {
+          <app-mplus-player-card
+            cdkDrag
+            [cdkDragData]="s"
+            [cdkDragDisabled]="!canManage()"
+            [cdkDragStartDelay]="dragStartDelay()"
+            [signup]="s"
+            [score]="scoreOf()(s)"
+            [canManage]="canManage()"
+            [isMe]="s.user_id === currentUserId()"
+            [offRole]="slot.offRole"
+            (cdkDragStarted)="dragStarted.emit(s)"
+            (cdkDragEnded)="dragEnded.emit()"
+            (click)="cardActivate.emit(s)"
+            (keydown.enter)="cardActivate.emit(s)"
+            (keydown.space)="$event.preventDefault(); cardActivate.emit(s)"
+          />
+        } @else {
+          <div class="mp-slot-free">
+            <img [src]="'assets/icons/' + slot.role + '.png'" alt="" />
+            <span>{{ emptySlotLabel(slot.role) }}</span>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <footer class="mp-group-foot">
+    <span class="mp-util" [class.ok]="group().hasLust" [title]="i18n.t('event.mplus.lust_hint')">
+      <span aria-hidden="true">{{ group().hasLust ? '✓' : '✕' }}</span>
+      {{ i18n.t('event.mplus.lust') }}
+    </span>
+    <span class="mp-util" [class.ok]="group().hasBrez" [title]="i18n.t('event.mplus.brez_hint')">
+      <span aria-hidden="true">{{ group().hasBrez ? '✓' : '✕' }}</span>
+      {{ i18n.t('event.mplus.brez') }}
+    </span>
+    <span class="mp-buffs">
+      @for (buff of group().buffs; track buff.id) {
+        <img
+          class="mp-buff"
+          [class.missing]="!buff.present"
+          [src]="buff.icon"
+          [alt]="i18n.t('buff.label.' + buff.id)"
+          [title]="
+            i18n.t('buff.label.' + buff.id) +
+            ' : ' +
+            (buff.present
+              ? i18n.t('event.details.status_present')
+              : i18n.t('event.details.buff_missing'))
+          "
+        />
+      }
+    </span>
+  </footer>
+</article>

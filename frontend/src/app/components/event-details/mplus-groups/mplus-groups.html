@@ -1,0 +1,287 @@
+<section class="mplus">
+  <!-- Synthèse + actions -->
+  <header class="mp-toolbar">
+    <div class="mp-intro">
+      <span class="mp-intro-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2l3 6.5 7 .9-5.1 4.8 1.3 6.9L12 17.8 5.8 21.1l1.3-6.9L2 9.4l7-.9z" />
+        </svg>
+      </span>
+      <div>
+        <h3>{{ i18n.t('event.mplus.title') }}</h3>
+        <p>
+          {{ i18n.t(canManage() ? 'event.mplus.subtitle_manager' : 'event.mplus.subtitle_member') }}
+        </p>
+      </div>
+    </div>
+
+    <dl class="mp-stats">
+      <div class="mp-stat" style="--i: 0">
+        <dt>{{ i18n.t('event.mplus.stat_players') }}</dt>
+        <dd>{{ stats().players }}</dd>
+      </div>
+      <div class="mp-stat placed" style="--i: 1">
+        <dt>{{ i18n.t('event.mplus.stat_placed') }}</dt>
+        <dd>{{ stats().placed }}</dd>
+      </div>
+      <div class="mp-stat pending" style="--i: 2">
+        <dt>{{ i18n.t('event.details.mm_no_group') }}</dt>
+        <dd>{{ pool().length }}</dd>
+      </div>
+      <div class="mp-stat ready" style="--i: 3">
+        <dt>{{ i18n.t('event.mplus.stat_ready') }}</dt>
+        <dd>
+          {{ stats().ready }}<small>/{{ stats().groups }}</small>
+        </dd>
+      </div>
+    </dl>
+
+    <div class="mp-actions">
+      @if (canManage()) {
+        <button
+          type="button"
+          class="mp-btn primary"
+          (click)="addGroup()"
+          [disabled]="addingGroup() || groupsCount() >= maxGroups"
+        >
+          <span aria-hidden="true">＋</span> {{ i18n.t('event.details.mm_add_group') }}
+        </button>
+        <button
+          type="button"
+          class="mp-btn accent"
+          (click)="autoFill()"
+          [disabled]="!pool().length || !freeSlots()"
+          [title]="i18n.t('event.mplus.autofill_hint')"
+        >
+          <span aria-hidden="true">⚡</span> {{ i18n.t('event.mplus.btn_autofill') }}
+        </button>
+      }
+      <button
+        type="button"
+        class="mp-btn ghost"
+        (click)="copyForDiscord()"
+        [disabled]="!stats().groups"
+        [title]="i18n.t('event.mplus.copy_hint')"
+      >
+        <span aria-hidden="true">📋</span> {{ i18n.t('event.mplus.btn_copy') }}
+      </button>
+      @if (canManage()) {
+        <button
+          type="button"
+          class="mp-btn ghost"
+          (click)="resetAll()"
+          [disabled]="!stats().placed"
+        >
+          <span aria-hidden="true">↺</span> {{ i18n.t('event.mplus.btn_reset') }}
+        </button>
+      }
+    </div>
+  </header>
+
+  <div class="mp-board" cdkDropListGroup>
+    <!-- Joueurs sans groupe -->
+    <aside
+      class="mp-pool"
+      cdkDropList
+      cdkDropListSortingDisabled
+      [cdkDropListData]="0"
+      [cdkDropListDisabled]="!canManage()"
+      (cdkDropListDropped)="onDrop($event)"
+    >
+      <header class="mp-pool-head">
+        <span class="mp-dot" aria-hidden="true"></span>
+        <h4>{{ i18n.t('event.details.mm_no_group') }}</h4>
+        <span class="mp-count">{{ pool().length }}</span>
+      </header>
+
+      <div class="mp-filter" role="group" [attr.aria-label]="i18n.t('event.mplus.filter_label')">
+        <button
+          type="button"
+          [class.active]="roleFilter() === 'all'"
+          [attr.aria-pressed]="roleFilter() === 'all'"
+          (click)="roleFilter.set('all')"
+        >
+          {{ i18n.t('event.mplus.filter_all') }}
+        </button>
+        @for (role of roles; track role) {
+          <button
+            type="button"
+            [class.active]="roleFilter() === role"
+            [attr.aria-pressed]="roleFilter() === role"
+            [title]="roleLabel(role)"
+            (click)="roleFilter.set(role)"
+          >
+            <img [src]="'assets/icons/' + role + '.png'" [alt]="roleLabel(role)" />
+            {{ poolByRole()[role] }}
+          </button>
+        }
+      </div>
+
+      @if (pool().length) {
+        <p class="mp-possible">
+          {{
+            i18n.t('event.mplus.possible_groups').replace('{count}', stats().possible.toString())
+          }}
+        </p>
+      }
+
+      <div class="mp-pool-list">
+        @for (s of filteredPool(); track s.user_id; let i = $index) {
+          <app-mplus-player-card
+            cdkDrag
+            [cdkDragData]="s"
+            [cdkDragDisabled]="!canManage()"
+            [cdkDragStartDelay]="dragStartDelay"
+            [signup]="s"
+            [score]="scoreOf(s)"
+            [canManage]="canManage()"
+            [isMe]="s.user_id === currentUserId()"
+            [style.animation-delay.ms]="i * 30"
+            (cdkDragStarted)="onDragStarted(s)"
+            (cdkDragEnded)="onDragEnded()"
+            (click)="onCardActivate(s)"
+            (keydown.enter)="onCardActivate(s)"
+            (keydown.space)="$event.preventDefault(); onCardActivate(s)"
+          />
+        } @empty {
+          <div class="mp-pool-empty">
+            @if (pool().length) {
+              <p>{{ i18n.t('event.mplus.filter_empty') }}</p>
+            } @else if (stats().players) {
+              <span class="mp-party" aria-hidden="true">🎉</span>
+              <p>{{ i18n.t('event.details.mm_all_placed') }}</p>
+            } @else {
+              <p>{{ i18n.t('event.mplus.no_players') }}</p>
+            }
+          </div>
+        }
+      </div>
+    </aside>
+
+    <!-- Groupes -->
+    <div class="mp-groups">
+      @for (group of groups(); track groupKey($index); let i = $index) {
+        <app-mplus-group-card
+          [id]="'mp-group-' + group.index"
+          [style.--i]="i"
+          animate.leave="mp-leave"
+          [group]="group"
+          [highlighted]="highlightedGroup() === group.index"
+          [scoreOf]="scoreOf"
+          [canManage]="canManage()"
+          [currentUserId]="currentUserId()"
+          [draggingRole]="draggingRole()"
+          [dragStartDelay]="dragStartDelay"
+          (remove)="removeGroup(group)"
+          (dropped)="onDrop($event)"
+          (cardActivate)="onCardActivate($event)"
+          (dragStarted)="onDragStarted($event)"
+          (dragEnded)="onDragEnded()"
+        />
+      }
+
+      @if (canManage() && groupsCount() < maxGroups) {
+        <button
+          type="button"
+          class="mp-add-tile"
+          (click)="addGroup()"
+          [disabled]="addingGroup()"
+          [style.--i]="groups().length"
+        >
+          <span class="mp-add-plus" aria-hidden="true">＋</span>
+          <strong>{{ i18n.t('event.details.mm_add_group') }}</strong>
+          @if (!groups().length && stats().possible) {
+            <small>{{
+              i18n.t('event.mplus.possible_groups').replace('{count}', stats().possible.toString())
+            }}</small>
+          }
+        </button>
+      } @else if (!groups().length) {
+        <div class="mp-no-groups">
+          <span aria-hidden="true">🗝️</span>
+          <p>{{ i18n.t('event.mplus.no_groups') }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- Panneau d'actions (manager) : bottom-sheet sur mobile, modale sur desktop -->
+@if (sheetSignup(); as s) {
+  <div class="mp-sheet-overlay" (click)="closeSheet()">
+    <div
+      class="mp-sheet"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="displayName(s)"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="mp-sheet-header" [class]="classCss(s)">
+        <img
+          class="mp-sheet-role"
+          [src]="'assets/icons/' + s.role + '.png'"
+          [alt]="roleLabel(s.role)"
+        />
+        <div class="mp-sheet-title">
+          <span class="name">{{ displayName(s) }}</span>
+          <span class="sub">
+            {{ roleLabel(s.role) }}
+            @if (scoreOf(s); as score) {
+              · {{ i18n.t('event.mplus.score') }} {{ score }}
+            }
+          </span>
+        </div>
+        <button
+          type="button"
+          class="mp-sheet-close"
+          (click)="closeSheet()"
+          [attr.aria-label]="i18n.t('event.details.btn_close')"
+        >
+          ×
+        </button>
+      </header>
+
+      <div class="mp-sheet-body">
+        @if (s.comment) {
+          <blockquote class="mp-sheet-comment">“{{ s.comment }}”</blockquote>
+        }
+        <h5>{{ i18n.t('event.mplus.sheet_move') }}</h5>
+        <div class="mp-sheet-targets">
+          <button
+            type="button"
+            class="none"
+            [class.active]="sheetGroupIndex() === 0"
+            [attr.aria-pressed]="sheetGroupIndex() === 0"
+            (click)="move(s, 0)"
+          >
+            <span class="label">{{ i18n.t('event.details.mm_no_group') }}</span>
+          </button>
+          @for (g of groups(); track g.index) {
+            <button
+              type="button"
+              [class.active]="sheetGroupIndex() === g.index"
+              [attr.aria-pressed]="sheetGroupIndex() === g.index"
+              [disabled]="g.isFull && sheetGroupIndex() !== g.index"
+              (click)="move(s, g.index)"
+            >
+              <span class="label">{{ groupTitle(g.index) }}</span>
+              <span class="fill">{{ g.members.length }}/{{ groupSize }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <footer class="mp-sheet-footer">
+        <a class="mp-btn ghost" [href]="raiderIoUrl(s)" target="_blank" rel="noopener noreferrer">
+          <img src="assets/icons/raiderio.webp" alt="" /> Raider.io
+        </a>
+        <button type="button" class="mp-btn ghost" (click)="viewCharacters(s)">
+          {{ i18n.t('event.lineup.sheet_view_characters') }}
+        </button>
+        <button type="button" class="mp-btn primary" (click)="closeSheet()">
+          {{ i18n.t('event.lineup.sheet_done') }}
+        </button>
+      </footer>
+    </div>
+  </div>
+}

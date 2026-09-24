@@ -1,5 +1,4 @@
-import { PoolClient } from 'pg';
-import pool from '../lib/db';
+import { withTransaction } from '../lib/db';
 import { HttpError } from '../middlewares/errorHandler';
 import { LineupNotifier, LineupSnapshot } from './lineupNotifier';
 
@@ -144,19 +143,4 @@ function playableRoles(signup: LockedSignup): Set<RaidRole> {
 
 function toSnapshot(entry: Pick<LineupEntry, 'role' | 'selection' | 'assigned_role'>): LineupSnapshot {
   return { selection: entry.selection, role: entry.assigned_role ?? entry.role };
-}
-
-async function withTransaction<T>(work: (client: PoolClient) => Promise<T>): Promise<T> {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const result = await work(client);
-    await client.query('COMMIT');
-    return result;
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-  }
 }

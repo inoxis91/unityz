@@ -1,157 +1,44 @@
-import { Component, Input, Output, EventEmitter, signal, computed, inject } from '@angular/core';
-
-import { FormsModule } from '@angular/forms';
-import {
-  CdkDragDrop,
-  moveItemInArray,
-  transferArrayItem,
-  DragDropModule,
-} from '@angular/cdk/drag-drop';
-import { CalendarService, Signup } from '../../../services/calendar';
-import { ToastService } from '../../../services/toast';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
+import { Signup } from '../../../services/calendar';
 import { I18nService } from '../../../services/i18n';
-import { CharacterService } from '../../../services/character';
-import { Buff, RaidBuffsComponent, computeBuffs } from '../raid-buffs/raid-buffs';
+import { RaidBuffsComponent, computeBuffs } from '../raid-buffs/raid-buffs';
+import { signupClassCss, signupDisplayName } from '../raid-lineup/lineup-utils';
 
+/** Répartition des inscrits par rôle (événements hors raid et hors Mythique+). */
 @Component({
   selector: 'app-composition',
-  standalone: true,
-  imports: [FormsModule, DragDropModule, RaidBuffsComponent],
+  imports: [RaidBuffsComponent],
   templateUrl: './composition.html',
   styleUrl: './composition.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CompositionComponent {
-  private calendarService = inject(CalendarService);
-  private toast = inject(ToastService);
   public i18n = inject(I18nService);
 
-  @Input() event!: any;
-  @Input() canManageEvents!: boolean;
-  @Input() rioScores!: Map<string, number>;
+  signups = input<Signup[]>([]);
+  openAlts = output<Signup>();
 
-  @Input() set signups(val: any[]) {
-    this.signupsSig.set(val || []);
-  }
-  @Output() openAlts = new EventEmitter<any>();
-  @Output() compositionChanged = new EventEmitter<void>();
+  readonly columns = [
+    { role: 'tank', header: 'event.details.header_tanks' },
+    { role: 'heal', header: 'event.details.header_heals' },
+    { role: 'dps', header: 'event.details.header_dps' },
+  ] as const;
 
-  signupsSig = signal<any[]>([]);
+  private active = computed(() => this.signups().filter((s) => s.status === 'signed_up'));
 
-  // Computed views for Raid
-  tanks = computed(() =>
-    this.signupsSig().filter((s) => s.role === 'tank' && s.status === 'signed_up'),
-  );
-  heals = computed(() =>
-    this.signupsSig().filter((s) => s.role === 'heal' && s.status === 'signed_up'),
-  );
-  dps = computed(() =>
-    this.signupsSig().filter((s) => s.role === 'dps' && s.status === 'signed_up'),
-  );
-
-  // Computed views for MM+
-  unassignedMembers = computed(() =>
-    this.signupsSig().filter(
-      (s) => s.status === 'signed_up' && (s.group_index === 0 || !s.group_index),
-    ),
-  );
-
-  mmGroups = computed(() => {
-    const count = this.event?.mm_groups_count || 0;
-    const groups = [];
-    for (let i = 1; i <= count; i++) {
-      const members = this.signupsSig().filter((s) => s.group_index === i);
-      groups.push({
-        index: i,
-        members: members,
-        tanks: members.filter((m) => m.role === 'tank'),
-        heals: members.filter((m) => m.role === 'heal'),
-        dps: members.filter((m) => m.role === 'dps'),
-        buffs: this.calculateBuffs(members),
-      });
-    }
-    return groups;
+  byRole = computed(() => {
+    const byRole: Record<string, Signup[]> = { tank: [], heal: [], dps: [] };
+    for (const s of this.active()) byRole[s.role]?.push(s);
+    return byRole;
   });
 
-  buffs = computed(() => {
-    const activeSignups = this.signupsSig().filter((s) => s.status === 'signed_up');
-    return this.calculateBuffs(activeSignups);
-  });
+  buffs = computed(() => computeBuffs(this.active()));
 
-  calculateBuffs(members: Signup[]): Buff[] {
-    return computeBuffs(members);
+  displayName(s: Signup): string {
+    return signupDisplayName(s) ?? this.i18n.t('event.details.unknown_user');
   }
 
-  // MM+ Group Management
-  onAddGroup() {
-    if (!this.event || !this.event.id) return;
-    const newCount = (this.event.mm_groups_count || 0) + 1;
-    this.event.mm_groups_count = newCount;
-    this.calendarService.updateGroupsCount(this.event.id, newCount).subscribe(() => {
-      this.compositionChanged.emit();
-    });
-  }
-
-  onRemoveGroup(index: number) {
-    if (!this.event || !this.event.id) return;
-
-    // Mise à jour optimiste de l'UI pour éviter les lenteurs
-    const currentSignups = this.signupsSig();
-    const updatedSignups = currentSignups.map((s) => {
-      if (s.group_index === index) {
-        return { ...s, group_index: 0 };
-      } else if (s.group_index && s.group_index > index) {
-        return { ...s, group_index: s.group_index - 1 };
-      }
-      return s;
-    });
-    this.signupsSig.set(updatedSignups);
-    this.event.mm_groups_count = Math.max(0, (this.event.mm_groups_count || 0) - 1);
-
-    this.calendarService.deleteGroup(this.event.id, index).subscribe({
-      next: () => {
-        this.compositionChanged.emit();
-      },
-      error: () => {
-        this.toast.error(this.i18n.t('event.details.toast_remove_error'));
-        this.compositionChanged.emit();
-      },
-    });
-  }
-
-  dropToGroup(event: CdkDragDrop<Signup[]>, groupIndex: number) {
-    if (event.previousContainer === event.container) return;
-    const member = event.item.data;
-    if (!this.event || !this.event.id || !member) return;
-
-    // Optimistic UI update
-    const currentSignups = this.signupsSig();
-    const updatedSignups = currentSignups.map((s) =>
-      s.user_id === member.user_id ? { ...s, group_index: groupIndex } : s,
-    );
-    this.signupsSig.set(updatedSignups);
-
-    // Backend update
-    this.calendarService.updateSignupGroup(this.event.id, member.user_id, groupIndex).subscribe({
-      next: () => {
-        this.compositionChanged.emit();
-      },
-      error: () => {
-        this.toast.error(this.i18n.t('event.details.toast_move_error'));
-        this.compositionChanged.emit();
-      },
-    });
-  }
-
-  getClassCategory(className: string | undefined): string {
-    return CharacterService.getClassId(className);
-  }
-
-  getRioScoreForKey(name: string | undefined, realm: string | undefined): number | null {
-    if (!name || !realm || !this.rioScores) return null;
-    return this.rioScores.get(`${name}-${realm}`.toLowerCase()) || null;
-  }
-
-  onOpenAltsModal(s: Signup) {
-    this.openAlts.emit(s);
+  classCss(s: Signup): string {
+    return signupClassCss(s);
   }
 }

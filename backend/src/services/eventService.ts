@@ -399,6 +399,8 @@ export class EventService {
           WHEN EXCLUDED.status = 'absent' OR EXCLUDED.character_id IS DISTINCT FROM event_signups.character_id THEN NULL
           ELSE event_signups.assigned_role
         END,
+        -- Groupes M+ : un joueur qui passe absent libère sa place
+        group_index = CASE WHEN EXCLUDED.status = 'absent' THEN 0 ELSE event_signups.group_index END,
         updated_at = CURRENT_TIMESTAMP
       RETURNING *
     `;
@@ -428,12 +430,6 @@ export class EventService {
     return (result.rowCount ?? 0) > 0;
   }
 
-  static async updateSignupGroup(eventId: string, userId: string, groupIndex: number): Promise<boolean> {
-    const query = 'UPDATE event_signups SET group_index = $1, updated_at = CURRENT_TIMESTAMP WHERE event_id = $2 AND user_id = $3';
-    const result = await pool.query(query, [groupIndex, eventId, userId]);
-    return (result.rowCount ?? 0) > 0;
-  }
-
   static async updateSignup(eventId: string, userId: string, data: { character_id?: string | null; role?: string; status?: string }): Promise<boolean> {
     const fields: string[] = [];
     const values: any[] = [];
@@ -453,7 +449,7 @@ export class EventService {
       fields.push(`status = $${paramIndex}`);
       values.push(data.status);
       paramIndex++;
-      if (data.status === 'absent') fields.push('selection = NULL');
+      if (data.status === 'absent') fields.push('selection = NULL', 'group_index = 0');
     }
 
     if (fields.length === 0) return false;
@@ -471,45 +467,6 @@ export class EventService {
     `;
     const result = await pool.query(query, values);
     return (result.rowCount ?? 0) > 0;
-  }
-
-  static async updateGroupsCount(eventId: string, count: number): Promise<boolean> {
-    const query = 'UPDATE events SET mm_groups_count = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2';
-    const result = await pool.query(query, [count, eventId]);
-    return (result.rowCount ?? 0) > 0;
-  }
-
-  static async deleteGroup(eventId: string, groupIndex: number): Promise<boolean> {
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
-
-      // 1. Déplacer les membres du groupe supprimé vers "sans groupe" (group_index = 0)
-      await client.query(
-        'UPDATE event_signups SET group_index = 0, updated_at = CURRENT_TIMESTAMP WHERE event_id = $1 AND group_index = $2',
-        [eventId, groupIndex]
-      );
-
-      // 2. Décaler les index des groupes suivants de -1
-      await client.query(
-        'UPDATE event_signups SET group_index = group_index - 1, updated_at = CURRENT_TIMESTAMP WHERE event_id = $1 AND group_index > $2',
-        [eventId, groupIndex]
-      );
-
-      // 3. Décrémenter le nombre total de groupes de l'événement
-      const result = await client.query(
-        'UPDATE events SET mm_groups_count = GREATEST(0, mm_groups_count - 1), updated_at = CURRENT_TIMESTAMP WHERE id = $1',
-        [eventId]
-      );
-
-      await client.query('COMMIT');
-      return (result.rowCount ?? 0) > 0;
-    } catch (e) {
-      await client.query('ROLLBACK');
-      throw e;
-    } finally {
-      client.release();
-    }
   }
 
   static async getEventsForDate(date: Date): Promise<Event[]> {

@@ -5,6 +5,7 @@ import { API_URL, SEED_PATH, STATE_PATH, readSeed } from './fixtures';
 export default async function globalTeardown() {
   if (!existsSync(SEED_PATH)) return;
   const api = await request.newContext({ baseURL: `${API_URL}/`, storageState: STATE_PATH });
-  await api.delete(`events/${readSeed().eventId}`);
+  const seed = readSeed();
+  for (const id of [seed.eventId, seed.mplusEventId]) if (id) await api.delete(`events/${id}`);
   await api.dispose();
 }

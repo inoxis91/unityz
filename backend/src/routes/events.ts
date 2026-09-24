@@ -2,10 +2,11 @@ import express from 'express';
 import pool from '../lib/db';
 import { EventService } from '../services/eventService';
 import { LineupService } from '../services/lineupService';
+import { MplusGroupService } from '../services/mplusGroupService';
 import { WclReportService } from '../services/wclReportService';
 import { isAuthenticated, canManageEvents, canManageLineup, requireActiveGuild, requirePaidGuild } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
-import { createEventSchema, updateEventSchema, signupSchema, updateSignupGroupSchema, updateGroupsCountSchema, updateSignupSchema, updateLineupEntrySchema, bulkUpdateLineupSchema, eventLogsAnalysisSchema } from '../schemas/eventSchemas';
+import { createEventSchema, updateEventSchema, signupSchema, updateSignupGroupSchema, mplusGroupsSchema, deleteMplusGroupSchema, setGroupAssignmentsSchema, updateSignupSchema, updateLineupEntrySchema, bulkUpdateLineupSchema, eventLogsAnalysisSchema } from '../schemas/eventSchemas';
 
 const router = express.Router();
 
@@ -147,45 +148,47 @@ router.delete('/:id', canManageEvents, async (req, res, next) => {
   }
 });
 
-// PATCH /api/events/:id/groups-count : Met à jour le nombre de groupes MM+
-router.patch('/:id/groups-count', canManageEvents, validate(updateGroupsCountSchema), async (req, res, next) => {
+// POST /api/events/:id/groups : Ajoute un groupe MM+
+router.post('/:id/groups', canManageEvents, validate(mplusGroupsSchema), async (req, res, next) => {
   try {
-    const success = await EventService.updateGroupsCount(req.params.id as string, req.body.count);
-    if (!success) {
-      return res.status(404).json({ status: 'error', message: 'Event not found' });
-    }
-    res.json({ status: 'success', message: 'Groups count updated' });
+    res.status(201).json(await MplusGroupService.addGroup(req.user!.active_guild_id!, req.params.id as string));
   } catch (error) {
     next(error);
   }
 });
 
-// DELETE /api/events/:id/groups/:index : Supprime un groupe MM+ et réorganise les membres
-router.delete('/:id/groups/:index', canManageEvents, async (req, res, next) => {
+// DELETE /api/events/:id/groups/:index : Supprime un groupe MM+ et renumérote les suivants
+router.delete('/:id/groups/:index', canManageEvents, validate(deleteMplusGroupSchema), async (req, res, next) => {
   try {
-    const eventId = req.params.id as string;
-    const index = parseInt(req.params.index as string, 10);
-    if (isNaN(index) || index < 1) {
-      return res.status(400).json({ status: 'error', message: 'Invalid group index' });
-    }
-    const success = await EventService.deleteGroup(eventId, index);
-    if (!success) {
-      return res.status(404).json({ status: 'error', message: 'Event not found' });
-    }
-    res.json({ status: 'success', message: 'Group deleted and members shifted successfully' });
+    const index = Number(req.params.index);
+    res.json(await MplusGroupService.deleteGroup(req.user!.active_guild_id!, req.params.id as string, index));
   } catch (error) {
     next(error);
   }
 });
 
-// PATCH /api/events/:id/signups/:userId/group : Déplace un utilisateur dans un groupe MM+
+// PUT /api/events/:id/groups/assignments : Placement groupé (remplissage automatique, réinitialisation)
+router.put('/:id/groups/assignments', canManageEvents, validate(setGroupAssignmentsSchema), async (req, res, next) => {
+  try {
+    res.json(
+      await MplusGroupService.setAssignments(req.user!.active_guild_id!, req.params.id as string, req.body.assignments),
+    );
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PATCH /api/events/:id/signups/:userId/group : Déplace un joueur dans un groupe MM+ (0 = sans groupe)
 router.patch('/:id/signups/:userId/group', canManageEvents, validate(updateSignupGroupSchema), async (req, res, next) => {
   try {
-    const success = await EventService.updateSignupGroup(req.params.id as string, req.params.userId as string, req.body.group_index);
-    if (!success) {
-      return res.status(404).json({ status: 'error', message: 'Signup not found' });
-    }
-    res.json({ status: 'success', message: 'Signup group updated' });
+    res.json(
+      await MplusGroupService.moveSignup(
+        req.user!.active_guild_id!,
+        req.params.id as string,
+        req.params.userId as string,
+        req.body.group_index,
+      ),
+    );
   } catch (error) {
     next(error);
   }

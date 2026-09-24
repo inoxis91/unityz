@@ -191,15 +191,20 @@
             (entriesChange)="onLineupEntriesChange($event)"
             (openAlts)="onOpenAltsModal($event)"
           />
+        } @else if (isMplus()) {
+          @defer {
+            <app-mplus-groups
+              [event]="event()!"
+              [signups]="signups()"
+              [rioScores]="rioScores()"
+              [canManage]="canManageEvents() && !event()!.is_canceled"
+              [currentUserId]="currentUserId()"
+              (stateChange)="onMplusStateChange($event)"
+              (openAlts)="onOpenAltsModal($event)"
+            />
+          }
         } @else {
-          <app-composition
-            [event]="event()"
-            [signups]="signups()"
-            [canManageEvents]="canManageEvents()"
-            [rioScores]="rioScores()"
-            (openAlts)="onOpenAltsModal($event)"
-            (compositionChanged)="onReloadSignups()"
-          ></app-composition>
+          <app-composition [signups]="signups()" (openAlts)="onOpenAltsModal($event)" />
         }
       </div>
     }

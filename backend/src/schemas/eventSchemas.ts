@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+/** Limites des groupes Mythique+ (miroir de `MPLUS_*` côté frontend). */
+export const MPLUS_MAX_GROUPS = 20;
+export const MPLUS_GROUP_SIZE = 5;
+
 export const createEventSchema = z.object({
   body: z.object({
     title: z.string().min(1, 'Title is required').max(255),
@@ -8,7 +12,7 @@ export const createEventSchema = z.object({
     end_time: z.string().min(10),
     type: z.string().min(1),
     roster_id: z.string().uuid().optional().nullable(),
-    mm_groups_count: z.number().int().min(0).optional(),
+    mm_groups_count: z.number().int().min(0).max(MPLUS_MAX_GROUPS).optional(),
     invited_groups: z.array(z.string()).optional().nullable(),
     logs: z.string().optional().nullable(),
   }),
@@ -25,28 +29,46 @@ export const updateEventSchema = z.object({
     end_time: z.string().min(10),
     type: z.string().min(1),
     roster_id: z.string().uuid().optional().nullable(),
-    mm_groups_count: z.number().int().min(0).optional(),
+    mm_groups_count: z.number().int().min(0).max(MPLUS_MAX_GROUPS).optional(),
     invited_groups: z.array(z.string()).optional().nullable(),
     logs: z.string().optional().nullable(),
   }),
 });
 
-export const updateSignupGroupSchema = z.object({
+const groupIndex = z.number().int().min(0).max(MPLUS_MAX_GROUPS); // 0 = sans groupe
+
+export const mplusGroupsSchema = z.object({
   params: z.object({
-    id: z.string().uuid(), // eventId
-    userId: z.string(),
-  }),
-  body: z.object({
-    group_index: z.number().int().min(0),
+    id: z.string().uuid(),
   }),
 });
 
-export const updateGroupsCountSchema = z.object({
+export const deleteMplusGroupSchema = z.object({
   params: z.object({
-    id: z.string().uuid(), // eventId
+    id: z.string().uuid(),
+    index: z.coerce.number().int().min(1).max(MPLUS_MAX_GROUPS),
+  }),
+});
+
+export const updateSignupGroupSchema = z.object({
+  params: z.object({
+    id: z.string().uuid(),
+    userId: z.string().min(1),
   }),
   body: z.object({
-    count: z.number().int().min(0),
+    group_index: groupIndex,
+  }),
+});
+
+export const setGroupAssignmentsSchema = z.object({
+  params: z.object({
+    id: z.string().uuid(),
+  }),
+  body: z.object({
+    assignments: z
+      .array(z.object({ user_id: z.string().min(1), group_index: groupIndex }))
+      .min(1)
+      .max(200),
   }),
 });
 

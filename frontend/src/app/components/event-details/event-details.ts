@@ -2,7 +2,7 @@ import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { CalendarService, CalendarEvent, LineupEntry, Signup } from '../../services/calendar';
+import { CalendarService, CalendarEvent, LineupEntry, MplusGroupsState, Signup } from '../../services/calendar';
 import { CharacterService, Character } from '../../services/character';
 import { RosterService, Roster } from '../../services/roster';
 import { AuthService } from '../../services/auth';
@@ -13,12 +13,13 @@ import { ParticipantsComponent } from './participants/participants';
 import { CompositionComponent } from './composition/composition';
 import { LogsDashboardComponent } from './logs-dashboard/logs-dashboard';
 import { RaidLineupComponent } from './raid-lineup/raid-lineup';
+import { MplusGroupsComponent } from './mplus-groups/mplus-groups';
 import { LineupStatusComponent } from './raid-lineup/lineup-status/lineup-status';
 
 @Component({
   selector: 'app-event-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, LogsDashboardComponent, ParticipantsComponent, CompositionComponent, RaidLineupComponent, LineupStatusComponent],
+  imports: [CommonModule, RouterModule, FormsModule, LogsDashboardComponent, ParticipantsComponent, CompositionComponent, RaidLineupComponent, MplusGroupsComponent, LineupStatusComponent],
   templateUrl: './event-details.html',
   styleUrl: './event-details.css',
 })
@@ -71,6 +72,7 @@ export class EventDetailsComponent implements OnInit {
   currentUserId = computed(() => this.authService.currentUser()?.id ?? null);
 
   isRaid = computed(() => this.event()?.type?.toLowerCase() === 'raid');
+  isMplus = computed(() => this.event()?.type?.toLowerCase() === 'mm+');
 
   /** Inscription du joueur connecté, si elle est concernée par le line-up (raid actif, non absent). */
   myLineupSignup = computed(() => {
@@ -337,6 +339,15 @@ export class EventDetailsComponent implements OnInit {
       this.loadSignups(evt.id);
       this.loadEvent(evt.id);
     }
+  }
+
+  /** Groupes M+ confirmés par le serveur : pas besoin de recharger l'événement ni les inscriptions. */
+  onMplusStateChange(state: MplusGroupsState) {
+    const byUser = new Map(state.assignments.map((a) => [a.user_id, a.group_index]));
+    this.event.update((evt) => (evt ? { ...evt, mm_groups_count: state.mm_groups_count } : evt));
+    this.signups.update((list) =>
+      list.map((s) => (byUser.has(s.user_id) ? { ...s, group_index: byUser.get(s.user_id)! } : s)),
+    );
   }
 
   onLineupEntriesChange(entries: LineupEntry[]) {

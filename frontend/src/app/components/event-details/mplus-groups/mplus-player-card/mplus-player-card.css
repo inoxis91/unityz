@@ -1,0 +1,164 @@
+/* Fond et couleur de texte : classes globales .bg-class-<classe> (styles.css). */
+:host {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 7px 10px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.14);
+  cursor: pointer;
+  user-select: none;
+  animation: card-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.18s ease;
+}
+
+:host(:hover) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.22);
+  filter: brightness(1.05);
+}
+
+:host(:focus-visible) {
+  outline: 3px solid var(--ui-focus);
+  outline-offset: 2px;
+}
+
+:host(.is-draggable) {
+  cursor: grab;
+}
+
+:host(.is-draggable:active) {
+  cursor: grabbing;
+}
+
+:host(.is-me) {
+  box-shadow:
+    0 0 0 2px var(--ui-surface),
+    0 0 0 4px var(--ui-brand),
+    0 6px 14px rgba(15, 23, 42, 0.2);
+}
+
+:host(.is-off-role) {
+  outline: 2px dashed var(--ui-status-warning);
+  outline-offset: 2px;
+}
+
+.role-icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 3px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.name {
+  overflow: hidden;
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.15;
+  color: inherit;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tags:empty {
+  display: none;
+}
+
+.tag {
+  padding: 3px 6px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--ui-on-solid);
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.tag.me {
+  background: var(--ui-brand);
+}
+
+.tag.maybe,
+.tag.off-role {
+  color: var(--ui-on-warning);
+  background: var(--ui-warning);
+}
+
+.tag.comment {
+  text-transform: none;
+  background: rgba(var(--ui-surface-rgb), 0.85);
+}
+
+/* Score M+ : pastille claire, texte coloré par palier (AA sur surface) */
+.rio {
+  flex-shrink: 0;
+  min-width: 44px;
+  padding: 4px 7px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--ui-text-strong);
+  background: rgba(var(--ui-surface-rgb), 0.94);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2);
+}
+
+.rio.tier-gray {
+  color: var(--wcl-gray-text);
+}
+.rio.tier-green {
+  color: var(--wcl-green-text);
+}
+.rio.tier-blue {
+  color: var(--wcl-blue-text);
+}
+.rio.tier-purple {
+  color: var(--wcl-purple-text);
+}
+.rio.tier-orange {
+  color: var(--wcl-orange-text);
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host {
+    animation: none;
+    transition: none;
+  }
+
+  :host(:hover) {
+    transform: none;
+  }
+}

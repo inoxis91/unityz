@@ -112,6 +112,12 @@ test('readable /events/:id (all tabs)', async ({ page }) => {
   await checkEachTab(page, 'app-event-details .tabs:not([role="tablist"])', '/events');
 });
 
+test('readable /events/:id M+ (all tabs)', async ({ page }) => {
+  await open(page, `/events/${readSeed().mplusEventId}`);
+  await checkEachTab(page, 'app-event-details .tabs:not([role="tablist"])', '/events M+');
+  await expect(page.locator('app-mplus-group-card')).toHaveCount(2);
+});
+
 test('readable /events/:id › Logs & Analyses (all tabs)', async ({ page }) => {
   // Première analyse du rapport côté WCL (~5 s) puis axe sur quatre sous-onglets
   test.setTimeout(120_000);

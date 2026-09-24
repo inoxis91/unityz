@@ -1,0 +1,25 @@
+<img class="role-icon" [src]="'assets/icons/' + signup().role + '.png'" [alt]="roleLabel()" />
+<div class="text">
+  <span class="name">{{ name() }}</span>
+  <span class="tags">
+    @if (isMe()) {
+      <span class="tag me">{{ i18n.t('event.lineup.tag_me') }}</span>
+    }
+    @if (signup().status === 'standby') {
+      <span class="tag maybe">{{ i18n.t('event.details.status_maybe') }}</span>
+    }
+    @if (offRole()) {
+      <span class="tag off-role" [title]="i18n.t('event.mplus.off_role_hint')">
+        {{ i18n.t('event.mplus.off_role') }}
+      </span>
+    }
+    @if (signup().comment) {
+      <span class="tag comment" [title]="signup().comment">💬</span>
+    }
+  </span>
+</div>
+@if (score()) {
+  <span class="rio" [class]="'tier-' + tier()" [title]="i18n.t('event.mplus.score')">
+    {{ score() }}
+  </span>
+}

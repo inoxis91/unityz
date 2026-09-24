@@ -16,7 +16,7 @@ async function ok(res: APIResponse, step: string) {
   return res.json();
 }
 
-/** Connexion mock + onboarding complet par l'API, puis un raid de test avec une inscription. */
+/** Connexion mock + onboarding complet par l'API, puis un raid et une sortie M+ de test avec une inscription. */
 export default async function globalSetup() {
   const api = await request.newContext({ baseURL: `${API_URL}/` });
 
@@ -61,8 +61,38 @@ export default async function globalSetup() {
     'signup',
   );
 
+  // Sortie M+ : deux groupes dont un occupé, pour l'écran de composition
+  const mplus = await ok(
+    await api.post('events', {
+      data: {
+        title: '[e2e] M+ a11y',
+        description: 'Seeded by Playwright',
+        type: 'mm+',
+        mm_groups_count: 2,
+        start_time: start.toISOString(),
+        end_time: new Date(start.getTime() + 3 * 3600 * 1000).toISOString(),
+      },
+    }),
+    'create M+ event',
+  );
+  await ok(
+    await api.post(`events/${mplus.id}/signup`, {
+      data: { character_id: characters[0]?.id ?? null, role: 'tank', status: 'signed_up' },
+    }),
+    'M+ signup',
+  );
+  await ok(
+    await api.patch(`events/${mplus.id}/signups/${MOCK_USER_ID}/group`, {
+      data: { group_index: 1 },
+    }),
+    'M+ group',
+  );
+
   mkdirSync(dirname(STATE_PATH), { recursive: true });
   await api.storageState({ path: STATE_PATH });
-  writeFileSync(SEED_PATH, JSON.stringify({ eventId: event.id } satisfies Seed));
+  writeFileSync(
+    SEED_PATH,
+    JSON.stringify({ eventId: event.id, mplusEventId: mplus.id } satisfies Seed),
+  );
   await api.dispose();
 }
