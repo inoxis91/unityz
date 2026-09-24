@@ -1,32 +1,26 @@
 import express, { NextFunction, Request, Response } from 'express';
 import { requireActiveGuild } from '../middlewares/auth';
+import { validate } from '../middlewares/validate';
 import pool from '../lib/db';
-import { isProd } from '../lib/env';
-import Stripe from 'stripe';
+import { HttpError } from '../middlewares/errorHandler';
+import { checkoutSessionSchema, paidTierBodySchema } from '../schemas/billingSchemas';
+import {
+  CheckoutSession,
+  StripeInvoice,
+  StripeSubscription,
+  activateCheckoutSession,
+  activateFreeTrial,
+  applyInvoicePaid,
+  applySubscriptionChange,
+  changePlan,
+  createCheckoutSession,
+  mockPaymentsEnabled,
+  pendingInvoiceUrl,
+  previewPlanChange,
+  stripe,
+} from '../services/billingService';
 
 const router = express.Router();
-
-// Define Stripe core types dynamically using TypeScript return types
-type StripeInstance = InstanceType<typeof Stripe>;
-type CheckoutSession = Awaited<ReturnType<StripeInstance['checkout']['sessions']['retrieve']>>;
-type StripeInvoice = Awaited<ReturnType<StripeInstance['invoices']['retrieve']>>;
-type StripeSubscription = Awaited<ReturnType<StripeInstance['subscriptions']['retrieve']>>;
-
-// Initialize Stripe if secret key is present
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-let stripe: StripeInstance | null = null;
-
-if (stripeSecretKey) {
-  stripe = new Stripe(stripeSecretKey);
-  console.log('[Stripe] Successfully initialized Stripe client.');
-} else {
-  console.log('[Stripe] STRIPE_SECRET_KEY not set. Operating in MOCK / SIMULATOR mode.');
-}
-
-const PAID_TIERS = ['medium', 'pro'];
-
-/** Simulateur de paiement : uniquement hors production et sans clé Stripe. */
-const mockPaymentsEnabled = () => !stripe && !isProd;
 
 /** Seuls le GM et les officiers (rang <= 2) gèrent l'abonnement de la guilde. */
 async function requireSubscriptionManager(req: Request, res: Response, next: NextFunction) {
@@ -50,200 +44,84 @@ async function requireSubscriptionManager(req: Request, res: Response, next: Nex
   }
 }
 
-// POST /api/stripe/create-checkout-session : Crée une session Stripe de paiement ou simule
-router.post('/create-checkout-session', requireActiveGuild, requireSubscriptionManager, async (req, res, next) => {
+const manager = [requireActiveGuild, requireSubscriptionManager];
+
+// POST /api/stripe/create-checkout-session : première souscription payante (Stripe Checkout)
+router.post('/create-checkout-session', ...manager, validate(paidTierBodySchema), async (req, res, next) => {
   try {
-    const guildId = req.user!.active_guild_id;
-    const { tier } = req.body;
-
-    if (!guildId) {
-      return res.status(400).json({ status: 'error', message: 'No active guild found in session.' });
-    }
-
-    if (!tier || !PAID_TIERS.includes(tier)) {
-      return res.status(400).json({ status: 'error', message: 'Invalid subscription tier selected.' });
-    }
-
-    // Simulateur en développement quand Stripe n'est pas configuré
-    if (mockPaymentsEnabled()) {
-      const mockSessionId = `mock_cs_${Math.random().toString(36).substring(2, 15)}`;
-      const checkoutUrl = `/payment?session_id=${mockSessionId}&guild_id=${guildId}&tier=${tier}`;
-      return res.json({ url: checkoutUrl });
-    }
-
-    // Retrieve guild details to reuse customer if possible
-    const guildRes = await pool.query('SELECT name, stripe_customer_id FROM guilds WHERE id = $1', [guildId]);
-    const guild = guildRes.rows[0];
-
-    if (!guild) {
-      return res.status(404).json({ status: 'error', message: 'Guild not found.' });
-    }
-
-    // Set up product price and description
-    const planName = tier === 'pro' ? "Guild Manager - Pro Subscription" : "Guild Manager - Standard Subscription";
-    const planDesc = tier === 'pro'
-      ? "Accès complet aux fonctionnalités de la guilde, synchronisation Discord complète, et gestion de cotisations Pro."
-      : "Accès standard aux fonctionnalités de la guilde et gestion de cotisations.";
-    const priceAmount = tier === 'pro' ? 499 : 299; // in cents (4.99 EUR / 2.99 EUR)
-
-    // Let compiler infer SessionCreateParams dynamically
-    const sessionParams = {
-      payment_method_types: ['card'] as ('card')[],
-      line_items: [
-        {
-          price_data: {
-            currency: 'eur',
-            product_data: {
-              name: planName,
-              description: planDesc,
-            },
-            unit_amount: priceAmount,
-            recurring: {
-              interval: 'month' as const
-            }
-          },
-          quantity: 1,
-        }
-      ],
-      mode: 'subscription' as const,
-      metadata: {
-        guild_id: guildId,
-        tier: tier
-      },
-      success_url: `${process.env.FRONTEND_URL}/payment?session_id={CHECKOUT_SESSION_ID}&guild_id=${guildId}`,
-      cancel_url: `${process.env.FRONTEND_URL}/payment`,
-      customer: guild.stripe_customer_id || undefined
-    };
-
-    if (!stripe) {
-      return res.status(503).json({ status: 'error', code: 'PAYMENTS_UNAVAILABLE', message: 'Payments are not configured.' });
-    }
-    const session = await stripe.checkout.sessions.create(sessionParams);
-    res.json({ url: session.url });
+    res.json({ url: await createCheckoutSession(req.user!.active_guild_id!, req.body.tier) });
   } catch (error) {
     next(error);
   }
 });
 
-// GET /api/stripe/checkout-session/:sessionId : Valide et active immédiatement l'abonnement
-router.get('/checkout-session/:sessionId', requireActiveGuild, requireSubscriptionManager, async (req, res, next) => {
+// POST /api/stripe/change-plan/preview : montant proratisé d'un changement d'offre
+router.post('/change-plan/preview', ...manager, validate(paidTierBodySchema), async (req, res, next) => {
+  try {
+    res.json(await previewPlanChange(req.user!.active_guild_id!, req.body.tier));
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/stripe/change-plan : change l'offre de l'abonnement en cours, au prorata
+router.post('/change-plan', ...manager, validate(paidTierBodySchema), async (req, res, next) => {
+  try {
+    res.json({ status: 'success', guild: await changePlan(req.user!.active_guild_id!, req.body.tier) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/stripe/pending-invoice : lien de paiement de la facture en retard
+router.get('/pending-invoice', ...manager, async (req, res, next) => {
+  try {
+    res.json({ url: await pendingInvoiceUrl(req.user!.active_guild_id!) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/stripe/checkout-session/:sessionId : valide la session au retour de Stripe
+router.get('/checkout-session/:sessionId', ...manager, validate(checkoutSessionSchema), async (req, res, next) => {
   try {
     const { sessionId } = req.params as { sessionId: string };
-    const guildId = req.user!.active_guild_id;
-
-    if (!guildId) {
-      return res.status(400).json({ status: 'error', message: 'No active guild found in session.' });
-    }
+    const guildId = req.user!.active_guild_id!;
 
     // Session simulée : jamais acceptée en production ni quand Stripe est configuré
     if (sessionId.startsWith('mock_')) {
       if (!mockPaymentsEnabled()) {
-        return res.status(400).json({ status: 'error', code: 'INVALID_SESSION', message: 'Invalid checkout session.' });
+        throw new HttpError(400, 'Invalid checkout session.', 'INVALID_SESSION');
       }
       const tier = String(req.query.tier || 'pro');
-      if (!PAID_TIERS.includes(tier)) {
-        return res.status(400).json({ status: 'error', message: 'Invalid subscription tier selected.' });
-      }
-      const interval = '30 days';
-
       const result = await pool.query(
-        `UPDATE guilds 
-         SET subscription_tier = $1, 
-             subscription_expires_at = CURRENT_TIMESTAMP + $2::interval, 
+        `UPDATE guilds
+         SET subscription_tier = $1,
+             subscription_expires_at = CURRENT_TIMESTAMP + INTERVAL '30 days',
              subscription_status = 'active',
-             updated_at = CURRENT_TIMESTAMP 
-         WHERE id = $3 
+             free_trial_used_at = COALESCE(free_trial_used_at, CURRENT_TIMESTAMP),
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $2
          RETURNING *`,
-        [tier, interval, guildId]
+        [tier, guildId],
       );
-
-      if (result.rowCount === 0) {
-        return res.status(404).json({ status: 'error', message: 'Guild not found.' });
-      }
-
-      return res.json({
-        status: 'success',
-        tier: tier,
-        message: `Subscription successfully mock-activated for tier: ${tier}`,
-        guild: result.rows[0]
-      });
+      if (!result.rows[0]) throw new HttpError(404, 'Guild not found.', 'GUILD_NOT_FOUND');
+      return res.json({ status: 'success', tier, guild: result.rows[0] });
     }
 
-    if (!stripe) {
-      return res.status(400).json({ status: 'error', message: 'Stripe is not configured and session is not a mock ID.' });
-    }
-
+    if (!stripe) throw new HttpError(400, 'Invalid checkout session.', 'INVALID_SESSION');
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-    
-    if (session.payment_status === 'paid' && session.metadata?.guild_id === guildId) {
-      const tier = session.metadata.tier || 'medium';
-      const stripeCustomerId = session.customer as string;
-      const stripeSubscriptionId = session.subscription as string;
-
-      let expiresAt: Date;
-      if (stripeSubscriptionId) {
-        try {
-          const subscription = (await stripe.subscriptions.retrieve(stripeSubscriptionId)) as unknown as { current_period_end: number };
-          const periodEnd = subscription?.current_period_end;
-          if (periodEnd && !isNaN(Number(periodEnd))) {
-            expiresAt = new Date(Number(periodEnd) * 1000);
-          } else {
-            console.warn('[Stripe] Invalid current_period_end returned. Falling back to 30 days.');
-            expiresAt = new Date();
-            expiresAt.setMonth(expiresAt.getMonth() + 1);
-          }
-        } catch (err) {
-          console.error('[Stripe] Error retrieving subscription details. Using 30-day fallback:', err);
-          expiresAt = new Date();
-          expiresAt.setMonth(expiresAt.getMonth() + 1);
-        }
-      } else {
-        expiresAt = new Date();
-        expiresAt.setMonth(expiresAt.getMonth() + 1);
-      }
-
-      // Retrieve current subscription details to cancel old one if upgrading
-      const currentGuildRes = await pool.query('SELECT stripe_subscription_id FROM guilds WHERE id = $1', [guildId]);
-      const oldStripeSubscriptionId = currentGuildRes.rows[0]?.stripe_subscription_id;
-
-      if (oldStripeSubscriptionId && stripeSubscriptionId && oldStripeSubscriptionId !== stripeSubscriptionId) {
-        try {
-          console.log(`[Stripe Upgrade] Cancelling old subscription ${oldStripeSubscriptionId} in favor of new subscription ${stripeSubscriptionId}.`);
-          await stripe.subscriptions.cancel(oldStripeSubscriptionId);
-        } catch (err) {
-          console.error('[Stripe Upgrade] Error cancelling old subscription:', err);
-        }
-      }
-
-      const result = await pool.query(
-        `UPDATE guilds 
-         SET subscription_tier = $1, 
-             subscription_expires_at = $2, 
-             stripe_customer_id = $3,
-             stripe_subscription_id = $4,
-             subscription_status = 'active',
-             updated_at = CURRENT_TIMESTAMP 
-         WHERE id = $5
-         RETURNING *`,
-        [tier, expiresAt, stripeCustomerId, stripeSubscriptionId, guildId]
-      );
-
-      return res.json({
-        status: 'success',
-        tier: tier,
-        expiresAt: expiresAt,
-        message: 'Subscription successfully activated via Stripe.',
-        guild: result.rows[0]
-      });
+    if (session.payment_status !== 'paid' || session.metadata?.guild_id !== guildId) {
+      throw new HttpError(400, 'Payment not completed or guild ID mismatch.', 'PAYMENT_NOT_COMPLETED');
     }
-
-    res.status(400).json({ status: 'error', message: 'Payment not completed or guild ID mismatch.' });
+    const { tier, expiresAt, guild } = await activateCheckoutSession(stripe, session);
+    res.json({ status: 'success', tier, expiresAt, guild });
   } catch (error) {
     next(error);
   }
 });
 
-// POST /api/stripe/webhook : Webhook pour écouter les événements de paiement réels de Stripe
+// POST /api/stripe/webhook : événements Stripe (signature vérifiée sur le corps brut)
 router.post('/webhook', async (req, res) => {
   const sig = req.headers['stripe-signature'];
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -253,15 +131,13 @@ router.post('/webhook', async (req, res) => {
   }
 
   let event;
-
   try {
     if (!sig || !endpointSecret) {
       throw new Error('Webhook signature or endpoint secret missing');
     }
-    const rawBody = (req as any).rawBody;
-    event = stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
+    event = stripe.webhooks.constructEvent((req as any).rawBody, sig, endpointSecret);
   } catch (err: any) {
-    console.error(`❌ Webhook signature verification failed:`, err.message);
+    console.error(`[Stripe Webhook] Signature verification failed:`, err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
@@ -269,206 +145,58 @@ router.post('/webhook', async (req, res) => {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as CheckoutSession;
-        const guildId = session.metadata?.guild_id;
-        const tier = session.metadata?.tier || 'medium';
-        const stripeCustomerId = session.customer as string;
-        const stripeSubscriptionId = session.subscription as string;
-
-        if (guildId) {
-          let expiresAt: Date;
-          if (stripeSubscriptionId) {
-            try {
-              const subscription = (await stripe.subscriptions.retrieve(stripeSubscriptionId)) as unknown as { current_period_end: number };
-              const periodEnd = subscription?.current_period_end;
-              if (periodEnd && !isNaN(Number(periodEnd))) {
-                expiresAt = new Date(Number(periodEnd) * 1000);
-              } else {
-                expiresAt = new Date();
-                expiresAt.setMonth(expiresAt.getMonth() + 1);
-              }
-            } catch (err) {
-              console.error('[Stripe Webhook] Failed to retrieve subscription details. Using 30-day fallback:', err);
-              expiresAt = new Date();
-              expiresAt.setMonth(expiresAt.getMonth() + 1);
-            }
-          } else {
-            expiresAt = new Date();
-            expiresAt.setMonth(expiresAt.getMonth() + 1);
-          }
-
-          // Retrieve current subscription details to cancel old one if upgrading
-          const currentGuildRes = await pool.query('SELECT stripe_subscription_id FROM guilds WHERE id = $1', [guildId]);
-          const oldStripeSubscriptionId = currentGuildRes.rows[0]?.stripe_subscription_id;
-
-          if (oldStripeSubscriptionId && stripeSubscriptionId && oldStripeSubscriptionId !== stripeSubscriptionId) {
-            try {
-              console.log(`[Stripe Webhook Upgrade] Cancelling old subscription ${oldStripeSubscriptionId} in favor of new subscription ${stripeSubscriptionId}.`);
-              await stripe.subscriptions.cancel(oldStripeSubscriptionId);
-            } catch (err) {
-              console.error('[Stripe Webhook Upgrade] Error cancelling old subscription:', err);
-            }
-          }
-
-          await pool.query(
-            `UPDATE guilds 
-             SET subscription_tier = $1, 
-                 subscription_expires_at = $2, 
-                 stripe_customer_id = $3,
-                 stripe_subscription_id = $4,
-                 subscription_status = 'active',
-                 updated_at = CURRENT_TIMESTAMP 
-             WHERE id = $5`,
-            [tier, expiresAt, stripeCustomerId, stripeSubscriptionId, guildId]
-          );
-          console.log(`[Stripe Webhook] Guild ${guildId} subscription activated for tier ${tier}.`);
-        }
-        break;
-      }
-
-      case 'invoice.payment_succeeded': {
-        const invoice = event.data.object as StripeInvoice;
-        const stripeSubscriptionId = (invoice as unknown as { subscription: string | null }).subscription;
-
-        if (stripeSubscriptionId) {
-          let expiresAt: Date;
+        if (session.metadata?.guild_id && session.payment_status === 'paid') {
           try {
-            const subscription = (await stripe.subscriptions.retrieve(stripeSubscriptionId)) as unknown as { current_period_end: number };
-            const periodEnd = subscription?.current_period_end;
-            if (periodEnd && !isNaN(Number(periodEnd))) {
-              expiresAt = new Date(Number(periodEnd) * 1000);
-            } else {
-              expiresAt = new Date();
-              expiresAt.setMonth(expiresAt.getMonth() + 1);
-            }
+            const { tier } = await activateCheckoutSession(stripe, session);
+            console.log(`[Stripe Webhook] Guild ${session.metadata.guild_id} subscription activated for tier ${tier}.`);
           } catch (err) {
-            console.error('[Stripe Webhook] Failed to retrieve subscription details for invoice. Using 30-day fallback:', err);
-            expiresAt = new Date();
-            expiresAt.setMonth(expiresAt.getMonth() + 1);
+            // Métadonnées invalides : inutile de laisser Stripe renvoyer l'événement
+            if (!(err instanceof HttpError)) throw err;
+            console.warn(`[Stripe Webhook] Ignored checkout session ${session.id}: ${err.message}`);
           }
-
-          await pool.query(
-            `UPDATE guilds 
-             SET subscription_expires_at = $1, 
-                 subscription_status = 'active',
-                 updated_at = CURRENT_TIMESTAMP 
-             WHERE stripe_subscription_id = $2`,
-            [expiresAt, stripeSubscriptionId]
-          );
-          console.log(`[Stripe Webhook] Subscription ${stripeSubscriptionId} renewed until ${expiresAt}.`);
         }
         break;
       }
-
+      case 'invoice.payment_succeeded':
+        await applyInvoicePaid(stripe, event.data.object as StripeInvoice);
+        break;
+      case 'customer.subscription.updated':
       case 'customer.subscription.deleted':
-      case 'customer.subscription.updated': {
-        const subscription = event.data.object as StripeSubscription;
-        const stripeSubscriptionId = subscription.id;
-        const status = subscription.status;
-        const subscriptionObj = subscription as unknown as { current_period_end: number | undefined };
-        const periodEnd = subscriptionObj?.current_period_end;
-
-        let expiresAt: Date | null = null;
-        let tier = 'none';
-
-        if (status === 'active' || status === 'trialing') {
-          const guildRes = await pool.query('SELECT subscription_tier FROM guilds WHERE stripe_subscription_id = $1', [stripeSubscriptionId]);
-          tier = guildRes.rows[0]?.subscription_tier || 'medium';
-
-          if (periodEnd && !isNaN(Number(periodEnd))) {
-            expiresAt = new Date(Number(periodEnd) * 1000);
-          } else {
-            expiresAt = new Date();
-            expiresAt.setMonth(expiresAt.getMonth() + 1);
-          }
-        } else {
-          // If canceled, unpaid, past_due, or fully deleted: immediately revoke access and nullify expiration date
-          tier = 'none';
-          expiresAt = null;
-        }
-
-        await pool.query(
-          `UPDATE guilds 
-           SET subscription_status = $1,
-               subscription_expires_at = $2,
-               subscription_tier = $3,
-               updated_at = CURRENT_TIMESTAMP
-           WHERE stripe_subscription_id = $4`,
-          [status, expiresAt, tier, stripeSubscriptionId]
+        await applySubscriptionChange(
+          event.data.object as StripeSubscription,
+          event.type === 'customer.subscription.deleted',
         );
-        console.log(`[Stripe Webhook] Subscription ${stripeSubscriptionId} status updated to ${status}. Tier: ${tier}.`);
         break;
-      }
-
       default:
         console.log(`[Stripe Webhook] Unhandled event type ${event.type}`);
     }
   } catch (error) {
-    console.error(`[Stripe Webhook Error] Failed handling event ${event.type}:`, error);
+    console.error(`[Stripe Webhook] Failed handling event ${event.type}:`, error);
     return res.status(500).json({ status: 'error', message: 'Internal server error handling webhook' });
   }
 
   res.json({ received: true });
 });
 
-// POST /api/stripe/activate-free : Active (ou renouvelle) l'offre gratuite de 30 jours. Refusé
-// si un abonnement payant est encore en cours, pour ne jamais l'écraser.
-router.post('/activate-free', requireActiveGuild, requireSubscriptionManager, async (req, res, next) => {
+// POST /api/stripe/activate-free : essai gratuit de 30 jours, une seule fois par guilde
+router.post('/activate-free', ...manager, async (req, res, next) => {
   try {
-    const guildId = req.user!.active_guild_id;
-    const result = await pool.query(
-      `UPDATE guilds
-       SET subscription_tier = 'free',
-           subscription_expires_at = CURRENT_TIMESTAMP + INTERVAL '30 days',
-           subscription_status = 'active',
-           updated_at = CURRENT_TIMESTAMP
-       WHERE id = $1
-         AND (
-           subscription_tier IS NULL
-           OR subscription_tier IN ('none', 'free')
-           OR subscription_expires_at IS NULL
-           OR subscription_expires_at < CURRENT_TIMESTAMP
-         )
-       RETURNING *`,
-      [guildId],
-    );
-
-    if (result.rowCount === 0) {
-      return res.status(409).json({
-        status: 'error',
-        code: 'ACTIVE_SUBSCRIPTION',
-        message: 'A paid subscription is still active for this guild.',
-      });
-    }
-
-    res.json({ status: 'success', guild: result.rows[0] });
+    res.json({ status: 'success', guild: await activateFreeTrial(req.user!.active_guild_id!) });
   } catch (error) {
     next(error);
   }
 });
 
-// POST /api/stripe/cancel-subscription : Résilie l'abonnement en cours pour la guilde active
-router.post('/cancel-subscription', requireActiveGuild, requireSubscriptionManager, async (req, res, next) => {
+// POST /api/stripe/cancel-subscription : résiliation à la fin de la période payée
+router.post('/cancel-subscription', ...manager, async (req, res, next) => {
   try {
-    const guildId = req.user!.active_guild_id;
+    const guildId = req.user!.active_guild_id!;
+    const guildRes = await pool.query('SELECT stripe_subscription_id FROM guilds WHERE id = $1', [guildId]);
+    if (!guildRes.rows[0]) throw new HttpError(404, 'Guild not found.', 'GUILD_NOT_FOUND');
 
-    if (!guildId) {
-      return res.status(400).json({ status: 'error', message: 'No active guild found in session.' });
-    }
-
-    // Fetch guild subscription details
-    const guildRes = await pool.query('SELECT stripe_subscription_id, subscription_tier FROM guilds WHERE id = $1', [guildId]);
-    const guild = guildRes.rows[0];
-
-    if (!guild) {
-      return res.status(404).json({ status: 'error', message: 'Guild not found.' });
-    }
-
-    const stripeSubscriptionId = guild.stripe_subscription_id;
-
-    // Handle cancel in real Stripe vs Mock
+    const stripeSubscriptionId = guildRes.rows[0].stripe_subscription_id;
     if (stripeSubscriptionId && stripe) {
       try {
-        // Cancel the subscription on Stripe at the end of the current billing period
         await stripe.subscriptions.update(stripeSubscriptionId, { cancel_at_period_end: true });
       } catch (err) {
         console.error('[Stripe Cancel] Error canceling subscription on Stripe:', err);
@@ -476,21 +204,16 @@ router.post('/cancel-subscription', requireActiveGuild, requireSubscriptionManag
       }
     }
 
-    // Update database status to canceled but do NOT reset tier or expires_at so they keep access until next expiration!
+    // Tier and expiry are kept: access stays open until the end of the paid period
     const result = await pool.query(
-      `UPDATE guilds 
+      `UPDATE guilds
        SET subscription_status = 'canceled',
-           updated_at = CURRENT_TIMESTAMP 
-       WHERE id = $1 
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1
        RETURNING *`,
-      [guildId]
+      [guildId],
     );
-
-    res.json({
-      status: 'success',
-      message: 'Subscription successfully canceled',
-      guild: result.rows[0]
-    });
+    res.json({ status: 'success', message: 'Subscription successfully canceled', guild: result.rows[0] });
   } catch (error) {
     next(error);
   }

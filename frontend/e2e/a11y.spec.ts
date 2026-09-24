@@ -132,3 +132,18 @@ test('readable /events/:id › Logs & Analyses (all tabs)', async ({ page }) => 
     await check(page, '/events › logs (error)');
   }
 });
+
+test.describe('public pages', () => {
+  // Logged out: the landing redirects authenticated users to the dashboard
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test('readable / (landing)', async ({ page }) => {
+    // Reduced motion shows every scroll-revealed section at once
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await open(page, '/');
+    await expect(page.locator('app-landing .hero-title')).toBeVisible();
+    await check(page, '/');
+    await page.locator('app-mvp-showcase [role="tab"]').nth(2).click();
+    await check(page, '/ › MVP showcase');
+  });
+});

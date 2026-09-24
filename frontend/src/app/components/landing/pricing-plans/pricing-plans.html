@@ -1,0 +1,34 @@
+<ul class="grid">
+  @for (plan of plans(); track plan.tier; let i = $index) {
+    <li class="card" [class.highlighted]="plan.highlighted" [style.--i]="i">
+      @if (plan.highlighted) {
+        <span class="ribbon">{{ i18n.t('plans.recommended') }}</span>
+      }
+      <h3 class="name">{{ i18n.t('plans.name.' + plan.tier) }}</h3>
+      <p class="tagline">{{ i18n.t('plans.tagline.' + plan.tier) }}</p>
+      <p class="price">
+        <span class="amount">{{ plan.price }}</span>
+        <span class="period">{{ i18n.t('plans.period.' + plan.period) }}</span>
+      </p>
+      <span class="badge">
+        {{ i18n.t(plan.period === 'trial' ? 'plans.no_card' : 'plans.no_commitment') }}
+      </span>
+
+      <ul class="features">
+        @for (f of plan.features; track f.key) {
+          <li [class]="f.status">
+            <span class="mark" role="img" [attr.aria-label]="f.statusLabel">
+              {{ f.status === 'yes' ? '✓' : f.status === 'limit' ? '•' : '✕' }}
+            </span>
+            <span>{{ f.label }}</span>
+          </li>
+        }
+      </ul>
+
+      <button type="button" class="cta" (click)="choose.emit(plan.tier)">
+        {{ i18n.t('plans.cta.' + plan.tier) }}
+        <span class="arrow" aria-hidden="true">→</span>
+      </button>
+    </li>
+  }
+</ul>

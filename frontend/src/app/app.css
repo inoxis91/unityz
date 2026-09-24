@@ -5,14 +5,15 @@
   min-height: 100dvh;
 }
 
-/* ---------- Bandeau Discord ---------- */
-.discord-banner {
+/* ---------- Bandeaux (Discord non lié, paiement en retard) ---------- */
+.app-banner {
+  --banner-accent: var(--ui-discord);
   padding: 10px 20px;
-  border-bottom: 1px solid color-mix(in srgb, var(--ui-discord) 30%, var(--ui-border));
+  border-bottom: 1px solid color-mix(in srgb, var(--banner-accent) 30%, var(--ui-border));
   background:
     radial-gradient(
       60% 200% at 0% 50%,
-      color-mix(in srgb, var(--ui-discord) 18%, transparent),
+      color-mix(in srgb, var(--banner-accent) 18%, transparent),
       transparent 70%
     ),
     var(--ui-surface);
@@ -34,8 +35,16 @@
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  background: var(--ui-discord);
-  box-shadow: 0 6px 14px -6px var(--ui-discord);
+  background: var(--banner-accent);
+  box-shadow: 0 6px 14px -6px var(--banner-accent);
+}
+
+.app-banner.billing {
+  --banner-accent: var(--ui-danger);
+}
+
+.banner-emoji {
+  font-size: 1.1rem;
 }
 
 .banner-icon svg {
@@ -161,7 +170,7 @@ main.full-width {
     padding: 16px 12px 32px;
   }
 
-  .discord-banner {
+  .app-banner {
     padding: 10px 12px;
   }
 
@@ -185,7 +194,7 @@ main.full-width {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .discord-banner {
+  .app-banner {
     animation: none;
   }
 }

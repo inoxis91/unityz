@@ -26,115 +26,64 @@
       <div class="pricing-plans-section">
         <h3>{{ i18n.t('payment.choose_plan') }}</h3>
         <p class="subtitle">{{ i18n.t('payment.select_plan') }}</p>
-        <div class="plans-grid">
-          <!-- Gratuit Card (Trial) -->
-          <div
-            class="plan-card"
-            [class.selected]="selectedTier() === 'free'"
-            (click)="selectTier('free')"
-          >
-            <div class="card-radio">
-              <span class="radio-dot"></span>
-            </div>
-            <div class="plan-info">
-              <div class="plan-title-row">
-                <span class="plan-name">{{ i18n.t('pricing.plan.free') }}</span>
-                <span class="plan-price"
-                  >0 €<span class="price-period">{{ i18n.t('pricing.period.days') }}</span></span
-                >
-              </div>
-              <ul class="plan-features">
-                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.sync') }}</li>
-                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.dashboard') }}</li>
-                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.charspec') }}</li>
-                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roles') }}</li>
-                <li>
-                  <span class="check-partial">⚠</span>
-                  {{ i18n.t('pricing.feat.free_roster_limit') }}
-                </li>
-                <li>
-                  <span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.free_event_limit') }}
-                </li>
-                <li class="excluded">
-                  <span class="cross">❌</span> {{ i18n.t('pricing.feat.discord_no') }}
-                </li>
-                <li>
-                  <span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.fees_basic') }}
-                </li>
-              </ul>
-            </div>
-          </div>
-          <!-- Standard Card -->
-          <div
-            class="plan-card"
-            [class.selected]="selectedTier() === 'medium'"
-            (click)="selectTier('medium')"
-          >
-            <div class="card-radio">
-              <span class="radio-dot"></span>
-            </div>
-            <div class="plan-info">
-              <div class="plan-title-row">
-                <span class="plan-name">{{ i18n.t('pricing.plan.medium') }}</span>
-                <span class="plan-price"
-                  >2.99 €<span class="price-period">{{
-                    i18n.t('pricing.period.months')
-                  }}</span></span
-                >
-              </div>
-              <div class="commitment-badge-small">{{ i18n.t('pricing.commitment_free') }}</div>
-              <ul class="plan-features">
-                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.sync') }}</li>
-                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.dashboard') }}</li>
-                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.charspec') }}</li>
-                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roles') }}</li>
-                <li>
-                  <span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.roster_limit') }}
-                </li>
-                <li>
-                  <span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.event_limit') }}
-                </li>
-                <li class="excluded">
-                  <span class="cross">❌</span> {{ i18n.t('pricing.feat.discord_no') }}
-                </li>
-                <li>
-                  <span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.fees_basic') }}
-                </li>
-              </ul>
-            </div>
-          </div>
-          <!-- Pro Card -->
-          <div
-            class="plan-card pro-card"
-            [class.selected]="selectedTier() === 'pro'"
-            (click)="selectTier('pro')"
-          >
-            <div class="pro-badge">{{ i18n.t('pricing.popular') }}</div>
-            <div class="card-radio">
-              <span class="radio-dot"></span>
-            </div>
-            <div class="plan-info">
-              <div class="plan-title-row">
-                <span class="plan-name">{{ i18n.t('pricing.plan.pro') }}</span>
-                <span class="plan-price"
-                  >4.99 €<span class="price-period">{{
-                    i18n.t('pricing.period.months')
-                  }}</span></span
-                >
-              </div>
-              <div class="commitment-badge-small">{{ i18n.t('pricing.commitment_free') }}</div>
-              <ul class="plan-features">
-                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.sync') }}</li>
-                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.dashboard') }}</li>
-                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.charspec') }}</li>
-                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roles') }}</li>
-                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roster_unlimited') }}</li>
-                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.event_unlimited') }}</li>
-                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.discord_yes') }}</li>
-                <li><span class="check">✓</span> {{ i18n.t('pricing.feat.fees_pro') }}</li>
-              </ul>
-            </div>
-          </div>
+        <div class="plans-grid" role="radiogroup" [attr.aria-label]="i18n.t('payment.choose_plan')">
+          @for (plan of plans(); track plan.tier) {
+            <button
+              type="button"
+              role="radio"
+              class="plan-card"
+              [class.pro-card]="plan.highlighted"
+              [class.selected]="selectedTier() === plan.tier"
+              [attr.aria-checked]="selectedTier() === plan.tier"
+              [disabled]="plan.tier === 'free' && !trialAvailable()"
+              [class.used]="plan.tier === 'free' && !trialAvailable()"
+              (click)="selectTier(plan.tier)"
+            >
+              @if (plan.highlighted) {
+                <span class="pro-badge">{{ i18n.t('plans.recommended') }}</span>
+              }
+              <span class="card-radio" aria-hidden="true">
+                <span class="radio-dot"></span>
+              </span>
+              <span class="plan-info">
+                <span class="plan-title-row">
+                  <span class="plan-name">{{ i18n.t('plans.name.' + plan.tier) }}</span>
+                  <span class="plan-price">
+                    {{ plan.price }}
+                    <span class="price-period">{{ i18n.t('plans.period.' + plan.period) }}</span>
+                  </span>
+                </span>
+                @if (plan.tier === 'free' && !trialAvailable()) {
+                  <span class="commitment-badge-small used-badge">
+                    {{ i18n.t('payment.trial_used') }}
+                  </span>
+                } @else {
+                  <span class="commitment-badge-small">
+                    {{ i18n.t(plan.period === 'trial' ? 'plans.no_card' : 'plans.no_commitment') }}
+                  </span>
+                }
+                <span class="plan-features">
+                  @for (f of plan.features; track f.key) {
+                    <span class="feature" [class.excluded]="f.status === 'no'">
+                      <span
+                        [class]="
+                          f.status === 'yes'
+                            ? 'check'
+                            : f.status === 'limit'
+                              ? 'check-partial'
+                              : 'cross'
+                        "
+                        role="img"
+                        [attr.aria-label]="i18n.t('plans.status.' + f.status)"
+                        >{{ f.status === 'yes' ? '✓' : f.status === 'limit' ? '•' : '✕' }}</span
+                      >
+                      {{ f.label }}
+                    </span>
+                  }
+                </span>
+              </span>
+            </button>
+          }
         </div>
       </div>
       <!-- Right side: Stripe simulation Form or Free Activation -->
@@ -152,59 +101,37 @@
               : i18n.t('payment.secure_payment')
           }}
         </h2>
-        <p class="subtitle">
-          Confirmez votre abonnement
-          <strong>{{
-            selectedTier() === 'pro'
-              ? i18n.t('pricing.plan.pro')
-              : selectedTier() === 'medium'
-                ? i18n.t('pricing.plan.medium')
-                : i18n.t('pricing.plan.free')
-          }}</strong>
-          pour la guilde.
-        </p>
+        <p class="subtitle">{{ confirmText() }}</p>
         <div class="payment-amount-box">
           <span>{{ i18n.t('payment.amount') }}</span>
-          @if (selectedTier() === 'pro') {
-            <strong>4.99 €</strong>
-          }
-          @if (selectedTier() === 'medium') {
-            <strong>2.99 €</strong>
-          }
-          @if (selectedTier() === 'free') {
-            <strong style="color: #10b981">0.00 €</strong>
-          }
+          <strong [class.free-amount]="selectedTier() === 'free'">{{
+            selectedPlan().price
+          }}</strong>
         </div>
         <!-- Stripe redirect info - only for paid plans -->
         @if (selectedTier() !== 'free') {
           <div class="stripe-redirect-info-box">
             <div class="secure-checkout-badge">
-              <span class="secure-icon">🔒</span>
-              <span>Paiement 100% Sécurisé via Stripe</span>
+              <span class="secure-icon" aria-hidden="true">🔒</span>
+              <span>{{ i18n.t('payment.stripe_secure') }}</span>
             </div>
-            <div class="plan-summary-list">
+            <dl class="plan-summary-list">
               <div class="summary-item">
-                <span class="label">Abonnement choisi :</span>
-                <span class="value highlighting">{{
-                  selectedTier() === 'pro' ? 'Pro' : 'Standard'
-                }}</span>
+                <dt class="label">{{ i18n.t('payment.summary_plan') }}</dt>
+                <dd class="value highlighting">{{ i18n.t('plans.name.' + selectedTier()) }}</dd>
               </div>
               <div class="summary-item">
-                <span class="label">Facturation :</span>
-                <span class="value">Mensuelle (sans engagement)</span>
+                <dt class="label">{{ i18n.t('payment.summary_billing') }}</dt>
+                <dd class="value">{{ i18n.t('payment.summary_billing_value') }}</dd>
               </div>
               <div class="summary-item">
-                <span class="label">Prochain prélèvement :</span>
-                <span class="value">Dans 1 mois</span>
+                <dt class="label">{{ i18n.t('payment.summary_next') }}</dt>
+                <dd class="value">{{ i18n.t('payment.summary_next_value') }}</dd>
               </div>
-            </div>
+            </dl>
             <div class="redirect-hint">
-              <span class="info-bubble">ℹ️</span>
-              <p>
-                Vous allez être redirigé vers la plateforme sécurisée de
-                <strong>Stripe</strong> pour finaliser votre transaction. Aucun numéro de carte
-                n'est saisi sur notre site.
-              </p>
+              <span class="info-bubble" aria-hidden="true">ℹ️</span>
+              <p>{{ i18n.t('payment.redirect_hint') }}</p>
             </div>
           </div>
         }
@@ -215,18 +142,18 @@
             <p>{{ i18n.t('payment.free_trial_info') }}</p>
           </div>
         }
-        <button class="btn-pay" [disabled]="isProcessing()" (click)="processPayment()">
+        <button
+          class="btn-pay"
+          [disabled]="isProcessing() || !canSubmit()"
+          (click)="processPayment()"
+        >
           @if (!isProcessing() && selectedTier() === 'free') {
             <span>{{ i18n.t('payment.btn_trial') }}</span>
           }
           @if (!isProcessing() && selectedTier() !== 'free') {
             <span
               >{{ i18n.t('payment.btn_activate') }}
-              {{
-                selectedTier() === 'pro'
-                  ? i18n.t('pricing.plan.pro')
-                  : i18n.t('pricing.plan.medium')
-              }}</span
+              {{ i18n.t('plans.name.' + selectedTier()) }}</span
             >
           }
           @if (isProcessing()) {
@@ -272,31 +199,10 @@
         @if (verificationSuccess() === false) {
           <span class="status-icon error">❌</span>
         }
-        @if (verificationSuccess() === null) {
-          <h3>Vérification de votre paiement...</h3>
-        }
-        @if (verificationSuccess() === true) {
-          <h3>Paiement validé avec succès !</h3>
-        }
-        @if (verificationSuccess() === false) {
-          <h3>Échec de la validation du paiement</h3>
-        }
-        @if (verificationSuccess() === null) {
-          <p class="verification-desc">
-            Veuillez patienter pendant que nous validons votre transaction avec Stripe...
-          </p>
-        }
-        @if (verificationSuccess() === true) {
-          <p class="verification-desc">
-            Votre guilde a bien été mise à niveau. Redirection vers le tableau de bord...
-          </p>
-        }
-        @if (verificationSuccess() === false) {
-          <p class="verification-desc">
-            Une erreur est survenue lors de la vérification de votre paiement. Veuillez réessayer ou
-            contacter le support.
-          </p>
-        }
+        <h3>{{ i18n.t('payment.verify_' + verificationState() + '_title') }}</h3>
+        <p class="verification-desc">
+          {{ i18n.t('payment.verify_' + verificationState() + '_desc') }}
+        </p>
       </div>
     </div>
   }

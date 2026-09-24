@@ -200,7 +200,9 @@
             <div>
               <dt>{{ i18n.t('options.sub.status') }}</dt>
               <dd>
-                @if (user.subscription_status === 'canceled') {
+                @if (user.subscription_status === 'past_due') {
+                  <span class="ui-badge danger">{{ i18n.t('options.sub.status_past_due') }}</span>
+                } @else if (user.subscription_status === 'canceled') {
                   <span class="ui-badge warning">{{
                     i18n
                       .t('options.sub.status_canceled')
@@ -237,30 +239,49 @@
 
           @if (authService.isGMOrOfficer()) {
             <div class="sub-actions">
-              @if (user.subscription_tier !== 'pro') {
-                @if (user.subscription_tier !== 'medium') {
-                  <button
-                    type="button"
-                    class="ui-btn ghost"
-                    [disabled]="isProcessingSub()"
-                    (click)="upgradeSubscription('medium')"
-                  >
-                    {{ i18n.t('options.sub.upgrade_medium') }}
-                  </button>
-                }
+              @if (user.subscription_status === 'past_due') {
                 <button
                   type="button"
                   class="ui-btn accent"
                   [class.loading]="isProcessingSub()"
                   [disabled]="isProcessingSub()"
-                  (click)="upgradeSubscription('pro')"
+                  (click)="payPendingInvoice()"
                 >
-                  {{ i18n.t('options.sub.upgrade_pro') }}
+                  {{ i18n.t('billing.past_due_action') }}
                 </button>
+              } @else {
+                @if (user.subscription_tier !== 'medium') {
+                  <button
+                    type="button"
+                    class="ui-btn ghost"
+                    [disabled]="isProcessingSub()"
+                    (click)="changePlan('medium')"
+                  >
+                    {{
+                      i18n.t(
+                        user.subscription_tier === 'pro'
+                          ? 'options.sub.downgrade_medium'
+                          : 'options.sub.upgrade_medium'
+                      )
+                    }}
+                  </button>
+                }
+                @if (user.subscription_tier !== 'pro') {
+                  <button
+                    type="button"
+                    class="ui-btn accent"
+                    [class.loading]="isProcessingSub()"
+                    [disabled]="isProcessingSub()"
+                    (click)="changePlan('pro')"
+                  >
+                    {{ i18n.t('options.sub.upgrade_pro') }}
+                  </button>
+                }
               }
               @if (
                 (user.subscription_tier === 'medium' || user.subscription_tier === 'pro') &&
-                user.subscription_status !== 'canceled'
+                user.subscription_status !== 'canceled' &&
+                user.subscription_status !== 'past_due'
               ) {
                 <button
                   type="button"

@@ -21,6 +21,10 @@ export interface User {
   subscription_tier?: 'free' | 'medium' | 'pro';
   subscription_expires_at?: string | null;
   subscription_status?: string | null;
+  /** The one-time 30-day trial has not been used by the active guild yet. */
+  active_guild_free_trial_available?: boolean;
+  /** A running Stripe subscription: plan changes are prorated instead of going through Checkout. */
+  active_guild_has_subscription?: boolean;
   created_at?: string;
   updated_at?: string;
   characters?: any[];
@@ -29,7 +33,7 @@ export interface User {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private apiUrl = environment.apiUrl;
@@ -52,7 +56,9 @@ export class AuthService {
   // Miroir de canManageLineup (backend/src/middlewares/auth.ts) : sélection validé / banc des raids
   canManageLineup = computed(() => this.isAdmin() || this.isRaidLeader());
   canManageFees = computed(() => this.isAdmin() || this.isTreasurer());
-  canAccessAdmin = computed(() => this.isAdmin() || this.canManageRosters() || this.canManageFees());
+  canAccessAdmin = computed(
+    () => this.isAdmin() || this.canManageRosters() || this.canManageFees(),
+  );
 
   private router = inject(Router);
 
@@ -63,7 +69,11 @@ export class AuthService {
   }
 
   updateUserRole(userId: string, role: UserRole): Observable<User> {
-    return this.http.patch<User>(`${this.apiUrl}/users/${userId}/role`, { role }, { withCredentials: true });
+    return this.http.patch<User>(
+      `${this.apiUrl}/users/${userId}/role`,
+      { role },
+      { withCredentials: true },
+    );
   }
 
   deleteUser(userId: string): Observable<any> {
@@ -75,31 +85,31 @@ export class AuthService {
   }
 
   getActiveGuild(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/users/me/active-guild`, { withCredentials: true }).pipe(
-      tap(guild => this.currentGuild.set(guild))
-    );
+    return this.http
+      .get<any>(`${this.apiUrl}/users/me/active-guild`, { withCredentials: true })
+      .pipe(tap((guild) => this.currentGuild.set(guild)));
   }
 
   setActiveGuild(guildId: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/users/active-guild`, { guildId }, { withCredentials: true }).pipe(
-      switchMap(res => this.checkAuth().pipe(
-        map(() => res)
-      ))
-    );
+    return this.http
+      .post<any>(`${this.apiUrl}/users/active-guild`, { guildId }, { withCredentials: true })
+      .pipe(switchMap((res) => this.checkAuth().pipe(map(() => res))));
   }
 
   importCharacters(characters: any[]): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/users/import-characters`, { characters }, { withCredentials: true }).pipe(
-      switchMap(res => this.checkAuth().pipe(
-        map(() => res)
-      ))
-    );
+    return this.http
+      .post<any>(
+        `${this.apiUrl}/users/import-characters`,
+        { characters },
+        { withCredentials: true },
+      )
+      .pipe(switchMap((res) => this.checkAuth().pipe(map(() => res))));
   }
 
   checkAuth(): Observable<User> {
     return this.http.get<User>(`${this.apiUrl}/users/me`, { withCredentials: true }).pipe(
       tap({
-        next: user => {
+        next: (user) => {
           this.currentUser.set(user);
           if (user && user.active_guild_id) {
             this.getActiveGuild().subscribe();
@@ -110,37 +120,33 @@ export class AuthService {
         error: () => {
           this.currentUser.set(null);
           this.currentGuild.set(null);
-        }
-      })
+        },
+      }),
     );
   }
 
   updateDiscordId(discordId: string | null): Observable<User> {
-    return this.http.patch<User>(`${this.apiUrl}/users/discord`, { discordId }, { withCredentials: true }).pipe(
-      switchMap(user => this.checkAuth().pipe(
-        map(() => user)
-      ))
-    );
+    return this.http
+      .patch<User>(`${this.apiUrl}/users/discord`, { discordId }, { withCredentials: true })
+      .pipe(switchMap((user) => this.checkAuth().pipe(map(() => user))));
   }
 
   updateBirthday(birthday: string | null): Observable<User> {
-    return this.http.patch<User>(`${this.apiUrl}/users/birthday`, { birthday }, { withCredentials: true }).pipe(
-      switchMap(user => this.checkAuth().pipe(
-        map(() => user)
-      ))
-    );
+    return this.http
+      .patch<User>(`${this.apiUrl}/users/birthday`, { birthday }, { withCredentials: true })
+      .pipe(switchMap((user) => this.checkAuth().pipe(map(() => user))));
   }
 
   updateProfessions(professions: string[]): Observable<User> {
-    return this.http.patch<User>(`${this.apiUrl}/users/professions`, { professions }, { withCredentials: true }).pipe(
-      switchMap(user => this.checkAuth().pipe(
-        map(() => user)
-      ))
-    );
+    return this.http
+      .patch<User>(`${this.apiUrl}/users/professions`, { professions }, { withCredentials: true })
+      .pipe(switchMap((user) => this.checkAuth().pipe(map(() => user))));
   }
 
   getGuildBirthdays(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/users/active-guild/birthdays`, { withCredentials: true });
+    return this.http.get<any[]>(`${this.apiUrl}/users/active-guild/birthdays`, {
+      withCredentials: true,
+    });
   }
 
   getAttendance(): Observable<{
@@ -153,7 +159,9 @@ export class AuthService {
   }
 
   getGuildAttendance(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/users/active-guild/attendance`, { withCredentials: true });
+    return this.http.get<any[]>(`${this.apiUrl}/users/active-guild/attendance`, {
+      withCredentials: true,
+    });
   }
 
   linkDiscord(): void {
@@ -173,13 +181,15 @@ export class AuthService {
   }
 
   mockLogin(mockUserId: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/mock-auth/login`, { mockUserId }, { withCredentials: true }).pipe(
-      tap(res => {
-        if (res.status === 'success') {
-          this.currentUser.set(res.user);
-        }
-      })
-    );
+    return this.http
+      .post<any>(`${this.apiUrl}/mock-auth/login`, { mockUserId }, { withCredentials: true })
+      .pipe(
+        tap((res) => {
+          if (res.status === 'success') {
+            this.currentUser.set(res.user);
+          }
+        }),
+      );
   }
 
   logout(): void {
@@ -189,12 +199,20 @@ export class AuthService {
     });
   }
 
-  declareAbsence(startDate: string, endDate: string | null, reason?: string | null): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/users/me/absences`, {
-      start_date: startDate,
-      end_date: endDate,
-      reason
-    }, { withCredentials: true });
+  declareAbsence(
+    startDate: string,
+    endDate: string | null,
+    reason?: string | null,
+  ): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/users/me/absences`,
+      {
+        start_date: startDate,
+        end_date: endDate,
+        reason,
+      },
+      { withCredentials: true },
+    );
   }
 
   getUserAbsences(): Observable<any[]> {
@@ -202,14 +220,20 @@ export class AuthService {
   }
 
   deleteUserAbsence(absenceId: string): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/users/me/absences/${absenceId}`, { withCredentials: true });
+    return this.http.delete<any>(`${this.apiUrl}/users/me/absences/${absenceId}`, {
+      withCredentials: true,
+    });
   }
 
   getGuildAbsences(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/users/active-guild/absences`, { withCredentials: true });
+    return this.http.get<any[]>(`${this.apiUrl}/users/active-guild/absences`, {
+      withCredentials: true,
+    });
   }
 
   deleteGuildAbsenceAdmin(absenceId: string): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/users/active-guild/absences/${absenceId}`, { withCredentials: true });
+    return this.http.delete<any>(`${this.apiUrl}/users/active-guild/absences/${absenceId}`, {
+      withCredentials: true,
+    });
   }
 }

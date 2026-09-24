@@ -40,6 +40,7 @@ export const initDb = async (retries = 5, delay = 3000): Promise<void> => {
         stripe_customer_id VARCHAR(255),
         stripe_subscription_id VARCHAR(255),
         subscription_status VARCHAR(50),
+        free_trial_used_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NULL,
         discord_enabled BOOLEAN DEFAULT FALSE,
         discord_guild_id VARCHAR(255),
         discord_events_channel_id VARCHAR(255),
@@ -79,6 +80,13 @@ export const initDb = async (retries = 5, delay = 3000): Promise<void> => {
 
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='subscription_status') THEN
           ALTER TABLE guilds ADD COLUMN subscription_status VARCHAR(50);
+        END IF;
+
+        -- Essai gratuit unique par guilde : toute guilde ayant déjà eu une offre l'a consommé
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='free_trial_used_at') THEN
+          ALTER TABLE guilds ADD COLUMN free_trial_used_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NULL;
+          UPDATE guilds SET free_trial_used_at = COALESCE(updated_at, CURRENT_TIMESTAMP)
+          WHERE subscription_tier IN ('free', 'medium', 'pro') OR stripe_subscription_id IS NOT NULL;
         END IF;
 
         -- Migrate existing is_paid data

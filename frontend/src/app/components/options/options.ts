@@ -18,6 +18,7 @@ import { I18nService } from '../../services/i18n';
 import { CharacterManagerComponent } from '../character-manager/character-manager';
 import { ToastService } from '../../services/toast';
 import { ConfirmService } from '../../services/confirm';
+import { BillingService, PaidTier } from '../../services/billing';
 import { environment } from '../../../environments/environment';
 import { PageHeaderComponent } from '../../shared/ui/page-header/page-header';
 
@@ -39,6 +40,7 @@ export class OptionsComponent implements OnInit {
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
   private confirmService = inject(ConfirmService);
+  private billing = inject(BillingService);
   private apiUrl = environment.apiUrl;
   
   isPro = computed(() => this.authService.currentUser()?.subscription_tier === 'pro');
@@ -217,25 +219,20 @@ export class OptionsComponent implements OnInit {
     return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
   }
 
-  upgradeSubscription(tier: 'medium' | 'pro') {
+  /** Prorated change of the running subscription, or Stripe Checkout for a first subscription. */
+  async changePlan(tier: PaidTier) {
     if (this.isProcessingSub()) return;
     this.isProcessingSub.set(true);
+    const viaCheckout = !this.authService.currentUser()?.active_guild_has_subscription;
+    const done = await this.billing.choosePaidPlan(tier);
+    // Checkout leaves for Stripe: the spinner stays until the page unloads
+    if (!(done && viaCheckout)) this.isProcessingSub.set(false);
+  }
 
-    this.http.post<{ url: string }>(`${this.apiUrl}/stripe/create-checkout-session`, { tier }, { withCredentials: true }).subscribe({
-      next: (res) => {
-        if (res && res.url) {
-          window.location.href = res.url;
-        } else {
-          this.toast.error(this.i18n.t('payment.error'));
-          this.isProcessingSub.set(false);
-        }
-      },
-      error: (err) => {
-        console.error('Error upgrading subscription', err);
-        this.toast.error(this.i18n.t('payment.error'));
-        this.isProcessingSub.set(false);
-      }
-    });
+  async payPendingInvoice() {
+    if (this.isProcessingSub()) return;
+    this.isProcessingSub.set(true);
+    if (!(await this.billing.payPendingInvoice())) this.isProcessingSub.set(false);
   }
 
   cancelSubscription() {

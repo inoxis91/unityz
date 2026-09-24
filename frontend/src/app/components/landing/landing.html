@@ -1,174 +1,275 @@
-<div class="landing-container">
-  <!-- Header -->
-  <header class="landing-header">
-    <div class="logo">
-      <img src="favicon.ico" class="logo-img" alt="Logo">
-      <span>Guild Manager</span>
-      <span class="logo-beta">BETA</span>
-    </div>
-    <div class="header-actions">
-      <!-- Lang Selector -->
-      <div class="lang-selector">
-        <button [class.active]="i18n.currentLocale() === 'fr'" (click)="changeLang('fr')">FR</button>
-        <button [class.active]="i18n.currentLocale() === 'en'" (click)="changeLang('en')">EN</button>
+<div class="page">
+  <span #topSentinel class="top-sentinel" aria-hidden="true"></span>
+  <div class="backdrop" aria-hidden="true">
+    <span class="orb orb-blue"></span>
+    <span class="orb orb-violet"></span>
+    <span class="orb orb-gold"></span>
+    <span class="grid-lines"></span>
+  </div>
+
+  <header class="header" [class.scrolled]="scrolled()">
+    <div class="header-inner">
+      <a class="brand" href="/">
+        <img src="favicon.ico" alt="" width="28" height="28" />
+        <span class="brand-name">Guild Manager</span>
+        <span class="beta">BETA</span>
+      </a>
+
+      <nav class="nav" [attr.aria-label]="i18n.t('landing.nav.label')">
+        <button type="button" (click)="scrollTo('features')">
+          {{ i18n.t('landing.nav.features') }}
+        </button>
+        <button type="button" (click)="scrollTo('mvp')">{{ i18n.t('landing.nav.mvp') }}</button>
+        <button type="button" (click)="scrollTo('pricing')">
+          {{ i18n.t('landing.nav.pricing') }}
+        </button>
+        <button type="button" (click)="scrollTo('faq')">{{ i18n.t('landing.nav.faq') }}</button>
+      </nav>
+
+      <div class="header-actions">
+        <div class="lang" role="group" [attr.aria-label]="i18n.t('landing.nav.lang')">
+          <button
+            type="button"
+            lang="fr"
+            [class.active]="i18n.currentLocale() === 'fr'"
+            [attr.aria-pressed]="i18n.currentLocale() === 'fr'"
+            (click)="changeLang('fr')"
+          >
+            FR
+          </button>
+          <button
+            type="button"
+            lang="en"
+            [class.active]="i18n.currentLocale() === 'en'"
+            [attr.aria-pressed]="i18n.currentLocale() === 'en'"
+            (click)="changeLang('en')"
+          >
+            EN
+          </button>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" (click)="start()">
+          {{ i18n.t('nav.login') }}
+        </button>
       </div>
-      <button class="btn-login-nav" (click)="login()">{{ i18n.t('nav.login') }}</button>
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <section class="hero-section">
-    <div class="hero-content">
-      <h1 class="hero-title">{{ i18n.t('landing.hero.title') }}</h1>
-      <p class="hero-subtitle">{{ i18n.t('landing.hero.subtitle') }}</p>
-      <div class="hero-buttons">
-        <button class="btn-primary" (click)="login()">{{ i18n.t('landing.hero.cta.start') }}</button>
-        <button (click)="scrollToPricing()" class="btn-secondary">{{ i18n.t('landing.hero.cta.demo') }}</button>
-      </div>
-    </div>
-    <div class="hero-glow-sphere"></div>
-  </section>
-
-  <!-- Features Grid -->
-  <section class="features-section">
-    <div class="features-grid">
-      <!-- Sync -->
-      <div class="feature-card">
-        <div class="feature-icon">⚡</div>
-        <h3>{{ i18n.t('landing.feature.sync.title') }}</h3>
-        <p>{{ i18n.t('landing.feature.sync.desc') }}</p>
-      </div>
-
-      <!-- Rosters -->
-      <div class="feature-card">
-        <div class="feature-icon">👥</div>
-        <h3>{{ i18n.t('landing.feature.roster.title') }}</h3>
-        <p>{{ i18n.t('landing.feature.roster.desc') }}</p>
-      </div>
-
-      <!-- Calendar -->
-      <div class="feature-card">
-        <div class="feature-icon">📅</div>
-        <h3>{{ i18n.t('landing.feature.calendar.title') }}</h3>
-        <p>{{ i18n.t('landing.feature.calendar.desc') }}</p>
-      </div>
-
-      <!-- Fees -->
-      <div class="feature-card">
-        <div class="feature-icon">💰</div>
-        <h3>{{ i18n.t('landing.feature.fees.title') }}</h3>
-        <p>{{ i18n.t('landing.feature.fees.desc') }}</p>
-      </div>
-
-      <!-- Discord Push -->
-      <div class="feature-card">
-        <div class="feature-icon">💬</div>
-        <h3>{{ i18n.t('landing.feature.push.title') }}</h3>
-        <p>{{ i18n.t('landing.feature.push.desc') }}</p>
-      </div>
-
-      <!-- Dashboard 360 -->
-      <div class="feature-card">
-        <div class="feature-icon">📊</div>
-        <h3>{{ i18n.t('landing.feature.dashboard.title') }}</h3>
-        <p>{{ i18n.t('landing.feature.dashboard.desc') }}</p>
-      </div>
-
-      <!-- Character Spec -->
-      <div class="feature-card">
-        <div class="feature-icon">⚔️</div>
-        <h3>{{ i18n.t('landing.feature.charspec.title') }}</h3>
-        <p>{{ i18n.t('landing.feature.charspec.desc') }}</p>
-      </div>
-
-      <!-- Roles -->
-      <div class="feature-card">
-        <div class="feature-icon">👑</div>
-        <h3>{{ i18n.t('landing.feature.roles.title') }}</h3>
-        <p>{{ i18n.t('landing.feature.roles.desc') }}</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Pricing -->
-  <section id="pricing" class="pricing-section">
-    <h2 class="pricing-title">{{ i18n.t('landing.pricing.title') }}</h2>
-    <p class="pricing-subtitle">{{ i18n.t('landing.pricing.subtitle') }}</p>
-
-    <div class="pricing-cards-grid">
-      <!-- Trial Card -->
-      <div class="pricing-card">
-        <div class="pricing-header">
-          <h3>{{ i18n.t('pricing.plan.free') }}</h3>
-          <div class="price-container">
-            <span class="price-val">0 €</span>
-            <span class="price-period">{{ i18n.t('pricing.period.days') }}</span>
-          </div>
+  <div class="content">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-copy">
+        <button type="button" class="hero-badge" (click)="scrollTo('mvp')">
+          <span class="pulse" aria-hidden="true"></span>
+          {{ i18n.t('landing.hero.badge') }}
+          <span aria-hidden="true">→</span>
+        </button>
+        <h1 class="hero-title">
+          <span class="line">{{ i18n.t('landing.hero.title_1') }}</span>
+          <span class="line gradient">{{ i18n.t('landing.hero.title_2') }}</span>
+        </h1>
+        <p class="hero-subtitle">{{ i18n.t('landing.hero.subtitle') }}</p>
+        <div class="hero-ctas">
+          <button type="button" class="btn btn-primary btn-lg" (click)="start('free')">
+            {{ i18n.t('landing.hero.cta_start') }}
+            <span class="arrow" aria-hidden="true">→</span>
+          </button>
+          <button type="button" class="btn btn-ghost btn-lg" (click)="scrollTo('pricing')">
+            {{ i18n.t('landing.hero.cta_pricing') }}
+          </button>
         </div>
-        <ul class="pricing-features">
-          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.sync') }}</li>
-          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.dashboard') }}</li>
-          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.charspec') }}</li>
-          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roles') }}</li>
-          <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.free_roster_limit') }}</li>
-          <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.free_event_limit') }}</li>
-          <li class="excluded"><span class="cross">❌</span> {{ i18n.t('pricing.feat.discord_no') }}</li>
-          <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.fees_basic') }}</li>
+        <ul class="trust">
+          <li><span aria-hidden="true">🔐</span> {{ i18n.t('landing.hero.trust_bnet') }}</li>
+          <li><span aria-hidden="true">💳</span> {{ i18n.t('landing.hero.trust_card') }}</li>
+          <li><span aria-hidden="true">👥</span> {{ i18n.t('landing.hero.trust_members') }}</li>
         </ul>
-        <button class="btn-pricing-cta" (click)="login()">{{ i18n.t('pricing.cta.free') }}</button>
       </div>
 
-      <!-- Standard Card -->
-      <div class="pricing-card">
-        <div class="pricing-header">
-          <h3>{{ i18n.t('pricing.plan.medium') }}</h3>
-          <div class="price-container">
-            <span class="price-val">2.99 €</span>
-            <span class="price-period">{{ i18n.t('pricing.period.months') }}</span>
-          </div>
-          <div class="commitment-badge">{{ i18n.t('pricing.commitment_free') }}</div>
+      <div class="hero-visual">
+        <div class="hero-tilt">
+          <app-shot-frame
+            path="events/raid-mythique"
+            [source]="hero()"
+            [alt]="i18n.t('landing.hero.shot_alt')"
+            [priority]="true"
+            sizes="(max-width: 820px) 100vw, 1100px"
+          />
         </div>
-        <ul class="pricing-features">
-          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.sync') }}</li>
-          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.dashboard') }}</li>
-          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.charspec') }}</li>
-          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roles') }}</li>
-          <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.roster_limit') }}</li>
-          <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.event_limit') }}</li>
-          <li class="excluded"><span class="cross">❌</span> {{ i18n.t('pricing.feat.discord_no') }}</li>
-          <li><span class="check-partial">⚠</span> {{ i18n.t('pricing.feat.fees_basic') }}</li>
-        </ul>
-        <button class="btn-pricing-cta" (click)="login()">{{ i18n.t('pricing.cta.medium') }}</button>
+        <div class="float-card float-discord" aria-hidden="true">
+          <span class="float-icon discord">💬</span>
+          <span>
+            <strong>{{ i18n.t('landing.hero.chip_discord') }}</strong>
+            <small>{{ i18n.t('landing.hero.chip_discord_sub') }}</small>
+          </span>
+        </div>
+        <div class="float-card float-mvp" aria-hidden="true">
+          <span class="float-icon gold">🏆</span>
+          <span>
+            <strong>{{ i18n.t('landing.hero.chip_mvp') }}</strong>
+            <small>{{ i18n.t('landing.hero.chip_mvp_sub') }}</small>
+          </span>
+        </div>
       </div>
+    </section>
 
-      <!-- Pro Card -->
-      <div class="pricing-card pro-card-highlight">
-        <div class="pro-tag">{{ i18n.t('pricing.popular') }}</div>
-        <div class="pricing-header">
-          <h3>{{ i18n.t('pricing.plan.pro') }}</h3>
-          <div class="price-container">
-            <span class="price-val">4.99 €</span>
-            <span class="price-period">{{ i18n.t('pricing.period.months') }}</span>
-          </div>
-          <div class="commitment-badge">{{ i18n.t('pricing.commitment_free') }}</div>
-        </div>
-        <ul class="pricing-features">
-          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.sync') }}</li>
-          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.dashboard') }}</li>
-          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.charspec') }}</li>
-          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roles') }}</li>
-          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.roster_unlimited') }}</li>
-          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.event_unlimited') }}</li>
-          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.discord_yes') }}</li>
-          <li><span class="check">✓</span> {{ i18n.t('pricing.feat.fees_pro') }}</li>
-        </ul>
-        <button class="btn-pricing-cta btn-pro-cta" (click)="login()">{{ i18n.t('pricing.cta.pro') }}</button>
+    <!-- Feature marquee -->
+    <section class="marquee" [attr.aria-label]="i18n.t('landing.chips.label')">
+      <ul class="marquee-track">
+        @for (chip of chips; track chip[1]) {
+          <li class="chip">
+            <span aria-hidden="true">{{ chip[0] }}</span> {{ i18n.t('landing.chip.' + chip[1]) }}
+          </li>
+        }
+      </ul>
+      <!-- Second copy makes the loop seamless; hidden from assistive tech -->
+      <ul class="marquee-track" aria-hidden="true">
+        @for (chip of chips; track chip[1]) {
+          <li class="chip">
+            <span>{{ chip[0] }}</span> {{ i18n.t('landing.chip.' + chip[1]) }}
+          </li>
+        }
+      </ul>
+    </section>
+
+    <!-- MVP spotlight -->
+    <section id="mvp" class="section">
+      <div class="section-head" appReveal>
+        <span class="eyebrow gold">{{ i18n.t('landing.mvp.eyebrow') }}</span>
+        <h2>{{ i18n.t('landing.mvp.title') }}</h2>
+        <p>{{ i18n.t('landing.mvp.subtitle') }}</p>
       </div>
+      <app-mvp-showcase appReveal />
+    </section>
+
+    <!-- Feature rows -->
+    <section id="features" class="section">
+      @for (row of rows(); track row.id; let odd = $odd) {
+        <article class="feature-row" [class.reverse]="odd" appReveal>
+          <div class="feature-copy">
+            <span class="eyebrow">
+              <span aria-hidden="true">{{ row.icon }}</span>
+              {{ i18n.t('landing.' + row.id + '.eyebrow') }}
+            </span>
+            <h2>{{ i18n.t('landing.' + row.id + '.title') }}</h2>
+            <p>{{ i18n.t('landing.' + row.id + '.desc') }}</p>
+            <ul class="points">
+              @for (point of row.points; track point.label; let i = $index) {
+                <li [style.--i]="i">
+                  <span class="check" aria-hidden="true">✓</span>
+                  <span>{{ i18n.t(point.label) }}</span>
+                  @if (point.pro) {
+                    <span class="pro-tag">{{ i18n.t('landing.pro_only') }}</span>
+                  }
+                </li>
+              }
+            </ul>
+          </div>
+          <app-shot-frame
+            class="feature-shot"
+            [path]="row.path"
+            [source]="row.source"
+            [alt]="i18n.t('landing.' + row.id + '.shot_alt')"
+            sizes="(max-width: 1100px) 100vw, 700px"
+          />
+        </article>
+      }
+    </section>
+
+    <!-- Everything else -->
+    <section class="section">
+      <div class="section-head" appReveal>
+        <span class="eyebrow">{{ i18n.t('landing.more.eyebrow') }}</span>
+        <h2>{{ i18n.t('landing.more.title') }}</h2>
+        <p>{{ i18n.t('landing.more.subtitle') }}</p>
+      </div>
+      <ul class="more-grid" appReveal>
+        @for (item of more; track item[1]; let i = $index) {
+          <li class="more-card" [style.--i]="i">
+            <span class="more-icon" aria-hidden="true">{{ item[0] }}</span>
+            <h3>
+              {{ i18n.t('landing.more.' + item[1] + '_title') }}
+              @if (item[2]) {
+                <span class="pro-tag">{{ i18n.t('landing.pro_only') }}</span>
+              }
+            </h3>
+            <p>{{ i18n.t('landing.more.' + item[1] + '_desc') }}</p>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <!-- Steps -->
+    <section class="section">
+      <div class="section-head" appReveal>
+        <span class="eyebrow">{{ i18n.t('landing.steps.eyebrow') }}</span>
+        <h2>{{ i18n.t('landing.steps.title') }}</h2>
+      </div>
+      <ol class="steps" appReveal>
+        @for (step of ['one', 'two', 'three']; track step; let i = $index) {
+          <li class="step" [style.--i]="i">
+            <span class="step-num" aria-hidden="true">{{ i + 1 }}</span>
+            <h3>{{ i18n.t('landing.steps.' + step + '_title') }}</h3>
+            <p>{{ i18n.t('landing.steps.' + step + '_desc') }}</p>
+          </li>
+        }
+      </ol>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="section">
+      <div class="section-head" appReveal>
+        <span class="eyebrow">{{ i18n.t('landing.pricing.eyebrow') }}</span>
+        <h2>{{ i18n.t('landing.pricing.title') }}</h2>
+        <p>{{ i18n.t('landing.pricing.subtitle') }}</p>
+      </div>
+      <app-pricing-plans appReveal (choose)="start($event)" />
+      <p class="pricing-note">
+        <span aria-hidden="true">🔒</span> {{ i18n.t('landing.pricing.note') }}
+      </p>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="section section-narrow">
+      <div class="section-head" appReveal>
+        <span class="eyebrow">{{ i18n.t('landing.faq.eyebrow') }}</span>
+        <h2>{{ i18n.t('landing.faq.title') }}</h2>
+      </div>
+      <div class="faq" appReveal>
+        @for (n of faq; track n) {
+          <details class="faq-item" name="faq">
+            <summary>
+              {{ i18n.t('landing.faq.q' + n) }}
+              <span class="faq-toggle" aria-hidden="true"></span>
+            </summary>
+            <p>{{ i18n.t('landing.faq.a' + n) }}</p>
+          </details>
+        }
+      </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="section">
+      <div class="final-cta" appReveal>
+        <h2>{{ i18n.t('landing.cta.title') }}</h2>
+        <p>{{ i18n.t('landing.cta.subtitle') }}</p>
+        <button type="button" class="btn btn-primary btn-lg" (click)="start('free')">
+          {{ i18n.t('landing.cta.button') }}
+          <span class="arrow" aria-hidden="true">→</span>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img src="favicon.ico" alt="" width="22" height="22" />
+        <span>© {{ year }} Guild Manager</span>
+      </div>
+      <nav class="footer-links" aria-label="Legal">
+        <a routerLink="/terms">{{ i18n.t('footer.terms') }}</a>
+        <a routerLink="/privacy">{{ i18n.t('footer.privacy') }}</a>
+      </nav>
     </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="landing-footer">
-    <p>© 2026 Guild Manager. World of Warcraft, Warcraft and Blizzard Entertainment are trademarks or registered trademarks of Blizzard Entertainment, Inc.</p>
+    <p class="disclaimer">{{ i18n.t('landing.footer.disclaimer') }}</p>
   </footer>
 </div>

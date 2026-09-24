@@ -1,0 +1,74 @@
+<div class="layout">
+  <div class="side">
+    <div
+      class="tabs"
+      role="tablist"
+      [attr.aria-label]="i18n.t('landing.mvp.tabs_label')"
+      (keydown)="onKeydown($event)"
+    >
+      @for (tab of tabs; track tab.id; let i = $index) {
+        <button
+          type="button"
+          role="tab"
+          class="tab"
+          [id]="'mvp-tab-' + tab.id"
+          [class.active]="active() === i"
+          [attr.aria-selected]="active() === i"
+          [attr.aria-controls]="'mvp-panel'"
+          [tabIndex]="active() === i ? 0 : -1"
+          [style.--i]="i"
+          (click)="select(i)"
+        >
+          <span class="tab-icon" aria-hidden="true">{{ tab.icon }}</span>
+          <span class="tab-text">
+            <span class="tab-label">{{ i18n.t(tab.label) }}</span>
+            <span class="tab-desc">{{ i18n.t(tab.desc) }}</span>
+          </span>
+          @if (active() === i && running()) {
+            <span class="progress" aria-hidden="true"></span>
+          }
+        </button>
+      }
+    </div>
+
+    <!-- Compact layouts only show the labels in the tabs -->
+    <p class="active-desc" aria-hidden="true">{{ i18n.t(current().desc) }}</p>
+
+    <button
+      type="button"
+      class="autoplay"
+      [attr.aria-label]="
+        i18n.t(paused() ? 'landing.mvp.autoplay_play' : 'landing.mvp.autoplay_pause')
+      "
+      [title]="i18n.t(paused() ? 'landing.mvp.autoplay_play' : 'landing.mvp.autoplay_pause')"
+      (click)="togglePause()"
+    >
+      <span aria-hidden="true">{{ paused() ? '▶' : '❚❚' }}</span>
+    </button>
+  </div>
+
+  <app-shot-frame
+    id="mvp-panel"
+    role="tabpanel"
+    class="frame"
+    path="events/raid-mythique"
+    [attr.aria-labelledby]="'mvp-tab-' + current().id"
+  >
+    <div class="stack">
+      @for (src of sources(); track src.src; let i = $index) {
+        <img
+          loading="lazy"
+          decoding="async"
+          sizes="(max-width: 1100px) 100vw, 760px"
+          [attr.srcset]="src.srcset"
+          [src]="src.src"
+          [width]="src.width"
+          [height]="src.height"
+          [alt]="src.alt"
+          [class.visible]="active() === i"
+          [attr.aria-hidden]="active() !== i"
+        />
+      }
+    </div>
+  </app-shot-frame>
+</div>

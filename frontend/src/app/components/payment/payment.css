@@ -67,7 +67,7 @@
   gap: 2.5rem;
   max-width: 1000px;
   width: 100%;
-  align-items: stretch;
+  align-items: flex-start;
 }
 
 /* Left side: Pricing plans */
@@ -102,6 +102,10 @@
 .plan-card {
   display: flex;
   gap: 1.25rem;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  text-align: left;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
@@ -111,9 +115,25 @@
   transition: all 0.25s ease;
 }
 
-.plan-card:hover {
+.plan-card:not(.used):hover {
   background: rgba(255, 255, 255, 0.04);
   border-color: rgba(59, 130, 246, 0.3);
+}
+
+.plan-card.used {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.used-badge {
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.plan-card:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 3px;
 }
 
 .plan-card.selected {
@@ -172,9 +192,22 @@
 /* Plan details */
 .plan-info {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.free-amount {
+  color: #10b981;
+}
+
+.plan-summary-list,
+.plan-summary-list dd {
+  margin: 0;
 }
 
 .plan-title-row {
+  align-self: stretch;
   display: flex;
   justify-content: space-between;
   align-items: baseline;
@@ -215,21 +248,21 @@
 }
 
 /* Feature status icons */
-.plan-features li .check {
+.plan-features .check {
   color: #10b981;
   font-weight: 800;
   margin-right: 0.5rem;
   font-size: 0.9rem;
 }
 
-.plan-features li .check-partial {
+.plan-features .check-partial {
   color: #f59e0b; /* Amber/Orange */
   font-weight: 800;
   margin-right: 0.5rem;
   font-size: 0.9rem;
 }
 
-.plan-features li .cross {
+.plan-features .cross {
   margin-right: 0.5rem;
   font-size: 0.85rem;
 }
@@ -243,21 +276,23 @@
   gap: 0.5rem;
 }
 
-.plan-features li {
+.plan-features .feature {
   font-size: 0.85rem;
   color: #cbd5e1;
   display: flex;
   align-items: center;
 }
 
-.plan-features li.excluded {
+.plan-features .feature.excluded {
   color: #6b7280;
   text-decoration: line-through;
 }
 
-/* Right side: Stripe Form */
+/* Right side: Stripe Form, kept in view (with its pay button) while browsing the plans */
 .stripe-payment-form {
   flex: 0.9;
+  position: sticky;
+  top: 1.5rem;
   background: #111827;
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 16px;
@@ -388,7 +423,7 @@
   align-items: center;
   box-shadow: 0 4px 12px rgba(99, 91, 255, 0.3);
   transition: all 0.2s ease;
-  margin-top: auto;
+  margin-top: 1.5rem;
 }
 
 .btn-pay:hover {
@@ -559,6 +594,10 @@
   .pricing-plans-section, .stripe-payment-form {
     flex: none;
     width: 100%;
+  }
+
+  .stripe-payment-form {
+    position: static;
   }
 }
 

@@ -35,6 +35,10 @@ router.post('/login', async (req, res, next) => {
             subscription_tier = EXCLUDED.subscription_tier, 
             subscription_expires_at = EXCLUDED.subscription_expires_at, 
             discord_enabled = EXCLUDED.discord_enabled,
+            -- Chaque connexion repart d'une guilde vierge côté facturation (essai gratuit rejouable)
+            subscription_status = NULL,
+            stripe_subscription_id = NULL,
+            free_trial_used_at = NULL,
             updated_at = CURRENT_TIMESTAMP
       `, [guild.id, guild.blizzard_id, guild.name, guild.realm, guild.region, guild.subscription_tier, guild.subscription_expires_at, guild.discord_enabled]);
     }

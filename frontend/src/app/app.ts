@@ -10,6 +10,7 @@ import { filter, map } from 'rxjs';
 import { NavigationEnd } from '@angular/router';
 import { I18nService } from './services/i18n';
 import { AuthService } from './services/auth';
+import { BillingService } from './services/billing';
 import { ThemeService } from './services/theme';
 
 const DISCORD_BANNER_KEY = 'gm_discord_banner_dismissed';
@@ -39,6 +40,7 @@ export class AppComponent {
   private router = inject(Router);
   public i18n = inject(I18nService);
   private authService = inject(AuthService);
+  private billing = inject(BillingService);
   // Eager injection keeps <html data-theme> in sync (incl. OS changes) on every page
   private theme = inject(ThemeService);
 
@@ -50,6 +52,30 @@ export class AppComponent {
     if (this.isPublicPage() || this.discordBannerDismissed()) return false;
     return !!user && !user.discord_id?.trim();
   });
+
+  /** Renewal failed: managers settle the invoice before the grace period ends. */
+  readonly showPastDueBanner = computed(() => {
+    const user = this.authService.currentUser();
+    return (
+      !this.isPublicPage() &&
+      user?.subscription_status === 'past_due' &&
+      this.authService.isGMOrOfficer()
+    );
+  });
+  readonly pastDueMessage = computed(() => {
+    const expires = this.authService.currentUser()?.subscription_expires_at;
+    const date = expires
+      ? new Date(expires).toLocaleDateString(this.i18n.currentLocale() === 'fr' ? 'fr-FR' : 'en-GB')
+      : '';
+    return this.i18n.tf('billing.past_due_desc', { date });
+  });
+  readonly openingInvoice = signal(false);
+
+  async payPendingInvoice() {
+    this.openingInvoice.set(true);
+    // On success the page leaves for Stripe: the spinner stays until then
+    if (!(await this.billing.payPendingInvoice())) this.openingInvoice.set(false);
+  }
 
   dismissDiscordBanner() {
     this.discordBannerDismissed.set(true);
@@ -73,6 +99,9 @@ export class AppComponent {
     const currentUrl = this.url();
     return currentUrl === '/' || currentUrl.startsWith('/login');
   });
+
+  /** The landing page renders its own footer. */
+  isLandingPage = computed(() => this.url().split(/[?#]/)[0] === '/');
 
   isFullWidthPage = computed(() => {
     const currentUrl = this.url();
