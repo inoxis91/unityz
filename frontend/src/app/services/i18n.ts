@@ -653,6 +653,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'fees.status.approved': 'Validé',
     'fees.toast.decl_success': 'Déclaration envoyée avec succès ! Un administrateur va la valider prochainement.',
     'fees.toast.decl_error': 'Erreur lors de la déclaration.',
+    'fees.toast.decl_duplicate': 'Cette déclaration est déjà en attente de validation.',
 
     // Options Component
     'options.subtitle': 'Gérez vos personnages et vos paramètres de compte.',
@@ -1864,6 +1865,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'fees.status.approved': 'Approved',
     'fees.toast.decl_success': 'Declaration sent successfully! An administrator will validate it shortly.',
     'fees.toast.decl_error': 'Error during declaration.',
+    'fees.toast.decl_duplicate': 'This declaration is already awaiting validation.',
 
     // Options Component
     'options.subtitle': 'Manage your characters and account settings.',

@@ -1,4 +1,4 @@
-import pool from '../lib/db';
+import pool, { withTransaction } from '../lib/db';
 import { HttpError } from '../middlewares/errorHandler';
 import { sendDiscordDM, sendFeeDeclarationNotification, sendDiscordChannelMessage } from '../lib/discord';
 import { t, getDiscordLocale } from '../lib/i18n';
@@ -25,13 +25,27 @@ export interface FeeAllocation {
 
 export class FeeService {
   static async declarePayment(userId: string, data: any, guildId: string): Promise<FeeDeclaration> {
-    const query = `
-      INSERT INTO fee_declarations (user_id, amount, start_month, duration_months, comment, guild_id)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING *
-    `;
-    const result = await pool.query(query, [userId, data.amount, data.start_month, data.duration_months, data.comment, guildId]);
-    const declaration = result.rows[0];
+    const params = [userId, data.amount, data.start_month, data.duration_months, data.comment ?? null, guildId];
+    const declaration = await withTransaction(async (client) => {
+      // Sérialise les déclarations d'un membre : un double clic ne doit pas passer entre le check et l'insert
+      await client.query("SELECT pg_advisory_xact_lock(hashtext('fee_declaration:' || $1 || ':' || $2))", [userId, guildId]);
+      const duplicate = await client.query(
+        `SELECT 1 FROM fee_declarations
+         WHERE user_id = $1 AND amount = $2 AND start_month = $3 AND duration_months = $4
+           AND comment IS NOT DISTINCT FROM $5 AND guild_id = $6 AND status = 'pending'`,
+        params,
+      );
+      if (duplicate.rowCount) {
+        throw new HttpError(409, 'An identical declaration is already pending', 'DUPLICATE_DECLARATION');
+      }
+      const result = await client.query(
+        `INSERT INTO fee_declarations (user_id, amount, start_month, duration_months, comment, guild_id)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING *`,
+        params,
+      );
+      return result.rows[0];
+    });
 
     // Fetch guild Discord settings
     const guildRes = await pool.query('SELECT discord_enabled, discord_fees_channel_id, discord_locale FROM guilds WHERE id = $1', [guildId]);

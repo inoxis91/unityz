@@ -44,17 +44,22 @@ export class FeesComponent {
   // ---------- Formulaire ----------
   readonly startMonth = signal(`${this.currentKey}-01`);
   readonly duration = signal<number>(1);
-  readonly amount = signal(0);
+  readonly amount = signal<number | null>(null);
   readonly comment = signal('');
   readonly submitting = signal(false);
-  /** Le montant suit « minimum × durée » tant que l'utilisateur ne l'a pas saisi lui-même. */
+  /**
+   * Le montant suit « minimum × durée » tant que l'utilisateur ne l'a pas saisi lui-même.
+   * Après un envoi il est vidé : un second clic ne peut pas redéclarer la même cotisation.
+   */
   private readonly amountTouched = signal(false);
 
   readonly effectiveAmount = computed(() =>
     this.amountTouched() ? this.amount() : this.minimumFee() * this.duration(),
   );
-  readonly perMonth = computed(() => monthlyShare(this.effectiveAmount(), this.duration()));
-  readonly belowMinimum = computed(() => this.perMonth() < this.minimumFee());
+  readonly perMonth = computed(() => monthlyShare(this.effectiveAmount() ?? 0, this.duration()));
+  readonly belowMinimum = computed(
+    () => this.effectiveAmount() !== null && this.perMonth() < this.minimumFee(),
+  );
   readonly covered = computed(() => new Set(coveredMonths(this.startMonth(), this.duration())));
 
   readonly startLabel = computed(() => {
@@ -105,15 +110,18 @@ export class FeesComponent {
 
   setDuration(duration: number) {
     this.duration.set(duration);
+    // Un montant vidé après un envoi reprend la valeur par défaut dès qu'on reconfigure la période
+    if (this.amount() === null) this.amountTouched.set(false);
   }
 
   onAmountInput(value: number | null) {
     this.amountTouched.set(true);
-    this.amount.set(Math.max(0, Math.floor(Number(value) || 0)));
+    this.amount.set(value === null ? null : Math.max(0, Math.floor(Number(value) || 0)));
   }
 
-  resetAmount() {
-    this.amountTouched.set(false);
+  private clearAmount() {
+    this.amountTouched.set(true);
+    this.amount.set(null);
   }
 
   linkDiscord() {
@@ -122,7 +130,7 @@ export class FeesComponent {
 
   onSubmit() {
     const amount = this.effectiveAmount();
-    if (this.submitting() || amount < 1) return;
+    if (this.submitting() || amount === null || amount < 1) return;
     this.submitting.set(true);
     this.feeService
       .declarePayment({
@@ -135,14 +143,20 @@ export class FeesComponent {
         next: () => {
           this.submitting.set(false);
           this.comment.set('');
-          this.resetAmount();
+          this.clearAmount();
           this.feeService.loadMyDeclarations().subscribe();
           this.toast.success(this.i18n.t('fees.toast.decl_success'));
         },
         error: (err) => {
           this.submitting.set(false);
           console.error('[Fees] Declaration error', err);
-          this.toast.error(err?.error?.message || this.i18n.t('fees.toast.decl_error'));
+          this.toast.error(
+            this.i18n.t(
+              err?.error?.code === 'DUPLICATE_DECLARATION'
+                ? 'fees.toast.decl_duplicate'
+                : 'fees.toast.decl_error',
+            ),
+          );
         },
       });
   }

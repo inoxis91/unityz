@@ -209,7 +209,7 @@
           type="submit"
           class="ui-btn success submit"
           [class.loading]="submitting()"
-          [disabled]="submitting() || effectiveAmount() < 1"
+          [disabled]="submitting() || (effectiveAmount() ?? 0) < 1"
         >
           {{ i18n.t('fees.form.btn_submit') }}
         </button>
