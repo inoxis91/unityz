@@ -179,6 +179,7 @@ const HEALTHSTONE_IDS = [
   452930, // Demonic Healthstone
   1234768, // Silvermoon Health Potion
   1295247, // Concentrated Silvermoon Health Potion
+  1262857, // Potent Healing Potion
 ];
 
 interface WclAbility {
@@ -194,14 +195,17 @@ function consumableAbilities(abilities: WclAbility[]) {
       // Les flacons de la saison ont aussi « potion » dans leur icône (`…flask_sindoreipotion…`).
       (/alchemy.*potion/i.test(a.icon) && !/flask|health|heal/i.test(a.icon)),
   );
-  const flasks = abilities.filter((a) => /flask/i.test(a.icon));
-  const food = abilities.filter((a) => /^spell_misc_food/i.test(a.icon));
-  return {
-    potionIds: [...new Set(potions.map((a) => a.gameID))],
-    flaskIds: [...new Set(flasks.map((a) => a.gameID))],
-    foodIds: [...new Set(food.map((a) => a.gameID))],
-  };
+  return [...new Set(potions.map((a) => a.gameID))];
 }
+
+/**
+ * Flacons et nourriture au pull, lus dans l'instantané `CombatantInfo` du joueur. Ils sont
+ * presque toujours pris avant le début du log : absents de `masterData.abilities`, qui ne liste
+ * que les capacités vues dans les événements. Toutes les variantes (stat, « Hearty ») sont
+ * reconnues à leur icône.
+ */
+const isFlask = (aura: CombatantAura) => /flask/i.test(aura.icon);
+const isFood = (aura: CombatantAura) => /^spell_misc_food/i.test(aura.icon);
 
 /* ------------------------------------------------------------------ */
 /* Requêtes WCL                                                         */
@@ -275,12 +279,18 @@ interface Aura {
   bands: { startTime: number; endTime: number }[];
 }
 
+interface CombatantAura {
+  ability: number;
+  icon: string;
+}
+
 interface WclEvent {
   timestamp: number;
   fight: number;
   targetID?: number;
   sourceID?: number;
   killingAbilityGameID?: number;
+  auras?: CombatantAura[];
 }
 
 const META_QUERY = `
@@ -389,7 +399,7 @@ async function fetchReportTables(
 async function fetchEvents(
   code: string,
   fightIds: number[],
-  dataType: 'Deaths' | 'Casts',
+  dataType: 'Deaths' | 'Casts' | 'CombatantInfo',
   filterExpression: string | null,
   locale: WclLocale,
 ): Promise<WclEvent[]> {
@@ -472,10 +482,6 @@ const round = (value: number, decimals = 0) => {
 const average = (values: number[]) =>
   values.length ? values.reduce((sum, v) => sum + v, 0) / values.length : null;
 
-/** Un buff (flacon, nourriture, potion) couvre-t-il le début du pull ? */
-const activeAtPull = (bands: Aura['bands'] | undefined, fight: WclFight) =>
-  !!bands?.some((b) => b.startTime <= fight.startTime + 2000 && b.endTime >= fight.startTime);
-
 /** Nombre d'utilisations d'un buff pendant le pull (pré-potion comprise). */
 const usesDuringPull = (bands: Aura['bands'] | undefined, fight: WclFight) =>
   bands?.filter((b) => b.startTime <= fight.endTime && b.endTime >= fight.startTime).length ?? 0;
@@ -553,22 +559,32 @@ export class WclReportService {
       meta.masterData.actors.filter((a) => a.subType !== 'Unknown').map((a) => [a.id, a]),
     );
     const abilityById = new Map(meta.masterData.abilities.map((a) => [a.gameID, a]));
-    const { potionIds, flaskIds, foodIds } = consumableAbilities(meta.masterData.abilities);
+    const potionIds = consumableAbilities(meta.masterData.abilities);
 
-    const [fightTables, reportTables, deathEvents, healthstoneEvents] = fightIds.length
-      ? await Promise.all([
-          fetchFightTables(code, fightIds, locale),
-          fetchReportTables(code, fightIds, killIds, [...potionIds, ...flaskIds, ...foodIds], locale),
-          fetchEvents(code, fightIds, 'Deaths', null, locale),
-          fetchEvents(
-            code,
-            fightIds,
-            'Casts',
-            `ability.id in (${HEALTHSTONE_IDS.join(',')})`,
-            locale,
-          ),
-        ])
-      : [new Map(), null, [], []];
+    const [fightTables, reportTables, deathEvents, healthstoneEvents, combatantEvents] =
+      fightIds.length
+        ? await Promise.all([
+            fetchFightTables(code, fightIds, locale),
+            fetchReportTables(code, fightIds, killIds, potionIds, locale),
+            fetchEvents(code, fightIds, 'Deaths', null, locale),
+            fetchEvents(
+              code,
+              fightIds,
+              'Casts',
+              `ability.id in (${HEALTHSTONE_IDS.join(',')})`,
+              locale,
+            ),
+            fetchEvents(code, fightIds, 'CombatantInfo', null, locale),
+          ])
+        : [new Map(), null, [], [], []];
+
+    // Auras au pull : fightID → acteur → auras de l'instantané CombatantInfo.
+    const pullAuras = new Map<number, Map<number, CombatantAura[]>>();
+    for (const e of combatantEvents) {
+      if (e.sourceID === undefined) continue;
+      if (!pullAuras.has(e.fight)) pullAuras.set(e.fight, new Map());
+      pullAuras.get(e.fight)!.set(e.sourceID, e.auras ?? []);
+    }
 
     // Parses : fightID → clé personnage → percentiles.
     const parses = new Map<number, Map<string, { parse: number | null; ilvl: number | null }>>();
@@ -630,6 +646,7 @@ export class WclReportService {
           const activeMs = Math.max(dmg?.activeTime ?? 0, heal?.activeTime ?? 0);
           const parse = parses.get(fight.id)?.get(characterKey(actor.name, actor.server));
           const death = deaths.find((d) => d.actorId === detail.id);
+          const auras = pullAuras.get(fight.id)?.get(detail.id);
           const healthstoneCasts = healthstoneEvents.filter(
             (e) => e.fight === fight.id && e.sourceID === detail.id,
           );
@@ -649,8 +666,8 @@ export class WclReportService {
             healthstoneBeforeDeath:
               !!death &&
               healthstoneCasts.some((e) => e.timestamp - fight.startTime <= death.timeMs),
-            flask: activeAtPull(aurasFor(flaskIds, detail.id), fight),
-            food: activeAtPull(aurasFor(foodIds, detail.id), fight),
+            flask: !!auras?.some(isFlask),
+            food: !!auras?.some(isFood),
           });
         }
       }
