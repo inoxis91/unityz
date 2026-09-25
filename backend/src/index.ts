@@ -57,6 +57,12 @@ initDb();
 initDiscord();
 initCronJobs();
 
+// One canonical host: www.guild-manager.com -> guild-manager.com (SEO, host-only session cookie)
+app.use((req, res, next) => {
+  if (!req.hostname.startsWith('www.')) return next();
+  res.redirect(301, `https://${req.hostname.slice(4)}${req.originalUrl}`);
+});
+
 // gzip/brotli for the API and the static frontend
 app.use(compression());
 
