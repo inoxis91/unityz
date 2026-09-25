@@ -14,3 +14,12 @@ describe('I18nService.tf', () => {
     expect(i18n.tf('plans.feat.events', { n: 6 })).toBe('6 events per month');
   });
 });
+
+describe('I18nService.tIn', () => {
+  it('translates in the requested language whatever the current one', () => {
+    const i18n = TestBed.inject(I18nService);
+    i18n.setLocale('fr');
+    expect(i18n.tIn('en', 'landing.lang_suggest.action')).toBe('View in English');
+    expect(i18n.t('landing.lang_suggest.action')).toBe('Voir en français');
+  });
+});

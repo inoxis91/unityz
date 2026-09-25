@@ -144,8 +144,15 @@
   --st-bg: var(--ui-bg-blue-50);
 }
 
+/* Past: faded marker and border only, the text keeps its AA contrast */
 .abs.past {
-  opacity: 0.7;
+  --st: color-mix(in srgb, var(--ui-border-strong) 60%, transparent);
+  border-color: color-mix(in srgb, var(--ui-border) 60%, transparent);
+  background: var(--ui-surface);
+}
+
+.abs.past .abs-marker {
+  box-shadow: none;
 }
 
 .abs-marker {

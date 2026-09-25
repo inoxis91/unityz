@@ -1,5 +1,5 @@
 # Stage 1: Build the Angular application
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 
 WORKDIR /app
 
@@ -22,13 +22,14 @@ FROM nginx:alpine AS production
 # Copy the build output to the Nginx html directory
 COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
 
-# SPA configuration for Nginx
+# Prerendered pages (/, /en, /terms, /privacy) have their own index.html; every other route
+# is client-rendered from index.csr.html (same rules as backend/src/index.ts)
 RUN echo 'server { \
     listen 4200; \
     location / { \
         root /usr/share/nginx/html; \
         index index.html; \
-        try_files $uri $uri/ /index.html; \
+        try_files $uri $uri/index.html /index.csr.html; \
     } \
 }' > /etc/nginx/conf.d/default.conf
 

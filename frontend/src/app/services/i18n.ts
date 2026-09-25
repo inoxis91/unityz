@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
+import { Injectable, PLATFORM_ID, effect, inject, signal } from '@angular/core';
 
 export type SupportedLocale = 'fr' | 'en';
 
@@ -249,6 +250,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'landing.hero.cta_start': 'Essayer gratuitement 30 jours',
     'landing.hero.cta_pricing': 'Voir les tarifs',
     'landing.hero.trust_bnet': 'Connexion Battle.net officielle',
+    'landing.hero.trust_regions': 'Serveurs EU et US',
     'landing.hero.trust_card': 'Sans carte bancaire pour l\'essai',
     'landing.hero.trust_members': 'Gratuit pour tous les membres',
     'landing.hero.chip_discord': 'Line-up envoyée sur Discord',
@@ -357,6 +359,18 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'landing.faq.a6': 'Ajoutez le lien d\'un rapport Warcraft Logs public à votre événement de raid : l\'analyse et le classement sont générés automatiquement.',
     'landing.faq.q7': 'Le site est-il affilié à Blizzard ?',
     'landing.faq.a7': 'Non. Guild Manager est un outil indépendant qui utilise l\'API officielle Battle.net pour la connexion et l\'import des personnages.',
+    'landing.faq.q8': 'Quels serveurs sont pris en charge ?',
+    'landing.faq.a8': 'Les royaumes européens (EU) et américains (US, y compris l\'Océanie et l\'Amérique latine) de World of Warcraft Retail. Vos personnages sont détectés automatiquement dans chaque région de votre compte Battle.net.',
+    'landing.lang_suggest.text': 'Cette page existe aussi en français.',
+    'landing.lang_suggest.action': 'Voir en français',
+    'landing.lang_suggest.dismiss': 'Fermer',
+
+    // 404
+    'not_found.title': 'Cette page s\'est perdue dans le Vide distordu',
+    'not_found.text': 'L\'adresse demandée n\'existe pas ou n\'est plus disponible.',
+    'not_found.home': 'Retour à l\'accueil',
+    'not_found.dashboard': 'Tableau de bord',
+    'not_found.calendar': 'Calendrier',
     'landing.cta.title': 'Votre prochaine soirée raid mérite mieux qu\'un tableur',
     'landing.cta.subtitle': 'Activez 30 jours gratuits pour votre guilde, sans carte bancaire.',
     'landing.cta.button': 'Commencer gratuitement',
@@ -401,6 +415,8 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'select.guild.btn_retry': 'Réessayer',
     'select.guild.toast.bnet_session_expired': 'Votre session Battle.net a expiré. Reconnexion en cours...',
     'select.guild.toast.fetch_error': 'Erreur lors de la récupération de vos guildes.',
+    'select.guild.toast.select_error': 'Impossible de sélectionner cette guilde. Réessayez dans un instant.',
+    'select.guild.toast.not_member': 'Aucun de vos personnages n\'est membre de cette guilde selon Battle.net. Vérifiez qu\'il est bien dans la guilde en jeu, puis réessayez.',
     'select.guild.paid_badge': 'Abonnement Actif',
     'select.guild.unpaid_badge': 'Non Abonné',
     'select.guild.btn_connect': 'Se connecter à cette guilde',
@@ -1592,6 +1608,7 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'landing.hero.cta_start': 'Try it free for 30 days',
     'landing.hero.cta_pricing': 'See pricing',
     'landing.hero.trust_bnet': 'Official Battle.net login',
+    'landing.hero.trust_regions': 'EU and US realms',
     'landing.hero.trust_card': 'No credit card for the trial',
     'landing.hero.trust_members': 'Free for every member',
     'landing.hero.chip_discord': 'Line-up sent on Discord',
@@ -1700,6 +1717,18 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'landing.faq.a6': 'Add a public Warcraft Logs report link to your raid event: the analysis and ranking are generated automatically.',
     'landing.faq.q7': 'Is the site affiliated with Blizzard?',
     'landing.faq.a7': 'No. Guild Manager is an independent tool that uses the official Battle.net API for login and character import.',
+    'landing.faq.q8': 'Which realms are supported?',
+    'landing.faq.a8': 'European (EU) and American (US, including Oceanic and Latin American) World of Warcraft Retail realms. Your characters are detected automatically in every region of your Battle.net account.',
+    'landing.lang_suggest.text': 'This page is also available in English.',
+    'landing.lang_suggest.action': 'View in English',
+    'landing.lang_suggest.dismiss': 'Close',
+
+    // 404
+    'not_found.title': 'This page got lost in the Twisting Nether',
+    'not_found.text': 'The address you requested does not exist or is no longer available.',
+    'not_found.home': 'Back to home',
+    'not_found.dashboard': 'Dashboard',
+    'not_found.calendar': 'Calendar',
     'landing.cta.title': 'Your next raid night deserves better than a spreadsheet',
     'landing.cta.subtitle': 'Start 30 free days for your guild, no credit card needed.',
     'landing.cta.button': 'Start for free',
@@ -1744,6 +1773,8 @@ const TRANSLATIONS: Record<SupportedLocale, Record<string, string>> = {
     'select.guild.btn_retry': 'Retry',
     'select.guild.toast.bnet_session_expired': 'Your Battle.net session has expired. Reconnecting...',
     'select.guild.toast.fetch_error': 'Error retrieving your guilds.',
+    'select.guild.toast.select_error': 'Could not select this guild. Please try again in a moment.',
+    'select.guild.toast.not_member': 'None of your characters is a member of this guild according to Battle.net. Make sure it is in the guild in game, then try again.',
     'select.guild.paid_badge': 'Active Subscription',
     'select.guild.unpaid_badge': 'Unpaid',
     'select.guild.btn_connect': 'Connect to this guild',
@@ -2698,30 +2729,42 @@ export function interpolate(text: string, params: Record<string, string | number
   );
 }
 
+const STORAGE_KEY = 'guild_manager_locale';
+
+const isSupportedLocale = (value: unknown): value is SupportedLocale =>
+  value === 'fr' || value === 'en';
+
 @Injectable({
   providedIn: 'root'
 })
 export class I18nService {
-  currentLocale = signal<SupportedLocale>('fr');
+  private readonly document = inject(DOCUMENT);
+  // Prerendering (Node) has neither a visitor language nor stored preferences: French default
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+
+  /** Language explicitly chosen by the user, if any (null when prerendering). */
+  readonly storedLocale = signal<SupportedLocale | null>(
+    this.isBrowser ? readStoredLocale() : null,
+  );
+
+  currentLocale = signal<SupportedLocale>(
+    this.storedLocale() ?? (this.isBrowser ? browserLocale() : null) ?? 'fr',
+  );
 
   constructor() {
-    // Auto-detect browser language if available
-    const saved = localStorage.getItem('guild_manager_locale') as SupportedLocale;
-    if (saved === 'fr' || saved === 'en') {
-      this.currentLocale.set(saved);
-    } else {
-      const browserLang = navigator.language.slice(0, 2);
-      if (browserLang === 'en') {
-        this.currentLocale.set('en');
-      } else {
-        this.currentLocale.set('fr'); // Default to French
-      }
-    }
+    effect(() => this.document.documentElement.setAttribute('lang', this.currentLocale()));
   }
 
+  /** Switches the language and remembers the choice. */
   setLocale(locale: SupportedLocale) {
     this.currentLocale.set(locale);
-    localStorage.setItem('guild_manager_locale', locale);
+    this.storedLocale.set(locale);
+    if (!this.isBrowser) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, locale);
+    } catch {
+      // Storage unavailable (private mode): applies to this page only
+    }
   }
 
   // Reactive translation getter
@@ -2730,8 +2773,28 @@ export class I18nService {
     return TRANSLATIONS[locale][key] || key;
   }
 
+  /** Translation in a given language, whatever the current one (e.g. offering the other version). */
+  tIn(locale: SupportedLocale, key: string): string {
+    return TRANSLATIONS[locale][key] || key;
+  }
+
   /** `t()` with `{name}` placeholders filled from `params`. */
   tf(key: string, params: Record<string, string | number>): string {
     return interpolate(this.t(key), params);
   }
+}
+
+function readStoredLocale(): SupportedLocale | null {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return isSupportedLocale(saved) ? saved : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Visitor's browser language when it is one we support (call it in the browser only). */
+export function browserLocale(): SupportedLocale | null {
+  const lang = navigator.language?.slice(0, 2);
+  return isSupportedLocale(lang) ? lang : null;
 }

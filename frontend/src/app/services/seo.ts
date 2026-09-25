@@ -1,40 +1,86 @@
-import { Injectable } from '@angular/core';
-import { Title, Meta } from '@angular/platform-browser';
+import { DOCUMENT } from '@angular/common';
+import { Injectable, inject } from '@angular/core';
+import { Meta, Title } from '@angular/platform-browser';
+import type { SupportedLocale } from './i18n';
 
-@Injectable({
-  providedIn: 'root'
-})
+/** Production origin: canonical URLs and preview images must be absolute. */
+export const SITE_URL = 'https://guild-manager.com';
+
+/** Public page available in both languages: the landing lives at `/` (fr) and `/en`. */
+export const LOCALIZED_PATHS: Record<SupportedLocale, string> = { fr: '/', en: '/en' };
+
+const OG_LOCALE: Record<SupportedLocale, string> = { fr: 'fr_FR', en: 'en_US' };
+
+export interface SeoConfig {
+  title: string;
+  description: string;
+  /** Path of this page, e.g. `/terms`; the canonical URL is built from it. */
+  path: string;
+  locale: SupportedLocale;
+  /** Other-language versions of the page (hreflang), including this one. */
+  alternates?: Partial<Record<SupportedLocale, string>>;
+  /** Path of the preview image under `public/`. */
+  image?: string;
+  /** Keeps the page out of search results (login, 404). */
+  noindex?: boolean;
+}
+
+@Injectable({ providedIn: 'root' })
 export class SeoService {
-  constructor(private titleService: Title, private metaService: Meta) {}
+  private readonly title = inject(Title);
+  private readonly meta = inject(Meta);
+  private readonly document = inject(DOCUMENT);
 
-  generateTags(config: { title?: string; description?: string; keywords?: string; image?: string }) {
-    const defaultTitle = "Guild Manager - Logiciel de gestion de guilde WoW SaaS";
-    const defaultDesc = "La plateforme SaaS ultime pour gérer votre guilde World of Warcraft. Synchronisation Battle.net, rosters dynamiques, calendrier de raids et gestion des cotisations.";
-    const defaultImage = "https://guild-manager.com/favicon.ico";
-    
-    const title = config.title ? `${config.title} | Guild Manager` : defaultTitle;
-    const description = config.description || defaultDesc;
-    const image = config.image || defaultImage;
+  apply(config: SeoConfig) {
+    const url = absoluteUrl(config.path);
+    const image = absoluteUrl(config.image ?? `/assets/social/og-${config.locale}.jpg`);
 
-    // Set Title
-    this.titleService.setTitle(title);
+    this.title.setTitle(config.title);
+    this.meta.updateTag({ name: 'description', content: config.description });
+    this.meta.updateTag({ name: 'robots', content: config.noindex ? 'noindex' : 'index, follow' });
 
-    // Set Meta Description
-    this.metaService.updateTag({ name: 'description', content: description });
+    this.meta.updateTag({ property: 'og:title', content: config.title });
+    this.meta.updateTag({ property: 'og:description', content: config.description });
+    this.meta.updateTag({ property: 'og:url', content: url });
+    this.meta.updateTag({ property: 'og:image', content: image });
+    this.meta.updateTag({ property: 'og:locale', content: OG_LOCALE[config.locale] });
+    this.meta.updateTag({ name: 'twitter:title', content: config.title });
+    this.meta.updateTag({ name: 'twitter:description', content: config.description });
+    this.meta.updateTag({ name: 'twitter:image', content: image });
 
-    // Set Meta Keywords if provided
-    if (config.keywords) {
-      this.metaService.updateTag({ name: 'keywords', content: config.keywords });
-    }
-
-    // Open Graph
-    this.metaService.updateTag({ property: 'og:title', content: title });
-    this.metaService.updateTag({ property: 'og:description', content: description });
-    this.metaService.updateTag({ property: 'og:image', content: image });
-
-    // Twitter Card
-    this.metaService.updateTag({ property: 'twitter:title', content: title });
-    this.metaService.updateTag({ property: 'twitter:description', content: description });
-    this.metaService.updateTag({ property: 'twitter:image', content: image });
+    this.setLink('canonical', url);
+    this.setAlternates(config.alternates);
   }
+
+  private setLink(rel: string, href: string) {
+    let link = this.document.head.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`);
+    if (!link) {
+      link = this.document.createElement('link');
+      link.setAttribute('rel', rel);
+      this.document.head.appendChild(link);
+    }
+    link.setAttribute('href', href);
+  }
+
+  private setAlternates(alternates: SeoConfig['alternates']) {
+    this.document.head
+      .querySelectorAll('link[rel="alternate"][hreflang]')
+      .forEach((link) => link.remove());
+    if (!alternates) return;
+
+    // English is the fallback for every other language
+    const entries = Object.entries(alternates);
+    if (alternates.en) entries.push(['x-default', alternates.en]);
+    for (const [hreflang, path] of entries) {
+      const link = this.document.createElement('link');
+      link.setAttribute('rel', 'alternate');
+      link.setAttribute('hreflang', hreflang);
+      link.setAttribute('href', absoluteUrl(path));
+      this.document.head.appendChild(link);
+    }
+  }
+}
+
+export function absoluteUrl(path: string): string {
+  return path === '/' ? `${SITE_URL}/` : `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`;
 }

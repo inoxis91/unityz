@@ -4,16 +4,16 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  afterNextRender,
   computed,
-  effect,
   inject,
   signal,
   viewChild,
 } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
-import { I18nService, SupportedLocale } from '../../services/i18n';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { I18nService, SupportedLocale, browserLocale } from '../../services/i18n';
 import { AuthService } from '../../services/auth';
-import { SeoService } from '../../services/seo';
+import { LOCALIZED_PATHS, SeoService } from '../../services/seo';
 import { PlanTier } from '../../constants/plans';
 import { rememberPlan } from '../payment/payment-utils';
 import { LandingShot, shotSource } from './landing-utils';
@@ -66,7 +66,7 @@ const MORE = [
   ['🌗', 'theme', false],
 ] as const;
 
-const FAQ_COUNT = 7;
+const FAQ_COUNT = 8;
 
 @Component({
   selector: 'app-landing',
@@ -87,6 +87,13 @@ export class LandingComponent implements AfterViewInit {
   private readonly router = inject(Router);
   private readonly seo = inject(SeoService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly route = inject(ActivatedRoute);
+
+  /** Language of this page, from the route (`''` = fr, `'en'` = en). */
+  readonly locale: SupportedLocale = this.route.snapshot.data['locale'] ?? 'fr';
+  readonly paths = LOCALIZED_PATHS;
+  /** Visitor's language when it differs from the page's: offers the other version. */
+  readonly suggestedLocale = signal<SupportedLocale | null>(null);
 
   private readonly topSentinel = viewChild.required<ElementRef<HTMLElement>>('topSentinel');
   /** The header turns opaque once the page is scrolled. */
@@ -111,25 +118,31 @@ export class LandingComponent implements AfterViewInit {
   });
 
   constructor() {
-    effect(() => {
-      const isFr = this.i18n.currentLocale() === 'fr';
-      this.seo.generateTags({
-        title: isFr
-          ? 'Gestion de guilde WoW : raid planner, line-up & classement MVP'
-          : 'WoW guild management: raid planner, line-up & MVP ranking',
-        description: isFr
-          ? 'Calendrier et inscriptions, line-up de raid, groupes M+ avec Raider.io, analyse Warcraft Logs avec classement MVP, cotisations et bot Discord pour les guildes World of Warcraft.'
-          : 'Calendar and sign-ups, raid line-up, M+ groups with Raider.io, Warcraft Logs analysis with an MVP ranking, guild fees and a Discord bot for World of Warcraft guilds.',
-        keywords: isFr
-          ? 'logiciel gestion guilde wow, raid planner wow, line-up raid wow, groupes mythique+, warcraft logs mvp, calendrier de raid wow, cotisations guilde wow, bot discord guilde'
-          : 'wow guild management software, wow raid planner, wow raid line-up, mythic+ group builder, warcraft logs mvp, wow raid calendar, guild bank tracker, guild discord bot',
-      });
+    // The URL decides the language (`/` = fr, `/en` = en) so each version is indexable
+    this.i18n.currentLocale.set(this.locale);
+    const isFr = this.locale === 'fr';
+    this.seo.apply({
+      title: isFr
+        ? 'Guild Manager – Gestion de guilde WoW : raid planner, line-up & MVP'
+        : 'Guild Manager – WoW guild management: raid planner, line-up & MVP',
+      description: isFr
+        ? 'Calendrier et inscriptions, line-up de raid, groupes M+ avec Raider.io, analyse Warcraft Logs avec classement MVP, cotisations et bot Discord pour les guildes World of Warcraft (serveurs EU et US).'
+        : 'Calendar and sign-ups, raid line-up, M+ groups with Raider.io, Warcraft Logs analysis with an MVP ranking, guild fees and a Discord bot for World of Warcraft guilds on EU and US realms.',
+      path: LOCALIZED_PATHS[this.locale],
+      locale: this.locale,
+      alternates: LOCALIZED_PATHS,
     });
 
-    // Already logged in: straight to the app
-    this.authService.checkAuth().subscribe({
-      next: () => this.router.navigate(['/dashboard']),
-      error: () => {},
+    afterNextRender(() => {
+      // Browser only: the prerendered page is the same for every visitor
+      const preferred = this.i18n.storedLocale() ?? browserLocale();
+      if (preferred && preferred !== this.locale) this.suggestedLocale.set(preferred);
+
+      // Already logged in: straight to the app
+      this.authService.checkAuth().subscribe({
+        next: () => this.router.navigate(['/dashboard']),
+        error: () => {},
+      });
     });
   }
 
@@ -142,12 +155,15 @@ export class LandingComponent implements AfterViewInit {
     this.destroyRef.onDestroy(() => observer.disconnect());
   }
 
+  /** Language links are real links (crawlable); following one also remembers the choice. */
   changeLang(lang: SupportedLocale) {
     this.i18n.setLocale(lang);
   }
 
   start(plan?: PlanTier) {
     if (plan) rememberPlan(plan);
+    // The app keeps the language the visitor was reading
+    this.i18n.setLocale(this.locale);
     this.router.navigate(['/login']);
   }
 

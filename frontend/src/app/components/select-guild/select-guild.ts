@@ -138,6 +138,7 @@ export class SelectGuildComponent implements OnInit {
       error: (err) => {
         console.error('Error selecting active guild', err);
         this.isLoading.set(false);
+        this.toast.error(this.i18n.t(this.errorKey(err, 'select.guild.toast.select_error')));
       }
     });
   }
@@ -169,13 +170,13 @@ export class SelectGuildComponent implements OnInit {
   confirmImport() {
     const selectedList = this.availableCharacters().filter(c => c.selected);
     if (selectedList.length === 0) {
-      alert(this.i18n.t('select.guild.alert.select_char'));
+      this.toast.error(this.i18n.t('select.guild.alert.select_char'));
       return;
     }
 
     const hasMain = selectedList.some(c => c.is_main);
     if (!hasMain) {
-      alert(this.i18n.t('select.guild.alert.set_main'));
+      this.toast.error(this.i18n.t('select.guild.alert.set_main'));
       return;
     }
 
@@ -195,9 +196,14 @@ export class SelectGuildComponent implements OnInit {
       error: (err) => {
         console.error('Error importing characters', err);
         this.isImporting.set(false);
-        alert(this.i18n.t('select.guild.alert.import_error'));
+        this.toast.error(this.i18n.t(this.errorKey(err, 'select.guild.alert.import_error')));
       }
     });
+  }
+
+  /** Membership is checked with Blizzard: say so instead of a generic error. */
+  private errorKey(err: any, fallback: string): string {
+    return err?.error?.code === 'NOT_A_GUILD_MEMBER' ? 'select.guild.toast.not_member' : fallback;
   }
 
   goBackToStep1() {

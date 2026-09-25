@@ -146,4 +146,20 @@ test.describe('public pages', () => {
     await page.locator('app-mvp-showcase [role="tab"]').nth(2).click();
     await check(page, '/ › MVP showcase');
   });
+
+  test('readable /en (landing) with the language suggestion', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    // A French visitor on the English page is offered the French version
+    await page.addInitScript(() => localStorage.setItem('guild_manager_locale', 'fr'));
+    await open(page, '/en');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    await expect(page.locator('.lang-suggest')).toBeVisible();
+    await check(page, '/en');
+  });
+
+  test('readable 404', async ({ page }) => {
+    await open(page, '/this-page-does-not-exist');
+    await expect(page.locator('app-not-found h1')).toBeVisible();
+    await check(page, '404');
+  });
 });

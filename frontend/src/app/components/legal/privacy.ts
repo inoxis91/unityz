@@ -1,7 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 
 import { RouterModule } from '@angular/router';
 import { I18nService } from '../../services/i18n';
+import { LOCALIZED_PATHS, SeoService } from '../../services/seo';
 
 @Component({
   selector: 'app-privacy',
@@ -10,7 +11,9 @@ import { I18nService } from '../../services/i18n';
   template: `
     <div class="legal-container animated-fade-in">
       <div class="back-link">
-        <a routerLink="/">← {{ i18n.currentLocale() === 'fr' ? 'Retour' : 'Back' }}</a>
+        <a [routerLink]="paths[i18n.currentLocale()]"
+          >← {{ i18n.currentLocale() === 'fr' ? 'Retour' : 'Back' }}</a
+        >
       </div>
 
       <!-- FRENCH PRIVACY -->
@@ -295,4 +298,24 @@ import { I18nService } from '../../services/i18n';
 })
 export class PrivacyPolicyComponent {
   public i18n = inject(I18nService);
+  private readonly seo = inject(SeoService);
+  readonly paths = LOCALIZED_PATHS;
+
+  constructor() {
+    effect(() => {
+      const locale = this.i18n.currentLocale();
+      this.seo.apply({
+        title:
+          locale === 'fr'
+            ? 'Politique de confidentialité – Guild Manager'
+            : 'Privacy Policy – Guild Manager',
+        description:
+          locale === 'fr'
+            ? 'Données collectées par Guild Manager (compte Battle.net, personnages, Discord), finalités, durée de conservation et vos droits RGPD.'
+            : 'Data collected by Guild Manager (Battle.net account, characters, Discord), purposes, retention and your GDPR rights.',
+        path: '/privacy',
+        locale,
+      });
+    });
+  }
 }

@@ -1,7 +1,9 @@
 import express from 'express';
 import session from 'express-session';
+import connectPgSimple from 'connect-pg-simple';
 import passport from './config/passport';
 import cors from 'cors';
+import compression from 'compression';
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -21,6 +23,7 @@ import { initDiscord } from './lib/discord';
 import { initCronJobs } from './lib/cron';
 import { UserService } from './services/userService';
 import { isProd } from './lib/env';
+import { DEFAULT_REGION, toWowRegion } from './lib/regions';
 
 // Étendre le type Session pour inclure nos propriétés personnalisées
 declare module 'express-session' {
@@ -54,6 +57,9 @@ initDb();
 initDiscord();
 initCronJobs();
 
+// gzip/brotli for the API and the static frontend
+app.use(compression());
+
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
@@ -71,10 +77,20 @@ app.use(express.json({
   }
 }));
 
+// Un secret par défaut rendrait les cookies de session forgeables en production
+if (isProd && !process.env.SESSION_SECRET) {
+  throw new Error('[System] SESSION_SECRET is required in production');
+}
+
+const PgSessionStore = connectPgSimple(session);
+
 app.use(session({
   name: 'guild_manager_sid',
-  secret: process.env.SESSION_SECRET || 'guild-manager-secret',
-  resave: true, 
+  secret: process.env.SESSION_SECRET || 'guild-manager-dev-secret',
+  // Sessions en base : un redéploiement ne déconnecte plus personne (table créée par initDb)
+  store: new PgSessionStore({ pool, tableName: 'session', pruneSessionInterval: 60 * 60 }),
+  // Le store implémente touch() : inutile de réécrire la session à chaque requête
+  resave: false,
   saveUninitialized: false,
   rolling: true,
   proxy: true,
@@ -106,20 +122,48 @@ if (!isProd) {
 }
 
 // --- SERVING FRONTEND ---
+// Public pages are prerendered at build time (frontend/src/app/app.routes.server.ts): each one
+// is served from its own index.html. The app routes share the client-only index.csr.html, and
+// any other path gets a real 404 (Angular renders its not-found page).
+const PRERENDERED_ROUTES = new Set(['/', '/en', '/terms', '/privacy']);
+const APP_ROUTE_ROOTS = new Set([
+  'login', 'select-guild', 'payment', 'dashboard', 'guild-characters', 'options',
+  'absences', 'calendar', 'fees', 'crafts', 'events', 'admin',
+]);
+// Angular output hashing: main-ABCD1234.js, chunk-ABCD1234.js, styles-ABCD1234.css
+const HASHED_ASSET = /-[A-Z0-9]{8}\.(js|css)$/;
+
 if (isProd) {
   const publicPath = path.join(__dirname, '../public');
   console.log(`[System] Serving frontend from: ${publicPath}`);
-  app.use(express.static(publicPath));
-  
-  // SPA Routing: Middleware final pour capturer toutes les routes non-API
-  // Cette méthode évite les erreurs de syntaxe wildcard d'Express 5
+  app.use(express.static(publicPath, {
+    // Directory indexes are resolved below, without the "/en" -> "/en/" redirect
+    index: false,
+    redirect: false,
+    setHeaders: (res, filePath) => {
+      if (HASHED_ASSET.test(filePath)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    },
+  }));
+
   app.use((req, res, next) => {
-    // Si c'est une requête API qui n'existe pas, on laisse l'errorHandler gérer
-    if (req.path.startsWith('/api')) {
+    // Unknown API routes fall through to the errorHandler
+    if (req.path.startsWith('/api') || (req.method !== 'GET' && req.method !== 'HEAD')) {
       return next();
     }
-    // Pour tout le reste, on sert l'index.html de l'application Angular
-    res.sendFile(path.join(publicPath, 'index.html'));
+
+    // One URL per page: "/en/" -> "/en"
+    if (req.path.length > 1 && req.path.endsWith('/')) {
+      const query = req.originalUrl.slice(req.path.length);
+      return res.redirect(301, req.path.replace(/\/+$/, '') + query);
+    }
+
+    if (PRERENDERED_ROUTES.has(req.path)) {
+      return res.sendFile(path.join(publicPath, req.path, 'index.html'));
+    }
+    const status = APP_ROUTE_ROOTS.has(req.path.split('/')[1]) ? 200 : 404;
+    res.status(status).sendFile(path.join(publicPath, 'index.csr.html'));
   });
 }
 // Auth Routes
@@ -227,8 +271,9 @@ app.get('/api/users/me', async (req, res, next) => {
       let active_guild_minimum_fee_amount = 2000;
       let active_guild_free_trial_available = false;
       let active_guild_has_subscription = false;
+      let active_guild_region = DEFAULT_REGION;
       if (user.active_guild_id) {
-        const guildRes = await pool.query('SELECT subscription_tier, subscription_expires_at, subscription_status, fees_enabled, minimum_fee_amount, free_trial_used_at, stripe_subscription_id FROM guilds WHERE id = $1', [user.active_guild_id]);
+        const guildRes = await pool.query('SELECT subscription_tier, subscription_expires_at, subscription_status, fees_enabled, minimum_fee_amount, free_trial_used_at, stripe_subscription_id, region FROM guilds WHERE id = $1', [user.active_guild_id]);
         if (guildRes.rows[0]) {
           subscription_tier = guildRes.rows[0].subscription_tier;
           subscription_expires_at = guildRes.rows[0].subscription_expires_at;
@@ -237,6 +282,7 @@ app.get('/api/users/me', async (req, res, next) => {
           active_guild_fees_enabled = guildRes.rows[0].fees_enabled !== undefined ? guildRes.rows[0].fees_enabled : true;
           active_guild_minimum_fee_amount = guildRes.rows[0].minimum_fee_amount || 2000;
           active_guild_free_trial_available = !guildRes.rows[0].free_trial_used_at;
+          active_guild_region = toWowRegion(guildRes.rows[0].region);
           // Abonnement Stripe en cours : un changement d'offre passe par le prorata, pas par Checkout
           active_guild_has_subscription =
             !!guildRes.rows[0].stripe_subscription_id &&
@@ -256,6 +302,7 @@ app.get('/api/users/me', async (req, res, next) => {
         active_guild_minimum_fee_amount,
         active_guild_free_trial_available,
         active_guild_has_subscription,
+        active_guild_region,
       });
     } catch (error) {
       next(error);

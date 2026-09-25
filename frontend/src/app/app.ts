@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterOutlet, Router, RouterModule } from '@angular/router';
+import { PlatformLocation } from '@angular/common';
 import { NavbarComponent } from './components/navbar/navbar';
 import { ToastComponent } from './components/toast/toast';
 import { ConfirmComponent } from './components/confirm/confirm';
@@ -14,6 +15,8 @@ import { BillingService } from './services/billing';
 import { ThemeService } from './services/theme';
 
 const DISCORD_BANNER_KEY = 'gm_discord_banner_dismissed';
+
+const isLandingPath = (path: string) => path === '/' || path === '/en';
 
 function readSession(key: string): string | null {
   try {
@@ -92,25 +95,20 @@ export class AppComponent {
       filter((event) => event instanceof NavigationEnd),
       map((event) => (event as NavigationEnd).urlAfterRedirects),
     ),
-    { initialValue: '/' },
+    // Real path from the first render on, so hydration matches the prerendered page
+    { initialValue: inject(PlatformLocation).pathname },
   );
 
-  isPublicPage = computed(() => {
-    const currentUrl = this.url();
-    return currentUrl === '/' || currentUrl.startsWith('/login');
-  });
+  private path = computed(() => this.url().split(/[?#]/)[0]);
 
-  /** The landing page renders its own footer. */
-  isLandingPage = computed(() => this.url().split(/[?#]/)[0] === '/');
+  /** The landing page renders its own header and footer, in both languages. */
+  isLandingPage = computed(() => isLandingPath(this.path()));
+
+  isPublicPage = computed(() => this.isLandingPage() || this.path().startsWith('/login'));
 
   isFullWidthPage = computed(() => {
-    const currentUrl = this.url();
-    return (
-      currentUrl === '/' ||
-      currentUrl.startsWith('/login') ||
-      currentUrl.startsWith('/select-guild') ||
-      currentUrl.startsWith('/payment')
-    );
+    const path = this.path();
+    return this.isPublicPage() || path.startsWith('/select-guild') || path.startsWith('/payment');
   });
 
   readonly year = new Date().getFullYear();

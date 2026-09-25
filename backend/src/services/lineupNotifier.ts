@@ -1,4 +1,5 @@
 import pool from '../lib/db';
+import { sqlRegionTimeZone } from '../lib/regions';
 import { sendDiscordDM } from '../lib/discord';
 import { t, getDiscordLocale, SupportedDiscordLocale } from '../lib/i18n';
 import type { LineupSelection, RaidRole } from './lineupService';
@@ -58,7 +59,7 @@ export class LineupNotifier {
     const { rows } = await pool.query<NotificationContext>(
       `SELECT s.role, s.selection, s.assigned_role, u.discord_id, c.name AS character_name,
               e.title, to_char(e.start_time, 'YYYY-MM-DD"T"HH24:MI:SS') AS start_time, e.is_canceled,
-              e.start_time < (NOW() AT TIME ZONE 'Europe/Paris') AS is_past,
+              e.start_time < (NOW() AT TIME ZONE ${sqlRegionTimeZone('g.region')}) AS is_past,
               g.discord_enabled, g.discord_locale
        FROM event_signups s
        JOIN users u ON u.id = s.user_id

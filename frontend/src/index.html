@@ -5,7 +5,7 @@
   <title>Guild Manager - Logiciel de Gestion de Guilde WoW & Raid Planner</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" href="favicon.ico" sizes="any">
   <!-- Applies the theme before first paint (same rules as ThemeService) -->
   <script>
     (function () {
@@ -18,43 +18,66 @@
     })();
   </script>
   
-  <!-- Base Meta Tags -->
-  <meta name="description" content="Optimisez la gestion de votre guilde World of Warcraft. Synchronisation Battle.net, gestionnaire de rosters, calendrier de raids dynamique et suivi de la trésorerie pour les officiers et Guild Masters.">
-  <meta name="keywords" content="logiciel gestion guilde wow, gestion de guilde world of warcraft, outil roster wow, raid planner wow, calendrier de raid wow, cotisations guilde wow, guild manager, battle.net api wow, wow guild management software, wow raid planner">
-  <meta name="author" content="Guild Manager Team">
+  <!-- Defaults for client-rendered pages; SeoService rewrites them on public pages (prerendered) -->
+  <meta name="description" content="Gestion de guilde World of Warcraft : calendrier et inscriptions, line-up de raid, groupes M+, analyse Warcraft Logs avec classement MVP, cotisations et bot Discord. Serveurs EU et US.">
   <meta name="theme-color" content="#1e1b4b">
+  <link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
-  <!-- Open Graph / Facebook -->
+  <!-- Open Graph / Twitter -->
   <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Guild Manager">
   <meta property="og:url" content="https://guild-manager.com/">
   <meta property="og:title" content="Guild Manager - Logiciel de Gestion de Guilde WoW & Raid Planner">
-  <meta property="og:description" content="Optimisez la gestion de votre guilde World of Warcraft. Synchronisation Battle.net, gestionnaire de rosters, calendrier de raids dynamique et suivi de la trésorerie pour les officiers et Guild Masters.">
-  <meta property="og:image" content="https://guild-manager.com/favicon.ico">
-  <meta property="og:site_name" content="Guild Manager">
-
-  <!-- Twitter -->
-  <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:url" content="https://guild-manager.com/">
-  <meta property="twitter:title" content="Guild Manager - Logiciel de Gestion de Guilde WoW & Raid Planner">
-  <meta property="twitter:description" content="Optimisez la gestion de votre guilde World of Warcraft. Synchronisation Battle.net, gestionnaire de rosters, calendrier de raids dynamique et suivi de la trésorerie pour les officiers et Guild Masters.">
-  <meta property="twitter:image" content="https://guild-manager.com/favicon.ico">
+  <meta property="og:description" content="Calendrier et inscriptions, line-up de raid, groupes M+, analyse Warcraft Logs avec classement MVP, cotisations et bot Discord pour les guildes World of Warcraft.">
+  <meta property="og:image" content="https://guild-manager.com/assets/social/og-fr.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="fr_FR">
+  <meta name="twitter:card" content="summary_large_image">
 
   <!-- Structured Data JSON-LD -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "Guild Manager",
-    "operatingSystem": "All",
-    "applicationCategory": "BusinessApplication",
-    "description": "La plateforme SaaS ultime pour gérer votre guilde World of Warcraft. Synchronisez vos personnages via l'API officielle Battle.net, planifiez des raids sur un calendrier interactif, créez vos rosters et suivez la trésorerie de votre guilde.",
-    "offers": {
-      "@type": "AggregateOffer",
-      "priceCurrency": "EUR",
-      "lowPrice": "0.00",
-      "highPrice": "4.99",
-      "offerCount": "3"
-    }
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://guild-manager.com/#organization",
+        "name": "Guild Manager",
+        "url": "https://guild-manager.com/",
+        "logo": "https://guild-manager.com/icons/icon-512.png"
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://guild-manager.com/#website",
+        "name": "Guild Manager",
+        "url": "https://guild-manager.com/",
+        "inLanguage": ["fr", "en"],
+        "publisher": { "@id": "https://guild-manager.com/#organization" }
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "Guild Manager",
+        "url": "https://guild-manager.com/",
+        "operatingSystem": "Web",
+        "applicationCategory": "BusinessApplication",
+        "applicationSubCategory": "World of Warcraft guild management",
+        "inLanguage": ["fr", "en"],
+        "image": "https://guild-manager.com/assets/social/og-en.jpg",
+        "description": "Guild management for World of Warcraft (EU and US realms): raid calendar and sign-ups, raid line-up, Mythic+ groups, Warcraft Logs analysis with an MVP ranking, guild fees and a Discord bot.",
+        "featureList": ["Raid calendar and sign-ups", "Raid line-up builder with raid buffs", "Mythic+ group builder with Raider.io scores", "Warcraft Logs analysis and MVP ranking", "Guild fees ledger", "Discord bot reminders", "Battle.net character import"],
+        "publisher": { "@id": "https://guild-manager.com/#organization" },
+        "offers": {
+          "@type": "AggregateOffer",
+          "priceCurrency": "EUR",
+          "lowPrice": "0",
+          "highPrice": "4.99",
+          "offerCount": "3"
+        }
+      }
+    ]
   }
   </script>
 </head>

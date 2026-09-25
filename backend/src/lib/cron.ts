@@ -1,15 +1,18 @@
 import cron from 'node-cron';
 import { EventService } from '../services/eventService';
 import { FeeService } from '../services/feeService';
+import { REGION_TIME_ZONE, WOW_REGIONS } from './regions';
 
 export const initCronJobs = () => {
-  // Every day at 10:00 AM - Daily Event Reminder
-  cron.schedule('0 10 * * *', async () => {
-    console.log('[Cron] Checking for today\'s events...');
-    await EventService.sendDailyReminders(new Date());
-  }, {
-    timezone: "Europe/Paris"
-  });
+  // Every day at 10:00 AM, guild local time - Daily Event Reminder (one run per region)
+  for (const region of WOW_REGIONS) {
+    cron.schedule('0 10 * * *', async () => {
+      console.log(`[Cron] Checking for today's events (${region})...`);
+      await EventService.sendDailyReminders(new Date(), region);
+    }, {
+      timezone: REGION_TIME_ZONE[region]
+    });
+  }
 
   // Every day at 18:00
   cron.schedule('0 18 * * *', async () => {

@@ -1,0 +1,19 @@
+<section class="not-found ui-card" aria-labelledby="not-found-title">
+  <div class="code" aria-hidden="true">
+    <span>4</span>
+    <span class="shield">🛡️</span>
+    <span>4</span>
+  </div>
+  <h1 id="not-found-title">{{ i18n.t('not_found.title') }}</h1>
+  <p>{{ i18n.t('not_found.text') }}</p>
+  <code class="path">{{ path }}</code>
+  <div class="actions">
+    @if (isLoggedIn()) {
+      <a class="ui-btn primary" routerLink="/dashboard">{{ i18n.t('not_found.dashboard') }}</a>
+      <a class="ui-btn ghost" routerLink="/calendar">{{ i18n.t('not_found.calendar') }}</a>
+    } @else {
+      <a class="ui-btn primary" [routerLink]="homePath()">{{ i18n.t('not_found.home') }}</a>
+      <a class="ui-btn ghost" routerLink="/login">{{ i18n.t('nav.login') }}</a>
+    }
+  </div>
+</section>

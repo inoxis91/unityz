@@ -1,18 +1,12 @@
 import { z } from 'zod';
 
+// Only name + realm are read: the server re-verifies each character with Blizzard
 export const importCharactersSchema = z.object({
   body: z.object({
     characters: z.array(z.object({
-      name: z.string().min(1),
-      realm: z.string().min(1),
-      class: z.string().min(1),
-      level: z.number().int(),
-      guild: z.object({
-        id: z.number().int(),
-        name: z.string().min(1),
-        realm: z.string().min(1)
-      }).nullable().optional()
-    })),
+      name: z.string().min(1).max(100),
+      realm: z.string().min(1).max(100),
+    })).min(1).max(50),
   }),
 });
 

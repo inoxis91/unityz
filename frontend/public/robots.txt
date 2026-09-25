@@ -1,13 +1,18 @@
 # robots.txt for Guild Manager
+# Public pages: / (fr), /en, /terms, /privacy. The app itself needs a Battle.net login.
 User-agent: *
 Allow: /
-Allow: /login
+Disallow: /api/
+Disallow: /login
 Disallow: /select-guild
 Disallow: /payment
 Disallow: /dashboard
+Disallow: /guild-characters
 Disallow: /options
+Disallow: /absences
 Disallow: /calendar
 Disallow: /fees
+Disallow: /crafts
 Disallow: /events
 Disallow: /admin
 

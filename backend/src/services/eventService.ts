@@ -1,6 +1,7 @@
 import pool, { withTransaction } from '../lib/db';
 import { assertEventQuota } from './tierLimits';
 import { HttpError } from '../middlewares/errorHandler';
+import { REGION_TIME_ZONE, WowRegion } from '../lib/regions';
 import { sendDiscordChannelMessage } from '../lib/discord';
 import { t, getDiscordLocale, SupportedDiscordLocale } from '../lib/i18n';
 
@@ -492,16 +493,20 @@ export class EventService {
     return (result.rowCount ?? 0) > 0;
   }
 
-  static async getEventsForDate(date: Date): Promise<Event[]> {
+  /** Événements du jour (date locale de la région) des guildes de cette région. */
+  static async getEventsForDate(date: Date, region: WowRegion): Promise<Event[]> {
+    const localDate = date.toLocaleDateString('en-CA', { timeZone: REGION_TIME_ZONE[region] });
     const query = `
       SELECT e.*, r.name as roster_name
       FROM events e
+      JOIN guilds g ON g.id = e.guild_id
       LEFT JOIN rosters r ON e.roster_id = r.id
       WHERE e.start_time::date = $1::date
+        AND g.region = $2
         AND NOT COALESCE(e.is_canceled, FALSE)
       ORDER BY e.start_time ASC
     `;
-    const result = await pool.query(query, [date.toISOString().split('T')[0]]);
+    const result = await pool.query(query, [localDate, region]);
     return result.rows;
   }
 
@@ -605,8 +610,8 @@ export class EventService {
     await sendDiscordChannelMessage(channelId, message);
   }
 
-  static async sendDailyReminders(date: Date): Promise<void> {
-    const events = await this.getEventsForDate(date);
+  static async sendDailyReminders(date: Date, region: WowRegion): Promise<void> {
+    const events = await this.getEventsForDate(date, region);
     if (events.length === 0) return;
 
     // Group events by guild_id to send isolated reminders per guild

@@ -1,7 +1,7 @@
 import express, { Request } from 'express';
-import axios from 'axios';
 import pool from '../lib/db';
 import { CharacterService } from '../services/characterService';
+import { UserService, characterKey } from '../services/userService';
 import { BlizzardService } from '../services/blizzardService';
 import { isAuthenticated, requireActiveGuild, requirePaidGuild, canManageRosters } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
@@ -15,6 +15,7 @@ import {
 import { WclCharacterRef, WclCharacterService } from '../services/wclCharacterService';
 import { HttpError } from '../middlewares/errorHandler';
 import { toRealmSlug } from '../lib/realm';
+import { WowRegion, toWowRegion } from '../lib/regions';
 
 const router = express.Router();
 
@@ -27,11 +28,12 @@ router.get('/details/:realm/:name', isAuthenticated, requireActiveGuild, require
     }
 
     const { realm, name } = req.params;
+    const region = await activeGuildRegion(req.user!.active_guild_id!);
 
     const [media, equipment, summary] = await Promise.all([
-      BlizzardService.getCharacterMedia(accessToken, realm as string, name as string),
-      BlizzardService.getCharacterEquipment(accessToken, realm as string, name as string),
-      BlizzardService.getCharacterSummary(accessToken, realm as string, name as string)
+      BlizzardService.getCharacterMedia(accessToken, region, realm as string, name as string),
+      BlizzardService.getCharacterEquipment(accessToken, region, realm as string, name as string),
+      BlizzardService.getCharacterSummary(accessToken, region, realm as string, name as string)
     ]);
 
     res.json({
@@ -44,102 +46,21 @@ router.get('/details/:realm/:name', isAuthenticated, requireActiveGuild, require
   }
 });
 
-// GET /api/characters/bnet : Récupère les personnages de l'utilisateur via Blizzard, filtrés par sa guilde active
-router.get('/bnet', isAuthenticated, async (req, res, next) => {
+// GET /api/characters/bnet : personnages du compte Battle.net vérifiés dans la guilde active
+router.get('/bnet', isAuthenticated, requireActiveGuild, async (req, res, next) => {
   try {
     const accessToken = req.user!.access_token;
     if (!accessToken) {
       return res.status(401).json({ status: 'error', message: 'No access token found' });
     }
 
-    const guildId = req.user!.active_guild_id;
-    if (!guildId) {
-      return res.status(400).json({ status: 'error', message: 'No active guild selected' });
-    }
-
-    const guildRes = await pool.query('SELECT blizzard_id, name FROM guilds WHERE id = $1', [guildId]);
-    const guild = guildRes.rows[0];
-    if (!guild) {
-      return res.status(404).json({ status: 'error', message: 'Active guild not found' });
-    }
-
-    if (accessToken.startsWith('mock_')) {
-      const { mockCharacters } = require('../lib/mockData');
-      const filtered = mockCharacters.filter((c: any) => c.user_id === req.user!.id && c.guild_id === guildId).map((c: any) => ({
-        name: c.name,
-        realm: c.realm,
-        class: c.class,
-        level: c.level,
-        guild: {
-          id: guild.blizzard_id,
-          name: guild.name,
-          realm: c.realm
-        }
-      }));
-      return res.json(filtered);
-    }
-
-    const response = await axios.get('https://eu.api.blizzard.com/profile/user/wow', {
-      headers: { Authorization: `Bearer ${accessToken}` },
-      params: { namespace: 'profile-eu', locale: 'fr_FR' }
-    });
-
-    const accounts = response.data.wow_accounts || [];
-    let allCharacters: any[] = [];
-
-    accounts.forEach((account: any) => {
-      if (account.characters) {
-        account.characters.forEach((char: any) => {
-          // Optimization: Only list characters level 10+ to avoid rate limiting on summaries
-          if (char.name && (char.level || 0) >= 10) {
-            allCharacters.push({
-              name: char.name,
-              realm: char.realm?.name || 'Inconnu',
-              realmSlug: char.realm?.slug || null,
-              class: (char.character_class?.name || char.playable_class?.name || 'Inconnu'),
-              level: char.level || 0,
-              guild: null
-            });
-          }
-        });
-      }
-    });
-
-    console.log(`[Bnet Sync] Found ${allCharacters.length} characters (>= level 10) on Bnet account.`);
-
-    // Fetch summaries in parallel and filter by active guild's blizzard ID
-    const matchingCharacters: any[] = [];
-    await Promise.all(
-      allCharacters.map(async (char) => {
-        try {
-          const summary = await BlizzardService.getCharacterSummary(accessToken, char.realmSlug || char.realm, char.name);
-          if (!summary) {
-            console.log(`[Bnet Sync] Could not fetch summary for character: ${char.name}-${char.realm}. Character might be inactive or has third-party data sharing disabled in Battle.net settings.`);
-            return;
-          }
-          if (!summary.guild) {
-            console.log(`[Bnet Sync] Character ${char.name}-${char.realm} is not in any guild.`);
-            return;
-          }
-          if (summary.guild.id !== guild.blizzard_id) {
-            console.log(`[Bnet Sync] Character ${char.name}-${char.realm} is in guild '${summary.guild.name}' (ID: ${summary.guild.id}) but active guild is '${guild.name}' (ID: ${guild.blizzard_id}).`);
-            return;
-          }
-
-          console.log(`[Bnet Sync] Match found! Character ${char.name}-${char.realm} belongs to the active guild.`);
-          char.guild = {
-            id: summary.guild.id,
-            name: summary.guild.name,
-            realm: summary.guild.realm?.name || char.realm
-          };
-          matchingCharacters.push(char);
-        } catch (err: any) {
-          console.error(`[Bnet Sync] Error checking character ${char.name}-${char.realm}:`, err.message);
-        }
-      })
-    );
-
-    res.json(matchingCharacters);
+    const guild = await activeGuild(req.user!.active_guild_id!);
+    const { characters } = await UserService.findGuildCharacters(req.user!.id, accessToken, guild);
+    console.log(`[Bnet Sync] ${characters.length} character(s) of the account belong to guild '${guild.name}'.`);
+    res.json(characters.map((char) => ({
+      ...char,
+      guild: { id: guild.blizzard_id, name: guild.name, realm: guild.realm, region: guild.region },
+    })));
   } catch (error) {
     next(error);
   }
@@ -194,9 +115,23 @@ router.patch('/:id/main', isAuthenticated, requireActiveGuild, requirePaidGuild,
 });
 
 // POST /api/characters/import : Importe les personnages sélectionnés
-router.post('/import', isAuthenticated, validate(importCharactersSchema), async (req, res, next) => {
+router.post('/import', isAuthenticated, requireActiveGuild, validate(importCharactersSchema), async (req, res, next) => {
   try {
-    await CharacterService.importCharacters(req.user!.id, req.body.characters);
+    const accessToken = req.user!.access_token;
+    if (!accessToken) {
+      return res.status(401).json({ status: 'error', message: 'No access token found' });
+    }
+
+    // Jamais la guilde envoyée par le client : chaque personnage est revérifié dans la guilde active
+    const guild = await activeGuild(req.user!.active_guild_id!);
+    const requested = new Set(req.body.characters.map(characterKey));
+    const { characters } = await UserService.findGuildCharacters(
+      req.user!.id, accessToken, guild, (char) => requested.has(characterKey(char)),
+    );
+    if (characters.length === 0) {
+      throw new HttpError(403, 'None of these characters belongs to your active guild', 'NOT_A_GUILD_MEMBER');
+    }
+    await CharacterService.importCharacters(req.user!.id, guild.id, characters);
     res.json({ status: 'success', message: 'Characters imported successfully' });
   } catch (error) {
     next(error);
@@ -223,6 +158,16 @@ router.delete('/:id', isAuthenticated, requireActiveGuild, requirePaidGuild, asy
   }
 });
 
+async function activeGuild(guildId: string) {
+  const guildRes = await pool.query('SELECT id, blizzard_id, name, realm, region FROM guilds WHERE id = $1', [guildId]);
+  if (!guildRes.rows[0]) throw new HttpError(404, 'Active guild not found', 'GUILD_NOT_FOUND');
+  return guildRes.rows[0] as { id: string; blizzard_id: number; name: string; realm: string; region: string };
+}
+
+async function activeGuildRegion(guildId: string): Promise<WowRegion> {
+  return toWowRegion((await activeGuild(guildId)).region);
+}
+
 /** Personnage du joueur (guilde active) au format attendu par Warcraft Logs. */
 async function resolveWclCharacter(req: Request): Promise<WclCharacterRef> {
   const guildId = req.user!.active_guild_id!;
@@ -232,11 +177,10 @@ async function resolveWclCharacter(req: Request): Promise<WclCharacterRef> {
     throw new HttpError(404, 'Character not found', 'CHARACTER_NOT_FOUND');
   }
 
-  const guildRes = await pool.query('SELECT region FROM guilds WHERE id = $1', [guildId]);
   return {
     name: character.name,
     realmSlug: toRealmSlug(character.realm),
-    region: guildRes.rows[0]?.region || 'eu',
+    region: await activeGuildRegion(guildId),
     className: character.class,
   };
 }

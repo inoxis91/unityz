@@ -29,7 +29,7 @@ router.post('/login', async (req, res, next) => {
       await pool.query(`
         INSERT INTO guilds (id, blizzard_id, name, realm, region, subscription_tier, subscription_expires_at, discord_enabled)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        ON CONFLICT (blizzard_id) DO UPDATE
+        ON CONFLICT (blizzard_id, region) DO UPDATE
         SET name = EXCLUDED.name, 
             realm = EXCLUDED.realm, 
             subscription_tier = EXCLUDED.subscription_tier, 

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, map, catchError, shareReplay } from 'rxjs';
 
@@ -40,6 +40,14 @@ export interface GuildCharacterOverview {
 }
 
 import { environment } from '../../environments/environment';
+import { AuthService } from './auth';
+import {
+  DEFAULT_REGION,
+  WowRegion,
+  raiderIoCharacterUrl,
+  toRealmSlug,
+  warcraftLogsCharacterUrl,
+} from './character-utils';
 
 @Injectable({
   providedIn: 'root'
@@ -47,6 +55,7 @@ import { environment } from '../../environments/environment';
 export class CharacterService {
   private apiUrl = `${environment.apiUrl}/characters`;
   private rioCache = new Map<string, Observable<number>>();
+  private auth = inject(AuthService);
 
   static getClassId(className: string | undefined): string {
     if (!className) return 'unknown';
@@ -82,29 +91,30 @@ export class CharacterService {
     return `assets/icons/class/${icons[CharacterService.getClassId(className)] ?? 'warrior'}.webp`;
   }
 
+  /** Region of the active guild: every character shown in the app belongs to it. */
+  private region(): WowRegion {
+    return this.auth.currentUser()?.active_guild_region ?? DEFAULT_REGION;
+  }
+
   getWarcraftLogsUrl(name: string | undefined, realm: string | undefined): string {
-    if (!name || !realm) return '#';
-    const slugRealm = realm.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
-    return `https://www.warcraftlogs.com/character/eu/${encodeURIComponent(slugRealm)}/${encodeURIComponent(name.toLowerCase())}`;
+    return warcraftLogsCharacterUrl(this.region(), name, realm);
   }
 
   getRaiderIoUrl(name: string | undefined, realm: string | undefined): string {
-    if (!name || !realm) return '#';
-    const slugRealm = realm.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
-    return `https://raider.io/characters/eu/${encodeURIComponent(slugRealm)}/${encodeURIComponent(name.toLowerCase())}`;
+    return raiderIoCharacterUrl(this.region(), name, realm);
   }
 
   getRioScore(name: string, realm: string): Observable<number> {
-    const key = `${name}-${realm}`.toLowerCase();
-    
+    const region = this.region();
+    const key = `${region}-${name}-${realm}`.toLowerCase();
+
     if (this.rioCache.has(key)) {
       return this.rioCache.get(key)!;
     }
 
-    const slugRealm = realm.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
     const params = {
-      region: 'eu',
-      realm: slugRealm,
+      region,
+      realm: toRealmSlug(realm),
       name: name.toLowerCase(),
       fields: 'mythic_plus_scores_by_season:current',
     };

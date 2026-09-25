@@ -6,6 +6,9 @@ import pool from '../lib/db';
 
 const router = express.Router();
 
+// Columns the settings screen may see (never the Stripe ids)
+const GUILD_SETTINGS_COLUMNS = 'id, name, realm, region, subscription_tier, subscription_expires_at, discord_enabled, discord_guild_id, discord_events_channel_id, discord_fees_channel_id, discord_reminder_channel_id, discord_officer_channel_id, discord_crafts_channel_id, fees_enabled, minimum_fee_amount, discord_locale';
+
 const updateGuildSettingsSchema = z.object({
   body: z.object({
     discordEnabled: z.boolean(),
@@ -27,7 +30,7 @@ router.get('/my-settings', requireActiveGuild, isAdmin, async (req, res, next) =
     const guildId = req.user!.active_guild_id;
 
     const result = await pool.query(
-      'SELECT id, name, realm, region, subscription_tier, subscription_expires_at, discord_enabled, discord_guild_id, discord_events_channel_id, discord_fees_channel_id, discord_reminder_channel_id, discord_officer_channel_id, discord_crafts_channel_id, fees_enabled, minimum_fee_amount, discord_locale FROM guilds WHERE id = $1',
+      `SELECT ${GUILD_SETTINGS_COLUMNS} FROM guilds WHERE id = $1`,
       [guildId]
     );
 
@@ -99,7 +102,7 @@ router.put('/my-settings', requireActiveGuild, isAdmin, validate(updateGuildSett
            discord_locale = $10,
            updated_at = CURRENT_TIMESTAMP 
        WHERE id = $11 
-       RETURNING *`,
+       RETURNING ${GUILD_SETTINGS_COLUMNS}`,
       [
         tier === 'pro' ? discordEnabled : false,
         tier === 'pro' ? discordGuildId : null,

@@ -31,10 +31,10 @@ export const initDb = async (retries = 5, delay = 3000): Promise<void> => {
     await client.query(`
       CREATE TABLE IF NOT EXISTS guilds (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        blizzard_id INTEGER UNIQUE,
+        blizzard_id INTEGER,
         name VARCHAR(255) NOT NULL,
         realm VARCHAR(255) NOT NULL,
-        region VARCHAR(50) DEFAULT 'eu',
+        region VARCHAR(50) NOT NULL DEFAULT 'eu',
         subscription_tier VARCHAR(50) DEFAULT 'none',
         subscription_expires_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NULL,
         stripe_customer_id VARCHAR(255),
@@ -50,8 +50,24 @@ export const initDb = async (retries = 5, delay = 3000): Promise<void> => {
         fees_enabled BOOLEAN DEFAULT TRUE,
         minimum_fee_amount INTEGER DEFAULT 2000,
         created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (blizzard_id, region)
       );
+    `);
+
+    // Une guilde est identifiée par (blizzard_id, region) : les ids Blizzard se répètent entre l'EU et l'US
+    await client.query(`
+      DO $$
+      BEGIN
+        UPDATE guilds SET region = 'eu' WHERE region IS NULL;
+        ALTER TABLE guilds ALTER COLUMN region SET NOT NULL;
+        IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'guilds_blizzard_id_key') THEN
+          ALTER TABLE guilds DROP CONSTRAINT guilds_blizzard_id_key;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'guilds_blizzard_id_region_key') THEN
+          ALTER TABLE guilds ADD CONSTRAINT guilds_blizzard_id_region_key UNIQUE (blizzard_id, region);
+        END IF;
+      END $$;
     `);
 
     // Ensure Discord and Subscription columns exist in guilds
@@ -526,6 +542,16 @@ export const initDb = async (retries = 5, delay = 3000): Promise<void> => {
           ON CONFLICT DO NOTHING;
         END IF;
       END $$;
+    `);
+
+    // Sessions Express (connect-pg-simple) : survivent aux redéploiements, contrairement au MemoryStore
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS session (
+        sid VARCHAR NOT NULL PRIMARY KEY,
+        sess JSON NOT NULL,
+        expire TIMESTAMP(6) NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_session_expire ON session (expire);
     `);
 
     console.log('Database tables initialized successfully.');

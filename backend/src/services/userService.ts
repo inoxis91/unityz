@@ -1,6 +1,11 @@
 import pool, { withTransaction } from '../lib/db';
-import axios from 'axios';
-import { BlizzardService } from './blizzardService';
+import { BlizzardService, BnetCharacter } from './blizzardService';
+import { WowRegion, parseVirtualGuildId, toVirtualGuildId, toWowRegion } from '../lib/regions';
+import { HttpError } from '../middlewares/errorHandler';
+
+/** Clé d'un personnage (nom + royaume), insensible à la casse. */
+export const characterKey = (c: { name: string; realm: string }) =>
+  `${c.name.trim().toLowerCase()}|${c.realm.trim().toLowerCase()}`;
 
 export interface User {
   id: string;
@@ -157,9 +162,10 @@ export class UserService {
     return (result.rowCount ?? 0) > 0;
   }
 
+  /** Public fields only: Stripe ids and Discord channel config never reach the browser. */
   static async getActiveGuild(userId: string): Promise<any | null> {
     const query = `
-      SELECT g.* 
+      SELECT g.id, g.name, g.realm, g.region, g.subscription_tier, g.subscription_expires_at
       FROM guilds g
       JOIN users u ON u.active_guild_id = g.id
       WHERE u.id = $1
@@ -168,248 +174,143 @@ export class UserService {
     return result.rows[0] || null;
   }
 
+  /** Guilde enregistrée si elle existe, sinon entrée "virtuelle" à créer à la sélection. */
+  private static async toSelectableGuild(guild: {
+    blizzard_id: number;
+    name: string;
+    realm: string;
+    region: WowRegion;
+    subscription_tier?: string;
+    subscription_expires_at?: Date | null;
+  }): Promise<any> {
+    const dbRes = await pool.query(
+      `SELECT id, name, realm, region, subscription_tier, subscription_expires_at
+       FROM guilds
+       WHERE blizzard_id = $1 AND region = $2`,
+      [guild.blizzard_id, guild.region],
+    );
+    if (dbRes.rows[0]) return dbRes.rows[0];
+    return {
+      id: toVirtualGuildId(guild.region, guild.blizzard_id),
+      blizzard_id: guild.blizzard_id,
+      name: guild.name,
+      realm: guild.realm,
+      region: guild.region,
+      subscription_tier: guild.subscription_tier || 'none',
+      subscription_expires_at: guild.subscription_expires_at || null,
+      is_virtual: true,
+    };
+  }
+
   static async discoverUserGuilds(accessToken: string): Promise<any[]> {
     if (accessToken.startsWith('mock_')) {
       const { mockCharacters, mockGuilds } = require('../lib/mockData');
       const userChars = mockCharacters.filter((c: any) => c.user_id === accessToken);
       const guildIds = Array.from(new Set(userChars.map((c: any) => c.guild_id).filter((id: any) => id !== null)));
-      
+
       const registeredGuilds: any[] = [];
       for (const gid of guildIds) {
         const guild = mockGuilds.find((g: any) => g.id === gid);
         if (guild) {
-          const dbRes = await pool.query(`
-            SELECT id, name, realm, region, subscription_tier, subscription_expires_at 
-            FROM guilds 
-            WHERE blizzard_id = $1
-          `, [guild.blizzard_id]);
-          
-          if (dbRes.rows[0]) {
-            registeredGuilds.push(dbRes.rows[0]);
-          } else {
-            const virtualId = `00000000-0000-0000-0000-${String(guild.blizzard_id).padStart(12, '0')}`;
-            registeredGuilds.push({
-              id: virtualId,
-              blizzard_id: guild.blizzard_id,
-              name: guild.name,
-              realm: guild.realm,
-              region: guild.region,
-              subscription_tier: guild.subscription_tier || 'none',
-              subscription_expires_at: guild.subscription_expires_at || null,
-              is_virtual: true
-            });
-          }
+          registeredGuilds.push(await this.toSelectableGuild({ ...guild, region: toWowRegion(guild.region) }));
         }
       }
       return registeredGuilds;
     }
 
-    const response = await axios.get('https://eu.api.blizzard.com/profile/user/wow', {
-      headers: { Authorization: `Bearer ${accessToken}` },
-      params: { namespace: 'profile-eu', locale: 'fr_FR' }
-    });
-
-    const accounts = response.data.wow_accounts || [];
-    const characterSummaries: any[] = [];
-
-    accounts.forEach((account: any) => {
-      if (account.characters) {
-        account.characters.forEach((char: any) => {
-          if (char.name && (char.level || 0) >= 10) {
-            characterSummaries.push({
-              name: char.name,
-              realm: char.realm?.name || 'Inconnu',
-              realmSlug: char.realm?.slug || null
-            });
-          }
-        });
-      }
-    });
-
-    // Fetch character profiles in parallel to find their guild
-    const uniqueGuildsMap = new Map<number, any>();
-
+    // Guilde de chaque personnage, toutes régions confondues (clé région + id Blizzard)
+    const characters = await BlizzardService.getAccountCharacters(accessToken);
+    const uniqueGuildsMap = new Map<string, { blizzard_id: number; name: string; realm: string; region: WowRegion }>();
     await Promise.all(
-      characterSummaries.map(async (char) => {
-        try {
-          const summary = await BlizzardService.getCharacterSummary(accessToken, char.realmSlug || char.realm, char.name);
-          if (summary && summary.guild) {
-            uniqueGuildsMap.set(summary.guild.id, {
-              blizzard_id: summary.guild.id,
-              name: summary.guild.name,
-              realm: summary.guild.realm?.name || char.realm,
-              region: 'eu'
-            });
-          }
-        } catch (err) {
-          // Ignore
+      characters.map(async (char) => {
+        const summary = await BlizzardService.getCharacterSummary(accessToken, char.region, char.realmSlug || char.realm, char.name);
+        if (summary?.guild) {
+          uniqueGuildsMap.set(`${char.region}:${summary.guild.id}`, {
+            blizzard_id: summary.guild.id,
+            name: summary.guild.name,
+            realm: summary.guild.realm?.name || char.realm,
+            region: char.region,
+          });
         }
       })
     );
 
-    const discoveredGuilds = Array.from(uniqueGuildsMap.values());
+    // Les guildes ne sont pas créées ici, seulement à la sélection
     const registeredGuilds: any[] = [];
-
-    // Check if guilds exist in database, do not automatically insert them
-    for (const guild of discoveredGuilds) {
-      const dbRes = await pool.query(`
-        SELECT id, name, realm, region, subscription_tier, subscription_expires_at 
-        FROM guilds 
-        WHERE blizzard_id = $1
-      `, [guild.blizzard_id]);
-      
-      if (dbRes.rows[0]) {
-        registeredGuilds.push(dbRes.rows[0]);
-      } else {
-        const virtualId = `00000000-0000-0000-0000-${String(guild.blizzard_id).padStart(12, '0')}`;
-        registeredGuilds.push({
-          id: virtualId,
-          blizzard_id: guild.blizzard_id,
-          name: guild.name,
-          realm: guild.realm,
-          region: guild.region,
-          subscription_tier: 'none',
-          subscription_expires_at: null,
-          is_virtual: true
-        });
-      }
+    for (const guild of uniqueGuildsMap.values()) {
+      registeredGuilds.push(await this.toSelectableGuild(guild));
     }
-
     return registeredGuilds;
   }
 
-  static async fetchGuildCharacters(userId: string, guildId: string, accessToken: string): Promise<any[]> {
-    let guild = null;
-    let realGuildId = guildId;
+  /**
+   * Personnages du compte qui appartiennent vraiment à la guilde : même région et id de guilde
+   * vérifié via l'API Blizzard. C'est la seule preuve d'appartenance acceptée (jamais le client).
+   * `only` restreint la vérification aux personnages demandés ; `guildInfo` vient de Blizzard.
+   */
+  static async findGuildCharacters(
+    userId: string,
+    accessToken: string,
+    guild: { id: string | null; blizzard_id: number; region: string },
+    only?: (char: { name: string; realm: string }) => boolean,
+  ): Promise<{ characters: BnetCharacter[]; guildInfo: { name: string; realm: string } | null }> {
+    const region = toWowRegion(guild.region);
 
-    if (guildId.startsWith('00000000-0000-0000-0000-')) {
-      const blizzardId = parseInt(guildId.split('-').pop() || '0', 10);
-      
-      const existingRes = await pool.query('SELECT * FROM guilds WHERE blizzard_id = $1', [blizzardId]);
-      if (existingRes.rows[0]) {
-        guild = existingRes.rows[0];
-        realGuildId = guild.id;
-      } else {
-        let name = '';
-        let realm = '';
-        let region = 'eu';
-        let subTier = 'none';
-        let subExpires = null;
-
-        if (accessToken.startsWith('mock_')) {
-          const { mockGuilds } = require('../lib/mockData');
-          const mockG = mockGuilds.find((g: any) => g.blizzard_id === blizzardId);
-          if (mockG) {
-            name = mockG.name;
-            realm = mockG.realm;
-            region = mockG.region || 'eu';
-            subTier = mockG.subscription_tier || 'none';
-            subExpires = mockG.subscription_expires_at || null;
-          }
-        } else {
-          const response = await axios.get('https://eu.api.blizzard.com/profile/user/wow', {
-            headers: { Authorization: `Bearer ${accessToken}` },
-            params: { namespace: 'profile-eu', locale: 'fr_FR' }
-          });
-
-          const accounts = response.data.wow_accounts || [];
-          const characterSummaries: any[] = [];
-          accounts.forEach((account: any) => {
-            if (account.characters) {
-              account.characters.forEach((char: any) => {
-                if (char.name && (char.level || 0) >= 10) {
-                  characterSummaries.push({ name: char.name, realm: char.realm?.name || 'Inconnu', realmSlug: char.realm?.slug || null });
-                }
-              });
-            }
-          });
-
-          for (const char of characterSummaries) {
-            try {
-              const summary = await BlizzardService.getCharacterSummary(accessToken, char.realmSlug || char.realm, char.name);
-              if (summary && summary.guild && summary.guild.id === blizzardId) {
-                name = summary.guild.name;
-                realm = summary.guild.realm?.name || char.realm;
-                break;
-              }
-            } catch (err) {
-              // Ignore
-            }
-          }
-        }
-
-        const insertRes = await pool.query(`
-          INSERT INTO guilds (blizzard_id, name, realm, region, subscription_tier, subscription_expires_at)
-          VALUES ($1, $2, $3, $4, $5, $6)
-          ON CONFLICT (blizzard_id) DO UPDATE
-          SET name = EXCLUDED.name, realm = EXCLUDED.realm, updated_at = CURRENT_TIMESTAMP
-          RETURNING *
-        `, [blizzardId, name, realm, region, subTier, subExpires]);
-        guild = insertRes.rows[0];
-        realGuildId = guild.id;
-      }
-    } else {
-      const guildRes = await pool.query('SELECT * FROM guilds WHERE id = $1', [guildId]);
-      guild = guildRes.rows[0];
-    }
-
-    if (!guild) throw new Error('Guild not found');
-
-    // 2. Set user active guild ID
-    await pool.query('UPDATE users SET active_guild_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [realGuildId, userId]);
-
-    // 3. Fetch characters from BNet Account Profile
-    let matchingCharacters: any[] = [];
     if (accessToken.startsWith('mock_')) {
       const { mockCharacters } = require('../lib/mockData');
-      matchingCharacters = mockCharacters.filter((c: any) => c.user_id === userId && c.guild_id === realGuildId).map((c: any) => ({
-        name: c.name,
-        realm: c.realm,
-        class: c.class,
-        level: c.level
-      }));
-    } else {
-      const response = await axios.get('https://eu.api.blizzard.com/profile/user/wow', {
-        headers: { Authorization: `Bearer ${accessToken}` },
-        params: { namespace: 'profile-eu', locale: 'fr_FR' }
-      });
-
-      const accounts = response.data.wow_accounts || [];
-
-      // 4. Fetch details to find characters belonging to this guild
-      const charactersToCheck: any[] = [];
-      accounts.forEach((account: any) => {
-        if (account.characters) {
-          account.characters.forEach((char: any) => {
-            if (char.name && (char.level || 0) >= 10) {
-              charactersToCheck.push({
-                name: char.name,
-                realm: char.realm?.name || 'Inconnu',
-                realmSlug: char.realm?.slug || null,
-                class: (char.character_class?.name || char.playable_class?.name || 'Inconnu'),
-                level: char.level || 0
-              });
-            }
-          });
-        }
-      });
-
-      await Promise.all(
-        charactersToCheck.map(async (char) => {
-          try {
-            const summary = await BlizzardService.getCharacterSummary(accessToken, char.realmSlug || char.realm, char.name);
-            if (summary && summary.guild && summary.guild.id === guild.blizzard_id) {
-              matchingCharacters.push({
-                ...char,
-                is_main: false
-              });
-            }
-          } catch (err) {
-            // Ignore
-          }
-        })
-      );
+      const characters: BnetCharacter[] = mockCharacters
+        .filter((c: any) => c.user_id === userId && c.guild_id === guild.id)
+        .map((c: any) => ({ name: c.name, realm: c.realm, realmSlug: null, class: c.class, level: c.level, region }))
+        .filter((c: BnetCharacter) => !only || only(c));
+      return { characters, guildInfo: null };
     }
+
+    const candidates = (await BlizzardService.getAccountCharacters(accessToken))
+      .filter((c) => c.region === region && (!only || only(c)));
+    const characters: BnetCharacter[] = [];
+    let guildInfo: { name: string; realm: string } | null = null;
+    await Promise.all(
+      candidates.map(async (char) => {
+        const summary = await BlizzardService.getCharacterSummary(accessToken, region, char.realmSlug || char.realm, char.name);
+        if (summary?.guild?.id !== guild.blizzard_id) return;
+        characters.push(char);
+        guildInfo ??= { name: summary.guild.name, realm: summary.guild.realm?.name || char.realm };
+      })
+    );
+    return { characters, guildInfo };
+  }
+
+  static async fetchGuildCharacters(userId: string, guildId: string, accessToken: string): Promise<any[]> {
+    const virtual = parseVirtualGuildId(guildId);
+    const guildRes = virtual
+      ? await pool.query('SELECT * FROM guilds WHERE blizzard_id = $1 AND region = $2', [virtual.blizzardId, virtual.region])
+      : await pool.query('SELECT * FROM guilds WHERE id = $1', [guildId]);
+    let guild = guildRes.rows[0];
+    if (!guild && !virtual) throw new HttpError(404, 'Guild not found', 'GUILD_NOT_FOUND');
+
+    // Appartenance prouvée par Blizzard AVANT toute écriture (guilde active, membre, rang)
+    const target = guild ?? { id: null, blizzard_id: virtual!.blizzardId, region: virtual!.region };
+    const { characters, guildInfo } = await this.findGuildCharacters(userId, accessToken, target);
+    if (characters.length === 0) {
+      throw new HttpError(403, 'None of your characters belongs to this guild', 'NOT_A_GUILD_MEMBER');
+    }
+    const matchingCharacters = characters.map((char) => ({ ...char, is_main: false }));
+
+    if (!guild) {
+      // Première sélection de cette guilde : nom et royaume viennent de Blizzard
+      const insertRes = await pool.query(`
+        INSERT INTO guilds (blizzard_id, name, realm, region)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (blizzard_id, region) DO UPDATE
+        SET name = EXCLUDED.name, realm = EXCLUDED.realm, updated_at = CURRENT_TIMESTAMP
+        RETURNING *
+      `, [virtual!.blizzardId, guildInfo?.name ?? '', guildInfo?.realm ?? '', virtual!.region]);
+      guild = insertRes.rows[0];
+    }
+    const realGuildId: string = guild.id;
+    const guildRegion = toWowRegion(guild.region);
+
+    await pool.query('UPDATE users SET active_guild_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [realGuildId, userId]);
 
     // Check if any of the user's characters in the guild is the Guild Master (rank 0)
     let isGuildMaster = false;
@@ -421,7 +322,7 @@ export class UserService {
         userRank = mockUser?.rank !== null && mockUser?.rank !== undefined ? mockUser.rank : 9;
         isGuildMaster = userRank === 0;
       } else {
-        const roster = await BlizzardService.getGuildRoster(accessToken, guild.realm, guild.name);
+        const roster = await BlizzardService.getGuildRoster(accessToken, guildRegion, guild.realm, guild.name);
         if (roster && roster.members) {
           const guildMasterMember = roster.members.find((m: any) => m.rank === 0);
           if (guildMasterMember && guildMasterMember.character) {
@@ -478,13 +379,21 @@ export class UserService {
   }
 
   static async importSelectedCharacters(userId: string, guildId: string, accessToken: string, selectedCharacters: any[]): Promise<void> {
-    const guildRes = await pool.query('SELECT blizzard_id, name, realm FROM guilds WHERE id = $1', [guildId]);
+    const guildRes = await pool.query('SELECT id, blizzard_id, region FROM guilds WHERE id = $1', [guildId]);
     const guild = guildRes.rows[0];
-    if (!guild) throw new Error('Guild not found');
+    if (!guild) throw new HttpError(404, 'Guild not found', 'GUILD_NOT_FOUND');
 
     if (selectedCharacters.length === 0) {
-      throw new Error('Please select at least one character to import');
+      throw new HttpError(400, 'Please select at least one character to import', 'NO_CHARACTER_SELECTED');
     }
+
+    // Seuls les personnages vérifiés dans cette guilde sont importés, avec les données Blizzard
+    const selected = new Map(selectedCharacters.map((c: any) => [characterKey(c), !!c.is_main]));
+    const { characters } = await this.findGuildCharacters(userId, accessToken, guild, (c) => selected.has(characterKey(c)));
+    if (characters.length === 0) {
+      throw new HttpError(403, 'None of the selected characters belongs to this guild', 'NOT_A_GUILD_MEMBER');
+    }
+    selectedCharacters = characters.map((c) => ({ ...c, is_main: selected.get(characterKey(c)) }));
 
     // Insert characters into database
     const client = await pool.connect();

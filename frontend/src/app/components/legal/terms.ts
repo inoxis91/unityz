@@ -1,7 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 
 import { RouterModule } from '@angular/router';
 import { I18nService } from '../../services/i18n';
+import { LOCALIZED_PATHS, SeoService } from '../../services/seo';
 
 @Component({
   selector: 'app-terms',
@@ -10,7 +11,9 @@ import { I18nService } from '../../services/i18n';
   template: `
     <div class="legal-container animated-fade-in">
       <div class="back-link">
-        <a routerLink="/">← {{ i18n.currentLocale() === 'fr' ? 'Retour' : 'Back' }}</a>
+        <a [routerLink]="paths[i18n.currentLocale()]"
+          >← {{ i18n.currentLocale() === 'fr' ? 'Retour' : 'Back' }}</a
+        >
       </div>
 
       <!-- FRENCH TERMS -->
@@ -251,4 +254,24 @@ import { I18nService } from '../../services/i18n';
 })
 export class TermsOfServiceComponent {
   public i18n = inject(I18nService);
+  private readonly seo = inject(SeoService);
+  readonly paths = LOCALIZED_PATHS;
+
+  constructor() {
+    effect(() => {
+      const locale = this.i18n.currentLocale();
+      this.seo.apply({
+        title:
+          locale === 'fr'
+            ? "Conditions générales d'utilisation – Guild Manager"
+            : 'Terms of Service – Guild Manager',
+        description:
+          locale === 'fr'
+            ? "Conditions générales d'utilisation de Guild Manager, l'outil de gestion de guilde World of Warcraft : service, compte Battle.net, abonnements et bot Discord."
+            : 'Terms of Service of Guild Manager, the World of Warcraft guild management tool: service, Battle.net account, subscriptions and Discord bot.',
+        path: '/terms',
+        locale,
+      });
+    });
+  }
 }

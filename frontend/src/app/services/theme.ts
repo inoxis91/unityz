@@ -27,7 +27,7 @@ export class ThemeService {
     );
 
     effect(() => {
-      this.document.documentElement.dataset['theme'] = this.theme();
+      this.document.documentElement.setAttribute('data-theme', this.theme());
     });
   }
 

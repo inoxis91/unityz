@@ -28,13 +28,16 @@ export class LoginComponent implements OnInit {
 
   constructor(public authService: AuthService) {
     effect(() => {
-      const isFr = this.i18n.currentLocale() === 'fr';
-      this.seo.generateTags({
-        title: isFr ? 'Connectez-vous' : 'Sign In',
-        description: isFr
-          ? 'Accédez à votre espace guilde sur Guild Manager : calendrier de raids, roster, et cotisations.'
-          : 'Access your guild space on Guild Manager: raid calendar, roster, and membership fees.',
-        keywords: 'World of Warcraft, Connexion, Battle.net',
+      const locale = this.i18n.currentLocale();
+      this.seo.apply({
+        title: locale === 'fr' ? 'Connexion – Guild Manager' : 'Sign in – Guild Manager',
+        description:
+          locale === 'fr'
+            ? 'Accédez à votre espace guilde sur Guild Manager : calendrier de raids, roster et cotisations.'
+            : 'Access your guild space on Guild Manager: raid calendar, roster and membership fees.',
+        path: '/login',
+        locale,
+        noindex: true,
       });
     });
   }

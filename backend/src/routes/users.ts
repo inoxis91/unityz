@@ -296,13 +296,12 @@ router.post('/active-guild', isAuthenticated, validate(updateActiveGuildSchema),
 
 const importCharactersSchema = z.object({
   body: z.object({
+    // Class and level come from Blizzard: the server re-verifies every selected character
     characters: z.array(z.object({
       name: z.string().min(2).max(100),
       realm: z.string().min(2).max(100),
-      class: z.string().min(2).max(100),
-      level: z.number().int().min(1),
       is_main: z.boolean().optional(),
-    })).min(1),
+    })).min(1).max(50),
   }),
 });
 

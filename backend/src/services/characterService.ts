@@ -1,4 +1,5 @@
-import pool from '../lib/db';
+import pool, { withTransaction } from '../lib/db';
+import type { BnetCharacter } from './blizzardService';
 
 export interface Character {
   id: string;
@@ -67,54 +68,28 @@ export class CharacterService {
     }
   }
 
-  static async importCharacters(userId: string, characters: any[]): Promise<void> {
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
-      
-      // Check if user already has a main character
+  /** Characters already verified in the guild (see UserService.findGuildCharacters). */
+  static async importCharacters(userId: string, guildId: string, characters: BnetCharacter[]): Promise<void> {
+    await withTransaction(async (client) => {
+      // The first character imported becomes main if the user has no main yet
       const mainCheck = await client.query('SELECT 1 FROM characters WHERE user_id = $1 AND is_main = TRUE LIMIT 1', [userId]);
       let hasMain = mainCheck.rowCount! > 0;
 
       for (const char of characters) {
-        // The first character imported becomes main IF the user has no main yet
         const setAsMain = !hasMain;
-
-        let guildId: string | null = null;
-        if (char.guild) {
-          const guildRes = await client.query(`
-            INSERT INTO guilds (blizzard_id, name, realm)
-            VALUES ($1, $2, $3)
-            ON CONFLICT (blizzard_id) DO UPDATE 
-            SET name = EXCLUDED.name, realm = EXCLUDED.realm, updated_at = CURRENT_TIMESTAMP
-            RETURNING id
-          `, [char.guild.id, char.guild.name, char.guild.realm]);
-          guildId = guildRes.rows[0].id;
-        }
-        
-        const query = `
+        await client.query(`
           INSERT INTO characters (user_id, name, realm, class, level, is_main, guild_id)
           VALUES ($1, $2, $3, $4, $5, $6, $7)
-          ON CONFLICT (name, realm, user_id) 
-          DO UPDATE SET 
+          ON CONFLICT (name, realm, user_id)
+          DO UPDATE SET
             level = EXCLUDED.level,
             class = EXCLUDED.class,
             guild_id = EXCLUDED.guild_id,
             updated_at = CURRENT_TIMESTAMP
-        `;
-        await client.query(query, [userId, char.name, char.realm, char.class, char.level, setAsMain, guildId]);
-        
-        if (setAsMain) {
-          hasMain = true; // Only set the first one as main
-        }
+        `, [userId, char.name, char.realm, char.class, char.level, setAsMain, guildId]);
+        hasMain = true;
       }
-      await client.query('COMMIT');
-    } catch (e) {
-      await client.query('ROLLBACK');
-      throw e;
-    } finally {
-      client.release();
-    }
+    });
   }
 
   static async updateRoles(charId: string, userId: string, roles: { isTank: boolean, isHeal: boolean, isDPS: boolean }): Promise<Character> {

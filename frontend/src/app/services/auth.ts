@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, tap, switchMap, map } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
+import { WowRegion } from './character-utils';
 
 export type UserRole = 'admin' | 'raid_leader' | 'treasurer' | 'event_manager' | 'member';
 
@@ -25,6 +26,8 @@ export interface User {
   active_guild_free_trial_available?: boolean;
   /** A running Stripe subscription: plan changes are prorated instead of going through Checkout. */
   active_guild_has_subscription?: boolean;
+  /** Blizzard region of the active guild (Raider.io / Warcraft Logs links). */
+  active_guild_region?: WowRegion;
   created_at?: string;
   updated_at?: string;
   characters?: any[];

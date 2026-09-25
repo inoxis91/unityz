@@ -1,7 +1,9 @@
+import { isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  PLATFORM_ID,
   computed,
   effect,
   inject,
@@ -76,8 +78,10 @@ export class MvpShowcaseComponent {
   readonly paused = signal(
     typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches,
   );
+  /** No autoplay while prerendering: a pending timer would keep the app from ever being stable. */
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   readonly hovered = signal(false);
-  readonly running = computed(() => !this.paused() && !this.hovered());
+  readonly running = computed(() => this.isBrowser && !this.paused() && !this.hovered());
 
   readonly current = computed(() => this.tabs[this.active()]);
   readonly sources = computed(() => {

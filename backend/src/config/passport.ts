@@ -10,7 +10,15 @@ dotenv.config();
 const BNET_CLIENT_ID = process.env.BNET_CLIENT_ID;
 const BNET_CLIENT_SECRET = process.env.BNET_CLIENT_SECRET;
 const BNET_CALLBACK_URL = process.env.BNET_CALLBACK_URL || 'http://localhost:3000/api/auth/bnet/callback';
-const BNET_REGION = 'eu';
+// Endpoint OAuth global de Blizzard : le jeton obtenu est valable pour toutes les régions
+// (EU, US), la région de chaque appel d'API est choisie ensuite (lib/regions.ts).
+const BNET_OAUTH_HOST = 'https://oauth.battle.net';
+// `userURL` est lu par passport-bnet mais absent de ses typings, d'où l'objet séparé
+const BNET_OAUTH_URLS = {
+  authorizationURL: `${BNET_OAUTH_HOST}/authorize`,
+  tokenURL: `${BNET_OAUTH_HOST}/token`,
+  userURL: `${BNET_OAUTH_HOST}/userinfo`,
+};
 
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
@@ -24,7 +32,7 @@ if (BNET_CLIENT_ID && BNET_CLIENT_SECRET) {
         clientID: BNET_CLIENT_ID,
         clientSecret: BNET_CLIENT_SECRET,
         callbackURL: BNET_CALLBACK_URL,
-        region: BNET_REGION,
+        ...BNET_OAUTH_URLS,
         state: true,
         scope: ['wow.profile']
       },

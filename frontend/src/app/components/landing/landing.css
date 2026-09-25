@@ -178,21 +178,85 @@
   background: rgba(15, 23, 42, 0.6);
 }
 
-.lang button {
+.lang a {
   padding: 4px 10px;
-  border: none;
   border-radius: 7px;
-  background: none;
   color: var(--muted);
-  font: inherit;
   font-size: 0.8125rem;
   font-weight: 700;
+  text-decoration: none;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.lang a:hover {
+  color: #ffffff;
+}
+
+.lang a.active {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+/* ---------- Language suggestion ---------- */
+.lang-suggest {
+  position: relative;
+  z-index: 60;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 14px;
+  padding: 10px 48px;
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.92), rgba(124, 58, 237, 0.92));
+  color: #ffffff;
+  font-size: 0.875rem;
+  text-align: center;
+  animation: suggest-in 0.35s ease both;
+}
+
+.lang-suggest a {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.lang-suggest a:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.lang-suggest-close {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  transform: translateY(-50%);
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: #ffffff;
+  font-size: 1.25rem;
+  line-height: 1;
   cursor: pointer;
 }
 
-.lang button.active {
-  background: #2563eb;
-  color: #ffffff;
+.lang-suggest-close:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+@keyframes suggest-in {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
 }
 
 button:focus-visible,
@@ -1123,7 +1187,8 @@ summary::-webkit-details-marker {
   .hero-copy > *,
   .hero-visual,
   .hero-tilt,
-  .faq-item p {
+  .faq-item p,
+  .lang-suggest {
     animation: none;
   }
 

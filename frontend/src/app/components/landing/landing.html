@@ -7,9 +7,27 @@
     <span class="grid-lines"></span>
   </div>
 
+  @if (suggestedLocale(); as other) {
+    <aside class="lang-suggest" [attr.lang]="other" role="note">
+      <span>{{ i18n.tIn(other, 'landing.lang_suggest.text') }}</span>
+      <a [routerLink]="paths[other]" [attr.hreflang]="other" (click)="changeLang(other)">
+        {{ i18n.tIn(other, 'landing.lang_suggest.action') }}
+        <span aria-hidden="true">→</span>
+      </a>
+      <button
+        type="button"
+        class="lang-suggest-close"
+        [attr.aria-label]="i18n.tIn(other, 'landing.lang_suggest.dismiss')"
+        (click)="suggestedLocale.set(null)"
+      >
+        ×
+      </button>
+    </aside>
+  }
+
   <header class="header" [class.scrolled]="scrolled()">
     <div class="header-inner">
-      <a class="brand" href="/">
+      <a class="brand" [routerLink]="paths[locale]">
         <img src="favicon.ico" alt="" width="28" height="28" />
         <span class="brand-name">Guild Manager</span>
         <span class="beta">BETA</span>
@@ -27,26 +45,28 @@
       </nav>
 
       <div class="header-actions">
-        <div class="lang" role="group" [attr.aria-label]="i18n.t('landing.nav.lang')">
-          <button
-            type="button"
+        <nav class="lang" [attr.aria-label]="i18n.t('landing.nav.lang')">
+          <a
+            [routerLink]="paths.fr"
+            hreflang="fr"
             lang="fr"
-            [class.active]="i18n.currentLocale() === 'fr'"
-            [attr.aria-pressed]="i18n.currentLocale() === 'fr'"
+            [class.active]="locale === 'fr'"
+            [attr.aria-current]="locale === 'fr' ? 'page' : null"
             (click)="changeLang('fr')"
           >
             FR
-          </button>
-          <button
-            type="button"
+          </a>
+          <a
+            [routerLink]="paths.en"
+            hreflang="en"
             lang="en"
-            [class.active]="i18n.currentLocale() === 'en'"
-            [attr.aria-pressed]="i18n.currentLocale() === 'en'"
+            [class.active]="locale === 'en'"
+            [attr.aria-current]="locale === 'en' ? 'page' : null"
             (click)="changeLang('en')"
           >
             EN
-          </button>
-        </div>
+          </a>
+        </nav>
         <button type="button" class="btn btn-ghost btn-sm" (click)="start()">
           {{ i18n.t('nav.login') }}
         </button>
@@ -79,6 +99,7 @@
         </div>
         <ul class="trust">
           <li><span aria-hidden="true">🔐</span> {{ i18n.t('landing.hero.trust_bnet') }}</li>
+          <li><span aria-hidden="true">🌍</span> {{ i18n.t('landing.hero.trust_regions') }}</li>
           <li><span aria-hidden="true">💳</span> {{ i18n.t('landing.hero.trust_card') }}</li>
           <li><span aria-hidden="true">👥</span> {{ i18n.t('landing.hero.trust_members') }}</li>
         </ul>

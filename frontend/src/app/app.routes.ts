@@ -4,8 +4,16 @@ import { adminGuard } from './guards/admin.guard';
 
 // Chaque écran est un chunk chargé à la demande : le bundle initial ne contient que le shell.
 export const routes: Routes = [
+  // Landing in both languages; keep the prerendered list in app.routes.server.ts in sync
   {
     path: '',
+    pathMatch: 'full',
+    data: { locale: 'fr' },
+    loadComponent: () => import('./components/landing/landing').then((m) => m.LandingComponent),
+  },
+  {
+    path: 'en',
+    data: { locale: 'en' },
     loadComponent: () => import('./components/landing/landing').then((m) => m.LandingComponent),
   },
   {
@@ -81,5 +89,9 @@ export const routes: Routes = [
     canActivate: [authGuard, adminGuard],
     loadComponent: () => import('./components/admin/admin').then((m) => m.AdminComponent),
   },
-  { path: '**', redirectTo: '' },
+  {
+    path: '**',
+    loadComponent: () =>
+      import('./components/not-found/not-found').then((m) => m.NotFoundComponent),
+  },
 ];
