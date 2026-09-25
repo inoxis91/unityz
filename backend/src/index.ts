@@ -18,6 +18,7 @@ import guildRoutes from './routes/guilds';
 import mockAuthRoutes from './routes/mockAuth';
 import supportRoutes from './routes/support';
 import craftRoutes from './routes/crafts';
+import guildHelpRoutes from './routes/guildHelp';
 import { errorHandler } from './middlewares/errorHandler';
 import { initDiscord } from './lib/discord';
 import { initCronJobs } from './lib/cron';
@@ -121,6 +122,7 @@ app.use('/api/stripe', stripeRoutes);
 app.use('/api/guilds', guildRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/crafts', craftRoutes);
+app.use('/api/guild-help', guildHelpRoutes);
 
 if (!isProd) {
   app.use('/api/mock-auth', mockAuthRoutes);
@@ -134,7 +136,7 @@ if (!isProd) {
 const PRERENDERED_ROUTES = new Set(['/', '/en', '/terms', '/privacy']);
 const APP_ROUTE_ROOTS = new Set([
   'login', 'select-guild', 'payment', 'dashboard', 'guild-characters', 'options',
-  'absences', 'calendar', 'fees', 'crafts', 'events', 'admin',
+  'absences', 'calendar', 'fees', 'crafts', 'guild-help', 'events', 'admin',
 ]);
 // Angular output hashing: main-ABCD1234.js, chunk-ABCD1234.js, styles-ABCD1234.css
 const HASHED_ASSET = /-[A-Z0-9]{8}\.(js|css)$/;

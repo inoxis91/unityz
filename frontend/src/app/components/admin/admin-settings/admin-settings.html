@@ -164,6 +164,17 @@
                 />
               </div>
               <div class="form-group">
+                <label>{{ i18n.t('admin.settings.discord_help_channel') }}</label>
+                <input
+                  type="text"
+                  [ngModel]="discordHelpChannelId()"
+                  (ngModelChange)="discordHelpChannelId.set($event)"
+                  name="discordHelpChannelId"
+                  placeholder="ex: 1509267337147056249"
+                  [disabled]="!discordEnabled() || !isPro()"
+                />
+              </div>
+              <div class="form-group">
                 <label>{{ i18n.t('admin.settings.discord_fees_channel') }}</label>
                 <input
                   type="text"

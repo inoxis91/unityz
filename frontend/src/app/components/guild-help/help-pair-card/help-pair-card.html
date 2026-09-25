@@ -1,0 +1,82 @@
+@let p = pair();
+@if (variant() === 'mine') {
+  <article
+    class="ui-card pair"
+    [attr.aria-label]="i18n.t('help.pair.aria') + ' ' + view().partner.battletag"
+  >
+    <div class="pair-top">
+      <span class="ui-badge purple">{{ emoji() }} {{ i18n.t('help.category.' + p.category) }}</span>
+      <span class="since">⏳ {{ since() }}</span>
+    </div>
+
+    <div class="duo">
+      <div class="side" [class.me]="view().myRole === 'helper'">
+        <span class="side-label">{{ i18n.t('help.pair.helper') }}</span>
+        <app-help-member
+          [name]="helper().characterName"
+          [className]="helper().characterClass"
+          [battletag]="helper().battletag"
+        />
+      </div>
+      <div class="link" aria-hidden="true">
+        <span class="link-line"></span>
+        <span class="link-icon"><span class="link-emoji">🤝</span></span>
+      </div>
+      <div class="side" [class.me]="view().myRole === 'helped'">
+        <span class="side-label">{{ i18n.t('help.pair.helped') }}</span>
+        <app-help-member
+          [name]="helped().characterName"
+          [className]="helped().characterClass"
+          [battletag]="helped().battletag"
+        />
+      </div>
+    </div>
+
+    @if (p.post_title) {
+      <p class="origin"><span aria-hidden="true">📌</span> {{ p.post_title }}</p>
+    }
+
+    <div class="pair-actions">
+      @if (discordUrl(); as url) {
+        <a class="ui-btn discord sm" [href]="url" target="_blank" rel="noopener noreferrer">
+          {{ i18n.t('help.pair.contact_discord') }}
+        </a>
+      }
+      <button type="button" class="ui-btn ghost sm" (click)="copyBattletag()">
+        📋 {{ i18n.t('help.pair.copy_battletag') }}
+      </button>
+      <button type="button" class="ui-btn subtle-danger sm" (click)="end.emit(p)">
+        {{ i18n.t('help.pair.end') }}
+      </button>
+    </div>
+  </article>
+} @else {
+  <div class="row">
+    <span class="row-emoji" aria-hidden="true">{{ emoji() }}</span>
+    <app-help-member
+      [compact]="true"
+      [name]="helper().characterName"
+      [className]="helper().characterClass"
+      [battletag]="helper().battletag"
+    />
+    <span class="row-arrow" [attr.aria-label]="i18n.t('help.pair.helps')">➜</span>
+    <app-help-member
+      [compact]="true"
+      [name]="helped().characterName"
+      [className]="helped().characterClass"
+      [battletag]="helped().battletag"
+    />
+    <span class="row-since">{{ since() }}</span>
+    @if (canEnd()) {
+      <button
+        type="button"
+        class="ui-btn ghost icon sm"
+        [attr.aria-label]="i18n.t('help.pair.moderate_end')"
+        [title]="i18n.t('help.pair.moderate_end')"
+        (click)="end.emit(p)"
+      >
+        ✕
+      </button>
+    }
+  </div>
+}

@@ -63,3 +63,7 @@ export const canManageEvents = hasRole(['admin', 'raid_leader', 'event_manager']
 // Sélection du line-up raid (validé / banc, rôle imposé) : réservé au raid lead
 export const canManageLineup = hasRole(['admin', 'raid_leader']);
 export const canManageFees = hasRole(['admin', 'treasurer']);
+
+/** Admin de l'app, GM ou officier en jeu (rang ≤ 2) : modère l'entraide de la guilde. */
+export const isGuildModerator = (user: Express.User): boolean =>
+  user.role === 'admin' || (user.rank !== null && user.rank !== undefined && user.rank <= 2);

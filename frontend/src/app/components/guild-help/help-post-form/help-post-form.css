@@ -1,0 +1,219 @@
+.kinds {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.kind-request {
+  --kind: var(--ui-warning);
+  --kind-bg: var(--ui-bg-amber-50);
+}
+
+.kind-offer {
+  --kind: var(--ui-event-reunion);
+  --kind-bg: var(--ui-bg-green-50);
+}
+
+.kind {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 2px solid var(--ui-border);
+  border-radius: 16px;
+  font: inherit;
+  text-align: left;
+  color: var(--ui-text-secondary);
+  background: var(--ui-surface-muted);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.2s var(--ui-ease-spring);
+}
+
+.kind:hover {
+  border-color: var(--kind);
+  transform: translateY(-2px);
+}
+
+.kind.active {
+  border-color: var(--kind);
+  background: var(--kind-bg);
+}
+
+.kind-emoji {
+  font-size: 1.8rem;
+  line-height: 1;
+  transition: transform 0.3s var(--ui-ease-spring);
+}
+
+.kind.active .kind-emoji {
+  transform: scale(1.15) rotate(-6deg);
+}
+
+.kind-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.kind-text strong {
+  font-size: 0.95rem;
+  color: var(--ui-text-strong);
+}
+
+.kind-text small {
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--ui-text-muted);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.group legend {
+  margin-bottom: 8px;
+  padding: 0;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 2px solid var(--ui-border);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ui-text-secondary);
+  background: var(--ui-surface-muted);
+  cursor: pointer;
+  animation: ui-pop 0.3s var(--ui-ease-spring) backwards;
+  animation-delay: calc(var(--i, 0) * 25ms);
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.chip img {
+  width: 16px;
+  height: 16px;
+}
+
+.chip:hover {
+  border-color: var(--ui-border-hover);
+}
+
+.chip.active {
+  border-color: var(--ui-brand);
+  color: var(--ui-fg-brand);
+  background: var(--ui-bg-blue-50);
+}
+
+.counter {
+  align-self: flex-end;
+  font-variant-numeric: tabular-nums;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.capacity {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 12px 14px;
+  border: 1px solid var(--ui-border);
+  border-radius: 14px;
+  background: var(--ui-surface-muted);
+}
+
+.cap-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cap-text strong {
+  font-size: 0.9rem;
+  color: var(--ui-text-strong);
+}
+
+.cap-text small {
+  font-size: 0.78rem;
+  color: var(--ui-text-muted);
+}
+
+.stepper {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.cap-value {
+  min-width: 2ch;
+  font-size: 1.3rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--ui-text-strong);
+}
+
+.kind:focus-visible,
+.chip:focus-visible {
+  outline: 3px solid var(--ui-focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .kinds,
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ui-modal-foot {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip {
+    animation: none;
+  }
+
+  .kind,
+  .kind-emoji,
+  .chip {
+    transition: none;
+  }
+
+  .kind:hover,
+  .kind.active .kind-emoji {
+    transform: none;
+  }
+}

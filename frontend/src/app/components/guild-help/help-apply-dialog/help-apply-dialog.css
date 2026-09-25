@@ -1,0 +1,61 @@
+.kind-request {
+  --kind: var(--ui-warning);
+}
+
+.kind-offer {
+  --kind: var(--ui-event-reunion);
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--ui-border);
+  border-left: 4px solid var(--kind);
+  border-radius: 14px;
+  background: var(--ui-surface-muted);
+  animation: ui-rise 0.3s var(--ui-ease-out);
+}
+
+.summary-emoji {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.summary-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.summary-text strong {
+  overflow-wrap: anywhere;
+  color: var(--ui-text-strong);
+}
+
+.counter {
+  align-self: flex-end;
+  font-variant-numeric: tabular-nums;
+}
+
+.notice {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--ui-text-muted);
+}
+
+@media (max-width: 640px) {
+  .ui-modal-foot {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .summary {
+    animation: none;
+  }
+}

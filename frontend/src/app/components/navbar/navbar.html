@@ -120,6 +120,11 @@
             }
           </a>
         }
+        @if (user.has_characters && user.active_guild_id && user.active_guild_is_paid) {
+          <a routerLink="/guild-help" routerLinkActive="active" (click)="closeMenu()">{{
+            i18n.t('nav.guild_help')
+          }}</a>
+        }
         <div class="profile-dropdown" [class.open]="isProfileOpen()">
           <button
             type="button"

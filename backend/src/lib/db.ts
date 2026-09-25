@@ -47,6 +47,7 @@ export const initDb = async (retries = 5, delay = 3000): Promise<void> => {
         discord_fees_channel_id VARCHAR(255),
         discord_reminder_channel_id VARCHAR(255),
         discord_locale VARCHAR(50) DEFAULT 'en',
+        discord_help_channel_id VARCHAR(255),
         fees_enabled BOOLEAN DEFAULT TRUE,
         minimum_fee_amount INTEGER DEFAULT 2000,
         created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -540,6 +541,72 @@ export const initDb = async (retries = 5, delay = 3000): Promise<void> => {
           SELECT DISTINCT user_id, guild_id FROM characters
           WHERE user_id IS NOT NULL AND guild_id IS NOT NULL
           ON CONFLICT DO NOTHING;
+        END IF;
+      END $$;
+    `);
+
+    // Entraide : annonces (demande / offre d'aide), candidatures, et binômes aidant ↔ aidé.
+    // Un binôme vit indépendamment de son annonce : il dure jusqu'à ce que l'un des deux y mette fin.
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS help_posts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        guild_id UUID NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,
+        author_user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        character_id UUID REFERENCES characters(id) ON DELETE SET NULL,
+        kind VARCHAR(10) NOT NULL CHECK (kind IN ('request', 'offer')),
+        category VARCHAR(20) NOT NULL,
+        target_role VARCHAR(10) CHECK (target_role IN ('tank', 'heal', 'dps')),
+        title VARCHAR(120) NOT NULL,
+        description VARCHAR(1000) NOT NULL DEFAULT '',
+        -- Nombre maximal de binômes actifs issus de l'annonce
+        capacity SMALLINT NOT NULL DEFAULT 1 CHECK (capacity BETWEEN 1 AND 10),
+        status VARCHAR(10) NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'closed')),
+        closed_at TIMESTAMP WITHOUT TIME ZONE,
+        created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_help_posts_guild_open ON help_posts (guild_id, created_at DESC) WHERE status = 'open';
+      CREATE INDEX IF NOT EXISTS idx_help_posts_author_open ON help_posts (guild_id, author_user_id) WHERE status = 'open';
+
+      CREATE TABLE IF NOT EXISTS help_applications (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        post_id UUID NOT NULL REFERENCES help_posts(id) ON DELETE CASCADE,
+        guild_id UUID NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,
+        user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        character_id UUID REFERENCES characters(id) ON DELETE SET NULL,
+        message VARCHAR(300) NOT NULL DEFAULT '',
+        status VARCHAR(10) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined', 'withdrawn')),
+        created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (post_id, user_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_help_applications_guild_user ON help_applications (guild_id, user_id);
+
+      CREATE TABLE IF NOT EXISTS help_pairs (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        guild_id UUID NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,
+        post_id UUID REFERENCES help_posts(id) ON DELETE SET NULL,
+        helper_user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        helped_user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        helper_character_id UUID REFERENCES characters(id) ON DELETE SET NULL,
+        helped_character_id UUID REFERENCES characters(id) ON DELETE SET NULL,
+        category VARCHAR(20) NOT NULL,
+        started_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        ended_at TIMESTAMP WITHOUT TIME ZONE,
+        ended_by VARCHAR(255) REFERENCES users(id) ON DELETE SET NULL,
+        CHECK (helper_user_id <> helped_user_id)
+      );
+      -- Un seul binôme actif par couple aidant / aidé dans une guilde
+      CREATE UNIQUE INDEX IF NOT EXISTS uq_help_pairs_active
+        ON help_pairs (guild_id, helper_user_id, helped_user_id) WHERE ended_at IS NULL;
+      CREATE INDEX IF NOT EXISTS idx_help_pairs_post_active ON help_pairs (post_id) WHERE ended_at IS NULL;
+    `);
+
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='guilds' AND column_name='discord_help_channel_id') THEN
+          ALTER TABLE guilds ADD COLUMN discord_help_channel_id VARCHAR(255);
         END IF;
       END $$;
     `);

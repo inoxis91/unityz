@@ -1,0 +1,179 @@
+<div class="ui-overlay" (click)="closed.emit()">
+  <div
+    class="ui-modal wide"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="help-form-title"
+    (click)="$event.stopPropagation()"
+  >
+    <header class="ui-modal-head">
+      <h2 id="help-form-title">
+        {{ isEdit() ? i18n.t('help.form.edit_title') : i18n.t('help.form.create_title') }}
+      </h2>
+      <button
+        type="button"
+        class="ui-close"
+        [attr.aria-label]="i18n.t('help.form.close')"
+        (click)="closed.emit()"
+      >
+        ×
+      </button>
+    </header>
+
+    <form class="ui-modal-body" id="help-form" (submit)="$event.preventDefault(); submit()">
+      @if (!isEdit()) {
+        <div class="kinds" role="group" [attr.aria-label]="i18n.t('help.form.kind')">
+          @for (k of kinds; track k) {
+            <button
+              type="button"
+              class="kind"
+              [class]="'kind-' + k"
+              [class.active]="kind() === k"
+              [attr.aria-pressed]="kind() === k"
+              (click)="kind.set(k)"
+            >
+              <span class="kind-emoji" aria-hidden="true">{{ kindEmoji[k] }}</span>
+              <span class="kind-text">
+                <strong>{{ i18n.t('help.form.kind_' + k) }}</strong>
+                <small>{{ i18n.t('help.form.kind_' + k + '_hint') }}</small>
+              </span>
+            </button>
+          }
+        </div>
+      }
+
+      <fieldset class="group">
+        <legend class="ui-label">{{ i18n.t('help.form.category') }}</legend>
+        <div class="chips">
+          @for (c of categories; track c.value; let i = $index) {
+            <button
+              type="button"
+              class="chip"
+              [class.active]="category() === c.value"
+              [attr.aria-pressed]="category() === c.value"
+              [style.--i]="i"
+              (click)="category.set(c.value)"
+            >
+              <span aria-hidden="true">{{ c.emoji }}</span>
+              {{ i18n.t('help.category.' + c.value) }}
+            </button>
+          }
+        </div>
+      </fieldset>
+
+      <div class="ui-field">
+        <label for="help-title">{{ i18n.t('help.form.title') }}</label>
+        <input
+          #titleInput
+          id="help-title"
+          type="text"
+          required
+          [maxLength]="titleMax"
+          [value]="title()"
+          (input)="title.set($any($event.target).value)"
+          [placeholder]="i18n.t('help.form.title_placeholder_' + kind())"
+        />
+        <span class="hint counter">{{ title().length }}/{{ titleMax }}</span>
+      </div>
+
+      <div class="ui-field">
+        <label for="help-desc">{{ i18n.t('help.form.description') }}</label>
+        <textarea
+          id="help-desc"
+          rows="4"
+          [maxLength]="descriptionMax"
+          [value]="description()"
+          (input)="description.set($any($event.target).value)"
+          [placeholder]="i18n.t('help.form.description_placeholder_' + kind())"
+        ></textarea>
+        <span class="hint counter">{{ description().length }}/{{ descriptionMax }}</span>
+      </div>
+
+      <div class="row">
+        <fieldset class="group">
+          <legend class="ui-label">{{ i18n.t('help.form.role') }}</legend>
+          <div class="chips">
+            <button
+              type="button"
+              class="chip"
+              [class.active]="role() === null"
+              [attr.aria-pressed]="role() === null"
+              (click)="role.set(null)"
+            >
+              {{ i18n.t('help.form.role_any') }}
+            </button>
+            @for (r of roles; track r) {
+              <button
+                type="button"
+                class="chip"
+                [class.active]="role() === r"
+                [attr.aria-pressed]="role() === r"
+                (click)="role.set(r)"
+              >
+                <img [src]="'assets/icons/' + r + '.png'" alt="" width="16" height="16" />
+                {{ i18n.t('help.role.' + r) }}
+              </button>
+            }
+          </div>
+        </fieldset>
+
+        <div class="ui-field">
+          <label for="help-char">{{ i18n.t('help.form.character') }}</label>
+          <select id="help-char" (change)="characterId.set($any($event.target).value || null)">
+            <option value="" [selected]="!characterId()">
+              {{ i18n.t('help.form.character_main') }}
+            </option>
+            @for (c of characters() ?? []; track c.id) {
+              <option [value]="c.id" [selected]="c.id === characterId()">
+                {{ c.name }} · {{ c.class }}
+              </option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="capacity">
+        <span class="cap-text">
+          <strong id="help-cap-label">{{ i18n.t('help.form.capacity_' + kind()) }}</strong>
+          <small>{{ i18n.t('help.form.capacity_hint') }}</small>
+        </span>
+        <div class="stepper" role="group" aria-labelledby="help-cap-label">
+          <button
+            type="button"
+            class="ui-btn ghost icon sm"
+            [attr.aria-label]="i18n.t('help.form.capacity_less')"
+            [disabled]="capacity() <= 1"
+            (click)="setCapacity(capacity() - 1)"
+          >
+            −
+          </button>
+          <output class="cap-value" aria-live="polite">{{ capacity() }}</output>
+          <button
+            type="button"
+            class="ui-btn ghost icon sm"
+            [attr.aria-label]="i18n.t('help.form.capacity_more')"
+            [disabled]="capacity() >= maxCapacity"
+            (click)="setCapacity(capacity() + 1)"
+          >
+            +
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <footer class="ui-modal-foot">
+      <button type="button" class="ui-btn ghost" (click)="closed.emit()">
+        {{ i18n.t('help.form.cancel') }}
+      </button>
+      <button
+        type="submit"
+        form="help-form"
+        class="ui-btn primary"
+        [class.loading]="saving()"
+        [disabled]="!valid() || saving()"
+      >
+        {{ isEdit() ? i18n.t('help.form.save') : i18n.t('help.form.publish') }}
+      </button>
+    </footer>
+  </div>
+</div>

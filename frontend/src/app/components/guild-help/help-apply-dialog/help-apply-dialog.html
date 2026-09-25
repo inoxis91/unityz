@@ -1,0 +1,82 @@
+@let p = post();
+<div class="ui-overlay" (click)="closed.emit()">
+  <div
+    class="ui-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="help-apply-title"
+    (click)="$event.stopPropagation()"
+  >
+    <header class="ui-modal-head">
+      <h2 id="help-apply-title">{{ i18n.t('help.apply.title_' + p.kind) }}</h2>
+      <button
+        type="button"
+        class="ui-close"
+        [attr.aria-label]="i18n.t('help.form.close')"
+        (click)="closed.emit()"
+      >
+        ×
+      </button>
+    </header>
+
+    <form class="ui-modal-body" id="help-apply-form" (submit)="$event.preventDefault(); submit()">
+      <div class="summary" [class]="'kind-' + p.kind">
+        <span class="summary-emoji" aria-hidden="true">{{ emoji() }}</span>
+        <div class="summary-text">
+          <strong>{{ p.title }}</strong>
+          <app-help-member
+            [compact]="true"
+            [name]="p.author_character_name"
+            [className]="p.author_character_class"
+            [battletag]="p.author_battletag"
+          />
+        </div>
+      </div>
+
+      <div class="ui-field">
+        <label for="apply-char">{{ i18n.t('help.form.character') }}</label>
+        <select id="apply-char" (change)="characterId.set($any($event.target).value || null)">
+          <option value="" [selected]="!characterId()">
+            {{ i18n.t('help.form.character_main') }}
+          </option>
+          @for (c of characters() ?? []; track c.id) {
+            <option [value]="c.id" [selected]="c.id === characterId()">
+              {{ c.name }} · {{ c.class }}
+            </option>
+          }
+        </select>
+      </div>
+
+      <div class="ui-field">
+        <label for="apply-msg">{{ i18n.t('help.apply.message') }}</label>
+        <textarea
+          #messageInput
+          id="apply-msg"
+          rows="3"
+          [maxLength]="messageMax"
+          [value]="message()"
+          (input)="message.set($any($event.target).value)"
+          [placeholder]="i18n.t('help.apply.message_placeholder_' + p.kind)"
+        ></textarea>
+        <span class="hint counter">{{ message().length }}/{{ messageMax }}</span>
+      </div>
+
+      <p class="notice">🔔 {{ i18n.t('help.apply.notice') }}</p>
+    </form>
+
+    <footer class="ui-modal-foot">
+      <button type="button" class="ui-btn ghost" (click)="closed.emit()">
+        {{ i18n.t('help.form.cancel') }}
+      </button>
+      <button
+        type="submit"
+        form="help-apply-form"
+        class="ui-btn"
+        [class.success]="p.kind === 'request'"
+        [class.primary]="p.kind === 'offer'"
+      >
+        {{ i18n.t('help.card.apply_' + p.kind) }}
+      </button>
+    </footer>
+  </div>
+</div>

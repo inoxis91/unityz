@@ -10,6 +10,7 @@ export const WCL_REPORT_URL = 'https://www.warcraftlogs.com/reports/7qRgKthjfGTN
 export interface Seed {
   eventId: string;
   mplusEventId: string;
+  helpPostId: string;
 }
 
 export function readSeed(): Seed {

@@ -79,6 +79,12 @@ export const routes: Routes = [
     loadComponent: () => import('./components/crafts/crafts').then((m) => m.CraftsComponent),
   },
   {
+    path: 'guild-help',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./components/guild-help/guild-help').then((m) => m.GuildHelpComponent),
+  },
+  {
     path: 'events/:id',
     canActivate: [authGuard],
     loadComponent: () =>

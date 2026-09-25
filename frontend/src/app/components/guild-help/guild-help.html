@@ -1,0 +1,243 @@
+<div class="ui-page">
+  <app-page-header
+    icon="🤝"
+    tone="green"
+    [title]="i18n.t('help.title')"
+    [subtitle]="i18n.t('help.subtitle')"
+  >
+    <button pageActions type="button" class="ui-btn accent new-btn" (click)="openCreate()">
+      <span class="plus" aria-hidden="true">＋</span> {{ i18n.t('help.new_post') }}
+    </button>
+
+    <dl pageStats class="ui-kpis">
+      <div class="ui-kpi warning" style="--i: 0">
+        <dt>{{ i18n.t('help.kpi.requests') }}</dt>
+        <dd>{{ stats().openRequests }}</dd>
+      </div>
+      <div class="ui-kpi success" style="--i: 1">
+        <dt>{{ i18n.t('help.kpi.offers') }}</dt>
+        <dd>{{ stats().openOffers }}</dd>
+      </div>
+      <div class="ui-kpi purple" style="--i: 2">
+        <dt>{{ i18n.t('help.kpi.pairs') }}</dt>
+        <dd>{{ stats().activePairs }}</dd>
+      </div>
+      <div class="ui-kpi brand" style="--i: 3">
+        <dt>{{ i18n.t('help.kpi.to_review') }}</dt>
+        <dd>{{ stats().toReview }}</dd>
+      </div>
+    </dl>
+
+    <nav class="ui-tabs help-tabs" [attr.aria-label]="i18n.t('help.title')">
+      @for (t of tabs; track t) {
+        <button
+          type="button"
+          [class.active]="tab() === t"
+          [attr.aria-pressed]="tab() === t"
+          (click)="selectTab(t)"
+        >
+          {{ i18n.t('help.tabs.' + t) }}
+          @if (tabCounts()[t]) {
+            <span class="count" [class.alert]="t === 'mine'">{{ tabCounts()[t] }}</span>
+          }
+        </button>
+      }
+    </nav>
+  </app-page-header>
+
+  @if (!helpService.loaded()) {
+    <div class="grid" aria-hidden="true">
+      <span class="ui-skeleton sk"></span>
+      <span class="ui-skeleton sk"></span>
+      <span class="ui-skeleton sk"></span>
+    </div>
+  } @else {
+    @switch (tab()) {
+      @case ('mine') {
+        <section class="block" aria-labelledby="mine-title">
+          <header class="block-head">
+            <h2 id="mine-title">
+              <span class="ui-card-icon" aria-hidden="true">📣</span>
+              {{ i18n.t('help.mine.posts_title') }}
+            </h2>
+            <span class="quota" [class.full]="stats().myOpenPosts >= maxOpenPosts">
+              {{ stats().myOpenPosts }}/{{ maxOpenPosts }}
+            </span>
+          </header>
+          <div class="grid">
+            @for (post of myPosts(); track post.id; let i = $index) {
+              <app-help-post-card
+                [style.--i]="i"
+                animate.leave="ui-leave"
+                [post]="post"
+                state="mine"
+                [showApplications]="true"
+                [applications]="applicationsByPost().get(post.id) ?? []"
+                (edit)="openEdit($event)"
+                (close)="closePost($event)"
+                (decide)="decide($event)"
+              />
+            } @empty {
+              <div class="ui-empty span-all">
+                <span class="emoji" aria-hidden="true">📭</span>
+                <strong>{{ i18n.t('help.mine.empty_title') }}</strong>
+                <p>{{ i18n.t('help.mine.empty_desc') }}</p>
+                <button type="button" class="ui-btn primary" (click)="openCreate('request')">
+                  {{ i18n.t('help.new_post') }}
+                </button>
+              </div>
+            }
+          </div>
+        </section>
+
+        @if (myPendingPosts().length) {
+          <section class="block" aria-labelledby="pending-title">
+            <header class="block-head">
+              <h2 id="pending-title">
+                <span class="ui-card-icon" aria-hidden="true">⏳</span>
+                {{ i18n.t('help.mine.pending_title') }}
+              </h2>
+            </header>
+            <div class="grid">
+              @for (post of myPendingPosts(); track post.id; let i = $index) {
+                <app-help-post-card
+                  [style.--i]="i"
+                  animate.leave="ui-leave"
+                  [post]="post"
+                  state="pending"
+                  (withdraw)="withdraw($event)"
+                />
+              }
+            </div>
+          </section>
+        }
+      }
+
+      @case ('pairs') {
+        <section class="block" aria-labelledby="pairs-title">
+          <header class="block-head">
+            <h2 id="pairs-title">
+              <span class="ui-card-icon" aria-hidden="true">🤝</span>
+              {{ i18n.t('help.pairs.mine_title') }}
+            </h2>
+          </header>
+          <div class="grid pairs">
+            @for (pair of myPairs(); track pair.id; let i = $index) {
+              <app-help-pair-card
+                [style.--i]="i"
+                animate.leave="ui-leave"
+                [pair]="pair"
+                [userId]="userId()"
+                variant="mine"
+                (end)="endPair($event)"
+              />
+            } @empty {
+              <div class="how span-all">
+                <p class="how-intro">{{ i18n.t('help.pairs.empty_desc') }}</p>
+                <ol class="steps">
+                  @for (step of [1, 2, 3]; track step) {
+                    <li class="step" [style.--i]="step">
+                      <span class="step-num" aria-hidden="true">{{ step }}</span>
+                      <span class="step-emoji" aria-hidden="true">{{
+                        step === 1 ? '📣' : step === 2 ? '🙋' : '🤝'
+                      }}</span>
+                      <strong>{{ i18n.t('help.how.step' + step + '_title') }}</strong>
+                      <span>{{ i18n.t('help.how.step' + step + '_desc') }}</span>
+                    </li>
+                  }
+                </ol>
+              </div>
+            }
+          </div>
+        </section>
+
+        @if (guildPairs().length) {
+          <section class="block" aria-labelledby="guild-pairs-title">
+            <header class="block-head">
+              <h2 id="guild-pairs-title">
+                <span class="ui-card-icon" aria-hidden="true">🏰</span>
+                {{ i18n.t('help.pairs.guild_title') }}
+              </h2>
+              <span class="quota">{{ guildPairs().length }}</span>
+            </header>
+            <ul class="rows">
+              @for (pair of guildPairs(); track pair.id; let i = $index) {
+                <li [style.--i]="i" animate.leave="ui-leave">
+                  <app-help-pair-card
+                    [pair]="pair"
+                    [userId]="userId()"
+                    [canEnd]="canModerate()"
+                    (end)="endPair($event)"
+                  />
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      }
+
+      @default {
+        @if (categoryCounts().length > 1) {
+          <div class="filters" role="group" [attr.aria-label]="i18n.t('help.filter_label')">
+            @for (c of categoryCounts(); track c.value; let i = $index) {
+              <button
+                type="button"
+                class="filter"
+                [class.active]="category() === c.value"
+                [attr.aria-pressed]="category() === c.value"
+                [style.--i]="i"
+                (click)="toggleCategory(c.value)"
+              >
+                <span aria-hidden="true">{{ c.emoji }}</span>
+                {{ i18n.t('help.category.' + c.value) }}
+                <b>{{ c.count }}</b>
+              </button>
+            }
+          </div>
+        }
+
+        <div class="grid">
+          @for (post of listedPosts(); track post.id; let i = $index) {
+            <app-help-post-card
+              [style.--i]="i"
+              animate.leave="ui-leave"
+              [post]="post"
+              [state]="stateOf(post)"
+              [canModerate]="canModerate()"
+              (apply)="applyTarget.set($event)"
+              (withdraw)="withdraw($event)"
+              (edit)="openEdit($event)"
+              (close)="closePost($event)"
+              (review)="selectTab('mine')"
+            />
+          } @empty {
+            <div class="ui-empty span-all">
+              <span class="emoji" aria-hidden="true">{{ tab() === 'offers' ? '🌱' : '🎉' }}</span>
+              <strong>{{ i18n.t('help.empty.' + tab() + '_title') }}</strong>
+              <p>{{ i18n.t('help.empty.' + tab() + '_desc') }}</p>
+              <button
+                type="button"
+                class="ui-btn primary"
+                (click)="openCreate(tabKind() ?? 'request')"
+              >
+                {{ i18n.t('help.empty.' + tab() + '_cta') }}
+              </button>
+            </div>
+          }
+        </div>
+      }
+    }
+  }
+</div>
+
+@if (form(); as f) {
+  <app-help-post-form [post]="f.post" [initialKind]="f.kind" (closed)="form.set(null)" />
+}
+
+@if (applyTarget(); as target) {
+  <app-help-apply-dialog
+    [post]="target"
+    (closed)="applyTarget.set(null)"
+    (submitted)="submitApplication($event)"
+  />
+}

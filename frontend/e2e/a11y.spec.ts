@@ -107,6 +107,17 @@ test('readable /admin (all tabs)', async ({ page }) => {
   await checkEachTab(page, '.admin-tabs', '/admin');
 });
 
+test('readable /guild-help (all tabs and the post form)', async ({ page }) => {
+  await open(page, '/guild-help');
+  await expect(page.locator('app-help-post-card').first()).toBeVisible();
+  await checkEachTab(page, 'app-guild-help .help-tabs', '/guild-help');
+  await page.locator('app-guild-help .new-btn').click();
+  await expect(page.locator('app-help-post-form .ui-modal')).toBeVisible();
+  await check(page, '/guild-help › new post');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('app-help-post-form')).toHaveCount(0);
+});
+
 test('readable /events/:id (all tabs)', async ({ page }) => {
   await open(page, `/events/${readSeed().eventId}`);
   await checkEachTab(page, 'app-event-details .tabs:not([role="tablist"])', '/events');

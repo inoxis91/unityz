@@ -1,0 +1,13 @@
+<span class="avatar" [class.no-class]="!icon()" aria-hidden="true">
+  @if (icon(); as src) {
+    <img [src]="src" alt="" width="36" height="36" loading="lazy" />
+  } @else {
+    {{ label().charAt(0) }}
+  }
+</span>
+<span class="text">
+  <strong class="name" [class]="classCss()">{{ label() }}</strong>
+  @if (!compact() && name()) {
+    <span class="btag">{{ battletag() }}</span>
+  }
+</span>

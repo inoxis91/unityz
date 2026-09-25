@@ -88,11 +88,31 @@ export default async function globalSetup() {
     'M+ group',
   );
 
+  // Entraide : une annonce ouverte, affichée sur les onglets Demandes et Mes annonces
+  const helpPost = await ok(
+    await api.post('guild-help/posts', {
+      data: {
+        kind: 'request',
+        category: 'raid',
+        targetRole: 'heal',
+        characterId: null,
+        title: '[e2e] Guild help a11y',
+        description: 'Seeded by Playwright',
+        capacity: 1,
+      },
+    }),
+    'create help post',
+  );
+
   mkdirSync(dirname(STATE_PATH), { recursive: true });
   await api.storageState({ path: STATE_PATH });
   writeFileSync(
     SEED_PATH,
-    JSON.stringify({ eventId: event.id, mplusEventId: mplus.id } satisfies Seed),
+    JSON.stringify({
+      eventId: event.id,
+      mplusEventId: mplus.id,
+      helpPostId: helpPost.id,
+    } satisfies Seed),
   );
   await api.dispose();
 }

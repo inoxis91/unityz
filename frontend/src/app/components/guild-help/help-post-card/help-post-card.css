@@ -1,0 +1,350 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.kind-request {
+  --kind: var(--ui-warning);
+  --kind-text: var(--ui-fg-amber-800);
+  --kind-bg: var(--ui-bg-amber-50);
+  --kind-bd: var(--ui-bd-amber-200);
+}
+
+.kind-offer {
+  --kind: var(--ui-event-reunion);
+  --kind-text: var(--ui-fg-green-700);
+  --kind-bg: var(--ui-bg-green-50);
+  --kind-bd: var(--ui-bd-green-200);
+}
+
+.post {
+  --card-accent: var(--kind);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow: hidden;
+  transition:
+    transform 0.2s var(--ui-ease-out),
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+/* Liseré de couleur du type d'annonce */
+.post::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--kind);
+}
+
+.post:hover {
+  border-color: var(--ui-border-strong);
+  box-shadow: var(--ui-shadow-md);
+  transform: translateY(-3px);
+}
+
+/* ---------- En-tête ---------- */
+.post-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.cat-emoji {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  font-size: 1.35rem;
+  background: color-mix(in srgb, var(--kind) 16%, var(--ui-surface));
+  transition: transform 0.35s var(--ui-ease-spring);
+}
+
+.post:hover .cat-emoji {
+  transform: rotate(-8deg) scale(1.08);
+}
+
+.tags {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.kind-badge,
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border: 1px solid var(--kind-bd);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.3;
+  white-space: nowrap;
+  color: var(--kind-text);
+  background: var(--kind-bg);
+}
+
+.role-badge {
+  border-color: transparent;
+  color: var(--role-text);
+  background: var(--role-bg);
+}
+
+.role-badge img {
+  width: 14px;
+  height: 14px;
+}
+
+.role-tank {
+  --role-text: var(--ui-role-tank-text);
+  --role-bg: var(--ui-role-tank-bg);
+}
+.role-heal {
+  --role-text: var(--ui-role-heal-text);
+  --role-bg: var(--ui-role-heal-bg);
+}
+.role-dps {
+  --role-text: var(--ui-role-dps-text);
+  --role-bg: var(--ui-role-dps-bg);
+}
+
+.mod svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ---------- Contenu ---------- */
+.title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 900;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  color: var(--ui-text-strong);
+}
+
+.desc {
+  margin: -0.25rem 0 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  color: var(--ui-text-tertiary);
+}
+
+.more {
+  align-self: flex-start;
+  margin-top: -0.5rem;
+  padding: 0;
+  border: none;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--ui-fg-brand);
+  background: none;
+  cursor: pointer;
+}
+
+.more:hover {
+  text-decoration: underline;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 0.25rem;
+}
+
+.date {
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ui-text-muted);
+}
+
+/* ---------- Pied : places + actions ---------- */
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--ui-border);
+}
+
+.slots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.slot {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--ui-border-strong);
+  border-radius: 50%;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    transform 0.3s var(--ui-ease-spring);
+}
+
+.slot.taken {
+  border-color: var(--kind);
+  background: var(--kind);
+  animation: ui-pop 0.4s var(--ui-ease-spring) backwards;
+  animation-delay: calc(200ms + var(--i, 0) * 60ms);
+}
+
+.slots-text {
+  margin-left: 4px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--ui-text-muted);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.state {
+  animation: ui-pop 0.35s var(--ui-ease-spring) backwards;
+}
+
+/* ---------- Candidatures (mes annonces) ---------- */
+.apps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 -0.5rem -0.25rem;
+  padding: 0.75rem;
+  border-radius: 14px;
+  background: var(--ui-surface-muted);
+}
+
+.apps h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--ui-text-muted);
+}
+
+.count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: var(--ui-text-secondary);
+  background: var(--ui-surface-strong);
+}
+
+.count.has {
+  color: var(--ui-on-warning);
+  background: var(--ui-warning);
+  animation: ui-pop 0.4s var(--ui-ease-spring);
+}
+
+.app {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--ui-border);
+  border-radius: 12px;
+  background: var(--ui-surface);
+  animation: ui-rise 0.35s var(--ui-ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 50ms);
+}
+
+.app-main {
+  display: flex;
+  flex: 1 1 220px;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.app-msg {
+  font-size: 0.85rem;
+  font-style: italic;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  color: var(--ui-text-secondary);
+}
+
+.app-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.apps-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ui-text-muted);
+}
+
+.more:focus-visible {
+  outline: 3px solid var(--ui-focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .foot,
+  .actions {
+    align-items: stretch;
+  }
+
+  .actions,
+  .app-actions {
+    display: grid;
+    grid-auto-columns: 1fr;
+    grid-auto-flow: column;
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .post,
+  .cat-emoji,
+  .slot {
+    transition: none;
+  }
+
+  .post:hover,
+  .post:hover .cat-emoji {
+    transform: none;
+  }
+
+  .slot.taken,
+  .state,
+  .count.has,
+  .app {
+    animation: none;
+  }
+}
