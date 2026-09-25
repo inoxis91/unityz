@@ -126,26 +126,28 @@
         type="button"
         [class.active]="activeTab() === 'participants'"
         [attr.aria-pressed]="activeTab() === 'participants'"
-        (click)="activeTab.set('participants')"
+        (click)="selectTab('participants')"
       >
         <span aria-hidden="true">👥</span> {{ i18n.t('event.details.tab_participants') }}
         <span class="count">{{ attendingCount() }}</span>
       </button>
-      <button
-        type="button"
-        [class.active]="activeTab() === 'composition'"
-        [attr.aria-pressed]="activeTab() === 'composition'"
-        (click)="activeTab.set('composition')"
-      >
-        <span aria-hidden="true">{{ isMplus() ? '🗝️' : '🛡️' }}</span>
-        {{ i18n.t(isRaid() ? 'event.lineup.tab' : 'event.details.tab_composition') }}
-      </button>
+      @if (hasComposition()) {
+        <button
+          type="button"
+          [class.active]="activeTab() === 'composition'"
+          [attr.aria-pressed]="activeTab() === 'composition'"
+          (click)="selectTab('composition')"
+        >
+          <span aria-hidden="true">{{ isMplus() ? '🗝️' : '🛡️' }}</span>
+          {{ i18n.t(isRaid() ? 'event.lineup.tab' : 'event.details.tab_composition') }}
+        </button>
+      }
       @if (hasLogs()) {
         <button
           type="button"
           [class.active]="activeTab() === 'logs'"
           [attr.aria-pressed]="activeTab() === 'logs'"
-          (click)="activeTab.set('logs')"
+          (click)="selectTab('logs')"
         >
           <span aria-hidden="true">📊</span> {{ i18n.t('event.details.tab_logs') }}
         </button>

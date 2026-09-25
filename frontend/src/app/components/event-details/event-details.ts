@@ -72,7 +72,7 @@ export class EventDetailsComponent {
   readonly rioScores = signal<ReadonlyMap<string, number>>(new Map());
   readonly myCharacters = signal<Character[]>([]);
   readonly rosters = signal<Roster[]>([]);
-  readonly activeTab = signal<Tab>('participants');
+  private readonly selectedTab = signal<Tab>('participants');
   readonly now = signal(new Date());
 
   readonly modal = signal<Modal>(null);
@@ -89,6 +89,16 @@ export class EventDetailsComponent {
   readonly isRaid = computed(() => this.event()?.type?.toLowerCase() === 'raid');
   readonly isMplus = computed(() => this.event()?.type?.toLowerCase() === 'mm+');
   readonly hasLogs = computed(() => this.isRaid() && !!this.event()?.logs);
+  /** Une réunion n'a pas de composition : seul l'onglet participants a du sens. */
+  readonly hasComposition = computed(() => this.typeKey() !== 'reunion');
+
+  /** Onglet affiché : retombe sur les participants si l'onglet choisi n'existe plus (type modifié, logs retirés). */
+  readonly activeTab = computed<Tab>(() => {
+    const tab = this.selectedTab();
+    if (tab === 'composition' && !this.hasComposition()) return 'participants';
+    if (tab === 'logs' && !this.hasLogs()) return 'participants';
+    return tab;
+  });
 
   readonly typeLabel = computed(() => {
     const evt = this.event();
@@ -150,6 +160,10 @@ export class EventDetailsComponent {
     return mine && mine.status !== 'absent' ? mine : null;
   });
 
+  selectTab(tab: Tab) {
+    this.selectedTab.set(tab);
+  }
+
   constructor() {
     const destroyRef = inject(DestroyRef);
     const timer = setInterval(() => this.now.set(new Date()), 60_000);
@@ -158,7 +172,7 @@ export class EventDetailsComponent {
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       const id = params.get('id');
       if (!id) return;
-      this.activeTab.set('participants');
+      this.selectedTab.set('participants');
       this.event.set(null);
       this.notFound.set(false);
       this.signups.set([]);
