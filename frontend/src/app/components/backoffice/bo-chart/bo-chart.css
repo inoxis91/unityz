@@ -1,0 +1,163 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.chart {
+  margin: 0;
+}
+
+.total {
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ui-text-muted);
+}
+
+.plot {
+  position: relative;
+  height: 190px;
+  margin-left: 2.75rem;
+  border-radius: 8px;
+  outline: none;
+}
+
+.plot:focus-visible {
+  outline: 3px solid var(--ui-focus);
+  outline-offset: 4px;
+}
+
+.grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.tick {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed var(--ui-border);
+}
+
+.tick:last-child {
+  border-top-style: solid;
+  border-color: var(--ui-border-strong);
+}
+
+.tick-label {
+  position: absolute;
+  right: calc(100% + 8px);
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--ui-text-muted);
+}
+
+.bars {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+}
+
+.slot {
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+  min-width: 0;
+  border-radius: 4px 4px 0 0;
+  cursor: crosshair;
+  transition: background 0.15s ease;
+}
+
+.slot.active {
+  background: rgba(var(--ui-ink-rgb), 0.05);
+}
+
+.bar {
+  width: 100%;
+  max-width: 28px;
+  margin: 0 auto;
+  border-radius: 4px 4px 0 0;
+  background: var(--chart-color, var(--ui-brand));
+  transform-origin: bottom;
+  animation: grow 0.5s var(--ui-ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 8ms);
+  transition:
+    height 0.4s var(--ui-ease-out),
+    filter 0.15s ease;
+}
+
+.bar.zero {
+  height: 2px !important;
+  background: var(--ui-border-strong);
+}
+
+.slot.active .bar {
+  filter: brightness(1.15);
+}
+
+.tooltip {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 10px;
+  border: 1px solid var(--ui-border);
+  border-radius: 10px;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  color: var(--ui-text-secondary);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow-md);
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: ui-fade 0.15s ease-out;
+}
+
+.tooltip strong {
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ui-text-strong);
+}
+
+.axis {
+  position: relative;
+  height: 1.4rem;
+  margin: 6px 0 0 2.75rem;
+}
+
+.axis span {
+  position: absolute;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  color: var(--ui-text-muted);
+  transform: translateX(-50%);
+}
+
+.axis span:first-child {
+  transform: none;
+}
+
+.axis span:last-child:not(:first-child) {
+  transform: translateX(-100%);
+}
+
+@keyframes grow {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar,
+  .tooltip {
+    animation: none;
+    transition: none;
+  }
+}

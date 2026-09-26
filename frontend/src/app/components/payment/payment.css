@@ -408,6 +408,31 @@
 }
 
 /* Pay Button */
+.btn-not-now {
+  display: block;
+  margin: 0.85rem auto 0;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  color: #cbd5e1;
+  background: none;
+  cursor: pointer;
+}
+
+.btn-not-now:hover {
+  color: #ffffff;
+}
+
+.btn-not-now:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 2px;
+}
+
 .btn-pay {
   background: #635bff;
   color: #ffffff;

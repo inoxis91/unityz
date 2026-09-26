@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
+import { platformGuard } from './guards/platform.guard';
 
 // Chaque écran est un chunk chargé à la demande : le bundle initial ne contient que le shell.
 export const routes: Routes = [
@@ -94,6 +95,13 @@ export const routes: Routes = [
     path: 'admin',
     canActivate: [authGuard, adminGuard],
     loadComponent: () => import('./components/admin/admin').then((m) => m.AdminComponent),
+  },
+  {
+    // Back-office du créateur du site : pas de guilde active requise
+    path: 'backoffice',
+    canActivate: [platformGuard],
+    loadComponent: () =>
+      import('./components/backoffice/backoffice').then((m) => m.BackofficeComponent),
   },
   {
     path: '**',

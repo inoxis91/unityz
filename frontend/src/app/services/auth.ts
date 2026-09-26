@@ -28,6 +28,8 @@ export interface User {
   active_guild_has_subscription?: boolean;
   /** Blizzard region of the active guild (Raider.io / Warcraft Logs links). */
   active_guild_region?: WowRegion;
+  /** Site owner (PLATFORM_ADMIN_BNET_IDS): the /backoffice link and route. */
+  is_platform_admin?: boolean;
   created_at?: string;
   updated_at?: string;
   characters?: any[];
@@ -59,6 +61,7 @@ export class AuthService {
   // Miroir de canManageLineup (backend/src/middlewares/auth.ts) : sélection validé / banc des raids
   canManageLineup = computed(() => this.isAdmin() || this.isRaidLeader());
   canManageFees = computed(() => this.isAdmin() || this.isTreasurer());
+  isPlatformAdmin = computed(() => !!this.currentUser()?.is_platform_admin);
   canAccessAdmin = computed(
     () => this.isAdmin() || this.canManageRosters() || this.canManageFees(),
   );

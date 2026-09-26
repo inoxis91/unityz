@@ -70,6 +70,8 @@ jobs:
       BNET_CLIENT_ID: ci
       BNET_CLIENT_SECRET: ci
       BNET_CALLBACK_URL: http://localhost:3000/api/auth/bnet/callback
+      # Back-office: the mock GM (mock_user_6) is a platform admin in the a11y suite
+      PLATFORM_ADMIN_BNET_IDS: '9006'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

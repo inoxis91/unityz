@@ -1,0 +1,269 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.search {
+  position: relative;
+}
+
+/* Plus spécifique que la règle globale `.ui-field input:not(…)` qui fixe le padding */
+.search input[type='search']:not([type='checkbox']):not([type='radio']):not([type='range']) {
+  padding-left: 2.4rem;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.selects {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.partner-toggle.active {
+  border-color: var(--ui-bd-amber-300);
+  color: var(--ui-fg-amber-800);
+  background: var(--ui-bg-amber-50);
+}
+
+.count {
+  margin-left: auto;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ui-text-muted);
+}
+
+.list {
+  padding: 0.5rem;
+}
+
+.reloading {
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.ui-table-wrap {
+  border: 0;
+}
+
+.ui-table tbody tr {
+  cursor: pointer;
+  animation: ui-rise 0.35s var(--ui-ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 25ms);
+}
+
+.ui-table td small {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.75rem;
+  color: var(--ui-text-muted);
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.guild-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  color: var(--ui-text-strong);
+  background: none;
+  cursor: pointer;
+}
+
+.guild-link:hover strong {
+  color: var(--ui-fg-brand);
+  text-decoration: underline;
+}
+
+.guild-link:focus-visible,
+.guild-card:focus-visible {
+  outline: 3px solid var(--ui-focus);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.star {
+  font-size: 0.8rem;
+}
+
+.stage,
+.card-stage {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  color: var(--ui-text-secondary);
+}
+
+.stage-dots {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ui-surface-strong);
+  transition: background 0.3s ease;
+}
+
+.dot.on {
+  background: var(--ui-purple);
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 0.75rem 0 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ui-text-tertiary);
+}
+
+.mobile {
+  display: none;
+}
+
+.cards {
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cards li {
+  animation: ui-rise 0.35s var(--ui-ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 30ms);
+}
+
+.guild-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--ui-border);
+  border-radius: 16px;
+  font: inherit;
+  text-align: left;
+  color: var(--ui-text-primary);
+  background: var(--ui-surface);
+  cursor: pointer;
+  transition:
+    transform 0.2s var(--ui-ease-out),
+    box-shadow 0.2s ease;
+}
+
+.guild-card:hover {
+  box-shadow: var(--ui-shadow-sm);
+  transform: translateY(-2px);
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.card-top strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ui-text-strong);
+}
+
+.guild-card small {
+  font-size: 0.78rem;
+  color: var(--ui-text-muted);
+}
+
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 0.8rem;
+  color: var(--ui-text-tertiary);
+}
+
+.list-skeleton {
+  height: 480px;
+}
+
+@media (max-width: 1100px) {
+  .selects {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .desktop {
+    display: none;
+  }
+
+  .mobile {
+    display: flex;
+  }
+}
+
+@media (max-width: 640px) {
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .actions .ui-btn {
+    width: 100%;
+  }
+
+  .count {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    margin: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-table tbody tr,
+  .cards li {
+    animation: none;
+  }
+
+  .guild-card:hover {
+    transform: none;
+  }
+}

@@ -611,6 +611,85 @@ export const initDb = async (retries = 5, delay = 3000): Promise<void> => {
       END $$;
     `);
 
+    // Back-office plateforme : parcours de souscription, activité, paiements, raisons de non-conversion.
+    // Aucune de ces tables n'est lue par les routes des guildes (routes/platform.ts uniquement).
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS analytics_events (
+        id BIGSERIAL PRIMARY KEY,
+        occurred_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        name VARCHAR(64) NOT NULL,
+        user_id VARCHAR(255) REFERENCES users(id) ON DELETE SET NULL,
+        guild_id UUID REFERENCES guilds(id) ON DELETE CASCADE,
+        props JSONB NOT NULL DEFAULT '{}'::jsonb
+      );
+      CREATE INDEX IF NOT EXISTS idx_analytics_events_name_time ON analytics_events (name, occurred_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_analytics_events_guild_time ON analytics_events (guild_id, occurred_at DESC)
+        WHERE guild_id IS NOT NULL;
+
+      -- Statistiques d'usage par guilde (et listes d'événements de l'app)
+      CREATE INDEX IF NOT EXISTS idx_events_guild_created ON events (guild_id, created_at DESC);
+
+      -- Une ligne par utilisateur et par jour d'activité : DAU/WAU/MAU et rétention par cohorte
+      CREATE TABLE IF NOT EXISTS user_activity_days (
+        day DATE NOT NULL,
+        user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        guild_id UUID REFERENCES guilds(id) ON DELETE SET NULL,
+        PRIMARY KEY (day, user_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_user_activity_days_user ON user_activity_days (user_id, day);
+      CREATE INDEX IF NOT EXISTS idx_user_activity_days_guild ON user_activity_days (guild_id, day)
+        WHERE guild_id IS NOT NULL;
+
+      -- Factures Stripe payées (invoice.payment_succeeded, idempotent par facture) : CA et MRR réels
+      CREATE TABLE IF NOT EXISTS payments (
+        id BIGSERIAL PRIMARY KEY,
+        stripe_invoice_id VARCHAR(255) UNIQUE,
+        guild_id UUID REFERENCES guilds(id) ON DELETE SET NULL,
+        tier VARCHAR(20),
+        amount_cents INTEGER NOT NULL,
+        currency VARCHAR(10) NOT NULL DEFAULT 'eur',
+        billing_reason VARCHAR(64),
+        paid_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_payments_guild ON payments (guild_id, paid_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_payments_paid_at ON payments (paid_at DESC);
+
+      -- Pourquoi une guilde ne paie pas : questionnaire de la page d'offres, fin d'essai, résiliation
+      CREATE TABLE IF NOT EXISTS churn_feedback (
+        id BIGSERIAL PRIMARY KEY,
+        guild_id UUID REFERENCES guilds(id) ON DELETE CASCADE,
+        user_id VARCHAR(255) REFERENCES users(id) ON DELETE SET NULL,
+        source VARCHAR(20) NOT NULL CHECK (source IN ('payment_exit', 'trial_end', 'cancel')),
+        reason VARCHAR(32) NOT NULL,
+        comment VARCHAR(500) NOT NULL DEFAULT '',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_churn_feedback_time ON churn_feedback (created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_churn_feedback_guild ON churn_feedback (guild_id, created_at DESC);
+
+      -- Actions et consultations du back-office (qui, quoi, sur quelle guilde)
+      CREATE TABLE IF NOT EXISTS platform_audit_log (
+        id BIGSERIAL PRIMARY KEY,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        actor_user_id VARCHAR(255) REFERENCES users(id) ON DELETE SET NULL,
+        actor_battletag VARCHAR(255) NOT NULL,
+        action VARCHAR(64) NOT NULL,
+        guild_id UUID REFERENCES guilds(id) ON DELETE SET NULL,
+        details JSONB NOT NULL DEFAULT '{}'::jsonb,
+        ip VARCHAR(64)
+      );
+      CREATE INDEX IF NOT EXISTS idx_platform_audit_time ON platform_audit_log (created_at DESC);
+
+      -- Notes internes : table séparée pour qu'aucune route de guilde ne puisse les exposer
+      CREATE TABLE IF NOT EXISTS platform_guild_notes (
+        guild_id UUID PRIMARY KEY REFERENCES guilds(id) ON DELETE CASCADE,
+        note VARCHAR(2000) NOT NULL DEFAULT '',
+        is_partner BOOLEAN NOT NULL DEFAULT FALSE,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_by VARCHAR(255)
+      );
+    `);
+
     // Sessions Express (connect-pg-simple) : survivent aux redéploiements, contrairement au MemoryStore
     await client.query(`
       CREATE TABLE IF NOT EXISTS session (

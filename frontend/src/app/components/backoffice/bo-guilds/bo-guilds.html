@@ -1,0 +1,236 @@
+<section class="ui-card filters" style="--i: 0">
+  <div class="ui-field search">
+    <label class="visually-hidden" for="bo-guild-search">{{ i18n.t('bo.guilds.search') }}</label>
+    <span class="search-icon" aria-hidden="true">🔎</span>
+    <input
+      id="bo-guild-search"
+      type="search"
+      autocomplete="off"
+      [placeholder]="i18n.t('bo.guilds.search')"
+      [value]="searchText()"
+      (input)="onSearch($any($event.target).value)"
+    />
+  </div>
+  <div class="selects">
+    <label class="ui-field">
+      <span class="ui-label">{{ i18n.t('bo.guilds.state') }}</span>
+      <select (change)="setFilter('state', $event)">
+        <option value="" [selected]="!filters().state">{{ i18n.t('bo.guilds.any') }}</option>
+        @for (s of states; track s) {
+          <option [value]="s" [selected]="filters().state === s">{{ stateLabel(s) }}</option>
+        }
+      </select>
+    </label>
+    <label class="ui-field">
+      <span class="ui-label">{{ i18n.t('bo.guilds.stage') }}</span>
+      <select (change)="setFilter('stage', $event)">
+        <option value="" [selected]="filters().stage === null">
+          {{ i18n.t('bo.guilds.any') }}
+        </option>
+        @for (s of stages; track s; let i = $index) {
+          <option [value]="i" [selected]="filters().stage === i">
+            {{ i + 1 }}. {{ stageLabel(i) }}
+          </option>
+        }
+      </select>
+    </label>
+    <label class="ui-field">
+      <span class="ui-label">{{ i18n.t('bo.region.label') }}</span>
+      <select (change)="setFilter('region', $event)">
+        <option value="" [selected]="!filters().region">{{ i18n.t('bo.region.all') }}</option>
+        <option value="eu" [selected]="filters().region === 'eu'">EU</option>
+        <option value="us" [selected]="filters().region === 'us'">US</option>
+      </select>
+    </label>
+    <label class="ui-field">
+      <span class="ui-label">{{ i18n.t('bo.guilds.sort') }}</span>
+      <select (change)="setFilter('sort', $event)">
+        @for (s of sorts; track s) {
+          <option [value]="s" [selected]="filters().sort === s">
+            {{ i18n.t('bo.sort.' + s) }}
+          </option>
+        }
+      </select>
+    </label>
+  </div>
+  <div class="actions">
+    <button
+      type="button"
+      class="ui-btn sm partner-toggle"
+      [class.active]="filters().partner"
+      [attr.aria-pressed]="filters().partner"
+      (click)="togglePartner()"
+    >
+      ⭐ {{ i18n.t('bo.guilds.partner_only') }}
+    </button>
+    @if (hasFilters()) {
+      <button type="button" class="ui-btn ghost sm" (click)="reset()">
+        ✕ {{ i18n.t('bo.guilds.reset') }}
+      </button>
+    }
+    <span class="count" aria-live="polite">
+      @if (page(); as p) {
+        {{ i18n.tf('bo.guilds.count', { n: p.total }) }}
+      }
+    </span>
+    <a class="ui-btn sm" [href]="exportUrl()" download>⬇ {{ i18n.t('bo.guilds.export') }}</a>
+  </div>
+</section>
+
+@if (data.error()) {
+  <div class="ui-alert danger" role="alert">
+    <strong>{{ i18n.t('bo.error.load') }}</strong>
+    <button type="button" class="ui-btn sm" (click)="data.reload()">
+      {{ i18n.t('bo.retry') }}
+    </button>
+  </div>
+} @else if (page(); as p) {
+  @if (p.items.length) {
+    <section class="ui-card list" style="--i: 1" [class.reloading]="data.isLoading()">
+      <div class="ui-table-wrap desktop">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th scope="col">{{ i18n.t('bo.col.guild') }}</th>
+              <th scope="col">{{ i18n.t('bo.col.state') }}</th>
+              <th scope="col">{{ i18n.t('bo.col.stage') }}</th>
+              <th scope="col" class="num">{{ i18n.t('bo.col.members') }}</th>
+              <th scope="col">{{ i18n.t('bo.col.activity') }}</th>
+              <th scope="col" class="num">{{ i18n.t('bo.col.revenue') }}</th>
+              <th scope="col">{{ i18n.t('bo.col.created') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (g of p.items; track g.id; let i = $index) {
+              <tr [style.--i]="i" (click)="open(g)">
+                <td>
+                  <button
+                    type="button"
+                    class="guild-link"
+                    [attr.aria-label]="i18n.tf('bo.guilds.open', { name: g.name })"
+                    (click)="$event.stopPropagation(); open(g)"
+                  >
+                    <strong>{{ g.name }}</strong>
+                    @if (g.is_partner) {
+                      <span class="star" [title]="i18n.t('bo.guilds.partner')">⭐</span>
+                    }
+                  </button>
+                  <small>{{ g.realm }} · {{ g.region.toUpperCase() }}</small>
+                </td>
+                <td>
+                  <span [class]="'ui-badge ' + tone[g.state]">{{ stateLabel(g.state) }}</span>
+                </td>
+                <td>
+                  <span class="stage">
+                    <span class="stage-dots" aria-hidden="true">
+                      @for (s of stages; track s; let si = $index) {
+                        <span class="dot" [class.on]="si <= g.stage"></span>
+                      }
+                    </span>
+                    {{ stageLabel(g.stage) }}
+                  </span>
+                </td>
+                <td class="num">
+                  {{ g.members }}
+                  <small>{{ g.managers }} GM/off.</small>
+                </td>
+                <td>
+                  {{ lastActive(g.last_active_on) }}
+                  @if (g.active_users_7d) {
+                    <small>{{ i18n.tf('bo.guilds.active_7d', { n: g.active_users_7d }) }}</small>
+                  }
+                </td>
+                <td class="num">
+                  {{ g.paid_total_cents ? euro(g.paid_total_cents) : '—' }}
+                  @if (g.mrr_cents) {
+                    <small>{{ euro(g.mrr_cents) }} {{ i18n.t('plans.period.month') }}</small>
+                  }
+                </td>
+                <td>{{ created(g.created_at) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <ul class="cards mobile">
+        @for (g of p.items; track g.id; let i = $index) {
+          <li [style.--i]="i">
+            <button
+              type="button"
+              class="guild-card"
+              (click)="open(g)"
+              [attr.aria-label]="i18n.tf('bo.guilds.open', { name: g.name })"
+            >
+              <span class="card-top">
+                <strong
+                  >{{ g.name }}
+                  @if (g.is_partner) {
+                    ⭐
+                  }
+                </strong>
+                <span [class]="'ui-badge ' + tone[g.state]">{{ stateLabel(g.state) }}</span>
+              </span>
+              <small
+                >{{ g.realm }} · {{ g.region.toUpperCase() }} · {{ created(g.created_at) }}</small
+              >
+              <span class="card-stage">
+                <span class="stage-dots" aria-hidden="true">
+                  @for (s of stages; track s; let si = $index) {
+                    <span class="dot" [class.on]="si <= g.stage"></span>
+                  }
+                </span>
+                {{ stageLabel(g.stage) }}
+              </span>
+              <span class="card-meta">
+                <span>👥 {{ g.members }}</span>
+                <span>🕒 {{ lastActive(g.last_active_on) }}</span>
+                <span>💶 {{ g.paid_total_cents ? euro(g.paid_total_cents) : '—' }}</span>
+              </span>
+            </button>
+          </li>
+        }
+      </ul>
+
+      @if (pages() > 1) {
+        <nav
+          class="pager"
+          [attr.aria-label]="i18n.tf('bo.guilds.page', { page: p.page, pages: pages() })"
+        >
+          <button
+            type="button"
+            class="ui-btn sm"
+            [disabled]="p.page <= 1"
+            [attr.aria-label]="i18n.t('bo.guilds.prev')"
+            (click)="goTo(p.page - 1)"
+          >
+            ←
+          </button>
+          <span>{{ i18n.tf('bo.guilds.page', { page: p.page, pages: pages() }) }}</span>
+          <button
+            type="button"
+            class="ui-btn sm"
+            [disabled]="p.page >= pages()"
+            [attr.aria-label]="i18n.t('bo.guilds.next')"
+            (click)="goTo(p.page + 1)"
+          >
+            →
+          </button>
+        </nav>
+      }
+    </section>
+  } @else {
+    <div class="ui-empty">
+      <span class="emoji" aria-hidden="true">🏜️</span>
+      <strong>{{ i18n.t('bo.guilds.empty') }}</strong>
+      <p>{{ i18n.t('bo.guilds.empty_desc') }}</p>
+      @if (hasFilters()) {
+        <button type="button" class="ui-btn sm" (click)="reset()">
+          {{ i18n.t('bo.guilds.reset') }}
+        </button>
+      }
+    </div>
+  }
+} @else {
+  <div class="ui-skeleton list-skeleton" aria-hidden="true"></div>
+}

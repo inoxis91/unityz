@@ -299,3 +299,12 @@
     }
   </div>
 }
+
+@if (cancelSurveyOpen()) {
+  <app-feedback-survey
+    source="cancel"
+    [busy]="isProcessingSub()"
+    (submitted)="confirmCancel($event)"
+    (dismissed)="cancelSurveyOpen.set(false)"
+  />
+}

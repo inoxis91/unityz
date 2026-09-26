@@ -1,0 +1,95 @@
+<div class="ui-page">
+  <app-page-header
+    icon="🛰️"
+    tone="teal"
+    [title]="i18n.t('bo.title')"
+    [subtitle]="i18n.t('bo.subtitle')"
+  >
+    <nav class="ui-tabs bo-tabs" [attr.aria-label]="i18n.t('bo.tabs')">
+      @for (tab of tabs; track tab.id) {
+        <button
+          type="button"
+          [class.active]="activeTab() === tab.id"
+          [attr.aria-pressed]="activeTab() === tab.id"
+          (click)="select(tab.id)"
+        >
+          <span aria-hidden="true">{{ tab.icon }}</span> {{ i18n.t('bo.tab.' + tab.id) }}
+        </button>
+      }
+    </nav>
+  </app-page-header>
+
+  @if (api.reauthRequired()) {
+    <section class="ui-card reauth" role="alert">
+      <span class="reauth-icon" aria-hidden="true">🔐</span>
+      <div>
+        <h2>{{ i18n.t('bo.reauth.title') }}</h2>
+        <p>{{ i18n.t('bo.reauth.desc') }}</p>
+      </div>
+      <button type="button" class="ui-btn primary" (click)="reauthenticate()">
+        {{ i18n.t('bo.reauth.btn') }}
+      </button>
+    </section>
+  } @else {
+    <!-- Chaque onglet est un chunk chargé à la demande -->
+    <div class="tab-content">
+      @switch (activeTab()) {
+        @case ('overview') {
+          @defer {
+            <app-bo-overview />
+          } @placeholder {
+            <div class="ui-skeleton tab-skeleton" aria-hidden="true"></div>
+          }
+        }
+        @case ('funnel') {
+          @defer {
+            <app-bo-funnel />
+          } @placeholder {
+            <div class="ui-skeleton tab-skeleton" aria-hidden="true"></div>
+          }
+        }
+        @case ('guilds') {
+          @defer {
+            <app-bo-guilds />
+          } @placeholder {
+            <div class="ui-skeleton tab-skeleton" aria-hidden="true"></div>
+          }
+        }
+        @case ('usage') {
+          @defer {
+            <app-bo-usage />
+          } @placeholder {
+            <div class="ui-skeleton tab-skeleton" aria-hidden="true"></div>
+          }
+        }
+        @case ('reasons') {
+          @defer {
+            <app-bo-reasons />
+          } @placeholder {
+            <div class="ui-skeleton tab-skeleton" aria-hidden="true"></div>
+          }
+        }
+        @case ('audit') {
+          @defer {
+            <app-bo-audit />
+          } @placeholder {
+            <div class="ui-skeleton tab-skeleton" aria-hidden="true"></div>
+          }
+        }
+        @case ('health') {
+          @defer {
+            <app-bo-health />
+          } @placeholder {
+            <div class="ui-skeleton tab-skeleton" aria-hidden="true"></div>
+          }
+        }
+      }
+    </div>
+  }
+</div>
+
+@if (openGuildId(); as guildId) {
+  @defer {
+    <app-bo-guild-drawer [guildId]="guildId" (closed)="closeGuild()" />
+  }
+}

@@ -4,14 +4,20 @@ import { validate } from '../middlewares/validate';
 import pool from '../lib/db';
 import { HttpError } from '../middlewares/errorHandler';
 import { checkoutSessionSchema, paidTierBodySchema } from '../schemas/billingSchemas';
+import { cancelSubscriptionSchema, FeedbackReason } from '../schemas/analyticsSchemas';
+import { track } from '../services/analytics';
 import {
   CheckoutSession,
   StripeInvoice,
   StripeSubscription,
   activateCheckoutSession,
   activateFreeTrial,
+  PLAN_PRICE_CENTS,
   applyInvoicePaid,
   applySubscriptionChange,
+  isPaidTier,
+  recordInvoiceFailed,
+  recordPayment,
   changePlan,
   createCheckoutSession,
   mockPaymentsEnabled,
@@ -49,7 +55,9 @@ const manager = [requireActiveGuild, requireSubscriptionManager];
 // POST /api/stripe/create-checkout-session : première souscription payante (Stripe Checkout)
 router.post('/create-checkout-session', ...manager, validate(paidTierBodySchema), async (req, res, next) => {
   try {
-    res.json({ url: await createCheckoutSession(req.user!.active_guild_id!, req.body.tier) });
+    const url = await createCheckoutSession(req.user!.active_guild_id!, req.body.tier);
+    track('checkout_started', { userId: req.user!.id, guildId: req.user!.active_guild_id, props: { tier: req.body.tier } });
+    res.json({ url });
   } catch (error) {
     next(error);
   }
@@ -93,19 +101,30 @@ router.get('/checkout-session/:sessionId', ...manager, validate(checkoutSessionS
       if (!mockPaymentsEnabled()) {
         throw new HttpError(400, 'Invalid checkout session.', 'INVALID_SESSION');
       }
-      const tier = String(req.query.tier || 'pro');
+      const tier = isPaidTier(req.query.tier) ? req.query.tier : 'pro';
+      // Abonnement et facture simulés : le back-office voit une guilde payante comme en production
       const result = await pool.query(
         `UPDATE guilds
          SET subscription_tier = $1,
              subscription_expires_at = CURRENT_TIMESTAMP + INTERVAL '30 days',
              subscription_status = 'active',
+             stripe_subscription_id = $3,
              free_trial_used_at = COALESCE(free_trial_used_at, CURRENT_TIMESTAMP),
              updated_at = CURRENT_TIMESTAMP
          WHERE id = $2
          RETURNING *`,
-        [tier, guildId],
+        [tier, guildId, `mock_sub_${guildId}`],
       );
       if (!result.rows[0]) throw new HttpError(404, 'Guild not found.', 'GUILD_NOT_FOUND');
+      const firstReturn = await recordPayment({
+        invoiceId: `mock_in_${sessionId}`,
+        guildId,
+        tier,
+        amountCents: PLAN_PRICE_CENTS[tier],
+        currency: 'eur',
+        billingReason: 'subscription_create',
+      });
+      if (firstReturn) track('checkout_completed', { userId: req.user!.id, guildId, props: { tier, mock: true } });
       return res.json({ status: 'success', tier, guild: result.rows[0] });
     }
 
@@ -157,8 +176,19 @@ router.post('/webhook', async (req, res) => {
         }
         break;
       }
+      case 'checkout.session.expired': {
+        // Checkout ouvert puis abandonné (expire au bout de 24 h) : étape clé du tunnel
+        const session = event.data.object as CheckoutSession;
+        if (session.metadata?.guild_id) {
+          track('checkout_expired', { guildId: session.metadata.guild_id, props: { tier: session.metadata.tier ?? null } });
+        }
+        break;
+      }
       case 'invoice.payment_succeeded':
         await applyInvoicePaid(stripe, event.data.object as StripeInvoice);
+        break;
+      case 'invoice.payment_failed':
+        await recordInvoiceFailed(stripe, event.data.object as StripeInvoice);
         break;
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted':
@@ -181,23 +211,38 @@ router.post('/webhook', async (req, res) => {
 // POST /api/stripe/activate-free : essai gratuit de 30 jours, une seule fois par guilde
 router.post('/activate-free', ...manager, async (req, res, next) => {
   try {
-    res.json({ status: 'success', guild: await activateFreeTrial(req.user!.active_guild_id!) });
+    const guild = await activateFreeTrial(req.user!.active_guild_id!);
+    track('free_trial_activated', { userId: req.user!.id, guildId: guild.id });
+    res.json({ status: 'success', guild });
   } catch (error) {
     next(error);
   }
 });
 
-// POST /api/stripe/cancel-subscription : résiliation à la fin de la période payée
-router.post('/cancel-subscription', ...manager, async (req, res, next) => {
+/** Motif du questionnaire → catégorie de résiliation Stripe (visible dans le Dashboard). */
+const STRIPE_FEEDBACK: Partial<Record<FeedbackReason, 'too_expensive' | 'missing_features' | 'switched_service' | 'unused' | 'low_quality'>> = {
+  too_expensive: 'too_expensive',
+  missing_feature: 'missing_features',
+  other_tool: 'switched_service',
+  guild_inactive: 'unused',
+  technical_issue: 'low_quality',
+};
+
+// POST /api/stripe/cancel-subscription : résiliation à la fin de la période payée, motif obligatoire
+router.post('/cancel-subscription', ...manager, validate(cancelSubscriptionSchema), async (req, res, next) => {
   try {
     const guildId = req.user!.active_guild_id!;
+    const { reason, comment } = req.body as { reason: FeedbackReason; comment: string };
     const guildRes = await pool.query('SELECT stripe_subscription_id FROM guilds WHERE id = $1', [guildId]);
     if (!guildRes.rows[0]) throw new HttpError(404, 'Guild not found.', 'GUILD_NOT_FOUND');
 
     const stripeSubscriptionId = guildRes.rows[0].stripe_subscription_id;
     if (stripeSubscriptionId && stripe) {
       try {
-        await stripe.subscriptions.update(stripeSubscriptionId, { cancel_at_period_end: true });
+        await stripe.subscriptions.update(stripeSubscriptionId, {
+          cancel_at_period_end: true,
+          cancellation_details: { feedback: STRIPE_FEEDBACK[reason] ?? 'other', comment: comment || undefined },
+        });
       } catch (err) {
         console.error('[Stripe Cancel] Error canceling subscription on Stripe:', err);
         // Continue to cancel in DB as a fallback
@@ -213,6 +258,11 @@ router.post('/cancel-subscription', ...manager, async (req, res, next) => {
        RETURNING *`,
       [guildId],
     );
+    await pool.query(
+      `INSERT INTO churn_feedback (guild_id, user_id, source, reason, comment) VALUES ($1, $2, 'cancel', $3, $4)`,
+      [guildId, req.user!.id, reason, comment],
+    );
+    track('subscription_cancel_requested', { userId: req.user!.id, guildId, props: { reason } });
     res.json({ status: 'success', message: 'Subscription successfully canceled', guild: result.rows[0] });
   } catch (error) {
     next(error);

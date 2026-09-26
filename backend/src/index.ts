@@ -19,6 +19,10 @@ import mockAuthRoutes from './routes/mockAuth';
 import supportRoutes from './routes/support';
 import craftRoutes from './routes/crafts';
 import guildHelpRoutes from './routes/guildHelp';
+import platformRoutes from './routes/platform';
+import analyticsRoutes from './routes/analytics';
+import { recordActivity, track } from './services/analytics';
+import { isPlatformAdmin } from './middlewares/platform';
 import { errorHandler } from './middlewares/errorHandler';
 import { initDiscord } from './lib/discord';
 import { initCronJobs } from './lib/cron';
@@ -30,6 +34,8 @@ import { DEFAULT_REGION, toWowRegion } from './lib/regions';
 declare module 'express-session' {
   interface SessionData {
     redirect_after_login?: string;
+    /** Dernière connexion Battle.net (ms) : le back-office exige une connexion récente. */
+    authenticated_at?: number;
   }
 }
 
@@ -111,6 +117,7 @@ app.use(session({
 
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(recordActivity);
 
 // Routes
 app.use('/api/characters', characterRoutes);
@@ -123,6 +130,8 @@ app.use('/api/guilds', guildRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/crafts', craftRoutes);
 app.use('/api/guild-help', guildHelpRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/platform', platformRoutes);
 
 if (!isProd) {
   app.use('/api/mock-auth', mockAuthRoutes);
@@ -136,7 +145,7 @@ if (!isProd) {
 const PRERENDERED_ROUTES = new Set(['/', '/en', '/terms', '/privacy']);
 const APP_ROUTE_ROOTS = new Set([
   'login', 'select-guild', 'payment', 'dashboard', 'guild-characters', 'options',
-  'absences', 'calendar', 'fees', 'crafts', 'guild-help', 'events', 'admin',
+  'absences', 'calendar', 'fees', 'crafts', 'guild-help', 'events', 'admin', 'backoffice',
 ]);
 // Angular output hashing: main-ABCD1234.js, chunk-ABCD1234.js, styles-ABCD1234.css
 const HASHED_ASSET = /-[A-Z0-9]{8}\.(js|css)$/;
@@ -178,6 +187,7 @@ if (isProd) {
 app.get('/api/auth/bnet', (req, res, next) => {
   const redirect = req.query.redirect as string;
   console.log(`[Auth] Login initiated. SessionID: ${req.sessionID}, Redirect Query: ${redirect}`);
+  track('login_started');
 
   if (redirect && redirect.startsWith('/')) {
     req.session.redirect_after_login = redirect;
@@ -195,6 +205,10 @@ app.get('/api/auth/bnet', (req, res, next) => {
 app.get('/api/auth/bnet/callback', (req, res, next) => {
   // Capturer la redirection AVANT que passport ne régénère la session
   const savedRedirect = req.session.redirect_after_login;
+  // Refus sur l'écran Battle.net (access_denied...) : Blizzard revient ici avec ?error=
+  if (req.query.error) {
+    track('login_failed', { props: { reason: String(req.query.error).slice(0, 64) } });
+  }
 
   passport.authenticate('bnet', { failureRedirect: `${frontendUrl}/login` })(req, res, () => {
     let target = frontendUrl + '/';
@@ -205,6 +219,7 @@ app.get('/api/auth/bnet/callback', (req, res, next) => {
       // Pas besoin de le supprimer de la session car c'est une nouvelle session
     }
 
+    req.session.authenticated_at = Date.now();
     req.session.save((err) => {
       if (err) {
         console.error('[Auth] Session save error in callback:', err);
@@ -311,6 +326,7 @@ app.get('/api/users/me', async (req, res, next) => {
         active_guild_free_trial_available,
         active_guild_has_subscription,
         active_guild_region,
+        is_platform_admin: isPlatformAdmin(req.user),
       });
     } catch (error) {
       next(error);

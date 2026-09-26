@@ -1,0 +1,215 @@
+<div class="toolbar">
+  <div class="ui-tabs period" role="group" [attr.aria-label]="i18n.t('bo.period.label')">
+    @for (p of periods; track p) {
+      <button
+        type="button"
+        [class.active]="days() === p"
+        [attr.aria-pressed]="days() === p"
+        (click)="days.set(p)"
+      >
+        {{ i18n.t('bo.period.' + p) }}
+      </button>
+    }
+  </div>
+</div>
+
+@if (data.error()) {
+  <div class="ui-alert danger" role="alert">
+    <strong>{{ i18n.t('bo.error.load') }}</strong>
+    <button type="button" class="ui-btn sm" (click)="data.reload()">
+      {{ i18n.t('bo.retry') }}
+    </button>
+  </div>
+} @else if (data.hasValue()) {
+  @let r = data.value();
+  <div class="grid">
+    <section class="ui-card feedback" style="--i: 0; --card-accent: var(--ui-warning)">
+      <header class="ui-card-head">
+        <h2>
+          <span class="ui-card-icon" aria-hidden="true">💬</span
+          >{{ i18n.t('bo.reasons.feedback_title') }}
+        </h2>
+        <p>{{ i18n.t('bo.reasons.feedback_desc') }}</p>
+      </header>
+      <div
+        class="ui-tabs sources"
+        role="group"
+        [attr.aria-label]="i18n.t('bo.reasons.feedback_title')"
+      >
+        @for (s of sources; track s) {
+          <button
+            type="button"
+            [class.active]="source() === s"
+            [attr.aria-pressed]="source() === s"
+            (click)="source.set(s)"
+          >
+            {{ i18n.t('bo.source.' + s) }} <span class="count">{{ sourceCount()[s] ?? 0 }}</span>
+          </button>
+        }
+      </div>
+      @if (reasons().length) {
+        <ul class="bars">
+          @for (item of reasons(); track item.reason; let i = $index) {
+            <li [style.--i]="i">
+              <div class="bar-head">
+                <span>{{ i18n.t('feedback.reason.' + item.reason) }}</span>
+                <strong
+                  >{{ item.count }} <small>· {{ pct(item.share) }}</small></strong
+                >
+              </div>
+              <div class="track" aria-hidden="true">
+                <span class="fill" [style.width.%]="item.share * 100"></span>
+              </div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <div class="ui-empty">
+          <span class="emoji" aria-hidden="true">🤐</span>
+          <p>{{ i18n.t('bo.reasons.feedback_empty') }}</p>
+        </div>
+      }
+    </section>
+
+    <section class="ui-card" style="--i: 1; --card-accent: var(--ui-accent)">
+      <header class="ui-card-head">
+        <h2>
+          <span class="ui-card-icon" aria-hidden="true">🛒</span
+          >{{ i18n.t('bo.reasons.checkout_title') }}
+        </h2>
+        <p>{{ i18n.t('bo.reasons.checkout_desc') }}</p>
+      </header>
+      <div class="abandon">
+        <span class="abandon-value">{{ pct(r.checkout.abandon_rate) }}</span>
+        <span class="abandon-label">{{ i18n.t('bo.reasons.abandon_rate') }}</span>
+      </div>
+      <dl class="ui-kpis checkout">
+        <div class="ui-kpi" style="--i: 0">
+          <dd>{{ r.checkout.started }}</dd>
+          <dt>{{ i18n.t('bo.reasons.started') }}</dt>
+        </div>
+        <div class="ui-kpi success" style="--i: 1">
+          <dd>{{ r.checkout.completed }}</dd>
+          <dt>{{ i18n.t('bo.reasons.completed') }}</dt>
+        </div>
+        <div class="ui-kpi warning" style="--i: 2">
+          <dd>{{ r.checkout.canceled }}</dd>
+          <dt>{{ i18n.t('bo.reasons.canceled') }}</dt>
+        </div>
+        <div class="ui-kpi danger" style="--i: 3">
+          <dd>{{ r.checkout.expired }}</dd>
+          <dt>{{ i18n.t('bo.reasons.expired') }}</dt>
+        </div>
+      </dl>
+    </section>
+  </div>
+
+  <div class="grid">
+    <section class="ui-card" style="--i: 2; --card-accent: var(--ui-danger)">
+      <header class="ui-card-head">
+        <h2>
+          <span class="ui-card-icon" aria-hidden="true">🚧</span
+          >{{ i18n.t('bo.reasons.blockers_title') }}
+        </h2>
+        <p>{{ i18n.t('bo.reasons.blockers_desc') }}</p>
+      </header>
+      <ul class="blockers">
+        <li>
+          <strong class="big">{{ r.blocked_not_manager }}</strong>
+          <span>
+            <b>{{ i18n.t('bo.reasons.blocked_not_manager') }}</b>
+            <small>{{ i18n.t('bo.reasons.blocked_not_manager_hint') }}</small>
+          </span>
+        </li>
+        <li>
+          <strong class="big">{{ r.no_guild_found }}</strong>
+          <span>
+            <b>{{ i18n.t('bo.reasons.no_guild_found') }}</b>
+            <small>{{ i18n.t('bo.reasons.no_guild_found_hint') }}</small>
+          </span>
+        </li>
+        <li class="list">
+          <b>{{ i18n.t('bo.reasons.login_failures') }}</b>
+          @for (f of r.login_failures; track f.reason) {
+            <span class="ui-badge warning">{{ f.reason }} · {{ f.count }}</span>
+          } @empty {
+            <small>0</small>
+          }
+        </li>
+        <li class="list">
+          <b>{{ i18n.t('bo.reasons.select_failures') }}</b>
+          @for (f of r.guild_select_failures; track f.code) {
+            <span class="ui-badge warning">{{ f.code }} · {{ f.count }}</span>
+          } @empty {
+            <small>0</small>
+          }
+        </li>
+      </ul>
+    </section>
+
+    <section class="ui-card" style="--i: 3; --card-accent: var(--ui-danger)">
+      <header class="ui-card-head">
+        <h2>
+          <span class="ui-card-icon" aria-hidden="true">💥</span
+          >{{ i18n.t('bo.reasons.payment_failures_title') }}
+        </h2>
+        <p>{{ i18n.t('bo.reasons.payment_failures_desc') }}</p>
+      </header>
+      <dl class="ui-kpis checkout">
+        <div class="ui-kpi warning" style="--i: 0">
+          <dd>{{ r.past_due }}</dd>
+          <dt>{{ i18n.t('bo.reasons.past_due') }}</dt>
+        </div>
+        <div class="ui-kpi danger" style="--i: 1">
+          <dd>{{ r.ended }}</dd>
+          <dt>{{ i18n.t('bo.reasons.ended') }}</dt>
+        </div>
+      </dl>
+      <div class="declines">
+        @for (d of r.payment_failures; track d.code) {
+          <span class="ui-badge danger"
+            >{{ d.code === 'unknown' ? i18n.t('bo.reasons.unknown') : d.code }} ·
+            {{ d.count }}</span
+          >
+        } @empty {
+          <small>{{ i18n.t('bo.reasons.no_failures') }}</small>
+        }
+      </div>
+    </section>
+  </div>
+
+  <section class="ui-card" style="--i: 4; --card-accent: var(--ui-purple)">
+    <header class="ui-card-head">
+      <h2>
+        <span class="ui-card-icon" aria-hidden="true">🗨️</span
+        >{{ i18n.t('bo.reasons.comments_title') }}
+      </h2>
+    </header>
+    @if (comments().length) {
+      <ul class="comments">
+        @for (c of comments(); track c.id; let i = $index) {
+          <li [style.--i]="i">
+            <blockquote>{{ c.comment }}</blockquote>
+            <div class="comment-meta">
+              <span class="ui-badge">{{ i18n.t('bo.source.' + c.source) }}</span>
+              <span class="ui-badge warning">{{ i18n.t('feedback.reason.' + c.reason) }}</span>
+              @if (c.guild_name) {
+                <button type="button" class="link" (click)="open(c.guild_id)">
+                  {{ c.guild_name }}
+                </button>
+              }
+              <small>{{ c.battletag }} · {{ when(c.created_at) }}</small>
+            </div>
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="ui-empty">
+        <span class="emoji" aria-hidden="true">📭</span>
+        <p>{{ i18n.t('bo.reasons.comments_empty') }}</p>
+      </div>
+    }
+  </section>
+} @else {
+  <div class="ui-skeleton reasons-skeleton" aria-hidden="true"></div>
+}

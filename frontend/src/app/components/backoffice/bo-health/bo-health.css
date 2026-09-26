@@ -1,0 +1,90 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.checks {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checks li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  animation: ui-rise 0.35s var(--ui-ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+
+.checks li:last-child {
+  border-bottom: 0;
+}
+
+.ui-dot {
+  color: var(--ui-border-hover);
+}
+
+.ui-dot.ok {
+  color: var(--ui-status-success);
+}
+
+.ui-dot.ko {
+  color: var(--ui-status-danger);
+}
+
+.name {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ui-text-strong);
+}
+
+.muted {
+  font-size: 0.78rem;
+  color: var(--ui-text-muted);
+}
+
+.error {
+  font-size: 0.75rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  color: var(--ui-fg-red-700);
+}
+
+.health-skeleton {
+  height: 420px;
+}
+
+@media (max-width: 820px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checks li {
+    animation: none;
+  }
+}

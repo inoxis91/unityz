@@ -1,0 +1,458 @@
+<div class="overlay" (click)="close()" aria-hidden="true"></div>
+<aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="bo-drawer-title">
+  <header class="drawer-head">
+    <div class="head-text">
+      <h2 id="bo-drawer-title">
+        @if (guild(); as g) {
+          {{ g.name }}
+          @if (g.is_partner) {
+            <span class="star" [title]="i18n.t('bo.guilds.partner')">⭐</span>
+          }
+        } @else {
+          {{ i18n.t('bo.detail.title') }}
+        }
+      </h2>
+      @if (guild(); as g) {
+        <p>
+          {{
+            i18n.tf('bo.detail.region_realm', { realm: g.realm, region: g.region.toUpperCase() })
+          }}
+          · #{{ g.blizzard_id }}
+        </p>
+      }
+    </div>
+    <button
+      #closeBtn
+      type="button"
+      class="ui-close"
+      [attr.aria-label]="i18n.t('bo.detail.close')"
+      (click)="close()"
+    >
+      ×
+    </button>
+  </header>
+
+  <div class="drawer-body">
+    @if (data.error()) {
+      <div class="ui-alert danger" role="alert">
+        <strong>{{ i18n.t('bo.error.load') }}</strong>
+        <button type="button" class="ui-btn sm" (click)="data.reload()">
+          {{ i18n.t('bo.retry') }}
+        </button>
+      </div>
+    } @else if (guild(); as g) {
+      <div class="badges">
+        <span [class]="'ui-badge ' + tone[g.state]">{{ i18n.t('bo.state.' + g.state) }}</span>
+        <span class="ui-badge purple"
+          >{{ stageIndex() + 1 }}/{{ stages.length }} ·
+          {{ i18n.t('bo.stage.' + g.stage_key) }}</span
+        >
+        <span class="ui-badge">{{ i18n.t('bo.tier.' + g.subscription_tier) }}</span>
+      </div>
+      <div class="progress" aria-hidden="true">
+        @for (s of stages; track s; let i = $index) {
+          <span class="progress-step" [class.on]="i <= stageIndex()" [style.--i]="i"></span>
+        }
+      </div>
+
+      <dl class="ui-kpis mini-kpis">
+        <div class="ui-kpi" style="--i: 0">
+          <dd>{{ g.members }}</dd>
+          <dt>{{ i18n.t('bo.col.members') }}</dt>
+        </div>
+        <div class="ui-kpi brand" style="--i: 1">
+          <dd>{{ g.active_users_7d }}</dd>
+          <dt>{{ i18n.t('bo.kpi.wau') }}</dt>
+        </div>
+        <div class="ui-kpi purple" style="--i: 2">
+          <dd>{{ g.events_30d }}</dd>
+          <dt>{{ i18n.t('bo.detail.events_30d') }}</dt>
+        </div>
+        <div class="ui-kpi success" style="--i: 3">
+          <dd>{{ g.paid_total_cents ? euro(g.paid_total_cents) : '—' }}</dd>
+          <dt>{{ i18n.t('bo.detail.paid_total') }}</dt>
+        </div>
+      </dl>
+
+      <!-- Abonnement -->
+      <section class="block" style="--i: 1">
+        <h3><span aria-hidden="true">💳</span> {{ i18n.t('bo.detail.subscription') }}</h3>
+        <dl class="facts">
+          <div>
+            <dt>{{ i18n.t('bo.detail.expires') }}</dt>
+            <dd>
+              @if (g.subscription_expires_at) {
+                {{ date(g.subscription_expires_at) }}
+                @if (left(); as l) {
+                  <span [class]="'ui-badge ' + (l > 7 ? 'success' : l > 0 ? 'warning' : 'danger')">
+                    {{
+                      l > 0
+                        ? i18n.tf('bo.detail.days_left', { n: l })
+                        : i18n.tf('bo.detail.expired_since', { n: -l })
+                    }}
+                  </span>
+                }
+              } @else {
+                {{ i18n.t('bo.detail.no_access') }}
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>{{ i18n.t('bo.detail.status') }}</dt>
+            <dd>{{ g.subscription_status ?? '—' }}</dd>
+          </div>
+          <div>
+            <dt>{{ i18n.t('bo.detail.trial_used') }}</dt>
+            <dd>
+              {{
+                g.free_trial_used_at
+                  ? date(g.free_trial_used_at)
+                  : i18n.t('bo.detail.trial_available')
+              }}
+            </dd>
+          </div>
+          <div>
+            <dt>{{ i18n.t('bo.detail.discord') }}</dt>
+            <dd>
+              {{ i18n.t(g.discord_enabled ? 'bo.detail.discord_on' : 'bo.detail.discord_off') }}
+            </dd>
+          </div>
+        </dl>
+        @if (g.stripe_customer_url || g.stripe_subscription_url) {
+          <div class="links">
+            @if (g.stripe_customer_url) {
+              <a
+                class="ui-btn sm"
+                [href]="g.stripe_customer_url"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                ↗ {{ i18n.t('bo.detail.open_customer') }}
+              </a>
+            }
+            @if (g.stripe_subscription_url) {
+              <a
+                class="ui-btn sm"
+                [href]="g.stripe_subscription_url"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                ↗ {{ i18n.t('bo.detail.open_subscription') }}
+              </a>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Actions -->
+      <section class="block" style="--i: 2">
+        <h3><span aria-hidden="true">🛠️</span> {{ i18n.t('bo.action.title') }}</h3>
+        <div class="action-list">
+          <div class="action" [class.open]="panel() === 'extend'">
+            <button
+              type="button"
+              class="action-toggle"
+              [attr.aria-expanded]="panel() === 'extend'"
+              (click)="toggle('extend')"
+            >
+              <span class="action-icon ok" aria-hidden="true">⏳</span>
+              <span class="action-text">
+                <strong>{{ i18n.t('bo.action.extend') }}</strong>
+                <small>{{ i18n.t('bo.action.extend_desc') }}</small>
+              </span>
+              <span class="chevron" aria-hidden="true">▾</span>
+            </button>
+            @if (panel() === 'extend') {
+              <form class="action-form" (submit)="$event.preventDefault(); submit('extend_access')">
+                <div class="chips" role="group" [attr.aria-label]="i18n.t('bo.action.days')">
+                  @for (d of quickDays; track d) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.active]="days() === d"
+                      [attr.aria-pressed]="days() === d"
+                      (click)="days.set(d)"
+                    >
+                      +{{ d }}
+                    </button>
+                  }
+                </div>
+                <div class="form-row">
+                  <label class="ui-field">
+                    <span class="ui-label">{{ i18n.t('bo.action.days') }}</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="365"
+                      [value]="days()"
+                      (input)="setDays($any($event.target).valueAsNumber)"
+                    />
+                  </label>
+                  <label class="ui-field">
+                    <span class="ui-label">{{ i18n.t('bo.action.tier') }}</span>
+                    <select
+                      [disabled]="g.stripe_managed"
+                      (change)="tier.set($any($event.target).value)"
+                    >
+                      @for (t of tiers; track t) {
+                        <option [value]="t" [selected]="tier() === t">
+                          {{ i18n.t('bo.tier.' + t) }}
+                        </option>
+                      }
+                    </select>
+                  </label>
+                </div>
+                @if (g.stripe_managed) {
+                  <p class="form-hint">ℹ️ {{ i18n.t('bo.action.stripe_managed') }}</p>
+                }
+                <label class="ui-field">
+                  <span class="ui-label">{{ i18n.t('bo.action.note') }}</span>
+                  <textarea
+                    rows="2"
+                    maxlength="300"
+                    [placeholder]="i18n.t('bo.action.note_placeholder')"
+                    [value]="actionNote()"
+                    (input)="actionNote.set($any($event.target).value)"
+                  ></textarea>
+                </label>
+                <button
+                  type="submit"
+                  class="ui-btn success"
+                  [class.loading]="busy()"
+                  [disabled]="busy()"
+                >
+                  {{ i18n.tf('bo.action.extend_submit', { n: days() }) }}
+                </button>
+              </form>
+            }
+          </div>
+
+          @if (g.free_trial_used_at) {
+            <div class="action" [class.open]="panel() === 'reset'">
+              <button
+                type="button"
+                class="action-toggle"
+                [attr.aria-expanded]="panel() === 'reset'"
+                (click)="toggle('reset')"
+              >
+                <span class="action-icon info" aria-hidden="true">🎁</span>
+                <span class="action-text">
+                  <strong>{{ i18n.t('bo.action.reset_trial') }}</strong>
+                  <small>{{ i18n.t('bo.action.reset_trial_desc') }}</small>
+                </span>
+                <span class="chevron" aria-hidden="true">▾</span>
+              </button>
+              @if (panel() === 'reset') {
+                <form class="action-form" (submit)="$event.preventDefault(); submit('reset_trial')">
+                  <label class="ui-field">
+                    <span class="ui-label">{{ i18n.t('bo.action.note') }}</span>
+                    <textarea
+                      rows="2"
+                      maxlength="300"
+                      [placeholder]="i18n.t('bo.action.note_placeholder')"
+                      [value]="actionNote()"
+                      (input)="actionNote.set($any($event.target).value)"
+                    ></textarea>
+                  </label>
+                  <button
+                    type="submit"
+                    class="ui-btn accent"
+                    [class.loading]="busy()"
+                    [disabled]="busy()"
+                  >
+                    {{ i18n.t('bo.action.reset_trial') }}
+                  </button>
+                </form>
+              }
+            </div>
+          }
+
+          @if (g.subscription_expires_at && !g.stripe_managed) {
+            <div class="action danger-zone" [class.open]="panel() === 'revoke'">
+              <button
+                type="button"
+                class="action-toggle"
+                [attr.aria-expanded]="panel() === 'revoke'"
+                (click)="toggle('revoke')"
+              >
+                <span class="action-icon ko" aria-hidden="true">⛔</span>
+                <span class="action-text">
+                  <strong>{{ i18n.t('bo.action.revoke') }}</strong>
+                  <small>{{ i18n.t('bo.action.revoke_desc') }}</small>
+                </span>
+                <span class="chevron" aria-hidden="true">▾</span>
+              </button>
+              @if (panel() === 'revoke') {
+                <form
+                  class="action-form"
+                  (submit)="$event.preventDefault(); submit('revoke_access')"
+                >
+                  <label class="ui-field">
+                    <span class="ui-label">{{ i18n.t('bo.action.note') }}</span>
+                    <textarea
+                      rows="2"
+                      maxlength="300"
+                      [placeholder]="i18n.t('bo.action.note_placeholder')"
+                      [value]="actionNote()"
+                      (input)="actionNote.set($any($event.target).value)"
+                    ></textarea>
+                  </label>
+                  <button
+                    type="submit"
+                    class="ui-btn danger"
+                    [class.loading]="busy()"
+                    [disabled]="busy()"
+                  >
+                    {{ i18n.t('bo.action.revoke') }}
+                  </button>
+                </form>
+              }
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- Note interne -->
+      <section class="block" style="--i: 3">
+        <h3><span aria-hidden="true">📝</span> {{ i18n.t('bo.detail.note') }}</h3>
+        <label class="ui-field">
+          <span class="visually-hidden">{{ i18n.t('bo.detail.note') }}</span>
+          <textarea
+            rows="3"
+            maxlength="2000"
+            [placeholder]="i18n.t('bo.detail.note_placeholder')"
+            [value]="note()"
+            (input)="note.set($any($event.target).value)"
+          ></textarea>
+        </label>
+        <div class="note-foot">
+          <label class="ui-check">
+            <input
+              type="checkbox"
+              [checked]="partner()"
+              (change)="partner.set($any($event.target).checked)"
+            />
+            ⭐ {{ i18n.t('bo.detail.partner') }}
+          </label>
+          @if (g.note.updated_at) {
+            <small>{{
+              i18n.tf('bo.detail.note_meta', {
+                when: when(g.note.updated_at),
+                who: g.note.updated_by ?? '—',
+              })
+            }}</small>
+          }
+          <button
+            type="button"
+            class="ui-btn primary sm"
+            [class.loading]="busy()"
+            [disabled]="!noteDirty() || busy()"
+            (click)="saveNote()"
+          >
+            {{ i18n.t('bo.detail.note_save') }}
+          </button>
+        </div>
+      </section>
+
+      <!-- Usage -->
+      <section class="block" style="--i: 4">
+        <h3><span aria-hidden="true">📦</span> {{ i18n.t('bo.detail.usage') }}</h3>
+        <ul class="usage">
+          @for (key of usageKeys; track key) {
+            <li [class.zero]="!g.usage[key]">
+              <strong>{{ g.usage[key] }}</strong>
+              <span>{{ i18n.t('bo.usage_key.' + key) }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+
+      <!-- Membres -->
+      <section class="block" style="--i: 5">
+        <h3>
+          <span aria-hidden="true">👥</span>
+          {{ i18n.tf('bo.detail.members', { n: g.roster.length }) }}
+        </h3>
+        @if (g.roster.length) {
+          <ul class="members">
+            @for (m of g.roster; track m.id) {
+              <li>
+                <span class="member-main">
+                  <strong>{{ m.battletag }}</strong>
+                  <small>
+                    @if (m.main_name) {
+                      {{ m.main_name }} ·
+                    }
+                    {{ i18n.t('role.' + m.role) }}
+                    @if (m.rank !== null) {
+                      · {{ i18n.tf('bo.detail.rank', { n: m.rank }) }}
+                    }
+                  </small>
+                </span>
+                <span class="member-meta">
+                  @if (m.rank !== null && m.rank <= 2) {
+                    <span class="ui-badge purple">GM/off.</span>
+                  }
+                  @if (m.discord_linked) {
+                    <span class="ui-badge info" [title]="i18n.t('bo.detail.discord_linked')"
+                      >Discord</span
+                    >
+                  }
+                  <small>{{ seen(m.last_active_on) }}</small>
+                </span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="empty-line">{{ i18n.t('bo.detail.members_empty') }}</p>
+        }
+      </section>
+
+      <!-- Parcours -->
+      <section class="block" style="--i: 6">
+        <h3><span aria-hidden="true">🧭</span> {{ i18n.t('bo.detail.timeline') }}</h3>
+        @if (timeline().length) {
+          <ol class="timeline">
+            @for (item of timeline(); track $index) {
+              <li [class]="'kind-' + item.kind">
+                <span class="tl-icon" aria-hidden="true">{{ icon(item) }}</span>
+                <div class="tl-body">
+                  <div class="tl-head">
+                    <strong>
+                      {{ label(item) }}
+                      @if (item.count > 1) {
+                        <span class="times">×{{ item.count }}</span>
+                      }
+                    </strong>
+                    <time [attr.datetime]="item.at" [title]="date(item.at)">{{
+                      when(item.at)
+                    }}</time>
+                  </div>
+                  @if (detail(item) || item.battletag) {
+                    <small>
+                      {{ detail(item) }}
+                      @if (item.battletag) {
+                        @if (detail(item)) {
+                          ·
+                        }
+                        {{ item.battletag }}
+                      }
+                    </small>
+                  }
+                  @if (comment(item); as c) {
+                    <blockquote>{{ c }}</blockquote>
+                  }
+                </div>
+              </li>
+            }
+          </ol>
+        } @else {
+          <p class="empty-line">{{ i18n.t('bo.detail.timeline_empty') }}</p>
+        }
+      </section>
+    } @else {
+      <div class="ui-skeleton drawer-skeleton" aria-hidden="true"></div>
+      <div class="ui-skeleton drawer-skeleton short" aria-hidden="true"></div>
+    }
+  </div>
+</aside>

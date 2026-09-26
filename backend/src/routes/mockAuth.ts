@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../lib/db';
 import { mockUsers, mockGuilds, mockCharacters } from '../lib/mockData';
+import { track } from '../services/analytics';
 
 const router = express.Router();
 
@@ -66,6 +67,9 @@ router.post('/login', async (req, res, next) => {
 
     req.login(dbUser, (err) => {
       if (err) return next(err);
+      // Même traçabilité qu'une connexion Battle.net (tunnel, accès au back-office)
+      req.session.authenticated_at = Date.now();
+      track('login_succeeded', { userId: dbUser.id, props: { first: false, mock: true } });
       res.json({ status: 'success', user: dbUser });
     });
   } catch (error) {

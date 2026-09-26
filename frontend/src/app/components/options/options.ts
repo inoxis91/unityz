@@ -21,12 +21,21 @@ import { ConfirmService } from '../../services/confirm';
 import { BillingService, PaidTier } from '../../services/billing';
 import { environment } from '../../../environments/environment';
 import { PageHeaderComponent } from '../../shared/ui/page-header/page-header';
+import { FeedbackSurveyComponent } from '../../shared/feedback-survey/feedback-survey';
+import { FeedbackAnswer } from '../../services/analytics';
 
 type OptionsTab = 'characters' | 'settings';
 
 @Component({
   selector: 'app-options',
-  imports: [DatePipe, FormsModule, RouterModule, CharacterManagerComponent, PageHeaderComponent],
+  imports: [
+    DatePipe,
+    FormsModule,
+    RouterModule,
+    CharacterManagerComponent,
+    PageHeaderComponent,
+    FeedbackSurveyComponent,
+  ],
   templateUrl: './options.html',
   styleUrl: './options.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,6 +54,8 @@ export class OptionsComponent implements OnInit {
   
   isPro = computed(() => this.authService.currentUser()?.subscription_tier === 'pro');
   isProcessingSub = signal(false);
+  /** Questionnaire de résiliation : le motif est obligatoire (back-office). */
+  cancelSurveyOpen = signal(false);
 
   readonly professionsList = [
     { id: 'alchemy', emoji: '⚗️' },
@@ -235,44 +246,38 @@ export class OptionsComponent implements OnInit {
     if (!(await this.billing.payPendingInvoice())) this.isProcessingSub.set(false);
   }
 
+  /** Résiliation : le questionnaire (motif obligatoire) sert aussi de confirmation. */
   cancelSubscription() {
     if (this.isProcessingSub()) return;
+    this.cancelSurveyOpen.set(true);
+  }
 
+  confirmCancel(answer: FeedbackAnswer) {
+    if (this.isProcessingSub()) return;
     const user = this.authService.currentUser();
     const expiryDate = user?.subscription_expires_at ? this.formatDate(user.subscription_expires_at) : '';
-    
-    const message = expiryDate 
-      ? this.i18n.t('options.sub.confirm_unsubscribe_period_end').replace('{date}', expiryDate)
-      : this.i18n.t('options.sub.confirm_unsubscribe');
 
-    this.confirmService.ask(
-      this.i18n.t('options.sub.unsubscribe'),
-      message,
-      this.i18n.t('options.sub.unsubscribe'),
-      this.i18n.t('calendar.form.btn_cancel'),
-      true,
-    ).then((confirmed) => {
-      if (!confirmed) return;
-
-      this.isProcessingSub.set(true);
-      this.http.post<any>(`${this.apiUrl}/stripe/cancel-subscription`, {}, { withCredentials: true }).subscribe({
+    this.isProcessingSub.set(true);
+    this.http
+      .post<any>(`${this.apiUrl}/stripe/cancel-subscription`, answer, { withCredentials: true })
+      .subscribe({
         next: () => {
           const successMsg = expiryDate
             ? this.i18n.t('options.sub.unsubscribe_success_period_end').replace('{date}', expiryDate)
             : this.i18n.t('options.sub.unsubscribe_success');
 
           this.toast.success(successMsg);
+          this.cancelSurveyOpen.set(false);
           this.authService.checkAuth().subscribe({
             next: () => this.isProcessingSub.set(false),
-            error: () => this.isProcessingSub.set(false)
+            error: () => this.isProcessingSub.set(false),
           });
         },
         error: (err) => {
           console.error('Error canceling subscription', err);
           this.toast.error(this.i18n.t('payment.error'));
           this.isProcessingSub.set(false);
-        }
+        },
       });
-    });
   }
 }

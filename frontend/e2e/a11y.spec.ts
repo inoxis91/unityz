@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { readSeed } from './fixtures';
+import { PRO_GUILD_ID, readSeed } from './fixtures';
 
 /**
  * WCAG 2.1 AA color contrast on every authenticated screen, in each project's color scheme,
@@ -24,15 +24,18 @@ async function settle(page: Page) {
   );
 }
 
-async function check(page: Page, label: string) {
+async function check(page: Page, label: string, include?: string) {
   await settle(page);
-  const { violations } = await new AxeBuilder({ page }).withRules(['color-contrast']).analyze();
+  const axe = new AxeBuilder({ page }).withRules(['color-contrast']);
+  if (include) axe.include(include);
+  const { violations } = await axe.analyze();
   const report = violations.flatMap((v) =>
     v.nodes.map((n) => `${n.target.join(' ')} → ${n.any[0]?.message ?? v.help}`),
   );
   expect.soft(report, `${label}: contrast violations`).toEqual([]);
 
-  if (test.info().project.name.endsWith('mobile')) {
+  // A scoped check (include) only concerns that element, not the page layout
+  if (!include && test.info().project.name.endsWith('mobile')) {
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );
@@ -173,4 +176,38 @@ test.describe('public pages', () => {
     await expect(page.locator('app-not-found h1')).toBeVisible();
     await check(page, '404');
   });
+});
+
+test('readable /backoffice (all tabs)', async ({ page }) => {
+  await open(page, '/backoffice');
+  const tabs = page.locator('app-backoffice .bo-tabs > button');
+  for (let i = 0; i < (await tabs.count()); i++) {
+    await tabs.nth(i).click();
+    // Deferred chunk, then the tab's own skeleton while its data loads: wait for real cards
+    await expect(page.locator('app-backoffice .tab-content .ui-card').first()).toBeVisible();
+    await expect(page.locator('app-backoffice .tab-content .ui-skeleton')).toHaveCount(0);
+    await check(page, `/backoffice › ${(await tabs.nth(i).innerText()).trim()}`);
+  }
+});
+
+test('readable /backoffice › guild details and an action form', async ({ page }) => {
+  await open(page, `/backoffice?tab=guilds&guild=${PRO_GUILD_ID}`);
+  const drawer = page.locator('app-bo-guild-drawer');
+  await expect(drawer.locator('.ui-skeleton')).toHaveCount(0);
+  await drawer.locator('.action-toggle').first().click();
+  await expect(drawer.locator('.action-form')).toBeVisible();
+  await check(page, '/backoffice › guild details');
+  await page.keyboard.press('Escape');
+  await expect(drawer).toHaveCount(0);
+});
+
+test('readable /payment › non-conversion survey', async ({ page }) => {
+  await open(page, '/payment?feedback=trial_end');
+  const survey = page.locator('app-feedback-survey');
+  await expect(survey.locator('.ui-modal')).toBeVisible();
+  await survey.locator('.reason').first().click();
+  // The pricing page itself is dark by design and not part of this suite: only the survey is checked
+  await check(page, '/payment › survey', 'app-feedback-survey .ui-modal');
+  await page.keyboard.press('Escape');
+  await expect(survey).toHaveCount(0);
 });

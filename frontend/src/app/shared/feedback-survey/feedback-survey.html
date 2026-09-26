@@ -1,0 +1,84 @@
+<div class="ui-overlay" (click)="dismiss()">
+  <form
+    class="ui-modal survey"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="survey-title"
+    aria-describedby="survey-desc"
+    (click)="$event.stopPropagation()"
+    (submit)="$event.preventDefault(); submit()"
+  >
+    <header class="ui-modal-head">
+      <h2 id="survey-title">
+        <span aria-hidden="true">{{ source() === 'cancel' ? '💔' : '💬' }}</span>
+        {{ i18n.t('feedback.title.' + source()) }}
+      </h2>
+      <button
+        type="button"
+        class="ui-close"
+        [attr.aria-label]="i18n.t('feedback.close')"
+        (click)="dismiss()"
+      >
+        ×
+      </button>
+    </header>
+    <div class="ui-modal-body">
+      <p id="survey-desc" class="desc">{{ i18n.t('feedback.desc.' + source()) }}</p>
+      <fieldset class="reasons" [attr.aria-invalid]="showError()">
+        <legend class="visually-hidden">{{ i18n.t('feedback.reasons_label') }}</legend>
+        @for (r of reasons; track r.key; let first = $first; let i = $index) {
+          <label class="reason" [class.selected]="reason() === r.key" [style.--i]="i">
+            @if (first) {
+              <input
+                #firstOption
+                type="radio"
+                name="reason"
+                [value]="r.key"
+                [checked]="reason() === r.key"
+                (change)="pick(r.key)"
+              />
+            } @else {
+              <input
+                type="radio"
+                name="reason"
+                [value]="r.key"
+                [checked]="reason() === r.key"
+                (change)="pick(r.key)"
+              />
+            }
+            <span class="icon" aria-hidden="true">{{ r.icon }}</span>
+            <span>{{ i18n.t('feedback.reason.' + r.key) }}</span>
+          </label>
+        }
+      </fieldset>
+      @if (showError()) {
+        <p class="error" role="alert">{{ i18n.t('feedback.pick_reason') }}</p>
+      }
+      <label class="ui-field">
+        <span class="ui-label">{{ i18n.t('feedback.comment_label') }}</span>
+        <textarea
+          rows="3"
+          maxlength="500"
+          [placeholder]="i18n.t('feedback.comment_placeholder')"
+          [value]="comment()"
+          (input)="comment.set($any($event.target).value)"
+        ></textarea>
+      </label>
+    </div>
+    <footer class="ui-modal-foot">
+      <button type="button" class="ui-btn ghost" [disabled]="busy()" (click)="dismiss()">
+        {{ i18n.t(source() === 'cancel' ? 'confirm.cancel' : 'feedback.skip') }}
+      </button>
+      <button
+        type="submit"
+        class="ui-btn"
+        [class.primary]="source() !== 'cancel'"
+        [class.danger]="source() === 'cancel'"
+        [class.loading]="busy()"
+        [disabled]="busy()"
+      >
+        {{ i18n.t(source() === 'cancel' ? 'feedback.cancel_submit' : 'feedback.submit') }}
+      </button>
+    </footer>
+  </form>
+</div>

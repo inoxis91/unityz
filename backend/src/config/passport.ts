@@ -3,6 +3,7 @@ import passport from 'passport';
 import { Strategy as BnetStrategy } from 'passport-bnet';
 import { Strategy as DiscordStrategy } from 'passport-discord';
 import pool from '../lib/db';
+import { track } from '../services/analytics';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -50,11 +51,12 @@ if (BNET_CLIENT_ID && BNET_CLIENT_SECRET) {
               battletag = EXCLUDED.battletag,
               access_token = EXCLUDED.access_token,
               updated_at = CURRENT_TIMESTAMP
-            RETURNING *;
+            RETURNING *, (xmax = 0) AS inserted;
           `;
           
           const res = await pool.query(query, [profile.id.toString(), bnetId, battletag, tokenToStore]);
-          const user = res.rows[0];
+          const { inserted, ...user } = res.rows[0];
+          track('login_succeeded', { userId: user.id, props: { first: inserted } });
           return done(null, user);
         } catch (error) {
           console.error('Error during auth with DB:', error);

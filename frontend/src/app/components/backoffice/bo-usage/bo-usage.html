@@ -1,0 +1,124 @@
+@if (data.error()) {
+  <div class="ui-alert danger" role="alert">
+    <strong>{{ i18n.t('bo.error.load') }}</strong>
+    <button type="button" class="ui-btn sm" (click)="data.reload()">
+      {{ i18n.t('bo.retry') }}
+    </button>
+  </div>
+} @else if (data.hasValue()) {
+  @let u = data.value();
+  <div class="grid">
+    <section class="ui-card" style="--i: 0">
+      <header class="ui-card-head">
+        <h2>
+          <span class="ui-card-icon" aria-hidden="true">📈</span
+          >{{ i18n.t('bo.usage.active_title') }}
+        </h2>
+      </header>
+      <app-bo-chart
+        [points]="activePoints()"
+        [format]="count"
+        [label]="i18n.t('bo.usage.active_title')"
+      />
+    </section>
+
+    <section class="ui-card" style="--i: 1; --card-accent: var(--ui-purple)">
+      <header class="ui-card-head">
+        <h2>
+          <span class="ui-card-icon" aria-hidden="true">🔥</span>{{ i18n.t('bo.usage.top_title') }}
+        </h2>
+      </header>
+      @if (u.top_guilds.length) {
+        <ol class="top">
+          @for (g of u.top_guilds; track g.id; let i = $index) {
+            <li [style.--i]="i">
+              <span class="rank" aria-hidden="true">{{ i + 1 }}</span>
+              <button type="button" class="link" (click)="open(g.id)">
+                <strong>{{ g.name }}</strong>
+                <small>{{ g.realm }} · {{ g.region.toUpperCase() }}</small>
+              </button>
+              <span class="top-meta">{{
+                i18n.tf('bo.usage.top_row', { users: g.active_users, days: g.active_days })
+              }}</span>
+            </li>
+          }
+        </ol>
+      } @else {
+        <div class="ui-empty">
+          <span class="emoji" aria-hidden="true">😴</span>
+          <p>{{ i18n.t('bo.usage.top_empty') }}</p>
+        </div>
+      }
+    </section>
+  </div>
+
+  <section class="ui-card" style="--i: 2; --card-accent: var(--ui-success)">
+    <header class="ui-card-head">
+      <h2>
+        <span class="ui-card-icon" aria-hidden="true">🧩</span
+        >{{ i18n.t('bo.usage.adoption_title') }}
+      </h2>
+      <p>{{ i18n.tf('bo.usage.adoption_desc', { n: u.adoption.guilds }) }}</p>
+    </header>
+    <ul class="adoption">
+      @for (f of features(); track f.key; let i = $index) {
+        <li [style.--i]="i">
+          <div class="adoption-head">
+            <span>{{ i18n.t('bo.feature.' + f.key) }}</span>
+            <strong
+              >{{ pct(f.share) }} <small>({{ f.guilds }})</small></strong
+            >
+          </div>
+          <div class="track" aria-hidden="true">
+            <span class="fill" [style.width.%]="(f.share ?? 0) * 100"></span>
+          </div>
+        </li>
+      }
+    </ul>
+  </section>
+
+  <section class="ui-card" style="--i: 3; --card-accent: var(--ui-accent)">
+    <header class="ui-card-head">
+      <h2>
+        <span class="ui-card-icon" aria-hidden="true">🧪</span
+        >{{ i18n.t('bo.usage.cohorts_title') }}
+      </h2>
+      <p>{{ i18n.t('bo.usage.cohorts_desc') }}</p>
+    </header>
+    @if (u.cohorts.length) {
+      <div class="ui-table-wrap">
+        <table class="ui-table cohorts">
+          <thead>
+            <tr>
+              <th scope="col">{{ i18n.t('bo.usage.cohort') }}</th>
+              <th scope="col" class="num">{{ i18n.t('bo.usage.users') }}</th>
+              @for (w of weeks; track w) {
+                <th scope="col" class="num">{{ i18n.tf('bo.usage.week', { n: w }) }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of u.cohorts; track c.week) {
+              <tr>
+                <th scope="row">{{ week(c.week) }}</th>
+                <td class="num">{{ c.users }}</td>
+                @for (value of c.retention; track $index) {
+                  <td class="num cell" [class.future]="value === null" [style.--heat]="heat(value)">
+                    {{ value === null ? '' : pct(value) }}
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <div class="ui-empty">
+        <span class="emoji" aria-hidden="true">🧪</span>
+        <p>{{ i18n.t('bo.usage.cohorts_empty') }}</p>
+      </div>
+    }
+  </section>
+} @else {
+  <div class="ui-skeleton usage-skeleton" aria-hidden="true"></div>
+}

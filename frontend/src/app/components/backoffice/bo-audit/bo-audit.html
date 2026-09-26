@@ -1,0 +1,80 @@
+<section class="ui-card" style="--i: 0; --card-accent: var(--ui-neutral)">
+  <header class="ui-card-head">
+    <h2><span class="ui-card-icon" aria-hidden="true">🗂️</span>{{ i18n.t('bo.audit.title') }}</h2>
+    <p>{{ i18n.t('bo.audit.desc') }}</p>
+  </header>
+
+  @if (data.error()) {
+    <div class="ui-alert danger" role="alert">
+      <strong>{{ i18n.t('bo.error.load') }}</strong>
+      <button type="button" class="ui-btn sm" (click)="data.reload()">
+        {{ i18n.t('bo.retry') }}
+      </button>
+    </div>
+  } @else if (data.hasValue()) {
+    @if (data.value().items.length) {
+      <ol class="entries" [class.reloading]="data.isLoading()">
+        @for (e of data.value().items; track e.id; let i = $index) {
+          <li [style.--i]="i">
+            <span class="icon" aria-hidden="true">{{ icon(e.action) }}</span>
+            <div class="body">
+              <div class="line">
+                <strong>{{ i18n.t('bo.tl.' + e.action) }}</strong>
+                @if (e.guild_name) {
+                  <button type="button" class="link" (click)="open(e.guild_id)">
+                    {{ e.guild_name }}
+                  </button>
+                }
+                @if (summary(e); as s) {
+                  <span class="muted">{{ s }}</span>
+                }
+              </div>
+              @if (note(e); as n) {
+                <blockquote>{{ n }}</blockquote>
+              }
+              <small
+                >{{ e.actor_battletag }} ·
+                <time [attr.datetime]="e.created_at" [title]="date(e.created_at)">{{
+                  when(e.created_at)
+                }}</time></small
+              >
+            </div>
+          </li>
+        }
+      </ol>
+      @if (pages() > 1) {
+        <nav
+          class="pager"
+          [attr.aria-label]="i18n.tf('bo.guilds.page', { page: page(), pages: pages() })"
+        >
+          <button
+            type="button"
+            class="ui-btn sm"
+            [disabled]="page() <= 1"
+            [attr.aria-label]="i18n.t('bo.guilds.prev')"
+            (click)="page.set(page() - 1)"
+          >
+            ←
+          </button>
+          <span>{{ i18n.tf('bo.guilds.page', { page: page(), pages: pages() }) }}</span>
+          <button
+            type="button"
+            class="ui-btn sm"
+            [disabled]="page() >= pages()"
+            [attr.aria-label]="i18n.t('bo.guilds.next')"
+            (click)="page.set(page() + 1)"
+          >
+            →
+          </button>
+        </nav>
+      }
+    } @else {
+      <div class="ui-empty">
+        <span class="emoji" aria-hidden="true">🗂️</span>
+        <p>{{ i18n.t('bo.audit.empty') }}</p>
+      </div>
+    }
+  } @else {
+    <div class="ui-skeleton audit-skeleton" aria-hidden="true"></div>
+  }
+</section>

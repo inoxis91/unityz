@@ -1,0 +1,66 @@
+:host {
+  display: block;
+}
+
+.bo-tabs {
+  align-self: flex-start;
+  max-width: 100%;
+  box-shadow: none;
+}
+
+.tab-content {
+  min-width: 0;
+  animation: ui-fade 0.25s ease-out;
+}
+
+.tab-skeleton {
+  height: 460px;
+  border-radius: 20px;
+}
+
+.reauth {
+  --card-accent: var(--ui-status-warning);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.25rem;
+}
+
+.reauth > div {
+  flex: 1 1 260px;
+}
+
+.reauth h2 {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+  color: var(--ui-text-strong);
+}
+
+.reauth p {
+  margin: 0;
+  color: var(--ui-text-tertiary);
+}
+
+.reauth-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  font-size: 1.6rem;
+  background: var(--ui-bg-amber-50);
+  animation: ui-pop 0.45s var(--ui-ease-spring) backwards;
+}
+
+@media (max-width: 640px) {
+  .reauth .ui-btn {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-content,
+  .reauth-icon {
+    animation: none;
+  }
+}

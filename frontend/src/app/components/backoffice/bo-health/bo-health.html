@@ -1,0 +1,110 @@
+<div class="toolbar">
+  <button
+    type="button"
+    class="ui-btn ghost sm"
+    [class.loading]="data.isLoading()"
+    [disabled]="data.isLoading()"
+    (click)="data.reload()"
+  >
+    ↻ {{ i18n.t('bo.refresh') }}
+  </button>
+</div>
+
+@if (data.error()) {
+  <div class="ui-alert danger" role="alert">
+    <strong>{{ i18n.t('bo.error.load') }}</strong>
+    <button type="button" class="ui-btn sm" (click)="data.reload()">
+      {{ i18n.t('bo.retry') }}
+    </button>
+  </div>
+} @else if (data.hasValue()) {
+  @let h = data.value();
+  <div class="grid">
+    <section class="ui-card" style="--i: 0; --card-accent: var(--ui-success)">
+      <header class="ui-card-head">
+        <h2>
+          <span class="ui-card-icon" aria-hidden="true">🔌</span
+          >{{ i18n.t('bo.health.integrations') }}
+        </h2>
+      </header>
+      <ul class="checks">
+        @for (it of h.integrations; track it.key; let i = $index) {
+          <li [style.--i]="i">
+            <span class="ui-dot" [class.ok]="it.ok" [class.ko]="!it.ok" aria-hidden="true"></span>
+            <span class="name">{{ i18n.t('bo.integration.' + it.key) }}</span>
+            @if (it.detail) {
+              <span class="ui-badge">{{ it.detail }}</span>
+            }
+            <span [class]="'ui-badge ' + (it.ok ? 'success' : 'warning')">
+              {{ it.ok ? '✓ ' + i18n.t('bo.health.ok') : '! ' + i18n.t('bo.health.ko') }}
+            </span>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <section class="ui-card" style="--i: 1; --card-accent: var(--ui-accent)">
+      <header class="ui-card-head">
+        <h2>
+          <span class="ui-card-icon" aria-hidden="true">⏰</span>{{ i18n.t('bo.health.cron') }}
+        </h2>
+        <p>{{ i18n.t('bo.health.cron_desc') }}</p>
+      </header>
+      <ul class="checks">
+        @for (job of h.cron; track job.job; let i = $index) {
+          <li [style.--i]="i">
+            <span
+              class="ui-dot"
+              [class.ok]="job.last_status === 'ok'"
+              [class.ko]="job.last_status === 'error'"
+              aria-hidden="true"
+            ></span>
+            <span class="name">
+              {{ i18n.t('bo.job.' + job.job) }}
+              @if (job.last_error) {
+                <small class="error">{{ job.last_error }}</small>
+              }
+            </span>
+            <small class="muted">
+              @if (job.last_run_at) {
+                {{ when(job.last_run_at) }} · {{ i18n.tf('bo.health.runs', { n: job.runs }) }}
+              } @else {
+                {{ i18n.t('bo.health.never_run') }}
+              }
+            </small>
+          </li>
+        }
+      </ul>
+    </section>
+  </div>
+
+  <dl class="ui-kpis">
+    <div class="ui-kpi" style="--i: 0">
+      <dd>{{ bytes(h.database.size_bytes) }}</dd>
+      <dt>{{ i18n.t('bo.health.db_size') }}</dt>
+    </div>
+    <div class="ui-kpi brand" style="--i: 1">
+      <dd>{{ number(h.database.sessions) }}</dd>
+      <dt>{{ i18n.t('bo.health.sessions') }}</dt>
+    </div>
+    <div class="ui-kpi purple" style="--i: 2">
+      <small>{{ i18n.tf('bo.health.since', { date: date(h.database.tracking_since) }) }}</small>
+      <dd>{{ number(h.database.analytics_events) }}</dd>
+      <dt>{{ i18n.t('bo.health.events') }}</dt>
+    </div>
+    <div class="ui-kpi" style="--i: 3">
+      <dd>{{ uptime(h.process.uptime_s) }}</dd>
+      <dt>{{ i18n.t('bo.health.uptime') }}</dt>
+    </div>
+    <div class="ui-kpi" style="--i: 4">
+      <dd>{{ bytes(h.process.rss_bytes) }}</dd>
+      <dt>{{ i18n.t('bo.health.memory') }}</dt>
+    </div>
+    <div class="ui-kpi" style="--i: 5">
+      <dd>{{ h.process.node }}</dd>
+      <dt>{{ i18n.t('bo.health.node') }}</dt>
+    </div>
+  </dl>
+} @else {
+  <div class="ui-skeleton health-skeleton" aria-hidden="true"></div>
+}

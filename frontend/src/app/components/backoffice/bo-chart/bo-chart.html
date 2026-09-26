@@ -1,0 +1,65 @@
+<figure class="chart">
+  <figcaption class="total">{{ totalLabel() }}</figcaption>
+  <div
+    class="plot"
+    tabindex="0"
+    role="group"
+    [attr.aria-label]="label() + '. ' + t('bo.chart.hint')"
+    (keydown)="onKey($event)"
+    (mouseleave)="active.set(null)"
+    (blur)="active.set(null)"
+  >
+    <div class="grid" aria-hidden="true">
+      @for (tick of ticks(); track tick.ratio) {
+        <span class="tick" [style.bottom.%]="tick.ratio * 100">
+          <span class="tick-label">{{ tick.label }}</span>
+        </span>
+      }
+    </div>
+    <div class="bars" aria-hidden="true">
+      @for (bar of bars(); track bar.day; let i = $index) {
+        <span class="slot" [class.active]="active() === i" (mouseenter)="active.set(i)">
+          <span
+            class="bar"
+            [class.zero]="bar.value === 0"
+            [style.height.%]="bar.ratio * 100"
+            [style.--i]="i"
+          ></span>
+        </span>
+      }
+    </div>
+    @if (tooltip(); as tip) {
+      <div class="tooltip" role="status" [style.left.%]="tip.left * 100">
+        <span>{{ tip.title }}</span>
+        <strong>{{ tip.value }}</strong>
+      </div>
+    }
+  </div>
+  <div class="axis" aria-hidden="true">
+    @for (a of axis(); track a.left) {
+      <span [style.left.%]="a.left * 100">{{ a.label }}</span>
+    }
+  </div>
+
+  <table class="visually-hidden">
+    <caption>
+      {{
+        label()
+      }}
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">{{ t('bo.chart.date') }}</th>
+        <th scope="col">{{ t('bo.chart.value') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (bar of bars(); track bar.day) {
+        <tr>
+          <td>{{ periodLabel(bar) }}</td>
+          <td>{{ format()(bar.value) }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</figure>

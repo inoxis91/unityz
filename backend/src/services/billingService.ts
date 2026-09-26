@@ -2,6 +2,7 @@ import Stripe from 'stripe';
 import pool, { withTransaction } from '../lib/db';
 import { isProd } from '../lib/env';
 import { HttpError } from '../middlewares/errorHandler';
+import { track } from './analytics';
 
 export type StripeInstance = InstanceType<typeof Stripe>;
 export type CheckoutSession = Awaited<ReturnType<StripeInstance['checkout']['sessions']['retrieve']>>;
@@ -27,6 +28,12 @@ const PLAN_CATALOG: Record<PaidTier, { amount: number; name: string; description
     description:
       'Accès complet aux fonctionnalités de la guilde, synchronisation Discord complète, et gestion de cotisations Pro.',
   },
+};
+
+/** Prix mensuel de chaque offre payante, en centimes (MRR du back-office). */
+export const PLAN_PRICE_CENTS: Record<PaidTier, number> = {
+  medium: PLAN_CATALOG.medium.amount,
+  pro: PLAN_CATALOG.pro.amount,
 };
 
 const lookupKey = (tier: PaidTier) => `guild_manager_${tier}_monthly`;
@@ -215,20 +222,27 @@ export async function activateCheckoutSession(client: StripeInstance, session: C
     }
   }
 
+  // Retour de Stripe et webhook arrivent souvent ensemble : l'ancien abonnement, lu sous verrou,
+  // dit lequel des deux active vraiment l'offre (un seul checkout_completed)
   const result = await pool.query(
-    `UPDATE guilds
+    `UPDATE guilds g
      SET subscription_tier = $1,
          subscription_expires_at = $2,
          stripe_customer_id = $3,
          stripe_subscription_id = $4,
          subscription_status = 'active',
-         free_trial_used_at = COALESCE(free_trial_used_at, CURRENT_TIMESTAMP),
+         free_trial_used_at = COALESCE(g.free_trial_used_at, CURRENT_TIMESTAMP),
          updated_at = CURRENT_TIMESTAMP
-     WHERE id = $5
-     RETURNING *`,
+     FROM (SELECT stripe_subscription_id AS previous FROM guilds WHERE id = $5 FOR UPDATE) old
+     WHERE g.id = $5
+     RETURNING g.*, old.previous`,
     [tier, expiresAt, stripeCustomerId, stripeSubscriptionId, guildId],
   );
-  return { tier, expiresAt, guild: result.rows[0] };
+  const { previous, ...guild } = result.rows[0] ?? {};
+  if (result.rows[0] && previous !== stripeSubscriptionId) {
+    track('checkout_completed', { guildId, props: { tier } });
+  }
+  return { tier, expiresAt, guild };
 }
 
 /** Abonnement actif qu'un changement d'offre peut modifier, sinon une erreur explicite. */
@@ -268,18 +282,24 @@ export async function previewPlanChange(guildId: string, tier: PaidTier) {
 export async function changePlan(guildId: string, tier: PaidTier) {
   if (mockPaymentsEnabled()) {
     const { rows } = await pool.query(
-      `UPDATE guilds SET subscription_tier = $1, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $2 AND subscription_expires_at > CURRENT_TIMESTAMP RETURNING *`,
+      `UPDATE guilds g SET subscription_tier = $1, updated_at = CURRENT_TIMESTAMP
+       FROM (SELECT subscription_tier AS previous FROM guilds WHERE id = $2 FOR UPDATE) old
+       WHERE g.id = $2 AND g.subscription_expires_at > CURRENT_TIMESTAMP RETURNING g.*, old.previous`,
       [tier, guildId],
     );
     if (!rows[0]) throw new HttpError(409, 'No active subscription to change.', 'NO_ACTIVE_SUBSCRIPTION');
-    return rows[0];
+    const { previous, ...guild } = rows[0];
+    track('plan_changed', { guildId, props: { from: previous, to: tier } });
+    return guild;
   }
   const client = requireStripe();
 
   // Verrou sur la guilde : deux clics simultanés ne lancent pas deux changements facturés
   return withTransaction(async (db) => {
-    const { rows } = await db.query('SELECT stripe_subscription_id FROM guilds WHERE id = $1 FOR UPDATE', [guildId]);
+    const { rows } = await db.query(
+      'SELECT stripe_subscription_id, subscription_tier FROM guilds WHERE id = $1 FOR UPDATE',
+      [guildId],
+    );
     if (!rows[0]) throw new HttpError(404, 'Guild not found.', 'GUILD_NOT_FOUND');
     const subscription = await changeableSubscription(client, rows[0].stripe_subscription_id);
     if (tierOfSubscription(subscription) === tier && !subscription.cancel_at_period_end) {
@@ -319,6 +339,7 @@ export async function changePlan(guildId: string, tier: PaidTier) {
       [tier, subscriptionPeriodEnd(updated), guildId],
     );
     console.log(`[Stripe] Guild ${guildId} switched to ${tier} (subscription ${subscription.id}).`);
+    track('plan_changed', { guildId, props: { from: rows[0].subscription_tier, to: tier } });
     return result.rows[0];
   });
 }
@@ -355,15 +376,87 @@ export async function applyInvoicePaid(client: StripeInstance, invoice: StripeIn
   } catch (err) {
     console.error('[Stripe Webhook] Failed to retrieve subscription for invoice. Using 1-month fallback:', err);
   }
-  await pool.query(
+  // GREATEST : un accès prolongé depuis le back-office n'est pas raccourci par le renouvellement
+  const { rows } = await pool.query(
     `UPDATE guilds
-     SET subscription_expires_at = $1,
+     SET subscription_expires_at = GREATEST(COALESCE(subscription_expires_at, $1), $1),
          subscription_status = CASE WHEN subscription_status = 'canceled' THEN 'canceled' ELSE 'active' END,
          updated_at = CURRENT_TIMESTAMP
-     WHERE stripe_subscription_id = $2`,
+     WHERE stripe_subscription_id = $2
+     RETURNING id, subscription_tier`,
     [expiresAt, subscriptionId],
   );
   console.log(`[Stripe Webhook] Subscription ${subscriptionId} paid until ${expiresAt.toISOString()}.`);
+  if (rows[0] && invoice.id && invoice.amount_paid > 0) {
+    await recordPayment({
+      invoiceId: invoice.id,
+      guildId: rows[0].id,
+      tier: rows[0].subscription_tier,
+      amountCents: invoice.amount_paid,
+      currency: invoice.currency,
+      billingReason: invoice.billing_reason,
+    });
+  }
+}
+
+/** Facture encaissée (idempotent par facture : Stripe peut renvoyer un webhook). */
+export async function recordPayment(payment: {
+  invoiceId: string;
+  guildId: string;
+  tier: string | null;
+  amountCents: number;
+  currency: string;
+  billingReason: string | null;
+}): Promise<boolean> {
+  const { rowCount } = await pool.query(
+    `INSERT INTO payments (stripe_invoice_id, guild_id, tier, amount_cents, currency, billing_reason)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     ON CONFLICT (stripe_invoice_id) DO NOTHING`,
+    [payment.invoiceId, payment.guildId, payment.tier, payment.amountCents, payment.currency, payment.billingReason],
+  );
+  if (rowCount) {
+    track('payment_succeeded', {
+      guildId: payment.guildId,
+      props: { amount_cents: payment.amountCents, tier: payment.tier, billing_reason: payment.billingReason },
+    });
+  }
+  return !!rowCount;
+}
+
+/** Code de refus de la carte (decline_code Stripe) du dernier paiement de la facture, si connu. */
+async function declineCode(client: StripeInstance, invoiceId: string): Promise<string | null> {
+  try {
+    const payments = await client.invoicePayments.list({
+      invoice: invoiceId,
+      limit: 1,
+      expand: ['data.payment.payment_intent'],
+    });
+    const intent = payments.data[0]?.payment.payment_intent;
+    if (!intent || typeof intent === 'string') return null;
+    const error = intent.last_payment_error;
+    return error?.decline_code ?? error?.code ?? null;
+  } catch (err) {
+    console.warn('[Stripe Webhook] Could not read the decline code:', (err as Error).message);
+    return null;
+  }
+}
+
+/** Échec d'un prélèvement : signal du back-office (le délai de grâce vient de subscription.updated). */
+export async function recordInvoiceFailed(client: StripeInstance, invoice: StripeInvoice) {
+  const subscriptionId = invoiceSubscriptionId(invoice);
+  if (!subscriptionId || !invoice.id) return;
+  const { rows } = await pool.query('SELECT id FROM guilds WHERE stripe_subscription_id = $1', [subscriptionId]);
+  if (!rows[0]) return;
+  track('payment_failed', {
+    guildId: rows[0].id,
+    props: {
+      invoice: invoice.id,
+      attempt_count: invoice.attempt_count,
+      amount_due: invoice.amount_due,
+      billing_reason: invoice.billing_reason,
+      decline_code: await declineCode(client, invoice.id),
+    },
+  });
 }
 
 /** Synchronise la guilde sur un événement customer.subscription.updated / deleted. */
@@ -388,29 +481,41 @@ export async function applySubscriptionChange(subscription: StripeSubscription, 
     );
   } else if (!deleted && status === 'past_due') {
     // Délai de grâce ouvert au premier échec seulement : les relances Stripe ne le prolongent pas
-    await pool.query(
-      `UPDATE guilds
+    const { rows } = await pool.query(
+      `UPDATE guilds g
        SET subscription_expires_at = CASE
-             WHEN subscription_status = 'past_due' THEN subscription_expires_at
-             ELSE GREATEST(COALESCE(subscription_expires_at, CURRENT_TIMESTAMP),
+             WHEN old.status = 'past_due' THEN g.subscription_expires_at
+             ELSE GREATEST(COALESCE(g.subscription_expires_at, CURRENT_TIMESTAMP),
                            CURRENT_TIMESTAMP + make_interval(days => $1))
            END,
            subscription_status = 'past_due',
            updated_at = CURRENT_TIMESTAMP
-       WHERE stripe_subscription_id = $2`,
+       FROM (SELECT id, subscription_status AS status FROM guilds WHERE stripe_subscription_id = $2 FOR UPDATE) old
+       WHERE g.id = old.id
+       RETURNING g.id, old.status AS previous`,
       [PAST_DUE_GRACE_DAYS, id],
     );
+    for (const row of rows) {
+      if (row.previous !== 'past_due') track('subscription_past_due', { guildId: row.id });
+    }
   } else {
     // Supprimé, résilié, impayé après toutes les relances : l'accès est coupé
-    await pool.query(
-      `UPDATE guilds
+    const { rows } = await pool.query(
+      `UPDATE guilds g
        SET subscription_status = $1,
            subscription_expires_at = NULL,
            subscription_tier = 'none',
            updated_at = CURRENT_TIMESTAMP
-       WHERE stripe_subscription_id = $2`,
+       FROM (SELECT id, subscription_tier AS tier FROM guilds WHERE stripe_subscription_id = $2 FOR UPDATE) old
+       WHERE g.id = old.id
+       RETURNING g.id, old.tier AS previous_tier`,
       [deleted ? 'canceled' : status, id],
     );
+    for (const row of rows) {
+      if (row.previous_tier !== 'none') {
+        track('subscription_ended', { guildId: row.id, props: { tier: row.previous_tier, status: deleted ? 'deleted' : status } });
+      }
+    }
   }
   console.log(`[Stripe Webhook] Subscription ${id} is now ${deleted ? 'deleted' : status}.`);
 }

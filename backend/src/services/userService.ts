@@ -2,6 +2,7 @@ import pool, { withTransaction } from '../lib/db';
 import { BlizzardService, BnetCharacter } from './blizzardService';
 import { WowRegion, parseVirtualGuildId, toVirtualGuildId, toWowRegion } from '../lib/regions';
 import { HttpError } from '../middlewares/errorHandler';
+import { track } from './analytics';
 
 /** Clé d'un personnage (nom + royaume), insensible à la casse. */
 export const characterKey = (c: { name: string; realm: string }) =>
@@ -295,6 +296,7 @@ export class UserService {
       throw new HttpError(403, 'None of your characters belongs to this guild', 'NOT_A_GUILD_MEMBER');
     }
     const matchingCharacters = characters.map((char) => ({ ...char, is_main: false }));
+    const guildCreated = !guild;
 
     if (!guild) {
       // Première sélection de cette guilde : nom et royaume viennent de Blizzard
@@ -374,6 +376,11 @@ export class UserService {
        DO UPDATE SET role = EXCLUDED.role, rank = EXCLUDED.rank, updated_at = CURRENT_TIMESTAMP`,
       [userId, realGuildId, newRole, userRank]
     );
+    track('guild_selected', {
+      userId,
+      guildId: realGuildId,
+      props: { created: guildCreated, rank: userRank, role: newRole },
+    });
 
     return matchingCharacters;
   }

@@ -116,6 +116,10 @@ const TRANSLATIONS: Record<SupportedDiscordLocale, Record<string, string>> = {
     'discord.fees.dm.approved': '✅ Votre paiement de **{amount} PO** a été approuvé !\nPériode : **{duration} mois** (à partir de **{date}**)',
     'discord.fees.dm.rejected': '❌ Votre paiement de **{amount} PO** a été rejeté.\nPériode : **{duration} mois** (à partir de **{date}**)\nMotif : {reason}',
     'discord.fees.dm.unspecified_reason': 'Non spécifié',
+    // Fin d'essai gratuit (DM aux GM / officiers) et digest du back-office
+    'discord.trial_end.message': '⏳ **L\'essai gratuit de {guild} est terminé.**\nMerci d\'avoir testé Guild Manager ! Pour continuer, choisissez une offre : {url}\n\nVous ne souhaitez pas continuer ? Dites-nous en une minute ce qui vous a manqué, ça nous aide énormément : {feedbackUrl}',
+    'discord.digest.title': '📊 **Guild Manager, dernières 24 h**',
+    'discord.digest.body': '👤 Nouveaux comptes : **{newUsers}** · 🏰 Nouvelles guildes : **{newGuilds}**\n🎁 Essais activés : **{trials}** · 💳 Abonnements : **{subscriptions}** · 🛒 Paniers abandonnés : **{abandoned}**\n⚠️ Échecs de paiement : **{paymentFailures}** · ❌ Résiliations : **{cancellations}** · 💬 Retours : **{feedback}**\n💶 Encaissé : **{revenue}** · MRR : **{mrr}** ({paying} guildes payantes) · Actifs hier : **{activeUsers}**\n{url}',
     'discord.fees.reminder.message': '**Rappel de Cotisation** ⏰\nLes membres suivants ne sont pas encore à jour pour ce mois (Minimum requis : {minAmount} PO) : {mentions}.\n\nVeuillez d\'abord déposer vos pièces d\'or en banque de guilde puis déclarer votre dépôt sur le site !'
   },
   en: {
@@ -233,6 +237,10 @@ const TRANSLATIONS: Record<SupportedDiscordLocale, Record<string, string>> = {
     'discord.fees.dm.approved': '✅ Your payment of **{amount} Gold** has been approved!\nPeriod: **{duration} months** (starting **{date}**)',
     'discord.fees.dm.rejected': '❌ Your payment of **{amount} Gold** has been rejected.\nPeriod: **{duration} months** (starting **{date}**)\nReason: {reason}',
     'discord.fees.dm.unspecified_reason': 'Unspecified',
+    // Free trial end (DM to GMs / officers) and back-office digest
+    'discord.trial_end.message': '⏳ **The free trial of {guild} has ended.**\nThanks for trying Guild Manager! To keep going, pick a plan: {url}\n\nNot continuing? Tell us in one minute what was missing, it helps a lot: {feedbackUrl}',
+    'discord.digest.title': '📊 **Guild Manager, last 24 h**',
+    'discord.digest.body': '👤 New accounts: **{newUsers}** · 🏰 New guilds: **{newGuilds}**\n🎁 Trials: **{trials}** · 💳 Subscriptions: **{subscriptions}** · 🛒 Abandoned checkouts: **{abandoned}**\n⚠️ Payment failures: **{paymentFailures}** · ❌ Cancellations: **{cancellations}** · 💬 Feedback: **{feedback}**\n💶 Collected: **{revenue}** · MRR: **{mrr}** ({paying} paying guilds) · Active yesterday: **{activeUsers}**\n{url}',
     'discord.fees.reminder.message': '**Membership Fee Reminder** ⏰\nThe following members are not up to date for this month (Minimum required: {minAmount} Gold): {mentions}.\n\nPlease deposit your gold in the guild bank first, then declare your deposit on the website!'
   }
 };

@@ -5,6 +5,8 @@ import { z } from 'zod';
 import { validate } from '../middlewares/validate';
 import { findMemberByName } from '../lib/discord';
 import { UserService } from '../services/userService';
+import { track } from '../services/analytics';
+import { HttpError } from '../middlewares/errorHandler';
 import { CharacterService } from '../services/characterService';
 import { declareAbsenceSchema, deleteAbsenceSchema } from '../schemas/absenceSchemas';
 
@@ -243,6 +245,8 @@ router.get('/me/guilds', isAuthenticated, async (req, res, next) => {
       return res.status(401).json({ status: 'error', message: 'No access token found' });
     }
     const guilds = await UserService.discoverUserGuilds(accessToken);
+    // 0 guilde trouvée : abandon typique du tunnel (personnages sans guilde, mauvaise région)
+    track('guild_discovery', { userId: req.user!.id, props: { count: guilds.length } });
     res.json(guilds);
   } catch (error) {
     next(error);
@@ -290,6 +294,9 @@ router.post('/active-guild', isAuthenticated, validate(updateActiveGuildSchema),
     const characters = await UserService.fetchGuildCharacters(req.user!.id, guildId, accessToken);
     res.json({ status: 'success', characters });
   } catch (error) {
+    if (error instanceof HttpError) {
+      track('guild_select_failed', { userId: req.user!.id, props: { code: error.code ?? String(error.statusCode) } });
+    }
     next(error);
   }
 });
@@ -320,6 +327,7 @@ router.post('/import-characters', isAuthenticated, validate(importCharactersSche
     }
 
     await UserService.importSelectedCharacters(req.user!.id, guildId, accessToken, characters);
+    track('characters_imported', { userId: req.user!.id, guildId, props: { count: characters.length } });
     res.json({ status: 'success', message: 'Characters imported successfully' });
   } catch (error) {
     next(error);

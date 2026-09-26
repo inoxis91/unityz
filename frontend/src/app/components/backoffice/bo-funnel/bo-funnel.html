@@ -1,0 +1,158 @@
+<div class="toolbar">
+  <div class="ui-tabs period" role="group" [attr.aria-label]="i18n.t('bo.period.label')">
+    @for (p of periods; track p) {
+      <button
+        type="button"
+        [class.active]="days() === p"
+        [attr.aria-pressed]="days() === p"
+        (click)="days.set(p)"
+      >
+        {{ i18n.t('bo.period.' + p) }}
+      </button>
+    }
+  </div>
+  <label class="ui-field region">
+    <span class="visually-hidden">{{ i18n.t('bo.region.label') }}</span>
+    <select
+      [value]="region()"
+      (change)="setRegion($event)"
+      [attr.aria-label]="i18n.t('bo.region.label')"
+    >
+      <option value="">🌍 {{ i18n.t('bo.region.all') }}</option>
+      <option value="eu">🇪🇺 {{ i18n.t('bo.region.eu') }}</option>
+      <option value="us">🇺🇸 {{ i18n.t('bo.region.us') }}</option>
+    </select>
+  </label>
+</div>
+
+@if (data.error()) {
+  <div class="ui-alert danger" role="alert">
+    <strong>{{ i18n.t('bo.error.load') }}</strong>
+    <button type="button" class="ui-btn sm" (click)="data.reload()">
+      {{ i18n.t('bo.retry') }}
+    </button>
+  </div>
+} @else if (data.hasValue()) {
+  <section
+    class="ui-card"
+    style="--i: 0; --card-accent: var(--ui-purple)"
+    [class.reloading]="data.isLoading()"
+  >
+    <header class="ui-card-head">
+      <h2>
+        <span class="ui-card-icon" aria-hidden="true">🧭</span
+        >{{ i18n.t('bo.funnel.guilds_title') }}
+      </h2>
+      <p>{{ i18n.t('bo.funnel.guilds_desc') }}</p>
+    </header>
+
+    @if (guildRows()[0]?.reached) {
+      <ol class="funnel">
+        @for (row of guildRows(); track row.key; let i = $index; let last = $last) {
+          <li class="step" [class.worst]="row.key === worst()" [class.goal]="last" [style.--i]="i">
+            <div class="step-head">
+              <span class="step-index" aria-hidden="true">{{ i + 1 }}</span>
+              <div class="step-title">
+                <strong>{{ i18n.t('bo.stage.' + row.key) }}</strong>
+                @if (row.key === worst()) {
+                  <span class="ui-badge danger">🔻 {{ i18n.t('bo.funnel.biggest') }}</span>
+                }
+              </div>
+              <span class="step-count">{{ row.reached }}</span>
+            </div>
+            <div class="bar-track" aria-hidden="true">
+              <span class="bar" [style.width.%]="row.ofTotal * 100"></span>
+            </div>
+            <div class="step-meta">
+              <span>{{ i18n.tf('bo.funnel.of_total', { p: pct(row.ofTotal) }) }}</span>
+              @if (row.fromPrevious !== null) {
+                <span class="conv">{{
+                  i18n.tf('bo.funnel.from_previous', { p: pct(row.fromPrevious) })
+                }}</span>
+              }
+              @if (row.stopped) {
+                <button
+                  type="button"
+                  class="stopped"
+                  [attr.aria-label]="
+                    i18n.tf('bo.funnel.view', { stage: i18n.t('bo.stage.' + row.key) })
+                  "
+                  (click)="showStopped(row.key)"
+                >
+                  {{ i18n.tf('bo.funnel.stopped', { n: row.stopped }) }} →
+                </button>
+              }
+            </div>
+            @if (row.stopped && !last) {
+              <p class="hint">💡 {{ i18n.t('bo.stage_hint.' + row.key) }}</p>
+            }
+          </li>
+        }
+      </ol>
+    } @else {
+      <div class="ui-empty">
+        <span class="emoji" aria-hidden="true">🧭</span>
+        <p>{{ i18n.t('bo.funnel.empty') }}</p>
+      </div>
+    }
+  </section>
+
+  <div class="grid">
+    <section class="ui-card" style="--i: 1">
+      <header class="ui-card-head">
+        <h2>
+          <span class="ui-card-icon" aria-hidden="true">👤</span
+          >{{ i18n.t('bo.funnel.users_title') }}
+        </h2>
+        <p>{{ i18n.t('bo.funnel.users_desc') }}</p>
+      </header>
+      <ol class="mini-funnel">
+        @for (row of userRows(); track row.key; let i = $index) {
+          <li [style.--i]="i">
+            <div class="mini-head">
+              <span>{{ i18n.t('bo.ustage.' + row.key) }}</span>
+              <strong>{{ row.reached }}</strong>
+            </div>
+            <div class="bar-track thin" aria-hidden="true">
+              <span class="bar" [style.width.%]="row.ofTotal * 100"></span>
+            </div>
+            @if (row.fromPrevious !== null) {
+              <small>{{ i18n.tf('bo.funnel.from_previous', { p: pct(row.fromPrevious) }) }}</small>
+            }
+          </li>
+        }
+      </ol>
+    </section>
+
+    @if (logins(); as l) {
+      <section class="ui-card" style="--i: 2; --card-accent: var(--ui-accent)">
+        <header class="ui-card-head">
+          <h2>
+            <span class="ui-card-icon" aria-hidden="true">🔑</span
+            >{{ i18n.t('bo.funnel.logins_title') }}
+          </h2>
+        </header>
+        <dl class="ui-kpis logins">
+          <div class="ui-kpi" style="--i: 0">
+            <dd>{{ l.started }}</dd>
+            <dt>{{ i18n.t('bo.funnel.login_started') }}</dt>
+          </div>
+          <div class="ui-kpi success" style="--i: 1">
+            <dd>{{ l.succeeded }}</dd>
+            <dt>{{ i18n.t('bo.funnel.login_succeeded') }}</dt>
+          </div>
+          <div class="ui-kpi danger" style="--i: 2">
+            <dd>{{ l.failed }}</dd>
+            <dt>{{ i18n.t('bo.funnel.login_failed') }}</dt>
+          </div>
+          <div class="ui-kpi brand" style="--i: 3">
+            <dd>{{ loginRate() }}</dd>
+            <dt>{{ i18n.t('bo.funnel.login_rate') }}</dt>
+          </div>
+        </dl>
+      </section>
+    }
+  </div>
+} @else {
+  <div class="ui-skeleton funnel-skeleton" aria-hidden="true"></div>
+}

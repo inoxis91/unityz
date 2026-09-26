@@ -160,6 +160,9 @@
             <span class="spinner-small"></span>
           }
         </button>
+        <button type="button" class="btn-not-now" (click)="openSurvey()">
+          {{ i18n.t('payment.not_now') }}
+        </button>
       </div>
     </div>
   }
@@ -207,3 +210,12 @@
     </div>
   }
 </div>
+
+@if (survey(); as source) {
+  <app-feedback-survey
+    [source]="source"
+    [busy]="surveyBusy()"
+    (submitted)="sendFeedback($event)"
+    (dismissed)="survey.set(null)"
+  />
+}

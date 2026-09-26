@@ -74,6 +74,12 @@ import { LOCALIZED_PATHS, SeoService } from '../../services/seo';
                 des rappels d'événements par Message Privé (MP).
               </li>
               <li>Gérer l'historique et le suivi des cotisations de guilde.</li>
+              <li>
+                Mesurer l'usage du Service et le parcours de souscription (jours d'activité, étapes
+                franchies, réponses facultatives aux questionnaires) afin de l'améliorer. Cette
+                mesure est interne, sans cookie ni outil tiers, et fondée sur notre intérêt
+                légitime.
+              </li>
             </ul>
             <p>
               <strong>Aucune revente commerciale :</strong> Vos données ne sont jamais vendues,
@@ -177,6 +183,12 @@ import { LOCALIZED_PATHS, SeoService } from '../../services/seo';
                 reminders via Direct Message (DM).
               </li>
               <li>To manage the history and ledger of guild membership fees.</li>
+              <li>
+                To measure how the Service is used and the subscription journey (active days, steps
+                reached, optional survey answers) in order to improve it. This measurement is
+                first-party, uses no cookie or third-party tool, and is based on our legitimate
+                interest.
+              </li>
             </ul>
             <p>
               <strong>No commercial resale:</strong> Your data is never sold, rented, or shared with

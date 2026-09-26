@@ -1,0 +1,183 @@
+<div class="toolbar">
+  <div class="ui-tabs period" role="group" [attr.aria-label]="i18n.t('bo.period.label')">
+    @for (p of periods; track p) {
+      <button
+        type="button"
+        [class.active]="days() === p"
+        [attr.aria-pressed]="days() === p"
+        (click)="days.set(p)"
+      >
+        {{ i18n.t('bo.period.' + p) }}
+      </button>
+    }
+  </div>
+  <button
+    type="button"
+    class="ui-btn ghost sm"
+    [class.loading]="data.isLoading()"
+    [disabled]="data.isLoading()"
+    (click)="data.reload()"
+  >
+    ↻ {{ i18n.t('bo.refresh') }}
+  </button>
+</div>
+
+@if (data.error()) {
+  <div class="ui-alert danger" role="alert">
+    <strong>{{ i18n.t('bo.error.load') }}</strong>
+    <button type="button" class="ui-btn sm" (click)="data.reload()">
+      {{ i18n.t('bo.retry') }}
+    </button>
+  </div>
+} @else if (overview(); as o) {
+  <p class="tracking">ℹ️ {{ trackingNote() }}</p>
+
+  <dl class="ui-kpis kpis">
+    @for (k of kpis(); track k.key; let i = $index) {
+      <div [class]="'ui-kpi ' + k.tone" [style.--i]="i">
+        @if (k.hint || k.delta) {
+          <small class="kpi-hint">
+            @if (k.delta; as d) {
+              <span class="delta" [class]="'delta ' + d.dir"
+                >{{ d.dir === 'up' ? '▲' : d.dir === 'down' ? '▼' : '■' }} {{ d.text }}</span
+              >
+            }
+            @if (k.hint) {
+              <span>{{ k.hint }}</span>
+            }
+          </small>
+        }
+        <dd>
+          @if (k.count !== undefined) {
+            <span [appCountUp]="k.count" [countUpLocale]="locale()"></span>
+          } @else {
+            {{ k.text }}
+          }
+        </dd>
+        <dt>{{ i18n.t('bo.kpi.' + k.key) }}</dt>
+      </div>
+    }
+  </dl>
+
+  <div class="grid">
+    <section class="ui-card chart-card" style="--i: 1">
+      <header class="ui-card-head">
+        <h2>
+          <span class="ui-card-icon" aria-hidden="true">📈</span
+          >{{ i18n.t('bo.overview.chart_title') }}
+        </h2>
+        <div
+          class="ui-tabs metric-tabs"
+          role="group"
+          [attr.aria-label]="i18n.t('bo.overview.metric')"
+        >
+          @for (m of metrics; track m) {
+            <button
+              type="button"
+              [class.active]="metric() === m"
+              [attr.aria-pressed]="metric() === m"
+              (click)="metric.set(m)"
+            >
+              {{ i18n.t('bo.metric.' + m) }}
+            </button>
+          }
+        </div>
+      </header>
+      <app-bo-chart
+        [points]="chartPoints()"
+        [format]="chartFormat()"
+        [label]="i18n.t('bo.metric.' + metric())"
+        [style.--chart-color]="
+          metric() === 'revenue_cents' ? 'var(--ui-success)' : 'var(--ui-brand)'
+        "
+      />
+    </section>
+
+    <section class="ui-card recent-card" style="--i: 2; --card-accent: var(--ui-purple)">
+      <header class="ui-card-head">
+        <h2>
+          <span class="ui-card-icon" aria-hidden="true">⚡</span
+          >{{ i18n.t('bo.overview.recent_title') }}
+        </h2>
+      </header>
+      @if (o.recent.length) {
+        <ol class="recent">
+          @for (item of o.recent; track $index) {
+            <li [style.--i]="$index">
+              <span class="recent-icon" aria-hidden="true">{{ recentIcon(item.type) }}</span>
+              <div class="recent-text">
+                <button type="button" class="link" (click)="open(item.guild_id)">
+                  {{ item.guild_name }}
+                </button>
+                <span>
+                  {{
+                    i18n.t(
+                      'bo.tl.' + (item.type === 'guild_selected' ? 'guild_created' : item.type)
+                    )
+                  }}
+                  @if (recentDetail(item); as detail) {
+                    · {{ detail }}
+                  }
+                </span>
+              </div>
+              <time [attr.datetime]="item.at">{{ when(item.at) }}</time>
+            </li>
+          }
+        </ol>
+      } @else {
+        <div class="ui-empty">
+          <span class="emoji" aria-hidden="true">🌙</span>
+          <p>{{ i18n.t('bo.overview.recent_empty') }}</p>
+        </div>
+      }
+    </section>
+  </div>
+
+  <section class="ui-card" style="--i: 3; --card-accent: var(--ui-success)">
+    <header class="ui-card-head">
+      <h2>
+        <span class="ui-card-icon" aria-hidden="true">🏰</span
+        >{{ i18n.t('bo.overview.states_title') }}
+      </h2>
+      <p>{{ i18n.tf('bo.overview.states_desc', { n: o.guilds.total }) }}</p>
+    </header>
+    <div class="stack" aria-hidden="true">
+      @for (s of states(); track s.state) {
+        @if (s.count) {
+          <span
+            class="segment"
+            [class]="'segment tone-' + s.tone + ' st-' + s.state"
+            [style.flex-grow]="s.share"
+          ></span>
+        }
+      }
+    </div>
+    <ul class="states">
+      @for (s of states(); track s.state; let i = $index) {
+        <li [style.--i]="i">
+          <button type="button" class="state" (click)="showState(s.state)">
+            <span
+              class="swatch"
+              [class]="'swatch tone-' + s.tone + ' st-' + s.state"
+              aria-hidden="true"
+            ></span>
+            <span class="state-text">
+              <strong>{{ i18n.t('bo.state.' + s.state) }}</strong>
+              <small>{{ i18n.t('bo.state_hint.' + s.state) }}</small>
+            </span>
+            <span class="state-count">{{ s.count }}</span>
+          </button>
+        </li>
+      }
+    </ul>
+    <div class="tiers">
+      <span class="tiers-label">{{ i18n.t('bo.overview.tiers') }}</span>
+      <span class="ui-badge info">{{ i18n.t('bo.tier.free') }} · {{ o.guilds.byTier.free }}</span>
+      <span class="ui-badge">{{ i18n.t('bo.tier.medium') }} · {{ o.guilds.byTier.medium }}</span>
+      <span class="ui-badge purple">{{ i18n.t('bo.tier.pro') }} · {{ o.guilds.byTier.pro }}</span>
+    </div>
+  </section>
+} @else {
+  <div class="ui-skeleton kpi-skeleton" aria-hidden="true"></div>
+  <div class="ui-skeleton chart-skeleton" aria-hidden="true"></div>
+}

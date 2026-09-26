@@ -9,11 +9,13 @@ import { environment } from '../../../environments/environment';
 import { PLANS, PlanTier, formatPrice, planFeatures } from '../../constants/plans';
 import { takeRememberedPlan } from './payment-utils';
 import { BillingService } from '../../services/billing';
+import { AnalyticsService, FeedbackAnswer } from '../../services/analytics';
+import { FeedbackSurveyComponent } from '../../shared/feedback-survey/feedback-survey';
 
 @Component({
   selector: 'app-payment',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FeedbackSurveyComponent],
   templateUrl: './payment.html',
   styleUrl: './payment.css',
 })
@@ -25,6 +27,7 @@ export class PaymentComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private toast = inject(ToastService);
   private billing = inject(BillingService);
+  private analytics = inject(AnalyticsService);
 
   isProcessing = signal(false);
   verifyingSession = signal(false);
@@ -34,6 +37,10 @@ export class PaymentComponent implements OnInit {
     () => this.authService.currentUser()?.active_guild_free_trial_available !== false,
   );
   selectedTier = signal<PlanTier>(this.initialTier(takeRememberedPlan()));
+  /** Questionnaire « qu'est-ce qui vous retient ? » (back-office : raisons de non-conversion). */
+  survey = signal<'payment_exit' | 'trial_end' | null>(null);
+  surveyBusy = signal(false);
+  private viewTracked = false;
   /** Snapshot taken on submit: the user refresh after a plan change flips the live flag. */
   private hadSubscription = false;
   private apiUrl = environment.apiUrl;
@@ -68,8 +75,14 @@ export class PaymentComponent implements OnInit {
     this.route.queryParams.subscribe((params) => {
       const sessionId = params['session_id'];
       const tier = params['tier'];
-      // Back from Stripe Checkout without paying
-      if (params['canceled']) this.toast.info(this.i18n.t('payment.canceled'));
+      // Back from Stripe Checkout without paying: the best moment to ask why
+      if (params['canceled']) {
+        this.toast.info(this.i18n.t('payment.canceled'));
+        this.analytics.track('checkout_canceled');
+        if (this.authService.isGMOrOfficer()) this.survey.set('payment_exit');
+      }
+      // Link of the end-of-trial Discord DM
+      if (params['feedback'] === 'trial_end') this.survey.set('trial_end');
 
       if (sessionId) {
         this.verifyStripeSession(sessionId, tier);
@@ -77,6 +90,9 @@ export class PaymentComponent implements OnInit {
         // Standard flow: If user has no active guild set, redirect to select-guild
         if (!this.authService.currentUser()?.active_guild_id) {
           this.router.navigate(['/select-guild']);
+        } else if (!this.viewTracked) {
+          this.viewTracked = true;
+          this.analytics.track('payment_viewed');
         }
       }
     });
@@ -122,6 +138,27 @@ export class PaymentComponent implements OnInit {
           }, 4000);
         },
       });
+  }
+
+  openSurvey() {
+    this.survey.set('payment_exit');
+  }
+
+  async sendFeedback(answer: FeedbackAnswer) {
+    const source = this.survey();
+    if (!source || this.surveyBusy()) return;
+    this.surveyBusy.set(true);
+    this.analytics.sendFeedback(source, answer).subscribe({
+      next: () => {
+        this.toast.success(this.i18n.t('feedback.thanks'));
+        this.survey.set(null);
+        this.surveyBusy.set(false);
+      },
+      error: () => {
+        this.toast.error(this.i18n.t('feedback.error'));
+        this.surveyBusy.set(false);
+      },
+    });
   }
 
   selectTier(tier: PlanTier) {
