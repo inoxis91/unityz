@@ -54,3 +54,48 @@ export function prorationKey(amountCents: number): string {
   if (amountCents < 0) return 'payment.change_credit';
   return 'payment.change_free';
 }
+
+/** How /payment handles the selected plan: trial activation, first Checkout or prorated change. */
+export type PaymentMode = 'trial' | 'checkout' | 'change';
+
+export function paymentMode(tier: PlanTier, subscribed: boolean): PaymentMode {
+  if (tier === 'free') return 'trial';
+  return subscribed ? 'change' : 'checkout';
+}
+
+/** Guild billing state that decides which plans /payment offers. */
+export interface PlanContext {
+  trialAvailable: boolean;
+  /** A Stripe subscription is running: paid plans are switched with a prorated change. */
+  subscribed: boolean;
+  currentTier: PlanTier | null;
+  /** Cancellation scheduled at period end: picking the current plan again undoes it. */
+  canceled: boolean;
+}
+
+export function isPlanSelectable(tier: PlanTier, ctx: PlanContext): boolean {
+  if (tier === 'free') return ctx.trialAvailable && !ctx.subscribed;
+  return !ctx.subscribed || tier !== ctx.currentTier || ctx.canceled;
+}
+
+/**
+ * Plan preselected on /payment: the remembered choice when it is selectable, otherwise the other
+ * paid plan for a subscribed guild (its own one to undo a cancellation), the trial, or Pro.
+ */
+export function initialPlan(remembered: PlanTier | null, ctx: PlanContext): PlanTier {
+  if (remembered && isPlanSelectable(remembered, ctx)) return remembered;
+  if (ctx.subscribed && ctx.currentTier && ctx.currentTier !== 'free') {
+    if (ctx.canceled) return ctx.currentTier;
+    return ctx.currentTier === 'pro' ? 'medium' : 'pro';
+  }
+  return ctx.trialAvailable ? 'free' : 'pro';
+}
+
+/** Billing date shown on /payment (first charge, renewal). */
+export function formatBillingDate(iso: string, locale: string): string {
+  return new Date(iso).toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}

@@ -15,6 +15,12 @@ export type PaidTier = (typeof PAID_TIERS)[number];
 /** Jours d'accès conservés quand un renouvellement échoue, le temps de régulariser. */
 export const PAST_DUE_GRACE_DAYS = 7;
 
+/**
+ * Accès restant en dessous duquel une souscription est facturée tout de suite plutôt qu'à la fin de
+ * l'accès en cours (Stripe Checkout refuse une fin d'essai à moins de 48 h).
+ */
+const MIN_CARRIED_ACCESS_MS = 3 * 24 * 60 * 60 * 1000;
+
 /** Catalogue mensuel. Les prix Stripe sont retrouvés (ou créés) par `lookup_key`. */
 const PLAN_CATALOG: Record<PaidTier, { amount: number; name: string; description: string }> = {
   medium: {
@@ -148,13 +154,48 @@ async function liveSubscription(client: StripeInstance, subscriptionId: string |
   }
 }
 
-async function guildBilling(guildId: string) {
+interface GuildBilling {
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  subscription_tier: string;
+  subscription_expires_at: Date | null;
+}
+
+async function guildBilling(guildId: string): Promise<GuildBilling> {
   const { rows } = await pool.query(
-    'SELECT stripe_customer_id, stripe_subscription_id, subscription_tier FROM guilds WHERE id = $1',
+    `SELECT stripe_customer_id, stripe_subscription_id, subscription_tier, subscription_expires_at
+     FROM guilds WHERE id = $1`,
     [guildId],
   );
   if (!rows[0]) throw new HttpError(404, 'Guild not found.', 'GUILD_NOT_FOUND');
-  return rows[0] as { stripe_customer_id: string | null; stripe_subscription_id: string | null; subscription_tier: string };
+  return rows[0];
+}
+
+/**
+ * Fin de l'accès en cours sans abonnement Stripe (essai gratuit, accès offert) : une première
+ * souscription commence à cette date pour ne pas faire perdre les jours restants. Null si l'accès
+ * est terminé ou trop court pour être reporté.
+ */
+export function carriedAccessEnd(expiresAt: Date | string | null, now = new Date()): Date | null {
+  if (!expiresAt) return null;
+  const end = new Date(expiresAt);
+  return end.getTime() - now.getTime() >= MIN_CARRIED_ACCESS_MS ? end : null;
+}
+
+/** Session Checkout réglée : payée, ou sans paiement dû (essai reporté jusqu'à la fin de l'accès). */
+export const isCheckoutSettled = (session: CheckoutSession) =>
+  session.payment_status === 'paid' || session.payment_status === 'no_payment_required';
+
+/** Solde créditeur du client Stripe (en centimes), déduit par Stripe de la prochaine facture. */
+async function customerCredit(client: StripeInstance, customerId: string | null): Promise<number> {
+  if (!customerId) return 0;
+  try {
+    const customer = await client.customers.retrieve(customerId);
+    return customer.deleted ? 0 : Math.max(0, -customer.balance);
+  } catch (err) {
+    if (isMissing(err)) return 0;
+    throw err;
+  }
 }
 
 export async function createCheckoutSession(guildId: string, tier: PaidTier): Promise<string> {
@@ -176,18 +217,46 @@ export async function createCheckoutSession(guildId: string, tier: PaidTier): Pr
 
   const customer = await reusableCustomerId(client, guildId, guild.stripe_customer_id);
   const metadata = { guild_id: guildId, tier };
+  const trialEnd = carriedAccessEnd(guild.subscription_expires_at);
   const session = await client.checkout.sessions.create({
     mode: 'subscription',
     payment_method_types: ['card'],
     line_items: [{ price: await tierPrice(client, tier), quantity: 1 }],
     metadata,
-    subscription_data: { metadata },
+    // Premier prélèvement à la fin de l'accès en cours (la carte est enregistrée dès maintenant)
+    subscription_data: { metadata, trial_end: trialEnd ? Math.floor(trialEnd.getTime() / 1000) : undefined },
     customer: customer ?? undefined,
     success_url: `${process.env.FRONTEND_URL}/payment?session_id={CHECKOUT_SESSION_ID}&guild_id=${guildId}`,
     cancel_url: `${process.env.FRONTEND_URL}/payment?canceled=1`,
   });
   if (!session.url) throw new HttpError(502, 'Stripe did not return a checkout URL.', 'CHECKOUT_UNAVAILABLE');
   return session.url;
+}
+
+/**
+ * Coût d'une première souscription à `tier` : montant dû aujourd'hui (crédit client déduit, rien
+ * si l'accès en cours est reporté), prix mensuel et date du premier prélèvement.
+ */
+export async function previewCheckout(guildId: string, tier: PaidTier) {
+  const guild = await guildBilling(guildId);
+  const firstChargeAt = carriedAccessEnd(guild.subscription_expires_at);
+  let amount = PLAN_CATALOG[tier].amount;
+  let currency = 'eur';
+  let credit = 0;
+  if (!mockPaymentsEnabled()) {
+    const client = requireStripe();
+    const price = await client.prices.retrieve(await tierPrice(client, tier));
+    amount = price.unit_amount ?? amount;
+    currency = price.currency;
+    credit = await customerCredit(client, guild.stripe_customer_id);
+  }
+  return {
+    amount,
+    currency,
+    credit,
+    dueNow: firstChargeAt ? 0 : Math.max(0, amount - credit),
+    firstChargeAt,
+  };
 }
 
 /**
@@ -262,8 +331,13 @@ export async function previewPlanChange(guildId: string, tier: PaidTier) {
   const client = requireStripe();
   const guild = await guildBilling(guildId);
   const subscription = await changeableSubscription(client, guild.stripe_subscription_id);
-  if (tierOfSubscription(subscription) === tier && !subscription.cancel_at_period_end) {
-    throw new HttpError(409, 'The guild is already on this plan.', 'SAME_PLAN');
+  const periodEnd = subscriptionPeriodEnd(subscription);
+  if (tierOfSubscription(subscription) === tier) {
+    if (!subscription.cancel_at_period_end) {
+      throw new HttpError(409, 'The guild is already on this plan.', 'SAME_PLAN');
+    }
+    // Réactivation : rien n'est facturé (et Stripe n'a pas de facture à venir à prévisualiser)
+    return { amount: 0, currency: subscription.currency, periodEnd };
   }
   const preview = await client.invoices.createPreview({
     subscription: subscription.id,
@@ -272,7 +346,7 @@ export async function previewPlanChange(guildId: string, tier: PaidTier) {
       proration_behavior: 'always_invoice',
     },
   });
-  return { amount: preview.total, currency: preview.currency, periodEnd: subscriptionPeriodEnd(subscription) };
+  return { amount: preview.total, currency: preview.currency, periodEnd };
 }
 
 /**

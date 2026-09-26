@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import pool from '../lib/db';
+import { hasPaidAccessSql } from '../lib/guildAccess';
 
 export type UserRole = 'admin' | 'raid_leader' | 'treasurer' | 'event_manager' | 'member';
 
@@ -29,9 +30,10 @@ export const requirePaidGuild = async (req: Request, res: Response, next: NextFu
   }
 
   try {
-    const guildRes = await pool.query('SELECT subscription_expires_at FROM guilds WHERE id = $1', [req.user.active_guild_id]);
-    const guild = guildRes.rows[0];
-    if (!guild || !guild.subscription_expires_at || new Date(guild.subscription_expires_at) < new Date()) {
+    const guildRes = await pool.query(`SELECT 1 FROM guilds g WHERE g.id = $1 AND ${hasPaidAccessSql('g')}`, [
+      req.user.active_guild_id,
+    ]);
+    if (!guildRes.rows[0]) {
       return res.status(402).json({ status: 'error', code: 'GUILD_UNPAID', message: 'Payment required for this guild' });
     }
     next();

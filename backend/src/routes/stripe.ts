@@ -3,11 +3,12 @@ import { requireActiveGuild } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import pool from '../lib/db';
 import { HttpError } from '../middlewares/errorHandler';
-import { checkoutSessionSchema, paidTierBodySchema } from '../schemas/billingSchemas';
+import { checkoutSessionSchema, paidTierBodySchema, paidTierQuerySchema } from '../schemas/billingSchemas';
 import { cancelSubscriptionSchema, FeedbackReason } from '../schemas/analyticsSchemas';
 import { track } from '../services/analytics';
 import {
   CheckoutSession,
+  PaidTier,
   StripeInvoice,
   StripeSubscription,
   activateCheckoutSession,
@@ -15,6 +16,7 @@ import {
   PLAN_PRICE_CENTS,
   applyInvoicePaid,
   applySubscriptionChange,
+  isCheckoutSettled,
   isPaidTier,
   recordInvoiceFailed,
   recordPayment,
@@ -22,6 +24,7 @@ import {
   createCheckoutSession,
   mockPaymentsEnabled,
   pendingInvoiceUrl,
+  previewCheckout,
   previewPlanChange,
   stripe,
 } from '../services/billingService';
@@ -58,6 +61,15 @@ router.post('/create-checkout-session', ...manager, validate(paidTierBodySchema)
     const url = await createCheckoutSession(req.user!.active_guild_id!, req.body.tier);
     track('checkout_started', { userId: req.user!.id, guildId: req.user!.active_guild_id, props: { tier: req.body.tier } });
     res.json({ url });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/stripe/checkout-preview : montant dû aujourd'hui et premier prélèvement d'une souscription
+router.get('/checkout-preview', ...manager, validate(paidTierQuerySchema), async (req, res, next) => {
+  try {
+    res.json(await previewCheckout(req.user!.active_guild_id!, req.query.tier as PaidTier));
   } catch (error) {
     next(error);
   }
@@ -130,7 +142,7 @@ router.get('/checkout-session/:sessionId', ...manager, validate(checkoutSessionS
 
     if (!stripe) throw new HttpError(400, 'Invalid checkout session.', 'INVALID_SESSION');
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-    if (session.payment_status !== 'paid' || session.metadata?.guild_id !== guildId) {
+    if (!isCheckoutSettled(session) || session.metadata?.guild_id !== guildId) {
       throw new HttpError(400, 'Payment not completed or guild ID mismatch.', 'PAYMENT_NOT_COMPLETED');
     }
     const { tier, expiresAt, guild } = await activateCheckoutSession(stripe, session);
@@ -164,7 +176,7 @@ router.post('/webhook', async (req, res) => {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as CheckoutSession;
-        if (session.metadata?.guild_id && session.payment_status === 'paid') {
+        if (session.metadata?.guild_id && isCheckoutSettled(session)) {
           try {
             const { tier } = await activateCheckoutSession(stripe, session);
             console.log(`[Stripe Webhook] Guild ${session.metadata.guild_id} subscription activated for tier ${tier}.`);

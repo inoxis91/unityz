@@ -35,8 +35,9 @@
               [class.pro-card]="plan.highlighted"
               [class.selected]="selectedTier() === plan.tier"
               [attr.aria-checked]="selectedTier() === plan.tier"
-              [disabled]="plan.tier === 'free' && !trialAvailable()"
-              [class.used]="plan.tier === 'free' && !trialAvailable()"
+              [disabled]="!isSelectable(plan.tier)"
+              [class.used]="!isSelectable(plan.tier)"
+              [class.current]="planContext().currentTier === plan.tier"
               (click)="selectTier(plan.tier)"
             >
               @if (plan.highlighted) {
@@ -53,9 +54,23 @@
                     <span class="price-period">{{ i18n.t('plans.period.' + plan.period) }}</span>
                   </span>
                 </span>
-                @if (plan.tier === 'free' && !trialAvailable()) {
+                @if (planContext().currentTier === plan.tier) {
+                  <span class="commitment-badge-small current-badge">
+                    {{
+                      i18n.t(
+                        planContext().canceled
+                          ? 'payment.current_plan_canceled'
+                          : 'payment.current_plan'
+                      )
+                    }}
+                  </span>
+                } @else if (plan.tier === 'free' && !trialAvailable()) {
                   <span class="commitment-badge-small used-badge">
                     {{ i18n.t('payment.trial_used') }}
+                  </span>
+                } @else if (plan.tier === 'free' && planContext().subscribed) {
+                  <span class="commitment-badge-small used-badge">
+                    {{ i18n.t('payment.trial_unavailable') }}
                   </span>
                 } @else {
                   <span class="commitment-badge-small">
@@ -86,78 +101,180 @@
           }
         </div>
       </div>
-      <!-- Right side: Stripe simulation Form or Free Activation -->
+      <!-- Right side: summary of the selected plan (trial, first Checkout or prorated change) -->
       <div class="stripe-payment-form">
-        @if (selectedTier() !== 'free') {
-          <div class="stripe-badge">{{ i18n.t('payment.stripe_simulation') }}</div>
+        @switch (mode()) {
+          @case ('trial') {
+            <div class="stripe-badge free-badge">{{ i18n.t('payment.activation_direct') }}</div>
+            <h2>{{ i18n.t('payment.activation_direct') }}</h2>
+          }
+          @case ('checkout') {
+            <div class="stripe-badge">{{ i18n.t('payment.stripe_simulation') }}</div>
+            <h2>{{ i18n.t('payment.secure_payment') }}</h2>
+          }
+          @case ('change') {
+            <div class="stripe-badge change-badge">
+              {{ i18n.t(reactivating() ? 'payment.reactivate_badge' : 'payment.change_badge') }}
+            </div>
+            <h2>
+              {{ i18n.t(reactivating() ? 'payment.reactivate_heading' : 'payment.change_heading') }}
+            </h2>
+          }
         }
-        @if (selectedTier() === 'free') {
-          <div class="stripe-badge free-badge">{{ i18n.t('payment.activation_direct') }}</div>
-        }
-        <h2>
-          {{
-            selectedTier() === 'free'
-              ? i18n.t('payment.activation_direct')
-              : i18n.t('payment.secure_payment')
-          }}
-        </h2>
         <p class="subtitle">{{ confirmText() }}</p>
-        <div class="payment-amount-box">
-          <span>{{ i18n.t('payment.amount') }}</span>
-          <strong [class.free-amount]="selectedTier() === 'free'">{{
-            selectedPlan().price
-          }}</strong>
+
+        <div class="payment-amount-box" [attr.aria-busy]="quote.isLoading()">
+          @switch (mode()) {
+            @case ('trial') {
+              <span>{{ i18n.t('payment.amount') }}</span>
+              <strong class="free-amount">{{ selectedPlan().price }}</strong>
+            }
+            @case ('checkout') {
+              <span>{{ i18n.t('payment.due_today') }}</span>
+              @if (checkoutQuote(); as q) {
+                <strong [class.free-amount]="q.dueNow === 0">{{ price(q.dueNow) }}</strong>
+              } @else if (quote.isLoading()) {
+                <span class="amount-skeleton" aria-hidden="true"></span>
+              } @else {
+                <strong>{{ selectedPlan().price }}</strong>
+              }
+            }
+            @case ('change') {
+              <span>{{ i18n.t(changeAmountLabel()) }}</span>
+              @if (changeQuote(); as q) {
+                <strong [class.free-amount]="q.amount <= 0">{{
+                  price(q.amount < 0 ? -q.amount : q.amount)
+                }}</strong>
+              } @else if (quote.isLoading()) {
+                <span class="amount-skeleton" aria-hidden="true"></span>
+              } @else {
+                <strong>—</strong>
+              }
+            }
+          }
         </div>
-        <!-- Stripe redirect info - only for paid plans -->
-        @if (selectedTier() !== 'free') {
-          <div class="stripe-redirect-info-box">
-            <div class="secure-checkout-badge">
-              <span class="secure-icon" aria-hidden="true">🔒</span>
-              <span>{{ i18n.t('payment.stripe_secure') }}</span>
+
+        @switch (mode()) {
+          @case ('checkout') {
+            <div class="stripe-redirect-info-box">
+              <div class="secure-checkout-badge">
+                <span class="secure-icon" aria-hidden="true">🔒</span>
+                <span>{{ i18n.t('payment.stripe_secure') }}</span>
+              </div>
+              <dl class="plan-summary-list">
+                <div class="summary-item">
+                  <dt class="label">{{ i18n.t('payment.summary_plan') }}</dt>
+                  <dd class="value highlighting">{{ i18n.t('plans.name.' + selectedTier()) }}</dd>
+                </div>
+                <div class="summary-item">
+                  <dt class="label">{{ i18n.t('payment.summary_billing') }}</dt>
+                  <dd class="value">{{ i18n.t('payment.summary_billing_value') }}</dd>
+                </div>
+                @if (checkoutQuote(); as q) {
+                  @if (q.credit > 0) {
+                    <div class="summary-item">
+                      <dt class="label">{{ i18n.t('payment.summary_credit') }}</dt>
+                      <dd class="value credit">−{{ price(q.credit) }}</dd>
+                    </div>
+                  }
+                  <div class="summary-item">
+                    <dt class="label">{{ i18n.t('payment.summary_first_charge') }}</dt>
+                    <dd class="value">
+                      {{
+                        q.firstChargeAt
+                          ? i18n.tf('payment.summary_first_charge_on', {
+                              date: date(q.firstChargeAt),
+                              amount: price(q.amount),
+                            })
+                          : i18n.t('payment.summary_first_charge_now')
+                      }}
+                    </dd>
+                  </div>
+                }
+              </dl>
+              @if (checkoutQuote()?.firstChargeAt; as carried) {
+                <div class="carried-access-hint">
+                  <span class="info-bubble" aria-hidden="true">🎁</span>
+                  <p>{{ i18n.tf('payment.carried_access_hint', { date: date(carried) }) }}</p>
+                </div>
+              }
+              <div class="redirect-hint">
+                <span class="info-bubble" aria-hidden="true">ℹ️</span>
+                <p>{{ i18n.t('payment.redirect_hint') }}</p>
+              </div>
             </div>
-            <dl class="plan-summary-list">
-              <div class="summary-item">
-                <dt class="label">{{ i18n.t('payment.summary_plan') }}</dt>
-                <dd class="value highlighting">{{ i18n.t('plans.name.' + selectedTier()) }}</dd>
+          }
+          @case ('change') {
+            <div class="stripe-redirect-info-box">
+              <dl class="plan-summary-list">
+                <div class="summary-item">
+                  <dt class="label">{{ i18n.t('payment.summary_current') }}</dt>
+                  <dd class="value">{{ i18n.t('plans.name.' + planContext().currentTier) }}</dd>
+                </div>
+                @if (!reactivating()) {
+                  <div class="summary-item">
+                    <dt class="label">{{ i18n.t('payment.summary_new') }}</dt>
+                    <dd class="value highlighting">{{ i18n.t('plans.name.' + selectedTier()) }}</dd>
+                  </div>
+                }
+                @if (changeQuote(); as q) {
+                  <div class="summary-item">
+                    <dt class="label">{{ i18n.t('payment.summary_renewal') }}</dt>
+                    <dd class="value">
+                      {{
+                        i18n.tf('payment.summary_renewal_value', {
+                          date: date(q.periodEnd),
+                          amount: selectedPlan().price,
+                        })
+                      }}
+                    </dd>
+                  </div>
+                }
+              </dl>
+              <div class="redirect-hint">
+                <span class="info-bubble" aria-hidden="true">ℹ️</span>
+                <p>
+                  {{ i18n.t(reactivating() ? 'payment.reactivate_hint' : 'payment.change_hint') }}
+                </p>
               </div>
-              <div class="summary-item">
-                <dt class="label">{{ i18n.t('payment.summary_billing') }}</dt>
-                <dd class="value">{{ i18n.t('payment.summary_billing_value') }}</dd>
-              </div>
-              <div class="summary-item">
-                <dt class="label">{{ i18n.t('payment.summary_next') }}</dt>
-                <dd class="value">{{ i18n.t('payment.summary_next_value') }}</dd>
-              </div>
-            </dl>
-            <div class="redirect-hint">
-              <span class="info-bubble" aria-hidden="true">ℹ️</span>
-              <p>{{ i18n.t('payment.redirect_hint') }}</p>
             </div>
-          </div>
-        }
-        <!-- Free Trial message -->
-        @if (selectedTier() === 'free') {
-          <div class="free-trial-info-box">
-            <span class="info-icon">🎁</span>
-            <p>{{ i18n.t('payment.free_trial_info') }}</p>
-          </div>
+          }
+          @case ('trial') {
+            <div class="free-trial-info-box">
+              <span class="info-icon">🎁</span>
+              <p>{{ i18n.t('payment.free_trial_info') }}</p>
+            </div>
+          }
         }
         <button
           class="btn-pay"
           [disabled]="isProcessing() || !canSubmit()"
           (click)="processPayment()"
         >
-          @if (!isProcessing() && selectedTier() === 'free') {
-            <span>{{ i18n.t('payment.btn_trial') }}</span>
-          }
-          @if (!isProcessing() && selectedTier() !== 'free') {
-            <span
-              >{{ i18n.t('payment.btn_activate') }}
-              {{ i18n.t('plans.name.' + selectedTier()) }}</span
-            >
-          }
           @if (isProcessing()) {
             <span class="spinner-small"></span>
+          } @else {
+            @switch (mode()) {
+              @case ('trial') {
+                <span>{{ i18n.t('payment.btn_trial') }}</span>
+              }
+              @case ('checkout') {
+                <span
+                  >{{ i18n.t('payment.btn_activate') }}
+                  {{ i18n.t('plans.name.' + selectedTier()) }}</span
+                >
+              }
+              @case ('change') {
+                <span>{{
+                  i18n.tf(
+                    reactivating() ? 'payment.reactivate_confirm' : 'payment.change_confirm',
+                    {
+                      plan: i18n.t('plans.name.' + selectedTier()),
+                    }
+                  )
+                }}</span>
+              }
+            }
           }
         </button>
         <button type="button" class="btn-not-now" (click)="openSurvey()">

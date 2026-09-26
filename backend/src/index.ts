@@ -28,6 +28,7 @@ import { initDiscord } from './lib/discord';
 import { initCronJobs } from './lib/cron';
 import { UserService } from './services/userService';
 import { isProd } from './lib/env';
+import { hasPaidAccessSql } from './lib/guildAccess';
 import { DEFAULT_REGION, toWowRegion } from './lib/regions';
 
 // Étendre le type Session pour inclure nos propriétés personnalisées
@@ -296,12 +297,17 @@ app.get('/api/users/me', async (req, res, next) => {
       let active_guild_has_subscription = false;
       let active_guild_region = DEFAULT_REGION;
       if (user.active_guild_id) {
-        const guildRes = await pool.query('SELECT subscription_tier, subscription_expires_at, subscription_status, fees_enabled, minimum_fee_amount, free_trial_used_at, stripe_subscription_id, region FROM guilds WHERE id = $1', [user.active_guild_id]);
+        const guildRes = await pool.query(
+          `SELECT subscription_tier, subscription_expires_at, subscription_status, fees_enabled, minimum_fee_amount,
+                  free_trial_used_at, stripe_subscription_id, region, ${hasPaidAccessSql('g')} AS is_paid
+           FROM guilds g WHERE id = $1`,
+          [user.active_guild_id],
+        );
         if (guildRes.rows[0]) {
           subscription_tier = guildRes.rows[0].subscription_tier;
           subscription_expires_at = guildRes.rows[0].subscription_expires_at;
           subscription_status = guildRes.rows[0].subscription_status;
-          active_guild_is_paid = subscription_expires_at ? (new Date(subscription_expires_at) > new Date()) : false;
+          active_guild_is_paid = guildRes.rows[0].is_paid;
           active_guild_fees_enabled = guildRes.rows[0].fees_enabled !== undefined ? guildRes.rows[0].fees_enabled : true;
           active_guild_minimum_fee_amount = guildRes.rows[0].minimum_fee_amount || 2000;
           active_guild_free_trial_available = !guildRes.rows[0].free_trial_used_at;

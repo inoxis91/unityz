@@ -1,14 +1,23 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { map } from 'rxjs';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import { I18nService } from '../../services/i18n';
 import { ToastService } from '../../services/toast';
 import { environment } from '../../../environments/environment';
 import { PLANS, PlanTier, formatPrice, planFeatures } from '../../constants/plans';
-import { takeRememberedPlan } from './payment-utils';
-import { BillingService } from '../../services/billing';
+import {
+  PlanContext,
+  formatBillingDate,
+  initialPlan,
+  isPlanSelectable,
+  paymentMode,
+  takeRememberedPlan,
+} from './payment-utils';
+import { BillingService, CheckoutPreview, PlanChangePreview } from '../../services/billing';
 import { AnalyticsService, FeedbackAnswer } from '../../services/analytics';
 import { FeedbackSurveyComponent } from '../../shared/feedback-survey/feedback-survey';
 
@@ -36,7 +45,59 @@ export class PaymentComponent implements OnInit {
   readonly trialAvailable = computed(
     () => this.authService.currentUser()?.active_guild_free_trial_available !== false,
   );
-  selectedTier = signal<PlanTier>(this.initialTier(takeRememberedPlan()));
+  /** Running subscription, current plan and scheduled cancellation of the active guild. */
+  readonly planContext = computed<PlanContext>(() => {
+    const user = this.authService.currentUser();
+    const subscribed = !!user?.active_guild_has_subscription;
+    return {
+      trialAvailable: this.trialAvailable(),
+      subscribed,
+      currentTier: subscribed ? (user?.subscription_tier ?? null) : null,
+      canceled: subscribed && user?.subscription_status === 'canceled',
+    };
+  });
+  selectedTier = signal<PlanTier>(initialPlan(takeRememberedPlan(), this.planContext()));
+  readonly mode = computed(() => paymentMode(this.selectedTier(), this.planContext().subscribed));
+  /** Undoing a scheduled cancellation by picking the current plan again. */
+  readonly reactivating = computed(
+    () => this.mode() === 'change' && this.selectedTier() === this.planContext().currentTier,
+  );
+  /** Amounts of the selected paid plan, from Stripe (customer credit, carried access, proration). */
+  readonly quote = rxResource<
+    { kind: 'checkout'; data: CheckoutPreview } | { kind: 'change'; data: PlanChangePreview },
+    { tier: 'medium' | 'pro'; mode: 'checkout' | 'change' } | undefined
+  >({
+    params: () => {
+      const tier = this.selectedTier();
+      const mode = this.mode();
+      if (tier === 'free' || mode === 'trial' || !this.authService.isGMOrOfficer())
+        return undefined;
+      return { tier, mode };
+    },
+    stream: ({ params }) =>
+      params.mode === 'change'
+        ? this.billing
+            .changePreview(params.tier)
+            .pipe(map((data) => ({ kind: 'change' as const, data })))
+        : this.billing
+            .checkoutPreview(params.tier)
+            .pipe(map((data) => ({ kind: 'checkout' as const, data }))),
+  });
+  readonly checkoutQuote = computed(() => {
+    const q = this.quote.hasValue() ? this.quote.value() : undefined;
+    return q?.kind === 'checkout' ? q.data : null;
+  });
+  /** Reactivating costs nothing; a downgrade leaves a credit, an upgrade charges the proration. */
+  readonly changeAmountLabel = computed(() => {
+    if (this.reactivating()) return 'payment.due_today';
+    return (this.changeQuote()?.amount ?? 0) < 0
+      ? 'payment.change_credit_label'
+      : 'payment.change_due_label';
+  });
+  readonly changeQuote = computed(() => {
+    const q = this.quote.hasValue() ? this.quote.value() : undefined;
+    return q?.kind === 'change' ? q.data : null;
+  });
   /** Questionnaire « qu'est-ce qui vous retient ? » (back-office : raisons de non-conversion). */
   survey = signal<'payment_exit' | 'trial_end' | null>(null);
   surveyBusy = signal(false);
@@ -59,12 +120,14 @@ export class PaymentComponent implements OnInit {
   readonly selectedPlan = computed(
     () => this.plans().find((p) => p.tier === this.selectedTier()) ?? this.plans()[0],
   );
-  readonly confirmText = computed(() =>
-    this.i18n.tf('payment.confirm_plan', {
-      plan: this.i18n.t('plans.name.' + this.selectedTier()),
-    }),
-  );
-  readonly canSubmit = computed(() => this.selectedTier() !== 'free' || this.trialAvailable());
+  readonly confirmText = computed(() => {
+    const plan = this.i18n.t('plans.name.' + this.selectedTier());
+    if (this.mode() !== 'change') return this.i18n.tf('payment.confirm_plan', { plan });
+    if (this.reactivating()) return this.i18n.tf('payment.reactivate_subtitle', { plan });
+    const current = this.i18n.t('plans.name.' + this.planContext().currentTier);
+    return this.i18n.tf('payment.change_subtitle', { plan, current });
+  });
+  readonly canSubmit = computed(() => isPlanSelectable(this.selectedTier(), this.planContext()));
   readonly verificationState = computed(() => {
     const ok = this.verificationSuccess();
     return ok === null ? 'pending' : ok ? 'success' : 'error';
@@ -161,15 +224,21 @@ export class PaymentComponent implements OnInit {
     });
   }
 
+  isSelectable(tier: PlanTier): boolean {
+    return isPlanSelectable(tier, this.planContext());
+  }
+
   selectTier(tier: PlanTier) {
-    if (this.verifyingSession() || (tier === 'free' && !this.trialAvailable())) return;
+    if (this.verifyingSession() || !this.isSelectable(tier)) return;
     this.selectedTier.set(tier);
   }
 
-  private initialTier(remembered: PlanTier | null): PlanTier {
-    const trial = this.authService.currentUser()?.active_guild_free_trial_available !== false;
-    const tier = remembered ?? (trial ? 'free' : 'pro');
-    return tier === 'free' && !trial ? 'pro' : tier;
+  price(cents: number): string {
+    return formatPrice(cents, this.i18n.currentLocale());
+  }
+
+  date(iso: string): string {
+    return formatBillingDate(iso, this.i18n.currentLocale());
   }
 
   async processPayment() {

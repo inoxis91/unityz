@@ -1,5 +1,6 @@
 import pool, { withTransaction } from '../lib/db';
 import { HttpError } from '../middlewares/errorHandler';
+import { hasPaidAccessSql } from '../lib/guildAccess';
 import { sendDiscordDM, sendFeeDeclarationNotification, sendDiscordChannelMessage } from '../lib/discord';
 import { t, getDiscordLocale } from '../lib/i18n';
 
@@ -248,7 +249,7 @@ export class FeeService {
     // Fetch guilds to process
     let queryGuilds = `
       SELECT id, discord_reminder_channel_id, minimum_fee_amount, discord_enabled, discord_locale
-      FROM guilds 
+      FROM guilds g
       WHERE discord_enabled = TRUE 
         AND discord_reminder_channel_id IS NOT NULL
     `;
@@ -259,7 +260,7 @@ export class FeeService {
       paramsGuilds.push(guildId);
     } else {
       // For cron job (all active pro guilds)
-      queryGuilds += ` AND subscription_tier = 'pro' AND subscription_expires_at > CURRENT_TIMESTAMP`;
+      queryGuilds += ` AND subscription_tier = 'pro' AND ${hasPaidAccessSql('g')}`;
     }
 
     const guildsRes = await pool.query(queryGuilds, paramsGuilds);

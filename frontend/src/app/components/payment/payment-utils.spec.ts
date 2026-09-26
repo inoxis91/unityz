@@ -1,6 +1,11 @@
 import {
+  PlanContext,
   billingErrorKey,
+  formatBillingDate,
+  initialPlan,
+  isPlanSelectable,
   isPlanTier,
+  paymentMode,
   prorationKey,
   rememberPlan,
   takeRememberedPlan,
@@ -66,5 +71,47 @@ describe('payment-utils', () => {
     expect(prorationKey(137)).toBe('payment.change_charge');
     expect(prorationKey(-80)).toBe('payment.change_credit');
     expect(prorationKey(0)).toBe('payment.change_free');
+  });
+
+  const fresh: PlanContext = {
+    trialAvailable: true,
+    subscribed: false,
+    currentTier: null,
+    canceled: false,
+  };
+  const onMedium: PlanContext = {
+    trialAvailable: false,
+    subscribed: true,
+    currentTier: 'medium',
+    canceled: false,
+  };
+
+  it('picks the payment mode', () => {
+    expect(paymentMode('free', false)).toBe('trial');
+    expect(paymentMode('pro', false)).toBe('checkout');
+    expect(paymentMode('pro', true)).toBe('change');
+  });
+
+  it('locks the current plan and the trial of a subscribed guild', () => {
+    expect(isPlanSelectable('free', fresh)).toBe(true);
+    expect(isPlanSelectable('free', { ...fresh, trialAvailable: false })).toBe(false);
+    expect(isPlanSelectable('medium', onMedium)).toBe(false);
+    expect(isPlanSelectable('pro', onMedium)).toBe(true);
+    expect(isPlanSelectable('medium', { ...onMedium, canceled: true })).toBe(true);
+  });
+
+  it('preselects a selectable plan', () => {
+    expect(initialPlan(null, fresh)).toBe('free');
+    expect(initialPlan('medium', fresh)).toBe('medium');
+    expect(initialPlan(null, { ...fresh, trialAvailable: false })).toBe('pro');
+    expect(initialPlan(null, onMedium)).toBe('pro');
+    expect(initialPlan('medium', onMedium)).toBe('pro');
+    expect(initialPlan(null, { ...onMedium, currentTier: 'pro' })).toBe('medium');
+    expect(initialPlan(null, { ...onMedium, canceled: true })).toBe('medium');
+  });
+
+  it('formats billing dates per locale', () => {
+    expect(formatBillingDate('2026-10-26T16:07:18Z', 'fr')).toBe('26 octobre 2026');
+    expect(formatBillingDate('2026-10-26T16:07:18Z', 'en')).toBe('26 October 2026');
   });
 });
