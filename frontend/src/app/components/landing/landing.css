@@ -436,6 +436,17 @@ summary:focus-visible {
   color: var(--heading);
 }
 
+.kicker {
+  display: block;
+  margin-bottom: 14px;
+  color: var(--muted);
+  font-size: clamp(0.8125rem, 1.3vw, 0.9375rem);
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
 .line {
   display: block;
 }
