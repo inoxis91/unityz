@@ -10,14 +10,19 @@ import {
   ScoreFn,
 } from './mplus-utils';
 
-function player(user_id: string, role: string, character_class = 'Guerrier'): Signup {
+function player(
+  user_id: string,
+  role: string,
+  character_class = 'Guerrier',
+  status = 'signed_up',
+): Signup {
   return {
     id: `s-${user_id}`,
     event_id: 'event-1',
     user_id,
     character_id: null,
     role,
-    status: 'signed_up',
+    status,
     group_index: 0,
     comment: null,
     created_at: '',
@@ -85,20 +90,123 @@ describe('mplus-utils', () => {
     expect(possibleGroups(pool)).toBe(1);
   });
 
-  it('auto-fills free slots by role, strongest players to the weakest groups', () => {
-    Object.assign(scores, { tA: 3000, tB: 2000, hA: 2800, hB: 2600, dA: 2500, dB: 2400, dC: 2300 });
-    const groups = [buildGroup(1, [], scoreOf), buildGroup(2, [], scoreOf)];
-    const pool = ['tA', 'tB', 'hA', 'hB', 'dA', 'dB', 'dC'].map((id) =>
-      player(id, id.startsWith('t') ? 'tank' : id.startsWith('h') ? 'heal' : 'dps'),
+  /** Applique le remplissage et renvoie les groupes obtenus. */
+  function fill(groups: Signup[][], pool: Signup[]) {
+    const built = groups.map((members, i) => buildGroup(i + 1, members, scoreOf));
+    const assignments = autoFill(built, pool, scoreOf);
+    const result = groups.map((members) => [...members]);
+    for (const a of assignments) {
+      result[a.group_index - 1].push(pool.find((p) => p.user_id === a.user_id)!);
+    }
+    return {
+      assignments,
+      groups: result.map((members, i) => buildGroup(i + 1, members, scoreOf)),
+      ids: result.map((members) => members.map((m) => m.user_id).sort()),
+    };
+  }
+
+  it('only fills the groups the pool can complete, most advanced first', () => {
+    const { ids, assignments } = fill(
+      [[], [player('t0', 'tank')]],
+      [
+        player('t1', 'tank'),
+        player('h1', 'heal'),
+        ...['a', 'b', 'c'].map((id) => player(id, 'dps')),
+      ],
     );
 
-    const result = Object.fromEntries(
-      autoFill(groups, pool, scoreOf).map((a) => [a.user_id, a.group_index]),
+    expect(ids).toEqual([[], ['a', 'b', 'c', 'h1', 't0']]);
+    expect(assignments).toHaveLength(4); // t1 reste sans groupe
+  });
+
+  it('gives every group a bloodlust and a battle res when the pool allows it', () => {
+    Object.assign(scores, { lA: 3000, lB: 2900, bA: 1000, bB: 900 });
+    const { groups } = fill(
+      [[], []],
+      [
+        player('t1', 'tank', 'Moine'),
+        player('t2', 'tank', 'Guerrier'),
+        player('h1', 'heal', 'Prêtre'),
+        player('h2', 'heal', 'Prêtre'),
+        player('lA', 'dps', 'Mage'),
+        player('lB', 'dps', 'Chasseur'),
+        player('bA', 'dps', 'Démoniste'),
+        player('bB', 'dps', 'Druide'),
+        player('r1', 'dps', 'Voleur'),
+        player('r2', 'dps', 'Voleur'),
+      ],
     );
 
-    // tA → G1, tB → G2 ; le meilleur heal rejoint le groupe le plus faible (G2)
-    expect(result).toMatchObject({ tA: 1, tB: 2, hA: 2, hB: 1 });
-    expect(Object.keys(result)).toHaveLength(7);
+    expect(groups.map((g) => [g.isComplete, g.hasLust, g.hasBrez])).toEqual([
+      [true, true, true],
+      [true, true, true],
+    ]);
+  });
+
+  it('spreads buffs and classes before balancing scores', () => {
+    Object.assign(scores, { w1: 3000, w2: 2900, m1: 1000, m2: 900 });
+    const { groups } = fill(
+      [[], []],
+      [
+        player('t1', 'tank', 'Paladin'),
+        player('t2', 'tank', 'Druide'),
+        player('h1', 'heal', 'Chaman'),
+        player('h2', 'heal', 'Évocateur'),
+        player('w1', 'dps', 'Guerrier'),
+        player('w2', 'dps', 'Guerrier'),
+        player('m1', 'dps', 'Mage'),
+        player('m2', 'dps', 'Mage'),
+        player('r1', 'dps', 'Voleur'),
+        player('r2', 'dps', 'Voleur'),
+      ],
+    );
+
+    for (const g of groups) {
+      expect(new Set(g.members.map((m) => m.character_class)).size).toBe(5);
+    }
+  });
+
+  it('picks utility over score when there are more players than slots', () => {
+    Object.assign(scores, { v1: 3000, v2: 2900, g1: 2800, mage: 1000, lock: 900 });
+    const { ids } = fill(
+      [[player('t', 'tank', 'Guerrier'), player('h', 'heal', 'Prêtre')]],
+      [
+        player('v1', 'dps', 'Voleur'),
+        player('v2', 'dps', 'Voleur'),
+        player('g1', 'dps', 'Guerrier'),
+        player('mage', 'dps', 'Mage'),
+        player('lock', 'dps', 'Démoniste'),
+      ],
+    );
+
+    expect(ids[0]).toEqual(['h', 'lock', 'mage', 't', 'v1']);
+  });
+
+  it('keeps standbys for last, even when they bring a bloodlust', () => {
+    Object.assign(scores, { sub: 3000 });
+    const { ids } = fill(
+      [[player('t', 'tank'), player('d1', 'dps'), player('d2', 'dps'), player('d3', 'dps')]],
+      [player('main', 'heal', 'Prêtre'), player('sub', 'heal', 'Chaman', 'standby')],
+    );
+
+    expect(ids[0]).toContain('main');
+  });
+
+  it('balances group averages once utility and classes are settled', () => {
+    Object.assign(scores, { tHi: 3000, tLo: 1000, hHi: 3000, hLo: 1000 });
+    const { ids } = fill(
+      [[], []],
+      [
+        player('tHi', 'tank', 'Paladin'),
+        player('tLo', 'tank', 'Paladin'),
+        player('hHi', 'heal', 'Chaman'),
+        player('hLo', 'heal', 'Chaman'),
+        ...['a', 'b', 'c', 'd', 'e', 'f'].map((id) => player(id, 'dps', 'Guerrier')),
+      ],
+    );
+
+    // Le meilleur tank est associé au heal le plus faible
+    expect(ids.find((g) => g.includes('tHi'))).toContain('hLo');
   });
 
   it('never overfills a group nor places a second tank', () => {

@@ -187,14 +187,27 @@ describe('MplusGroupsComponent', () => {
 
   it('sends the auto-fill placements in one request', () => {
     calendarService.setMplusAssignments.mockReturnValue(new Subject());
+    const extra = [signup('dps2', 'dps'), signup('dps3', 'dps')];
+    fixture.componentRef.setInput('signups', [tank, healer, dps, absent, orphan, ...extra]);
 
     component.autoFill();
 
-    // Le groupe 2 (sans score) est plus faible que le groupe 1 (tank à 3100) : il est servi en premier
-    expect(calendarService.setMplusAssignments).toHaveBeenCalledWith('event-1', [
-      { user_id: 'healer', group_index: 2 },
-      { user_id: 'orphan', group_index: 2 },
-    ]);
+    // Seul le groupe 1 (tank placé) peut être complété ; le groupe 2 n'a pas de tank disponible
+    const [eventId, assignments] = calendarService.setMplusAssignments.mock.calls[0];
+    expect(eventId).toBe('event-1');
+    expect(assignments).toHaveLength(4);
+    expect(assignments).toEqual(
+      expect.arrayContaining(
+        ['healer', 'orphan', 'dps2', 'dps3'].map((user_id) => ({ user_id, group_index: 1 })),
+      ),
+    );
+  });
+
+  it('warns instead of sending when no group can be completed', () => {
+    component.autoFill();
+
+    expect(calendarService.setMplusAssignments).not.toHaveBeenCalled();
+    expect(toast.error).toHaveBeenCalledWith('event.mplus.toast_autofill_none');
   });
 
   it('opens the action sheet for managers and the characters modal for members', () => {

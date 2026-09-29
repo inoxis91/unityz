@@ -10,7 +10,9 @@ export interface Buff extends BuffInfo {
 
 export function computeBuffs(members: Signup[]): Buff[] {
   return CLASS_BUFFS.map((baseBuff) => {
-    const count = members.filter((s) => baseBuff.classes.includes(s.character_class || '')).length;
+    const count = members.filter((s) =>
+      baseBuff.classes.includes(s.character_class || s.main_character_class || ''),
+    ).length;
     return { ...baseBuff, present: count > 0, count };
   });
 }
