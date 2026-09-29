@@ -1,0 +1,332 @@
+/* Au-dessus du widget d'aide (z-index 1000, placé après dans le DOM) qui masquerait le bouton d'ajout sur mobile. */
+.ui-overlay {
+  z-index: 1001;
+}
+
+.gf {
+  max-width: 560px;
+  background:
+    radial-gradient(circle at 100% 0%, var(--ui-bg-purple-50), transparent 45%), var(--ui-surface);
+}
+
+.gf-head {
+  align-items: flex-start;
+}
+
+.gf-emblem {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  font-size: 1.35rem;
+  background: var(--ui-bg-purple-100);
+  box-shadow: inset 0 0 0 1px var(--ui-bd-purple-100);
+  animation: ui-pop 0.35s var(--ui-ease-spring) both;
+}
+
+.gf-titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.gf-titles p {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: var(--ui-text-muted);
+}
+
+.gf-body {
+  gap: 1.15rem;
+}
+
+.gf-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.gf-group legend {
+  margin-bottom: 8px;
+  padding: 0;
+}
+
+.hint {
+  font-size: 0.78rem;
+  color: var(--ui-text-muted);
+}
+
+.hint.error {
+  font-weight: 700;
+  color: var(--ui-fg-red-700);
+}
+
+input[aria-invalid='true'] {
+  border-color: var(--ui-status-danger);
+}
+
+/* ---------- Type de joueur ---------- */
+.gf-kinds {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.gf-kind {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 2px solid var(--ui-border);
+  border-radius: 14px;
+  text-align: left;
+  color: var(--ui-text-primary);
+  background: var(--ui-surface-muted);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.gf-kind:hover:not(.active) {
+  border-color: var(--ui-border-strong);
+  transform: translateY(-1px);
+}
+
+.gf-kind-icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 1.15rem;
+  background: var(--ui-surface);
+}
+
+.gf-kind-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.gf-kind-text strong {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--ui-text-strong);
+}
+
+.gf-kind-text small {
+  font-size: 0.75rem;
+  color: var(--ui-text-muted);
+}
+
+.gf-kind.pug.active {
+  border-color: var(--ui-status-info);
+  background: var(--ui-bg-blue-50);
+}
+
+.gf-kind.trial.active {
+  border-color: var(--ui-purple);
+  background: var(--ui-bg-purple-50);
+}
+
+.gf-kind.active .gf-kind-icon {
+  animation: ui-pop 0.3s var(--ui-ease-spring);
+}
+
+/* ---------- Classes ---------- */
+.gf-classes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+
+/* Tuile neutre avec un liseré de la couleur de classe ; remplie (.bg-class-*) une fois choisie. */
+.gf-class {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border: 2px solid var(--ui-border);
+  border-bottom: 4px solid var(--class-accent, var(--ui-border-strong));
+  border-radius: 14px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
+  cursor: pointer;
+  animation: ui-rise 0.3s var(--ui-ease-out) both;
+  animation-delay: calc(var(--i) * 25ms);
+  transition:
+    border-color 0.15s ease,
+    transform 0.2s var(--ui-ease-spring),
+    box-shadow 0.15s ease;
+}
+
+/* Choisie, la tuile prend le fond et la couleur de texte lisible de .bg-class-* (styles.css). */
+.gf-class:not(.active) {
+  color: var(--ui-text-primary);
+  background: var(--ui-surface-muted);
+}
+
+.gf-class img {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25);
+}
+
+.gf-class:hover {
+  border-color: var(--class-accent, var(--ui-border-strong));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
+}
+
+.gf-class.active {
+  border-color: var(--ui-surface);
+  box-shadow:
+    0 0 0 3px var(--ui-brand),
+    0 8px 18px rgba(15, 23, 42, 0.22);
+  transform: scale(1.04);
+}
+
+.gf-class.active img {
+  animation: ui-pop 0.3s var(--ui-ease-spring);
+}
+
+/* ---------- Segmentés (rôle, placement) ---------- */
+.gf-segmented {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.gf-segmented button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 46px;
+  padding: 6px;
+  border: 2px solid var(--ui-border);
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--ui-text-strong);
+  background: var(--ui-surface-muted);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.gf-segmented button:hover:not(:disabled):not(.active) {
+  border-color: var(--ui-border-strong);
+  transform: translateY(-1px);
+}
+
+.gf-segmented button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.gf-segmented.roles button.active {
+  border-color: var(--ui-brand);
+  color: var(--ui-on-solid);
+  background: var(--ui-brand);
+  box-shadow: 0 4px 10px rgba(0, 116, 224, 0.25);
+}
+
+.gf-segmented.placement .selected.active {
+  border-color: var(--ui-status-success);
+  color: var(--ui-fg-green-800);
+  background: var(--ui-bg-green-50);
+}
+
+.gf-segmented.placement .pending.active {
+  border-color: var(--ui-status-warning);
+  color: var(--ui-fg-amber-800);
+  background: var(--ui-bg-amber-50);
+}
+
+.gf-segmented.placement .benched.active {
+  border-color: var(--ui-neutral);
+  color: var(--ui-text-primary);
+  background: var(--ui-surface-subtle);
+}
+
+.gf-note-hint {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.gf-counter {
+  font-variant-numeric: tabular-nums;
+  transition: color 0.15s ease;
+}
+
+.gf-counter.near {
+  font-weight: 800;
+  color: var(--ui-fg-amber-700);
+}
+
+.gf-kind:focus-visible,
+.gf-class:focus-visible,
+.gf-segmented button:focus-visible {
+  outline: 3px solid var(--ui-focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .gf-classes {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .gf-kind-text small {
+    display: none;
+  }
+
+  .gf-segmented button {
+    flex-direction: column;
+    gap: 2px;
+    min-height: 56px;
+  }
+
+  .gf-foot .ui-btn {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gf-emblem,
+  .gf-class,
+  .gf-class.active img,
+  .gf-kind.active .gf-kind-icon {
+    animation: none;
+  }
+
+  .gf-class,
+  .gf-kind,
+  .gf-segmented button {
+    transition: none;
+  }
+
+  .gf-class:hover,
+  .gf-class.active,
+  .gf-kind:hover:not(.active),
+  .gf-segmented button:hover:not(:disabled):not(.active) {
+    transform: none;
+  }
+}

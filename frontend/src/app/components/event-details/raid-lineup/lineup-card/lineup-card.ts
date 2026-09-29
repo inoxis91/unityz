@@ -37,19 +37,26 @@ export class LineupCardComponent {
       .replace('{role}', this.i18n.t('event.details.role_' + this.signup().role)),
   );
 
+  guestTitle = computed(() => {
+    const kind = this.signup().guest?.kind;
+    return kind ? this.i18n.t('event.guest.kind_' + kind) : '';
+  });
+
   hostClasses = computed(() => {
     const s = this.signup();
     return [
       signupClassCss(s),
+      s.guest ? 'is-guest' : '',
       s.selection ? `is-${s.selection}` : 'is-pending',
       this.isMe() ? 'is-me' : '',
       this.canManage() ? 'is-draggable' : '',
     ].join(' ');
   });
 
-  ariaLabel = computed(
-    () => `${this.name()} — ${this.i18n.t('event.details.role_' + this.role())}`,
-  );
+  ariaLabel = computed(() => {
+    const label = `${this.name()} — ${this.i18n.t('event.details.role_' + this.role())}`;
+    return this.signup().guest ? `${label} — ${this.guestTitle()}` : label;
+  });
 
   onQuick(event: Event, action: 'select' | 'bench'): void {
     event.stopPropagation();

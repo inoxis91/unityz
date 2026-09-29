@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { WOW_CLASS_NAMES } from '../lib/wowClasses';
 
 /** Limites des groupes Mythique+ (miroir de `MPLUS_*` côté frontend). */
 export const MPLUS_MAX_GROUPS = 20;
@@ -118,10 +119,15 @@ export const bulkUpdateLineupSchema = z.object({
   params: z.object({
     id: z.string().uuid(),
   }),
-  body: z.object({
-    user_ids: z.array(z.string().min(1)).min(1).max(200),
-    selection: lineupSelection,
-  }),
+  body: z
+    .object({
+      user_ids: z.array(z.string().min(1)).max(200).default([]),
+      guest_ids: z.array(z.string().uuid()).max(200).default([]),
+      selection: lineupSelection,
+    })
+    .refine((b) => b.user_ids.length + b.guest_ids.length > 0, {
+      message: 'At least one player is required',
+    }),
 });
 
 export const eventLogsAnalysisSchema = z.object({
@@ -131,4 +137,45 @@ export const eventLogsAnalysisSchema = z.object({
   query: z.object({
     locale: z.enum(['fr', 'en']).default('fr'),
   }),
+});
+
+// --- Joueurs externes du line-up raid (PU, joueurs en test) ---------------------
+
+/** Pseudo seul ou « Pseudo-Royaume » : lettres (accents compris), espaces, apostrophes, tirets. */
+const guestName = z
+  .string()
+  .trim()
+  .min(2)
+  .max(40)
+  .regex(/^[\p{L}\p{M}][\p{L}\p{M}' -]*$/u, 'Invalid character name');
+const guestNote = z
+  .string()
+  .trim()
+  .max(500)
+  .nullable()
+  .transform((note) => note || null);
+const guestFields = {
+  name: guestName,
+  class: z.enum(WOW_CLASS_NAMES),
+  role: raidRole,
+  kind: z.enum(['pug', 'trial']),
+  note: guestNote,
+  selection: lineupSelection,
+};
+
+export const createGuestSchema = z.object({
+  params: z.object({ id: z.string().uuid() }),
+  body: z.object({ ...guestFields, note: guestNote.optional(), selection: lineupSelection.optional() }),
+});
+
+export const updateGuestSchema = z.object({
+  params: z.object({ id: z.string().uuid(), guestId: z.string().uuid() }),
+  body: z
+    .object(guestFields)
+    .partial()
+    .refine((b) => Object.keys(b).length > 0, { message: 'Nothing to update' }),
+});
+
+export const deleteGuestSchema = z.object({
+  params: z.object({ id: z.string().uuid(), guestId: z.string().uuid() }),
 });

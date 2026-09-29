@@ -57,6 +57,14 @@
 .lu-stat.benched strong {
   color: var(--ui-text-tertiary);
 }
+.lu-stat.guests {
+  border-color: var(--ui-bd-purple-100);
+  background: var(--ui-bg-purple-50);
+  animation: ui-pop 0.3s var(--ui-ease-spring);
+}
+.lu-stat.guests strong {
+  color: var(--ui-fg-purple-700);
+}
 
 .lu-role-split {
   display: flex;
@@ -131,6 +139,38 @@
 .lu-btn.ghost:hover:not(:disabled) {
   color: var(--ui-text-strong);
   background: var(--ui-surface-muted);
+}
+
+.lu-btn.guest {
+  color: var(--ui-fg-purple-700);
+  background: var(--ui-bg-purple-50);
+  border: 1px dashed var(--ui-purple);
+}
+
+.lu-btn.guest:hover {
+  background: var(--ui-bg-purple-100);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
+}
+
+.lu-btn-plus {
+  display: inline-block;
+  font-weight: 900;
+  transition: transform 0.25s var(--ui-ease-spring);
+}
+
+.lu-btn.guest:hover .lu-btn-plus {
+  transform: rotate(90deg) scale(1.15);
+}
+
+.lu-btn.danger {
+  color: var(--ui-fg-red-700);
+  background: var(--ui-bg-red-50);
+  border: 1px solid var(--ui-bd-red-200);
+}
+
+.lu-btn.danger:hover {
+  background: var(--ui-bg-red-100);
 }
 
 .lu-btn:disabled {
@@ -486,11 +526,17 @@
 
 .lu-sheet-footer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 0.75rem;
   padding: 1rem 1.25rem;
   border-top: 1px solid var(--ui-border);
   background: var(--ui-surface-muted);
+}
+
+.lu-sheet-guest-actions {
+  display: flex;
+  gap: 0.5rem;
 }
 
 @keyframes lu-fade {
@@ -554,8 +600,13 @@
     justify-content: space-around;
   }
 
-  .lu-bulk .lu-btn {
-    flex: 1;
+  .lu-bulk {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lu-bulk .lu-btn.guest {
+    grid-column: 1 / -1;
   }
 
   .lu-cards {
@@ -575,7 +626,16 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 
-  .lu-sheet-footer .lu-btn {
+  .lu-sheet-footer .lu-btn,
+  .lu-sheet-guest-actions {
+    flex: 1;
+  }
+
+  .lu-sheet-footer {
+    flex-direction: column-reverse;
+  }
+
+  .lu-sheet-guest-actions .lu-btn {
     flex: 1;
   }
 }
@@ -583,8 +643,15 @@
 @media (prefers-reduced-motion: reduce) {
   .lu-sheet,
   .lu-sheet-overlay,
+  .lu-stat.guests,
+  .lu-btn-plus,
   .cdk-drag-animating {
     animation: none;
     transition: none;
+  }
+
+  .lu-btn.guest:hover,
+  .lu-btn.guest:hover .lu-btn-plus {
+    transform: none;
   }
 }

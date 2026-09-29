@@ -1,0 +1,188 @@
+<div class="ui-overlay" (click)="close()">
+  <form
+    class="ui-modal gf"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="gf-title"
+    novalidate
+    (click)="$event.stopPropagation()"
+    (submit)="$event.preventDefault(); submit()"
+  >
+    <header class="ui-modal-head gf-head">
+      <span class="gf-emblem" aria-hidden="true">{{ isEdit() ? '✏️' : '🧭' }}</span>
+      <div class="gf-titles">
+        <h2 id="gf-title">
+          {{ i18n.t(isEdit() ? 'event.guest.form_title_edit' : 'event.guest.form_title_add') }}
+        </h2>
+        <p>{{ i18n.t('event.guest.form_subtitle') }}</p>
+      </div>
+      <button
+        type="button"
+        class="ui-close"
+        (click)="close()"
+        [attr.aria-label]="i18n.t('event.details.btn_close')"
+      >
+        ×
+      </button>
+    </header>
+
+    <div class="ui-modal-body gf-body">
+      <!-- Type de joueur -->
+      <fieldset class="gf-group">
+        <legend class="ui-label">{{ i18n.t('event.guest.field_kind') }}</legend>
+        <div class="gf-kinds">
+          @for (k of kinds; track k.value) {
+            <button
+              type="button"
+              class="gf-kind"
+              [class]="k.value"
+              [class.active]="kind() === k.value"
+              [attr.aria-pressed]="kind() === k.value"
+              (click)="kind.set(k.value)"
+            >
+              <span class="gf-kind-icon" aria-hidden="true">{{ k.icon }}</span>
+              <span class="gf-kind-text">
+                <strong>{{ i18n.t('event.guest.kind_' + k.value) }}</strong>
+                <small>{{ i18n.t('event.guest.kind_' + k.value + '_desc') }}</small>
+              </span>
+            </button>
+          }
+        </div>
+      </fieldset>
+
+      <!-- Pseudo -->
+      <div class="ui-field">
+        <label for="gf-name">{{ i18n.t('event.guest.field_name') }}</label>
+        <input
+          #nameInput
+          id="gf-name"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          [attr.maxlength]="nameMax"
+          [value]="name()"
+          [attr.aria-invalid]="showNameError() || !!nameError()"
+          [attr.aria-describedby]="'gf-name-hint'"
+          [placeholder]="i18n.t('event.guest.field_name_placeholder')"
+          (input)="onName($event)"
+        />
+        @if (nameError(); as err) {
+          <span id="gf-name-hint" class="hint error" role="alert">{{ i18n.t(err) }}</span>
+        } @else if (showNameError()) {
+          <span id="gf-name-hint" class="hint error" role="alert">{{
+            i18n.t('event.guest.error_name_invalid')
+          }}</span>
+        } @else {
+          <span id="gf-name-hint" class="hint">{{ i18n.t('event.guest.field_name_hint') }}</span>
+        }
+      </div>
+
+      <!-- Classe -->
+      <fieldset class="gf-group">
+        <legend class="ui-label">{{ i18n.t('event.guest.field_class') }}</legend>
+        <div
+          class="gf-classes"
+          role="radiogroup"
+          [attr.aria-label]="i18n.t('event.guest.field_class')"
+        >
+          @for (c of classes; track c.id; let i = $index) {
+            <button
+              type="button"
+              role="radio"
+              class="gf-class"
+              [class]="className() === c.name ? 'active bg-class-' + c.id : ''"
+              [style.--class-accent]="'var(--color-' + c.id + ')'"
+              [attr.aria-checked]="className() === c.name"
+              [style.--i]="i"
+              (click)="pickClass(c.name)"
+            >
+              <img [src]="classIcon(c.name)" alt="" width="34" height="34" />
+              <span>{{ i18n.t('class.' + c.id) }}</span>
+            </button>
+          }
+        </div>
+      </fieldset>
+
+      <!-- Rôle -->
+      <fieldset class="gf-group">
+        <legend class="ui-label">{{ i18n.t('event.guest.field_role') }}</legend>
+        <div class="gf-segmented roles">
+          @for (r of roles; track r) {
+            <button
+              type="button"
+              [class.active]="role() === r"
+              [attr.aria-pressed]="role() === r"
+              [disabled]="!className() || !playable().has(r)"
+              [title]="
+                !className() || playable().has(r)
+                  ? i18n.t('event.details.role_' + r)
+                  : i18n.t('event.guest.role_not_playable')
+              "
+              (click)="pickRole(r)"
+            >
+              <img [src]="'assets/icons/' + r + '.png'" alt="" width="24" height="24" />
+              <span>{{ i18n.t('event.details.role_' + r) }}</span>
+            </button>
+          }
+        </div>
+        @if (!className()) {
+          <span class="hint">{{ i18n.t('event.guest.field_class_hint') }}</span>
+        }
+      </fieldset>
+
+      <!-- Placement initial (ajout seulement) -->
+      @if (!isEdit()) {
+        <fieldset class="gf-group">
+          <legend class="ui-label">{{ i18n.t('event.guest.field_placement') }}</legend>
+          <div class="gf-segmented placement">
+            @for (p of placements; track p.key) {
+              <button
+                type="button"
+                [class]="p.value ?? 'pending'"
+                [class.active]="selection() === p.value"
+                [attr.aria-pressed]="selection() === p.value"
+                (click)="selection.set(p.value)"
+              >
+                <span aria-hidden="true">{{ p.icon }}</span>
+                <span>{{ i18n.t(p.key) }}</span>
+              </button>
+            }
+          </div>
+        </fieldset>
+      }
+
+      <!-- Note -->
+      <div class="ui-field">
+        <label for="gf-note">{{ i18n.t('event.guest.field_note') }}</label>
+        <textarea
+          id="gf-note"
+          rows="3"
+          [attr.maxlength]="noteMax"
+          [value]="note()"
+          [placeholder]="i18n.t('event.guest.field_note_placeholder')"
+          (input)="onNote($event)"
+        ></textarea>
+        <span class="hint gf-note-hint">
+          <span>🔒 {{ i18n.t('event.guest.field_note_hint') }}</span>
+          <span class="gf-counter" [class.near]="note().length > noteMax - 50"
+            >{{ note().length }}/{{ noteMax }}</span
+          >
+        </span>
+      </div>
+    </div>
+
+    <footer class="ui-modal-foot gf-foot">
+      <button type="button" class="ui-btn ghost" (click)="close()">
+        {{ i18n.t('event.guest.btn_cancel') }}
+      </button>
+      <button
+        type="submit"
+        class="ui-btn primary"
+        [class.loading]="saving()"
+        [disabled]="saving() || !valid()"
+      >
+        {{ i18n.t(isEdit() ? 'event.guest.btn_save' : 'event.guest.btn_add') }}
+      </button>
+    </footer>
+  </form>
+</div>

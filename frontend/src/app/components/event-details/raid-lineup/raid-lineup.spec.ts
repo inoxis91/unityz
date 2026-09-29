@@ -4,7 +4,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { RaidLineupComponent } from './raid-lineup';
-import { CalendarService, LineupEntry, Signup } from '../../../services/calendar';
+import { CalendarService, EventGuest, LineupEntry, Signup } from '../../../services/calendar';
+import { GuestChange, guestToSignup } from './guest-utils';
 import { ToastService } from '../../../services/toast';
 import { I18nService } from '../../../services/i18n';
 import { ConfirmService } from '../../../services/confirm';
@@ -28,6 +29,20 @@ function signup(partial: Partial<Signup> & Pick<Signup, 'user_id' | 'role'>): Si
   };
 }
 
+function guest(partial: Partial<EventGuest> & Pick<EventGuest, 'id'>): EventGuest {
+  return {
+    event_id: 'event-1',
+    name: `Guest ${partial.id}`,
+    class: 'Mage',
+    role: 'dps',
+    kind: 'pug',
+    note: null,
+    selection: null,
+    created_at: '',
+    ...partial,
+  };
+}
+
 function dropInto(zone: string, item: Signup): CdkDragDrop<string, unknown, Signup> {
   return {
     container: { data: zone },
@@ -40,10 +55,14 @@ describe('RaidLineupComponent', () => {
   let fixture: ComponentFixture<RaidLineupComponent>;
   let component: RaidLineupComponent;
   let emitted: LineupEntry[][];
+  let guestChanges: GuestChange[];
 
   const calendarService = {
     updateLineupEntry: vi.fn(),
     bulkUpdateLineup: vi.fn(),
+    createGuest: vi.fn(),
+    updateGuest: vi.fn(),
+    deleteGuest: vi.fn(),
   };
   const toast = { success: vi.fn(), error: vi.fn() };
   const confirm = { ask: vi.fn() };
@@ -68,6 +87,7 @@ describe('RaidLineupComponent', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     emitted = [];
+    guestChanges = [];
 
     await TestBed.configureTestingModule({
       imports: [RaidLineupComponent],
@@ -92,6 +112,7 @@ describe('RaidLineupComponent', () => {
     fixture.componentRef.setInput('signups', [tank, healer, benched, forced, absent, dpsOnly]);
     fixture.componentRef.setInput('canManage', true);
     component.entriesChange.subscribe((entries) => emitted.push(entries));
+    component.guestsChange.subscribe((change) => guestChanges.push(change));
     fixture.detectChanges();
   });
 
@@ -162,11 +183,12 @@ describe('RaidLineupComponent', () => {
   });
 
   it('selects every pending player in one request', () => {
-    calendarService.bulkUpdateLineup.mockReturnValue(of([]));
+    calendarService.bulkUpdateLineup.mockReturnValue(of({ entries: [], guests: [] }));
     component.selectAllPending();
     expect(calendarService.bulkUpdateLineup).toHaveBeenCalledWith(
       'event-1',
       ['tank', 'dpsonly'],
+      [],
       'selected',
     );
     expect(toast.success).toHaveBeenCalled();
@@ -178,11 +200,12 @@ describe('RaidLineupComponent', () => {
     expect(calendarService.bulkUpdateLineup).not.toHaveBeenCalled();
 
     confirm.ask.mockResolvedValue(true);
-    calendarService.bulkUpdateLineup.mockReturnValue(of([]));
+    calendarService.bulkUpdateLineup.mockReturnValue(of({ entries: [], guests: [] }));
     await component.resetAll();
     expect(calendarService.bulkUpdateLineup).toHaveBeenCalledWith(
       'event-1',
       expect.arrayContaining(['healer', 'benched', 'forced']),
+      [],
       null,
     );
   });
@@ -200,5 +223,155 @@ describe('RaidLineupComponent', () => {
     component.onCardActivate(tank);
     expect(component.sheetSignup()).toBeNull();
     expect(openAlts).toHaveBeenCalledWith(tank);
+  });
+
+  describe('external players', () => {
+    const pug = guest({ id: 'g-pug' });
+    const trial = guest({
+      id: 'g-trial',
+      class: 'Druide',
+      role: 'heal',
+      kind: 'trial',
+      selection: 'selected',
+    });
+
+    beforeEach(() => {
+      fixture.componentRef.setInput('guests', [pug, trial]);
+      fixture.detectChanges();
+    });
+
+    it('places guests on the board with members', () => {
+      expect(component.pool().map((s) => s.user_id)).toContain('guest:g-pug');
+      expect(component.selectedByRole().heal.map((s) => s.user_id)).toContain('guest:g-trial');
+      expect(component.guestCount()).toBe(2);
+    });
+
+    it('moves a guest through the guest endpoint with an optimistic update', () => {
+      const saved = { ...trial, role: 'tank' as const };
+      calendarService.updateGuest.mockReturnValue(of(saved));
+
+      component.onDrop(dropInto('tank', guestToSignup(trial)));
+
+      expect(calendarService.updateGuest).toHaveBeenCalledWith('event-1', 'g-trial', {
+        selection: 'selected',
+        role: 'tank',
+      });
+      expect(calendarService.updateLineupEntry).not.toHaveBeenCalled();
+      expect(guestChanges).toEqual([{ upsert: [saved] }, { upsert: [saved] }]);
+    });
+
+    it('limits drop targets to the roles of the guest class', () => {
+      const drag = { data: guestToSignup(pug) } as never;
+      expect(component.canEnter(drag, { data: 'heal' } as never)).toBe(false);
+      expect(component.canEnter(drag, { data: 'dps' } as never)).toBe(true);
+    });
+
+    it('rolls a guest back when the API fails', () => {
+      calendarService.updateGuest.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 409, error: { code: 'EVENT_CANCELED' } })),
+      );
+      component.setSelection(guestToSignup(pug), 'benched');
+      expect(guestChanges[0].upsert?.[0].selection).toBe('benched');
+      expect(guestChanges[1]).toEqual({ upsert: [pug] });
+      expect(toast.error).toHaveBeenCalledWith('event.lineup.error_event_canceled');
+    });
+
+    it('sends members and guests in the same bulk request', () => {
+      calendarService.bulkUpdateLineup.mockReturnValue(
+        of({ entries: [], guests: [{ ...pug, selection: 'selected' }] }),
+      );
+      component.selectAllPending();
+      expect(calendarService.bulkUpdateLineup).toHaveBeenCalledWith(
+        'event-1',
+        ['tank', 'dpsonly'],
+        ['g-pug'],
+        'selected',
+      );
+      expect(guestChanges.at(-1)).toEqual({ upsert: [{ ...pug, selection: 'selected' }] });
+    });
+
+    it('creates a guest and closes the form once saved', () => {
+      const created = guest({ id: 'g-new', name: 'Jaina' });
+      calendarService.createGuest.mockReturnValue(of(created));
+      component.openGuestForm();
+
+      component.saveGuest({
+        name: 'Jaina',
+        class: 'Mage',
+        role: 'dps',
+        kind: 'pug',
+        note: null,
+        selection: null,
+      });
+
+      expect(calendarService.createGuest).toHaveBeenCalledWith('event-1', {
+        name: 'Jaina',
+        class: 'Mage',
+        role: 'dps',
+        kind: 'pug',
+        note: null,
+        selection: null,
+      });
+      expect(guestChanges).toEqual([{ upsert: [created] }]);
+      expect(component.guestForm()).toBeNull();
+    });
+
+    it('keeps the form open with an inline error when the name is taken', () => {
+      calendarService.createGuest.mockReturnValue(
+        throwError(
+          () => new HttpErrorResponse({ status: 409, error: { code: 'GUEST_NAME_TAKEN' } }),
+        ),
+      );
+      component.openGuestForm();
+      component.saveGuest({
+        name: 'Jaina',
+        class: 'Mage',
+        role: 'dps',
+        kind: 'pug',
+        note: null,
+        selection: null,
+      });
+      expect(component.guestForm()).not.toBeNull();
+      expect(component.guestNameError()).toBe('event.guest.error_name_taken');
+      expect(toast.error).not.toHaveBeenCalled();
+    });
+
+    it('sends only the edited fields, never the placement, when editing', () => {
+      calendarService.updateGuest.mockReturnValue(of(pug));
+      component.openGuestForm(pug);
+      component.saveGuest({
+        name: 'Renamed',
+        class: 'Mage',
+        role: 'dps',
+        kind: 'pug',
+        note: null,
+        selection: 'benched',
+      });
+      expect(calendarService.updateGuest).toHaveBeenCalledWith('event-1', 'g-pug', {
+        name: 'Renamed',
+        class: 'Mage',
+        role: 'dps',
+        kind: 'pug',
+        note: null,
+      });
+    });
+
+    it('removes a guest after confirmation and restores it on error', async () => {
+      confirm.ask.mockResolvedValue(true);
+      calendarService.deleteGuest.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 500, error: {} })),
+      );
+      await component.removeGuest(pug);
+      expect(guestChanges).toEqual([{ remove: ['g-pug'] }, { upsert: [pug] }]);
+      expect(toast.error).toHaveBeenCalledWith('event.guest.error_remove');
+    });
+
+    it('does not open the characters modal for a guest', () => {
+      const openAlts = vi.fn();
+      component.openAlts.subscribe(openAlts);
+      fixture.componentRef.setInput('canManage', false);
+      component.onCardActivate(guestToSignup(pug));
+      expect(openAlts).not.toHaveBeenCalled();
+    });
   });
 });

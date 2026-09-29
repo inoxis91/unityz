@@ -6,6 +6,9 @@ import {
   CalendarEvent,
   CalendarService,
   effectiveRole,
+  EventGuest,
+  GuestInput,
+  LineupBulkResult,
   LineupEntry,
   LineupPatch,
   LineupSelection,
@@ -16,9 +19,12 @@ import {
 import { ConfirmService } from '../../../services/confirm';
 import { I18nService } from '../../../services/i18n';
 import { ToastService } from '../../../services/toast';
+import { CharacterService } from '../../../services/character';
 import { RaidBuffsComponent, computeBuffs } from '../raid-buffs/raid-buffs';
 import { LineupCardComponent } from './lineup-card/lineup-card';
+import { GuestFormComponent } from './guest-form/guest-form';
 import { hasForcedRole, signupClassCss, signupDisplayName } from './lineup-utils';
+import { GuestChange, guestToSignup } from './guest-utils';
 
 /** Zone de dépôt : file d'attente, banc, ou colonne de rôle des validés. */
 type LineupZone = 'pool' | 'bench' | RaidRole;
@@ -30,12 +36,26 @@ const ERROR_KEYS: Record<string, string> = {
   ROLE_NOT_PLAYABLE: 'event.lineup.error_role_not_playable',
   SIGNUP_ABSENT: 'event.lineup.error_signup_absent',
   EVENT_CANCELED: 'event.lineup.error_event_canceled',
+  GUEST_NOT_FOUND: 'event.guest.error_not_found',
+  GUEST_LIMIT_REACHED: 'event.guest.error_limit',
+  GUEST_NAME_TAKEN: 'event.guest.error_name_taken',
 };
+
+/** Changement de place et/ou de rôle, commun aux inscrits et aux invités. */
+interface Move {
+  selection?: LineupSelection;
+  role?: RaidRole;
+}
+
+/** Modale invité ouverte : `guest` null = ajout. */
+interface GuestFormState {
+  guest: EventGuest | null;
+}
 
 @Component({
   selector: 'app-raid-lineup',
   standalone: true,
-  imports: [DragDropModule, LineupCardComponent, RaidBuffsComponent],
+  imports: [DragDropModule, LineupCardComponent, RaidBuffsComponent, GuestFormComponent],
   templateUrl: './raid-lineup.html',
   styleUrl: './raid-lineup.css',
 })
@@ -47,11 +67,15 @@ export class RaidLineupComponent {
 
   event = input.required<CalendarEvent>();
   signups = input<Signup[]>([]);
+  /** Joueurs externes (PU, joueurs en test) ajoutés par le raid lead. */
+  guests = input<EventGuest[]>([]);
   canManage = input(false);
   currentUserId = input<string | null>(null);
 
   /** États de line-up à fusionner dans les inscriptions (optimiste, confirmé ou rollback). */
   entriesChange = output<LineupEntry[]>();
+  /** Invités à fusionner ou retirer (optimiste, confirmé ou rollback). */
+  guestsChange = output<GuestChange>();
   openAlts = output<Signup>();
 
   readonly roles = RAID_ROLES;
@@ -70,7 +94,16 @@ export class RaidLineupComponent {
   /** Un relâché de drag peut déclencher un click sur la carte : on l'ignore. */
   private lastDragEndedAt = 0;
 
-  private available = computed(() => this.signups().filter((s) => s.status !== 'absent'));
+  readonly guestForm = signal<GuestFormState | null>(null);
+  readonly guestSaving = signal(false);
+  readonly guestNameError = signal<string | null>(null);
+
+  private available = computed(() => [
+    ...this.signups().filter((s) => s.status !== 'absent'),
+    ...this.guests().map(guestToSignup),
+  ]);
+
+  guestCount = computed(() => this.guests().length);
 
   pool = computed(() =>
     this.available()
@@ -129,6 +162,11 @@ export class RaidLineupComponent {
   }
 
   signedAsLabel(s: Signup): string {
+    if (s.guest) {
+      return `${this.i18n.t('event.guest.kind_' + s.guest.kind)} · ${this.i18n.t(
+        'class.' + CharacterService.getClassId(s.guest.class),
+      )}`;
+    }
     return this.i18n.t('event.lineup.signed_as').replace('{role}', this.roleLabel(s.role));
   }
 
@@ -145,7 +183,7 @@ export class RaidLineupComponent {
   onCardActivate(s: Signup): void {
     if (Date.now() - this.lastDragEndedAt < 300) return;
     if (this.canManage()) this.sheetUserId.set(s.user_id);
-    else this.openAlts.emit(s);
+    else if (!s.guest) this.openAlts.emit(s);
   }
 
   closeSheet(): void {
@@ -154,7 +192,8 @@ export class RaidLineupComponent {
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    this.closeSheet();
+    // La modale invité, au-dessus de la fiche, gère sa propre touche Échap
+    if (!this.guestForm()) this.closeSheet();
   }
 
   viewCharacters(s: Signup): void {
@@ -164,13 +203,12 @@ export class RaidLineupComponent {
 
   setSelection(s: Signup, selection: LineupSelection): void {
     if ((s.selection ?? null) === selection) return;
-    this.updateEntry(s, { selection });
+    this.move(s, { selection });
   }
 
   assignRole(s: Signup, role: RaidRole): void {
     if (effectiveRole(s) === role || !playableRoles(s).has(role)) return;
-    // Revenir au rôle choisi par le joueur = pas de rôle imposé
-    this.updateEntry(s, { assigned_role: role === s.role ? null : role });
+    this.move(s, { role });
   }
 
   /** Empêche de survoler une colonne de rôle que le personnage ne peut pas jouer. */
@@ -187,10 +225,7 @@ export class RaidLineupComponent {
 
     if (zone === 'pool') return this.setSelection(s, null);
     if (zone === 'bench') return this.setSelection(s, 'benched');
-
-    const patch: LineupPatch = { selection: 'selected' };
-    if (effectiveRole(s) !== zone) patch.assigned_role = zone === s.role ? null : zone;
-    this.updateEntry(s, patch);
+    this.move(s, { selection: 'selected', role: zone });
   }
 
   selectAllPending(): void {
@@ -217,7 +252,101 @@ export class RaidLineupComponent {
     );
   }
 
+  // --- Joueurs externes ---------------------------------------------------------
+
+  openGuestForm(guest: EventGuest | null = null): void {
+    this.guestNameError.set(null);
+    this.guestSaving.set(false);
+    this.guestForm.set({ guest });
+  }
+
+  closeGuestForm(): void {
+    this.guestForm.set(null);
+  }
+
+  /** Ajout ou modification : attend le serveur (identifiant, pseudo déjà pris) avant de fermer. */
+  saveGuest(input: GuestInput): void {
+    const state = this.guestForm();
+    if (!state || this.guestSaving()) return;
+    const { selection, ...fields } = input;
+    const request$ = state.guest
+      ? this.calendarService.updateGuest(this.eventId(), state.guest.id, fields)
+      : this.calendarService.createGuest(this.eventId(), { ...fields, selection });
+    this.guestSaving.set(true);
+    this.guestNameError.set(null);
+    request$.subscribe({
+      next: (guest) => {
+        this.guestsChange.emit({ upsert: [guest] });
+        this.guestSaving.set(false);
+        this.closeGuestForm();
+        this.toast.success(
+          this.i18n
+            .t(state.guest ? 'event.guest.toast_updated' : 'event.guest.toast_added')
+            .replace('{name}', guest.name),
+        );
+      },
+      error: (err: HttpErrorResponse) => {
+        this.guestSaving.set(false);
+        if (err.error?.code === 'GUEST_NAME_TAKEN') {
+          this.guestNameError.set('event.guest.error_name_taken');
+          return;
+        }
+        this.toast.error(this.i18n.t(ERROR_KEYS[err.error?.code] ?? 'event.guest.error_save'));
+      },
+    });
+  }
+
+  async removeGuest(guest: EventGuest): Promise<void> {
+    const ok = await this.confirm.ask(
+      this.i18n.t('event.guest.confirm_remove_title'),
+      this.i18n.t('event.guest.confirm_remove_desc').replace('{name}', guest.name),
+      this.i18n.t('event.guest.btn_remove'),
+      undefined,
+      true,
+    );
+    if (!ok) return;
+    this.closeSheet();
+    this.guestsChange.emit({ remove: [guest.id] });
+    this.calendarService.deleteGuest(this.eventId(), guest.id).subscribe({
+      next: () =>
+        this.toast.success(this.i18n.t('event.guest.toast_removed').replace('{name}', guest.name)),
+      error: (err: HttpErrorResponse) => {
+        // Déjà retiré ailleurs : l'état optimiste est le bon
+        if (err.error?.code === 'GUEST_NOT_FOUND') return;
+        this.guestsChange.emit({ upsert: [guest] });
+        this.toast.error(this.i18n.t(ERROR_KEYS[err.error?.code] ?? 'event.guest.error_remove'));
+      },
+    });
+  }
+
   // --- Persistance -------------------------------------------------------------
+
+  private move(s: Signup, move: Move): void {
+    if (s.guest) return this.updateGuest(s.guest, move);
+
+    const patch: LineupPatch = {};
+    if (move.selection !== undefined) patch.selection = move.selection;
+    // Revenir au rôle choisi par le joueur = pas de rôle imposé
+    if (move.role && move.role !== effectiveRole(s)) {
+      patch.assigned_role = move.role === s.role ? null : move.role;
+    }
+    this.updateEntry(s, patch);
+  }
+
+  private updateGuest(guest: EventGuest, move: Move): void {
+    const patch: Partial<GuestInput> = { ...move };
+    if (patch.role === guest.role) delete patch.role;
+    this.guestsChange.emit({ upsert: [{ ...guest, ...patch }] });
+    this.calendarService.updateGuest(this.eventId(), guest.id, patch).subscribe({
+      next: (saved) => this.guestsChange.emit({ upsert: [saved] }),
+      error: (err: HttpErrorResponse) => {
+        this.guestsChange.emit(
+          err.error?.code === 'GUEST_NOT_FOUND' ? { remove: [guest.id] } : { upsert: [guest] },
+        );
+        this.toast.error(this.i18n.t(ERROR_KEYS[err.error?.code] ?? 'event.lineup.error_generic'));
+      },
+    });
+  }
 
   private updateEntry(s: Signup, patch: LineupPatch): void {
     const optimistic: LineupEntry = { ...toEntry(s), ...patch };
@@ -228,17 +357,23 @@ export class RaidLineupComponent {
     );
   }
 
+  /** Inscrits et invités dans une seule requête (une seule transaction côté serveur). */
   private bulkUpdate(targets: Signup[], selection: LineupSelection, onSuccess: () => void): void {
+    const members = targets.filter((s) => !s.guest);
+    const guests = targets.flatMap((s) => (s.guest ? [s.guest] : []));
     const request$ = this.calendarService.bulkUpdateLineup(
       this.eventId(),
-      targets.map((s) => s.user_id),
+      members.map((s) => s.user_id),
+      guests.map((g) => g.id),
       selection,
     );
+    this.guestsChange.emit({ upsert: guests.map((g) => ({ ...g, selection })) });
     this.commit(
-      targets,
-      targets.map((s) => ({ ...toEntry(s), selection })),
+      members,
+      members.map((s) => ({ ...toEntry(s), selection })),
       request$,
       onSuccess,
+      guests,
     );
   }
 
@@ -246,18 +381,25 @@ export class RaidLineupComponent {
   private commit(
     targets: Signup[],
     optimistic: LineupEntry[],
-    request$: Observable<LineupEntry | LineupEntry[]>,
+    request$: Observable<LineupEntry | LineupBulkResult>,
     onSuccess?: () => void,
+    guestsRollback: EventGuest[] = [],
   ): void {
     const rollback = targets.map(toEntry);
     this.entriesChange.emit(optimistic);
     request$.subscribe({
       next: (res) => {
-        this.entriesChange.emit(Array.isArray(res) ? res : [res]);
+        if ('entries' in res) {
+          this.entriesChange.emit(res.entries);
+          if (res.guests.length) this.guestsChange.emit({ upsert: res.guests });
+        } else {
+          this.entriesChange.emit([res]);
+        }
         onSuccess?.();
       },
       error: (err: HttpErrorResponse) => {
         this.entriesChange.emit(rollback);
+        if (guestsRollback.length) this.guestsChange.emit({ upsert: guestsRollback });
         this.toast.error(this.i18n.t(ERROR_KEYS[err.error?.code] ?? 'event.lineup.error_generic'));
       },
     });

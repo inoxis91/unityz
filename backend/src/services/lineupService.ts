@@ -1,9 +1,10 @@
 import { withTransaction } from '../lib/db';
 import { HttpError } from '../middlewares/errorHandler';
 import { LineupNotifier, LineupSnapshot } from './lineupNotifier';
+import { EventGuest, EventGuestService } from './eventGuestService';
+import { assertLineupEditable, LineupSelection, RaidRole } from './lineupRules';
 
-export type RaidRole = 'tank' | 'heal' | 'dps';
-export type LineupSelection = 'selected' | 'benched';
+export type { LineupSelection, RaidRole } from './lineupRules';
 
 /** État de line-up d'une inscription, renvoyé au frontend après modification. */
 export interface LineupEntry {
@@ -85,16 +86,20 @@ export class LineupService {
     return updated.entry;
   }
 
-  /** Applique la même sélection à plusieurs joueurs (ex. « valider tous les en attente »). Les absents sont ignorés. */
+  /**
+   * Applique la même sélection à plusieurs joueurs et invités (ex. « valider tous les en attente »),
+   * dans une seule transaction. Les absents sont ignorés.
+   */
   static async bulkUpdateSelection(
     guildId: string,
     eventId: string,
     userIds: string[],
+    guestIds: string[],
     selection: LineupSelection | null,
-  ): Promise<LineupEntry[]> {
-    const { previous, entries } = await withTransaction(async (client) => {
+  ): Promise<{ entries: LineupEntry[]; guests: EventGuest[] }> {
+    const { previous, entries, guests } = await withTransaction(async (client) => {
       const eventRes = await client.query<Pick<LockedSignup, 'type' | 'is_canceled'>>(
-        'SELECT type, is_canceled FROM events WHERE id = $1 AND guild_id = $2',
+        'SELECT type, is_canceled FROM events WHERE id = $1 AND guild_id = $2 FOR UPDATE',
         [eventId, guildId],
       );
       const event = eventRes.rows[0];
@@ -113,22 +118,14 @@ export class LineupService {
          RETURNING ${LINEUP_COLUMNS}`,
         [eventId, userIds, selection],
       );
-      return { previous: before.rows, entries: after.rows };
+      const guests = await EventGuestService.setSelection(client, guildId, eventId, guestIds, selection);
+      return { previous: before.rows, entries: after.rows, guests };
     });
 
     for (const row of previous) {
       LineupNotifier.schedule(eventId, row.user_id, toSnapshot(row));
     }
-    return entries;
-  }
-}
-
-function assertLineupEditable(event: { type: string; is_canceled: boolean | null }): void {
-  if (event.type?.toLowerCase() !== 'raid') {
-    throw new HttpError(400, 'Line-up management is only available for raid events', 'NOT_A_RAID');
-  }
-  if (event.is_canceled) {
-    throw new HttpError(409, 'This event has been canceled', 'EVENT_CANCELED');
+    return { entries, guests };
   }
 }
 

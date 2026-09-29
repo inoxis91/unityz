@@ -112,6 +112,16 @@
   background: var(--ui-purple);
 }
 
+.tag.guest {
+  color: var(--ui-on-inverse);
+  background: var(--ui-inverse-surface);
+  animation: ui-pop 0.35s var(--ui-ease-spring);
+}
+
+.tag.guest.trial {
+  background: var(--ui-purple);
+}
+
 .tag.comment {
   background: rgba(var(--ui-surface-rgb), 0.85);
   text-transform: none;
@@ -176,4 +186,10 @@
 .quick-btn:focus-visible {
   outline: 2px solid var(--ui-focus);
   outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tag.guest {
+    animation: none;
+  }
 }

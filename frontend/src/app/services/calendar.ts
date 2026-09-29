@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { wowClassRoles } from '../constants/wow';
 
 export interface CalendarEvent {
   id?: string;
@@ -39,6 +40,34 @@ export interface LineupPatch {
   assigned_role?: RaidRole | null;
 }
 
+/** PU ou joueur en test. */
+export type GuestKind = 'pug' | 'trial';
+
+/** Joueur externe à la guilde ajouté au line-up d'un raid par le raid lead. */
+export interface EventGuest {
+  id: string;
+  event_id: string;
+  name: string;
+  /** Nom de classe Blizzard fr_FR (voir `WOW_CLASSES`). */
+  class: string;
+  role: RaidRole;
+  kind: GuestKind;
+  /** Réservée au raid lead : toujours null pour les autres membres. */
+  note: string | null;
+  selection: LineupSelection;
+  created_at: string;
+}
+
+export type GuestInput = Pick<
+  EventGuest,
+  'name' | 'class' | 'role' | 'kind' | 'note' | 'selection'
+>;
+
+export interface LineupBulkResult {
+  entries: LineupEntry[];
+  guests: EventGuest[];
+}
+
 export interface Signup {
   id: string;
   event_id: string;
@@ -61,6 +90,8 @@ export interface Signup {
   battletag?: string;
   signup_date?: string;
   user_characters?: any[];
+  /** Présent quand la carte du line-up représente un joueur externe (voir `guestToSignup`). */
+  guest?: EventGuest;
 }
 
 /** Placement d'un joueur dans un groupe M+ (0 = sans groupe). */
@@ -82,6 +113,7 @@ export function effectiveRole(signup: Pick<Signup, 'role' | 'assigned_role'>): R
 
 /** Rôles jouables : ceux du personnage inscrit, plus le rôle déclaré par le joueur (miroir du backend). */
 export function playableRoles(signup: Signup): Set<RaidRole> {
+  if (signup.guest) return new Set(wowClassRoles(signup.guest.class));
   const roles = new Set<RaidRole>([signup.role as RaidRole]);
   const character = signup.user_characters?.find((c) => c.id === signup.character_id);
   if (character?.is_tank) roles.add('tank');
@@ -186,13 +218,42 @@ export class CalendarService {
   bulkUpdateLineup(
     eventId: string,
     userIds: string[],
+    guestIds: string[],
     selection: LineupSelection,
-  ): Observable<LineupEntry[]> {
-    return this.http.patch<LineupEntry[]>(
+  ): Observable<LineupBulkResult> {
+    return this.http.patch<LineupBulkResult>(
       `${this.apiUrl}/${eventId}/lineup`,
-      { user_ids: userIds, selection },
+      { user_ids: userIds, guest_ids: guestIds, selection },
       { withCredentials: true },
     );
+  }
+
+  getGuests(eventId: string): Observable<EventGuest[]> {
+    return this.http.get<EventGuest[]>(`${this.apiUrl}/${eventId}/guests`, {
+      withCredentials: true,
+    });
+  }
+
+  createGuest(eventId: string, guest: GuestInput): Observable<EventGuest> {
+    return this.http.post<EventGuest>(`${this.apiUrl}/${eventId}/guests`, guest, {
+      withCredentials: true,
+    });
+  }
+
+  updateGuest(
+    eventId: string,
+    guestId: string,
+    patch: Partial<GuestInput>,
+  ): Observable<EventGuest> {
+    return this.http.patch<EventGuest>(`${this.apiUrl}/${eventId}/guests/${guestId}`, patch, {
+      withCredentials: true,
+    });
+  }
+
+  deleteGuest(eventId: string, guestId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${eventId}/guests/${guestId}`, {
+      withCredentials: true,
+    });
   }
 
   getSignups(eventId: string): Observable<Signup[]> {

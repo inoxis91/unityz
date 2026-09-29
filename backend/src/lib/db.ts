@@ -423,6 +423,25 @@ export const initDb = async (retries = 5, delay = 3000): Promise<void> => {
       );
     `);
 
+    // Joueurs externes d'un raid (PU, joueurs en test) ajoutés au line-up par le raid lead
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS event_guests (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+        guild_id UUID NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,
+        name VARCHAR(40) NOT NULL,
+        class VARCHAR(40) NOT NULL, -- nom de classe Blizzard fr_FR, comme characters.class
+        role VARCHAR(10) NOT NULL CHECK (role IN ('tank', 'heal', 'dps')),
+        kind VARCHAR(10) NOT NULL DEFAULT 'pug' CHECK (kind IN ('pug', 'trial')),
+        note VARCHAR(500),
+        selection VARCHAR(10) CHECK (selection IN ('selected', 'benched')), -- NULL = en attente
+        created_by VARCHAR(255) REFERENCES users(id) ON DELETE SET NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS uq_event_guests_name ON event_guests (event_id, lower(name));
+    `);
+
     // Craft Requests table
     await client.query(`
       CREATE TABLE IF NOT EXISTS craft_requests (

@@ -78,3 +78,33 @@ export const CLASS_BUFFS: BuffInfo[] = [
     classes: ['Chasseur']
   }
 ];
+
+export type WowRaidRole = 'tank' | 'heal' | 'dps';
+
+/** Classe jouable : nom Blizzard fr_FR (comme `characters.class`), identifiant CSS/i18n, rôles possibles. */
+export interface WowClass {
+  name: string;
+  id: string;
+  roles: readonly WowRaidRole[];
+}
+
+/** Miroir de `WOW_CLASS_ROLES` (backend/src/lib/wowClasses.ts). */
+export const WOW_CLASSES: readonly WowClass[] = [
+  { name: 'Guerrier', id: 'warrior', roles: ['tank', 'dps'] },
+  { name: 'Paladin', id: 'paladin', roles: ['tank', 'heal', 'dps'] },
+  { name: 'Chevalier de la mort', id: 'death-knight', roles: ['tank', 'dps'] },
+  { name: 'Chasseur de démons', id: 'demon-hunter', roles: ['tank', 'dps'] },
+  { name: 'Druide', id: 'druid', roles: ['tank', 'heal', 'dps'] },
+  { name: 'Moine', id: 'monk', roles: ['tank', 'heal', 'dps'] },
+  { name: 'Prêtre', id: 'priest', roles: ['heal', 'dps'] },
+  { name: 'Chaman', id: 'shaman', roles: ['heal', 'dps'] },
+  { name: 'Évocateur', id: 'evoker', roles: ['heal', 'dps'] },
+  { name: 'Mage', id: 'mage', roles: ['dps'] },
+  { name: 'Démoniste', id: 'warlock', roles: ['dps'] },
+  { name: 'Chasseur', id: 'hunter', roles: ['dps'] },
+  { name: 'Voleur', id: 'rogue', roles: ['dps'] },
+];
+
+export function wowClassRoles(className: string | undefined): readonly WowRaidRole[] {
+  return WOW_CLASSES.find((c) => c.name === className)?.roles ?? [];
+}

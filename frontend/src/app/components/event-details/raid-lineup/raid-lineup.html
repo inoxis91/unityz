@@ -14,6 +14,12 @@
         <strong>{{ bench().length }}</strong>
         <span>{{ i18n.t('event.lineup.stat_benched') }}</span>
       </div>
+      @if (guestCount()) {
+        <div class="lu-stat guests" [title]="i18n.t('event.guest.stat_title')">
+          <strong>{{ guestCount() }}</strong>
+          <span>{{ i18n.t('event.guest.stat') }}</span>
+        </div>
+      }
       <div class="lu-role-split" [attr.aria-label]="i18n.t('event.lineup.stat_selected')">
         @for (role of roles; track role) {
           <span class="lu-role-count" [title]="roleLabel(role)">
@@ -44,6 +50,10 @@
           [disabled]="decidedUserIds().length === 0"
         >
           ↺ {{ i18n.t('event.lineup.btn_reset') }}
+        </button>
+        <button type="button" class="lu-btn guest" (click)="openGuestForm()">
+          <span class="lu-btn-plus" aria-hidden="true">＋</span>
+          {{ i18n.t('event.guest.btn_open') }}
         </button>
       </div>
       <p class="lu-hint">💡 {{ i18n.t('event.lineup.hint_manager') }}</p>
@@ -207,7 +217,7 @@
           <span class="name">{{ displayName(s) }}</span>
           <span class="lu-sheet-sub">
             {{ signedAsLabel(s) }}
-            @if (s.status === 'standby') {
+            @if (!s.guest && s.status === 'standby') {
               · {{ i18n.t('event.details.status_maybe') }}
             }
           </span>
@@ -275,24 +285,51 @@
             >
               <img [src]="'assets/icons/' + role + '.png'" alt="" />
               <span>{{ roleLabel(role) }}</span>
-              @if (role === s.role) {
+              @if (!s.guest && role === s.role) {
                 <small>{{ i18n.t('event.lineup.sheet_player_choice') }}</small>
               }
             </button>
           }
         </div>
 
-        <p class="lu-sheet-note">📨 {{ i18n.t('event.lineup.sheet_notify_note') }}</p>
+        <p class="lu-sheet-note">
+          @if (s.guest) {
+            🧭 {{ i18n.t('event.guest.sheet_note') }}
+          } @else {
+            📨 {{ i18n.t('event.lineup.sheet_notify_note') }}
+          }
+        </p>
       </div>
 
       <footer class="lu-sheet-footer">
-        <button type="button" class="lu-btn ghost" (click)="viewCharacters(s)">
-          {{ i18n.t('event.lineup.sheet_view_characters') }}
-        </button>
+        @if (s.guest; as guest) {
+          <div class="lu-sheet-guest-actions">
+            <button type="button" class="lu-btn ghost" (click)="openGuestForm(guest)">
+              ✏️ {{ i18n.t('event.guest.btn_edit') }}
+            </button>
+            <button type="button" class="lu-btn danger" (click)="removeGuest(guest)">
+              🗑️ {{ i18n.t('event.guest.btn_remove') }}
+            </button>
+          </div>
+        } @else {
+          <button type="button" class="lu-btn ghost" (click)="viewCharacters(s)">
+            {{ i18n.t('event.lineup.sheet_view_characters') }}
+          </button>
+        }
         <button type="button" class="lu-btn primary" (click)="closeSheet()">
           {{ i18n.t('event.lineup.sheet_done') }}
         </button>
       </footer>
     </div>
   </div>
+}
+
+@if (guestForm(); as form) {
+  <app-guest-form
+    [guest]="form.guest"
+    [saving]="guestSaving()"
+    [nameError]="guestNameError()"
+    (submitted)="saveGuest($event)"
+    (closed)="closeGuestForm()"
+  />
 }

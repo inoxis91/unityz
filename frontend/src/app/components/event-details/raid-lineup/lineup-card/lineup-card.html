@@ -6,6 +6,11 @@
 <div class="text">
   <span class="name">{{ name() }}</span>
   <span class="tags">
+    @if (signup().guest; as g) {
+      <span class="tag guest" [class.trial]="g.kind === 'trial'" [title]="guestTitle()">{{
+        i18n.t('event.guest.tag_' + g.kind)
+      }}</span>
+    }
     @if (isMe()) {
       <span class="tag me">{{ i18n.t('event.lineup.tag_me') }}</span>
     }

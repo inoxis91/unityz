@@ -42,16 +42,19 @@ export const requirePaidGuild = async (req: Request, res: Response, next: NextFu
   }
 };
 
+/** Rôle de l'utilisateur dans la guilde active ; admin passe tous les contrôles. */
+export const userHasRole = (user: Express.User, roles: readonly UserRole[]): boolean => {
+  const userRole = (user.role as UserRole) || 'member';
+  return userRole === 'admin' || roles.includes(userRole);
+};
+
 export const hasRole = (roles: UserRole[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ status: 'error', message: 'Not authenticated' });
     }
 
-    const userRole = (req.user.role as UserRole) || 'member';
-    
-    // Admin has access to everything
-    if (userRole === 'admin' || roles.includes(userRole)) {
+    if (userHasRole(req.user, roles)) {
       return next();
     }
 
@@ -62,8 +65,9 @@ export const hasRole = (roles: UserRole[]) => {
 export const isAdmin = hasRole(['admin']);
 export const canManageRosters = hasRole(['admin', 'raid_leader']);
 export const canManageEvents = hasRole(['admin', 'raid_leader', 'event_manager']);
-// Sélection du line-up raid (validé / banc, rôle imposé) : réservé au raid lead
-export const canManageLineup = hasRole(['admin', 'raid_leader']);
+// Line-up raid (validé / banc, rôle imposé, joueurs externes) : réservé au raid lead
+export const LINEUP_MANAGER_ROLES: UserRole[] = ['admin', 'raid_leader'];
+export const canManageLineup = hasRole(LINEUP_MANAGER_ROLES);
 export const canManageFees = hasRole(['admin', 'treasurer']);
 
 /** Admin de l'app, GM ou officier en jeu (rang ≤ 2) : modère l'entraide de la guilde. */

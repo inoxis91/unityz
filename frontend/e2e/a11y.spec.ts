@@ -126,6 +126,19 @@ test('readable /events/:id (all tabs)', async ({ page }) => {
   await checkEachTab(page, 'app-event-details .tabs:not([role="tablist"])', '/events');
 });
 
+test('readable /events/:id › line-up external players and form', async ({ page }) => {
+  await open(page, `/events/${readSeed().eventId}`);
+  await page.locator('app-event-details .tabs > button').nth(1).click();
+  await expect(page.locator('app-lineup-card .tag.guest')).toHaveCount(2);
+  await check(page, '/events › line-up with external players');
+  await page.locator('app-raid-lineup .lu-btn.guest').click();
+  await expect(page.locator('app-guest-form .ui-modal')).toBeVisible();
+  await page.locator('app-guest-form .gf-class').first().click();
+  await check(page, '/events › external player form');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('app-guest-form')).toHaveCount(0);
+});
+
 test('readable /events/:id M+ (all tabs)', async ({ page }) => {
   await open(page, `/events/${readSeed().mplusEventId}`);
   await checkEachTab(page, 'app-event-details .tabs:not([role="tablist"])', '/events M+');

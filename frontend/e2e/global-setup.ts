@@ -60,6 +60,19 @@ export default async function globalSetup() {
     }),
     'signup',
   );
+  // Joueurs externes : un PU validé et un joueur en test en attente, pour les badges du line-up
+  await ok(
+    await api.post(`events/${event.id}/guests`, {
+      data: { name: 'Thrall', class: 'Chaman', role: 'heal', kind: 'pug', selection: 'selected' },
+    }),
+    'guest pug',
+  );
+  await ok(
+    await api.post(`events/${event.id}/guests`, {
+      data: { name: 'Liadrin', class: 'Paladin', role: 'tank', kind: 'trial', note: 'e2e' },
+    }),
+    'guest trial',
+  );
 
   // Sortie M+ : deux groupes dont un occupé, pour l'écran de composition
   const mplus = await ok(

@@ -2,12 +2,13 @@ import express from 'express';
 import pool from '../lib/db';
 import { EventService } from '../services/eventService';
 import { LineupService } from '../services/lineupService';
+import { EventGuestService } from '../services/eventGuestService';
 import { MplusGroupService } from '../services/mplusGroupService';
 import { WclReportService } from '../services/wclReportService';
-import { isAuthenticated, canManageEvents, canManageLineup, requireActiveGuild, requirePaidGuild } from '../middlewares/auth';
+import { isAuthenticated, canManageEvents, canManageLineup, requireActiveGuild, requirePaidGuild, userHasRole, LINEUP_MANAGER_ROLES } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import { HttpError } from '../middlewares/errorHandler';
-import { createEventSchema, updateEventSchema, signupSchema, updateSignupGroupSchema, mplusGroupsSchema, deleteMplusGroupSchema, setGroupAssignmentsSchema, updateSignupSchema, updateLineupEntrySchema, bulkUpdateLineupSchema, eventLogsAnalysisSchema } from '../schemas/eventSchemas';
+import { createEventSchema, updateEventSchema, signupSchema, updateSignupGroupSchema, mplusGroupsSchema, deleteMplusGroupSchema, setGroupAssignmentsSchema, updateSignupSchema, updateLineupEntrySchema, bulkUpdateLineupSchema, eventLogsAnalysisSchema, createGuestSchema, updateGuestSchema, deleteGuestSchema } from '../schemas/eventSchemas';
 
 const router = express.Router();
 
@@ -207,13 +208,16 @@ router.patch('/:id/signups/:userId', canManageEvents, validate(updateSignupSchem
 // PATCH /api/events/:id/lineup : Sélection groupée (validé / banc / en attente) pour un raid (Admin/Raid Leader)
 router.patch('/:id/lineup', canManageLineup, validate(bulkUpdateLineupSchema), async (req, res, next) => {
   try {
-    const entries = await LineupService.bulkUpdateSelection(
-      req.user!.active_guild_id!,
-      req.params.id as string,
-      req.body.user_ids,
-      req.body.selection,
+    const { user_ids, guest_ids, selection } = bulkUpdateLineupSchema.shape.body.parse(req.body);
+    res.json(
+      await LineupService.bulkUpdateSelection(
+        req.user!.active_guild_id!,
+        req.params.id as string,
+        user_ids,
+        guest_ids,
+        selection,
+      ),
     );
-    res.json(entries);
   } catch (error) {
     next(error);
   }
@@ -229,6 +233,62 @@ router.patch('/:id/lineup/:userId', canManageLineup, validate(updateLineupEntryS
       req.body,
     );
     res.json(entry);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/events/:id/guests : Joueurs externes (PU, joueurs en test) du line-up raid
+router.get('/:id/guests', isAuthenticated, async (req, res, next) => {
+  try {
+    res.json(
+      await EventGuestService.list(
+        req.user!.active_guild_id!,
+        req.params.id as string,
+        userHasRole(req.user!, LINEUP_MANAGER_ROLES),
+      ),
+    );
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/events/:id/guests : Ajoute un joueur externe au line-up (Admin/Raid Leader)
+router.post('/:id/guests', canManageLineup, validate(createGuestSchema), async (req, res, next) => {
+  try {
+    const guest = await EventGuestService.create(
+      req.user!.active_guild_id!,
+      req.params.id as string,
+      req.user!.id,
+      createGuestSchema.shape.body.parse(req.body),
+    );
+    res.status(201).json(guest);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PATCH /api/events/:id/guests/:guestId : Modifie un joueur externe, sa place ou son rôle (Admin/Raid Leader)
+router.patch('/:id/guests/:guestId', canManageLineup, validate(updateGuestSchema), async (req, res, next) => {
+  try {
+    res.json(
+      await EventGuestService.update(
+        req.user!.active_guild_id!,
+        req.params.id as string,
+        req.params.guestId as string,
+        updateGuestSchema.shape.body.parse(req.body),
+      ),
+    );
+  } catch (error) {
+    next(error);
+  }
+});
+
+// DELETE /api/events/:id/guests/:guestId : Retire un joueur externe du line-up (Admin/Raid Leader)
+router.delete('/:id/guests/:guestId', canManageLineup, validate(deleteGuestSchema), async (req, res, next) => {
+  try {
+    await EventGuestService.remove(req.user!.active_guild_id!, req.params.id as string, req.params.guestId as string);
+    res.status(204).end();
   } catch (error) {
     next(error);
   }

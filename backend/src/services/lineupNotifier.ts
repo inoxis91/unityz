@@ -2,7 +2,7 @@ import pool from '../lib/db';
 import { sqlRegionTimeZone } from '../lib/regions';
 import { sendDiscordDM } from '../lib/discord';
 import { t, getDiscordLocale, SupportedDiscordLocale } from '../lib/i18n';
-import type { LineupSelection, RaidRole } from './lineupService';
+import type { LineupSelection, RaidRole } from './lineupRules';
 
 /** État visible par le joueur : sélection + rôle effectivement joué. */
 export interface LineupSnapshot {

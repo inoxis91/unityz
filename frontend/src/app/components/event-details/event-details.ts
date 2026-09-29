@@ -13,6 +13,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import {
   CalendarEvent,
   CalendarService,
+  EventGuest,
   LineupEntry,
   MplusGroupsState,
   Signup,
@@ -32,6 +33,7 @@ import { LogsDashboardComponent } from './logs-dashboard/logs-dashboard';
 import { RaidLineupComponent } from './raid-lineup/raid-lineup';
 import { MplusGroupsComponent } from './mplus-groups/mplus-groups';
 import { LineupStatusComponent } from './raid-lineup/lineup-status/lineup-status';
+import { applyGuestChange, GuestChange } from './raid-lineup/guest-utils';
 
 type Tab = 'participants' | 'composition' | 'logs';
 type Modal = 'edit' | 'cancel' | 'alts' | null;
@@ -69,6 +71,8 @@ export class EventDetailsComponent {
   readonly event = signal<CalendarEvent | null>(null);
   readonly notFound = signal(false);
   readonly signups = signal<Signup[]>([]);
+  /** Joueurs externes du line-up raid (PU, joueurs en test). */
+  readonly guests = signal<EventGuest[]>([]);
   readonly rioScores = signal<ReadonlyMap<string, number>>(new Map());
   readonly myCharacters = signal<Character[]>([]);
   readonly rosters = signal<Roster[]>([]);
@@ -176,8 +180,10 @@ export class EventDetailsComponent {
       this.event.set(null);
       this.notFound.set(false);
       this.signups.set([]);
+      this.guests.set([]);
       this.loadEvent(id);
       this.loadSignups(id);
+      this.loadGuests(id);
     });
 
     this.characterService.getMyCharacters().subscribe((chars) => this.myCharacters.set(chars));
@@ -205,6 +211,13 @@ export class EventDetailsComponent {
           this.rioScores.update((map) => new Map(map).set(key, score));
         });
       }
+    });
+  }
+
+  private loadGuests(id: string) {
+    this.calendarService.getGuests(id).subscribe({
+      next: (guests) => this.guests.set(guests),
+      error: (err) => console.error('[EventDetails] Guests load error', err),
     });
   }
 
@@ -381,6 +394,10 @@ export class EventDetailsComponent {
     this.signups.update((list) =>
       list.map((s) => (byUser.has(s.user_id) ? { ...s, group_index: byUser.get(s.user_id)! } : s)),
     );
+  }
+
+  onGuestsChange(change: GuestChange) {
+    this.guests.update((list) => applyGuestChange(list, change));
   }
 
   onLineupEntriesChange(entries: LineupEntry[]) {

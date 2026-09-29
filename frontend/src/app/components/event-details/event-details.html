@@ -174,9 +174,11 @@
             <app-raid-lineup
               [event]="evt"
               [signups]="signups()"
+              [guests]="guests()"
               [canManage]="canManageLineup() && !evt.is_canceled"
               [currentUserId]="currentUserId()"
               (entriesChange)="onLineupEntriesChange($event)"
+              (guestsChange)="onGuestsChange($event)"
               (openAlts)="onOpenAltsModal($event)"
             />
           } @else if (isMplus()) {
