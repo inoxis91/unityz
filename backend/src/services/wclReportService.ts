@@ -369,8 +369,11 @@ async function fetchReportTables(
   const buffFields = buffIds
     .map((id) => `b${id}: table(fightIDs: $fights, dataType: Buffs, abilityID: ${id})`)
     .join('\n');
+  // Sans kill (soirée de wipes), `rankings` est omis : `$kills` ne doit alors pas être déclaré,
+  // GraphQL rejette toute variable déclarée mais inutilisée.
+  const killsVar = killIds.length ? ', $kills: [Int]!' : '';
   const data = await wclQuery<{ reportData: { report: Record<string, { data: any } | null> } }>(
-    `query ($code: String!, $fights: [Int]!, $kills: [Int]!) {
+    `query ($code: String!, $fights: [Int]!${killsVar}) {
       reportData {
         report(code: $code) {
           ${killIds.length ? 'rankings: rankings(fightIDs: $kills)' : ''}
