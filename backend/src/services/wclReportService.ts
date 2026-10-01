@@ -3,7 +3,13 @@ import { HttpError } from '../middlewares/errorHandler';
 import { TtlCache } from '../lib/ttlCache';
 import { WclLocale, isWclConfigured, wclQuery } from '../lib/wclClient';
 import { encounterIconUrl, zoneImageUrl } from '../lib/wclAssets';
-import { MVP_RULES, MVP_WEIGHTS, flagPrematureDeaths, scorePlayers } from './raidMvpScoring';
+import {
+  MVP_RULES,
+  MVP_WEIGHTS,
+  flagPrematureDeaths,
+  rolePercentile,
+  scorePlayers,
+} from './raidMvpScoring';
 
 /**
  * Analyse d'un rapport Warcraft Logs rattaché à un événement raid : synthèse des pulls de boss,
@@ -37,7 +43,7 @@ export interface ReportPullPlayer {
   hps: number;
   /** Temps actif en % de la durée du pull. */
   activeTime: number;
-  /** Percentile WCL (kills classés uniquement). */
+  /** Percentile WCL (kills classés uniquement) : HPS pour un soigneur, DPS sinon. */
   parse: number | null;
   ilvlParse: number | null;
   died: boolean;
@@ -369,14 +375,20 @@ async function fetchReportTables(
   const buffFields = buffIds
     .map((id) => `b${id}: table(fightIDs: $fights, dataType: Buffs, abilityID: ${id})`)
     .join('\n');
-  // Sans kill (soirée de wipes), `rankings` est omis : `$kills` ne doit alors pas être déclaré,
+  // Sans `playerMetric`, WCL classe tout le monde au DPS, soigneurs compris : les classements HPS
+  // sont demandés à part. Sans kill (soirée de wipes), `rankings` est omis : `$kills` ne doit alors pas être déclaré,
   // GraphQL rejette toute variable déclarée mais inutilisée.
   const killsVar = killIds.length ? ', $kills: [Int]!' : '';
   const data = await wclQuery<{ reportData: { report: Record<string, { data: any } | null> } }>(
     `query ($code: String!, $fights: [Int]!${killsVar}) {
       reportData {
         report(code: $code) {
-          ${killIds.length ? 'rankings: rankings(fightIDs: $kills)' : ''}
+          ${
+            killIds.length
+              ? `rankings: rankings(fightIDs: $kills, playerMetric: dps)
+                 healRankings: rankings(fightIDs: $kills, playerMetric: hps)`
+              : ''
+          }
           interrupts: table(fightIDs: $fights, dataType: Interrupts)
           dispels: table(fightIDs: $fights, dataType: Dispels)
           ${buffFields}
@@ -392,6 +404,7 @@ async function fetchReportTables(
   );
   return {
     rankings: ((report.rankings as any)?.data ?? []) as FightRankings[],
+    healRankings: ((report.healRankings as any)?.data ?? []) as FightRankings[],
     interrupts: countByActor(report.interrupts?.data),
     dispels: countByActor(report.dispels?.data),
     auras,
@@ -589,20 +602,27 @@ export class WclReportService {
       pullAuras.get(e.fight)!.set(e.sourceID, e.auras ?? []);
     }
 
-    // Parses : fightID → clé personnage → percentiles.
-    const parses = new Map<number, Map<string, { parse: number | null; ilvl: number | null }>>();
-    for (const ranking of reportTables?.rankings ?? []) {
-      const byCharacter = new Map<string, { parse: number | null; ilvl: number | null }>();
-      for (const list of Object.values(ranking.roles ?? {})) {
-        for (const c of list?.characters ?? []) {
-          byCharacter.set(characterKey(c.name, c.server?.name), {
-            parse: c.rankPercent ?? null,
-            ilvl: c.bracketPercent ?? null,
-          });
+    // Parses : métrique → fightID → clé personnage → percentiles. Seuls les soigneurs sont lus
+    // dans les classements HPS.
+    type Percentiles = { parse: number | null; ilvl: number | null };
+    const indexRankings = (rankings: FightRankings[], lists: (keyof FightRankings['roles'])[]) => {
+      const byFight = new Map<number, Map<string, Percentiles>>();
+      for (const ranking of rankings) {
+        const byCharacter = new Map<string, Percentiles>();
+        for (const list of lists) {
+          for (const c of ranking.roles?.[list]?.characters ?? []) {
+            byCharacter.set(characterKey(c.name, c.server?.name), {
+              parse: c.rankPercent ?? null,
+              ilvl: c.bracketPercent ?? null,
+            });
+          }
         }
+        byFight.set(ranking.fightID, byCharacter);
       }
-      parses.set(ranking.fightID, byCharacter);
-    }
+      return byFight;
+    };
+    const dpsParses = indexRankings(reportTables?.rankings ?? [], ['tanks', 'healers', 'dps']);
+    const hpsParses = indexRankings(reportTables?.healRankings ?? [], ['healers']);
 
     const aurasFor = (ids: number[], actorId: number) =>
       ids.flatMap(
@@ -647,7 +667,9 @@ export class WclReportService {
           const dmg = damage.get(detail.id);
           const heal = healing.get(detail.id);
           const activeMs = Math.max(dmg?.activeTime ?? 0, heal?.activeTime ?? 0);
-          const parse = parses.get(fight.id)?.get(characterKey(actor.name, actor.server));
+          const key = characterKey(actor.name, actor.server);
+          const dpsParse = dpsParses.get(fight.id)?.get(key);
+          const hpsParse = hpsParses.get(fight.id)?.get(key);
           const death = deaths.find((d) => d.actorId === detail.id);
           const auras = pullAuras.get(fight.id)?.get(detail.id);
           const healthstoneCasts = healthstoneEvents.filter(
@@ -660,8 +682,8 @@ export class WclReportService {
             dps: seconds ? round((dmg?.total ?? 0) / seconds) : 0,
             hps: seconds ? round((heal?.total ?? 0) / seconds) : 0,
             activeTime: durationMs ? Math.min(100, round((100 * activeMs) / durationMs, 1)) : 0,
-            parse: parse?.parse ?? null,
-            ilvlParse: parse?.ilvl ?? null,
+            parse: rolePercentile(role, dpsParse?.parse ?? null, hpsParse?.parse ?? null),
+            ilvlParse: rolePercentile(role, dpsParse?.ilvl ?? null, hpsParse?.ilvl ?? null),
             died: !!death,
             prematureDeath: !!death?.premature,
             combatPotions: usesDuringPull(aurasFor(potionIds, detail.id), fight),

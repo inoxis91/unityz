@@ -5,7 +5,8 @@ import type { MvpBreakdown, RaidRole, ReportPull } from './wclReportService';
  *
  * Aucun critère ne compare directement un rôle à un autre :
  * - Performance : parse WCL moyen sur les kills. Le percentile est déjà calculé par WCL contre la
- *   même spécialisation (DPS pour les DPS et les tanks, HPS pour les soigneurs).
+ *   même spécialisation : DPS pour les DPS et les tanks, HPS pour les soigneurs (leur parse DPS
+ *   ne peut que l'améliorer, voir `rolePercentile`).
  * - Apport : sur chaque pull (wipes compris), DPS ou HPS rapporté à la médiane de son rôle dans le
  *   pull. La médiane vaut 50, le double de la médiane 100.
  * - Survie : morts pénalisantes par pull. Sur un wipe, les morts de fin de wipe ne comptent pas. Une
@@ -35,6 +36,8 @@ export const MVP_RULES = {
   potionMinPullMs: 60_000,
   /** Poids des éléments de préparation. */
   preparation: { potion: 0.6, flask: 0.2, food: 0.2 },
+  /** Part du parse DPS d'un soigneur, retenue seulement si elle améliore son parse HPS. */
+  healerDpsParseWeight: 0.2,
   /** Score d'utilité quand personne du rôle n'a interrompu ni dissipé. */
   neutralUtility: 50,
 } as const;
@@ -70,6 +73,22 @@ export function flagPrematureDeaths<T extends { timestamp: number }>(
 /** Montant comparé au sein du rôle : HPS pour un soigneur, DPS sinon. */
 export const roleAmount = (role: RaidRole, p: { dps: number; hps: number }) =>
   role === 'healer' ? p.hps : p.dps;
+
+/**
+ * Percentile retenu sur un pull. Un soigneur est jugé sur son parse HPS ; son parse DPS ne compte
+ * que s'il l'améliore (mélange HPS/DPS), il ne peut jamais le faire baisser. Sans parse HPS, un
+ * soigneur n'a pas de parse (son parse DPS seul le pénaliserait). Les tanks et DPS gardent le DPS.
+ */
+export function rolePercentile(
+  role: RaidRole,
+  dps: number | null,
+  hps: number | null,
+): number | null {
+  if (role !== 'healer') return dps;
+  if (hps === null || dps === null) return hps;
+  const w = MVP_RULES.healerDpsParseWeight;
+  return Math.round(Math.max(hps, (1 - w) * hps + w * dps));
+}
 
 export interface ScoringInput {
   actorId: number;
